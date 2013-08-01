@@ -1,0 +1,12 @@
+﻿Build started 26.06.2013 23:05:22.
+     1>Project "C:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\vs2010\ZERO_CHECK.vcxproj" on node 2 (build target(s)).
+     1>InitializeBuildStatus:
+         Creating "x64\Debug\ZERO_CHECK\ZERO_CHECK.unsuccessfulbuild" because "AlwaysCreate" was specified.
+       FinalizeBuildStatus:
+         Deleting file "x64\Debug\ZERO_CHECK\ZERO_CHECK.unsuccessfulbuild".
+         Touching "x64\Debug\ZERO_CHECK\ZERO_CHECK.lastbuildstate".
+     1>Done Building Project "C:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\vs2010\ZERO_CHECK.vcxproj" (build target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:00.09

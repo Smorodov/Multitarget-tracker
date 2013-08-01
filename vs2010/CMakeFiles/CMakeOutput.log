@@ -1,0 +1,137 @@
+The system is: Windows - 6.1 - 
+Determining if the C compiler works passed with the following output:
+Change Dir: c:/Users/USER/Documents/Visual Studio 2010/Projects/MultitargetTracker4/vs2010/CMakeFiles/CMakeTmp
+
+Run Build Command:C:\PROGRA~2\MICROS~2.0\Common7\IDE\devenv.com CMAKE_TRY_COMPILE.sln /build Debug /project cmTryCompileExec4055163996
+
+Microsoft (R) Visual Studio Version 10.0.40219.1.
+Copyright (C) Microsoft Corp. All rights reserved.
+1>------ Build started: Project: cmTryCompileExec4055163996, Configuration: Debug x64 ------
+1>Build started 23.06.2013 18:43:47.
+1>PrepareForBuild:
+1>  Creating directory "C:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\vs2010\CMakeFiles\CMakeTmp\Debug\".
+1>InitializeBuildStatus:
+1>  Creating "cmTryCompileExec4055163996.dir\Debug\cmTryCompileExec4055163996.unsuccessfulbuild" because "AlwaysCreate" was specified.
+1>ClCompile:
+1>  Microsoft (R) C/C++ Optimizing Compiler Version 16.00.40219.01 for x64
+1>  Copyright (C) Microsoft Corporation.  All rights reserved.
+1>  
+1>  cl /c /Zi /W3 /WX- /Od /Ob0 /D WIN32 /D _WINDOWS /D _DEBUG /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"cmTryCompileExec4055163996.dir\Debug\\" /Fd"C:/Users/USER/Documents/Visual Studio 2010/Projects/MultitargetTracker4/vs2010/CMakeFiles/CMakeTmp/Debug/cmTryCompileExec4055163996.pdb" /Gd /TC /errorReport:prompt testCCompiler.c  /Zm1000 
+1>  
+1>  testCCompiler.c
+1>Link:
+1>  cmTryCompileExec4055163996.vcxproj -> C:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\vs2010\CMakeFiles\CMakeTmp\Debug\cmTryCompileExec4055163996.exe
+1>LinkEmbedManifest:
+1>  cmTryCompileExec4055163996.vcxproj -> C:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\vs2010\CMakeFiles\CMakeTmp\Debug\cmTryCompileExec4055163996.exe
+1>FinalizeBuildStatus:
+1>  Deleting file "cmTryCompileExec4055163996.dir\Debug\cmTryCompileExec4055163996.unsuccessfulbuild".
+1>  Touching "cmTryCompileExec4055163996.dir\Debug\cmTryCompileExec4055163996.lastbuildstate".
+1>
+1>Build succeeded.
+1>
+1>Time Elapsed 00:00:00.51
+========== Build: 1 succeeded, 0 failed, 0 up-to-date, 0 skipped ==========
+
+
+Detecting C compiler ABI info compiled with the following output:
+Change Dir: c:/Users/USER/Documents/Visual Studio 2010/Projects/MultitargetTracker4/vs2010/CMakeFiles/CMakeTmp
+
+Run Build Command:C:\PROGRA~2\MICROS~2.0\Common7\IDE\devenv.com CMAKE_TRY_COMPILE.sln /build Debug /project cmTryCompileExec4262226015
+
+Microsoft (R) Visual Studio Version 10.0.40219.1.
+Copyright (C) Microsoft Corp. All rights reserved.
+1>------ Build started: Project: cmTryCompileExec4262226015, Configuration: Debug x64 ------
+1>Build started 23.06.2013 18:43:49.
+1>PrepareForBuild:
+1>  Creating directory "C:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\vs2010\CMakeFiles\CMakeTmp\Debug\".
+1>InitializeBuildStatus:
+1>  Creating "cmTryCompileExec4262226015.dir\Debug\cmTryCompileExec4262226015.unsuccessfulbuild" because "AlwaysCreate" was specified.
+1>ClCompile:
+1>  Microsoft (R) C/C++ Optimizing Compiler Version 16.00.40219.01 for x64
+1>  Copyright (C) Microsoft Corporation.  All rights reserved.
+1>  
+1>  cl /c /Zi /W3 /WX- /Od /Ob0 /D WIN32 /D _WINDOWS /D _DEBUG /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"cmTryCompileExec4262226015.dir\Debug\\" /Fd"C:/Users/USER/Documents/Visual Studio 2010/Projects/MultitargetTracker4/vs2010/CMakeFiles/CMakeTmp/Debug/cmTryCompileExec4262226015.pdb" /Gd /TC /errorReport:prompt "..\..\..\..\..\..\..\..\..\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeCCompilerABI.c"  /Zm1000 
+1>  
+1>  CMakeCCompilerABI.c
+1>Link:
+1>  cmTryCompileExec4262226015.vcxproj -> C:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\vs2010\CMakeFiles\CMakeTmp\Debug\cmTryCompileExec4262226015.exe
+1>LinkEmbedManifest:
+1>  cmTryCompileExec4262226015.vcxproj -> C:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\vs2010\CMakeFiles\CMakeTmp\Debug\cmTryCompileExec4262226015.exe
+1>FinalizeBuildStatus:
+1>  Deleting file "cmTryCompileExec4262226015.dir\Debug\cmTryCompileExec4262226015.unsuccessfulbuild".
+1>  Touching "cmTryCompileExec4262226015.dir\Debug\cmTryCompileExec4262226015.lastbuildstate".
+1>
+1>Build succeeded.
+1>
+1>Time Elapsed 00:00:00.49
+========== Build: 1 succeeded, 0 failed, 0 up-to-date, 0 skipped ==========
+
+
+Determining if the CXX compiler works passed with the following output:
+Change Dir: c:/Users/USER/Documents/Visual Studio 2010/Projects/MultitargetTracker4/vs2010/CMakeFiles/CMakeTmp
+
+Run Build Command:C:\PROGRA~2\MICROS~2.0\Common7\IDE\devenv.com CMAKE_TRY_COMPILE.sln /build Debug /project cmTryCompileExec956195616
+
+Microsoft (R) Visual Studio Version 10.0.40219.1.
+Copyright (C) Microsoft Corp. All rights reserved.
+1>------ Build started: Project: cmTryCompileExec956195616, Configuration: Debug x64 ------
+1>Build started 23.06.2013 18:43:50.
+1>PrepareForBuild:
+1>  Creating directory "C:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\vs2010\CMakeFiles\CMakeTmp\Debug\".
+1>InitializeBuildStatus:
+1>  Creating "cmTryCompileExec956195616.dir\Debug\cmTryCompileExec956195616.unsuccessfulbuild" because "AlwaysCreate" was specified.
+1>ClCompile:
+1>  Microsoft (R) C/C++ Optimizing Compiler Version 16.00.40219.01 for x64
+1>  Copyright (C) Microsoft Corporation.  All rights reserved.
+1>  
+1>  cl /c /Zi /W3 /WX- /Od /Ob0 /D WIN32 /D _WINDOWS /D _DEBUG /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /GR /Fo"cmTryCompileExec956195616.dir\Debug\\" /Fd"C:/Users/USER/Documents/Visual Studio 2010/Projects/MultitargetTracker4/vs2010/CMakeFiles/CMakeTmp/Debug/cmTryCompileExec956195616.pdb" /Gd /TP /errorReport:prompt testCXXCompiler.cxx  /Zm1000 
+1>  
+1>  testCXXCompiler.cxx
+1>Link:
+1>  cmTryCompileExec956195616.vcxproj -> C:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\vs2010\CMakeFiles\CMakeTmp\Debug\cmTryCompileExec956195616.exe
+1>LinkEmbedManifest:
+1>  cmTryCompileExec956195616.vcxproj -> C:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\vs2010\CMakeFiles\CMakeTmp\Debug\cmTryCompileExec956195616.exe
+1>FinalizeBuildStatus:
+1>  Deleting file "cmTryCompileExec956195616.dir\Debug\cmTryCompileExec956195616.unsuccessfulbuild".
+1>  Touching "cmTryCompileExec956195616.dir\Debug\cmTryCompileExec956195616.lastbuildstate".
+1>
+1>Build succeeded.
+1>
+1>Time Elapsed 00:00:00.53
+========== Build: 1 succeeded, 0 failed, 0 up-to-date, 0 skipped ==========
+
+
+Detecting CXX compiler ABI info compiled with the following output:
+Change Dir: c:/Users/USER/Documents/Visual Studio 2010/Projects/MultitargetTracker4/vs2010/CMakeFiles/CMakeTmp
+
+Run Build Command:C:\PROGRA~2\MICROS~2.0\Common7\IDE\devenv.com CMAKE_TRY_COMPILE.sln /build Debug /project cmTryCompileExec225877092
+
+Microsoft (R) Visual Studio Version 10.0.40219.1.
+Copyright (C) Microsoft Corp. All rights reserved.
+1>------ Build started: Project: cmTryCompileExec225877092, Configuration: Debug x64 ------
+1>Build started 23.06.2013 18:43:52.
+1>PrepareForBuild:
+1>  Creating directory "C:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\vs2010\CMakeFiles\CMakeTmp\Debug\".
+1>InitializeBuildStatus:
+1>  Creating "cmTryCompileExec225877092.dir\Debug\cmTryCompileExec225877092.unsuccessfulbuild" because "AlwaysCreate" was specified.
+1>ClCompile:
+1>  Microsoft (R) C/C++ Optimizing Compiler Version 16.00.40219.01 for x64
+1>  Copyright (C) Microsoft Corporation.  All rights reserved.
+1>  
+1>  cl /c /Zi /W3 /WX- /Od /Ob0 /D WIN32 /D _WINDOWS /D _DEBUG /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /GR /Fo"cmTryCompileExec225877092.dir\Debug\\" /Fd"C:/Users/USER/Documents/Visual Studio 2010/Projects/MultitargetTracker4/vs2010/CMakeFiles/CMakeTmp/Debug/cmTryCompileExec225877092.pdb" /Gd /TP /errorReport:prompt "..\..\..\..\..\..\..\..\..\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeCXXCompilerABI.cpp"  /Zm1000 
+1>  
+1>  CMakeCXXCompilerABI.cpp
+1>Link:
+1>  cmTryCompileExec225877092.vcxproj -> C:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\vs2010\CMakeFiles\CMakeTmp\Debug\cmTryCompileExec225877092.exe
+1>LinkEmbedManifest:
+1>  cmTryCompileExec225877092.vcxproj -> C:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\vs2010\CMakeFiles\CMakeTmp\Debug\cmTryCompileExec225877092.exe
+1>FinalizeBuildStatus:
+1>  Deleting file "cmTryCompileExec225877092.dir\Debug\cmTryCompileExec225877092.unsuccessfulbuild".
+1>  Touching "cmTryCompileExec225877092.dir\Debug\cmTryCompileExec225877092.lastbuildstate".
+1>
+1>Build succeeded.
+1>
+1>Time Elapsed 00:00:00.50
+========== Build: 1 succeeded, 0 failed, 0 up-to-date, 0 skipped ==========
+
+

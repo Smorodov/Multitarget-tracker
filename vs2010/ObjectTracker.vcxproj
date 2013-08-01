@@ -1,0 +1,345 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="MinSizeRel|x64">
+      <Configuration>MinSizeRel</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="RelWithDebInfo|x64">
+      <Configuration>RelWithDebInfo</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGUID>{53E06895-1E81-436F-8F37-DCD427A4421D}</ProjectGUID>
+    <Keyword>Win32Proj</Keyword>
+    <Platform>x64</Platform>
+    <ProjectName>ObjectTracker</ProjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.20506.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">c:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\vs2010\Debug\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">ObjectTracker.dir\Debug\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">ObjectTracker</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.exe</TargetExt>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</LinkIncremental>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</GenerateManifest>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">c:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\vs2010\Release\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">ObjectTracker.dir\Release\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">ObjectTracker</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.exe</TargetExt>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkIncremental>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</GenerateManifest>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">c:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\vs2010\MinSizeRel\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">ObjectTracker.dir\MinSizeRel\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">ObjectTracker</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">.exe</TargetExt>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkIncremental>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">true</GenerateManifest>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">c:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\vs2010\RelWithDebInfo\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">ObjectTracker.dir\RelWithDebInfo\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">ObjectTracker</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">.exe</TargetExt>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</LinkIncremental>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</GenerateManifest>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <AdditionalOptions> /Zm1000 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalIncludeDirectories>C:/Users/USER/Documents/opencv/opencv/modules/core/include;C:/Users/USER/Documents/opencv/opencv/modules/imgproc/include;C:/Users/USER/Documents/opencv/opencv/modules/flann/include;C:/Users/USER/Documents/opencv/opencv/modules/highgui/include;C:/Users/USER/Documents/opencv/opencv/modules/features2d/include;C:/Users/USER/Documents/opencv/opencv/modules/calib3d/include;C:/Users/USER/Documents/opencv/opencv/modules/ml/include;C:/Users/USER/Documents/opencv/opencv/modules/video/include;C:/Users/USER/Documents/opencv/opencv/modules/objdetect/include;C:/Users/USER/Documents/opencv/opencv/modules/contrib/include;C:/Users/USER/Documents/opencv/opencv/modules/photo/include;C:/Users/USER/Documents/opencv/opencv/modules/legacy/include;C:/Users/USER/Documents/opencv/opencv/modules/gpu/include;C:/Users/USER/Documents/opencv/opencv/modules/ocl/include;C:/Users/USER/Documents/opencv/opencv/modules/nonfree/include;C:/Users/USER/Documents/opencv/opencv/modules/softcascade/include;C:/Users/USER/Documents/opencv/opencv/modules/stitching/include;C:/Users/USER/Documents/opencv/opencv/modules/superres/include;C:/Users/USER/Documents/opencv/opencv/modules/ts/include;C:/Users/USER/Documents/opencv/opencv/modules/videostab/include;C:/Users/USER/Documents/Visual Studio 2010/Projects/MultitargetTracker4;c:/Users/USER/Documents/Visual Studio 2010/projects/opencv_64;C:/Users/USER/Documents/opencv/opencv/include;C:/Users/USER/Documents/opencv/opencv/include/opencv;C:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\vibe_src;C:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\HungarianAlg_src;C:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\Detector;C:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\Tracker;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
+      <Optimization>Disabled</Optimization>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;CMAKE_INTDIR="Debug";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AssemblerListingLocation>Debug</AssemblerListingLocation>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <ProgramDataBaseFileName>c:/Users/USER/Documents/Visual Studio 2010/Projects/MultitargetTracker4/vs2010/Debug/ObjectTracker.pdb</ProgramDataBaseFileName>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;CMAKE_INTDIR=\"Debug\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:/Users/USER/Documents/opencv/opencv/modules/core/include;C:/Users/USER/Documents/opencv/opencv/modules/imgproc/include;C:/Users/USER/Documents/opencv/opencv/modules/flann/include;C:/Users/USER/Documents/opencv/opencv/modules/highgui/include;C:/Users/USER/Documents/opencv/opencv/modules/features2d/include;C:/Users/USER/Documents/opencv/opencv/modules/calib3d/include;C:/Users/USER/Documents/opencv/opencv/modules/ml/include;C:/Users/USER/Documents/opencv/opencv/modules/video/include;C:/Users/USER/Documents/opencv/opencv/modules/objdetect/include;C:/Users/USER/Documents/opencv/opencv/modules/contrib/include;C:/Users/USER/Documents/opencv/opencv/modules/photo/include;C:/Users/USER/Documents/opencv/opencv/modules/legacy/include;C:/Users/USER/Documents/opencv/opencv/modules/gpu/include;C:/Users/USER/Documents/opencv/opencv/modules/ocl/include;C:/Users/USER/Documents/opencv/opencv/modules/nonfree/include;C:/Users/USER/Documents/opencv/opencv/modules/softcascade/include;C:/Users/USER/Documents/opencv/opencv/modules/stitching/include;C:/Users/USER/Documents/opencv/opencv/modules/superres/include;C:/Users/USER/Documents/opencv/opencv/modules/ts/include;C:/Users/USER/Documents/opencv/opencv/modules/videostab/include;C:/Users/USER/Documents/Visual Studio 2010/Projects/MultitargetTracker4;c:/Users/USER/Documents/Visual Studio 2010/projects/opencv_64;C:/Users/USER/Documents/opencv/opencv/include;C:/Users/USER/Documents/opencv/opencv/include/opencv;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>C:/Users/USER/Documents/opencv/opencv/modules/core/include;C:/Users/USER/Documents/opencv/opencv/modules/imgproc/include;C:/Users/USER/Documents/opencv/opencv/modules/flann/include;C:/Users/USER/Documents/opencv/opencv/modules/highgui/include;C:/Users/USER/Documents/opencv/opencv/modules/features2d/include;C:/Users/USER/Documents/opencv/opencv/modules/calib3d/include;C:/Users/USER/Documents/opencv/opencv/modules/ml/include;C:/Users/USER/Documents/opencv/opencv/modules/video/include;C:/Users/USER/Documents/opencv/opencv/modules/objdetect/include;C:/Users/USER/Documents/opencv/opencv/modules/contrib/include;C:/Users/USER/Documents/opencv/opencv/modules/photo/include;C:/Users/USER/Documents/opencv/opencv/modules/legacy/include;C:/Users/USER/Documents/opencv/opencv/modules/gpu/include;C:/Users/USER/Documents/opencv/opencv/modules/ocl/include;C:/Users/USER/Documents/opencv/opencv/modules/nonfree/include;C:/Users/USER/Documents/opencv/opencv/modules/softcascade/include;C:/Users/USER/Documents/opencv/opencv/modules/stitching/include;C:/Users/USER/Documents/opencv/opencv/modules/superres/include;C:/Users/USER/Documents/opencv/opencv/modules/ts/include;C:/Users/USER/Documents/opencv/opencv/modules/videostab/include;C:/Users/USER/Documents/Visual Studio 2010/Projects/MultitargetTracker4;c:/Users/USER/Documents/Visual Studio 2010/projects/opencv_64;C:/Users/USER/Documents/opencv/opencv/include;C:/Users/USER/Documents/opencv/opencv/include/opencv;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Link>
+      <AdditionalOptions> /machine:x64 /debug %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Debug\opencv_calib3d249d.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Debug\opencv_contrib249d.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Debug\opencv_core249d.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Debug\opencv_features2d249d.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Debug\opencv_flann249d.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Debug\opencv_gpu249d.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Debug\opencv_highgui249d.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Debug\opencv_imgproc249d.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Debug\opencv_legacy249d.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Debug\opencv_ml249d.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Debug\opencv_nonfree249d.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Debug\opencv_objdetect249d.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Debug\opencv_ocl249d.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Debug\opencv_photo249d.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Debug\opencv_softcascade249d.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Debug\opencv_stitching249d.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Debug\opencv_superres249d.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Debug\opencv_ts249d.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Debug\opencv_video249d.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Debug\opencv_videostab249d.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <ImportLibrary>c:/Users/USER/Documents/Visual Studio 2010/Projects/MultitargetTracker4/vs2010/Debug/ObjectTracker.lib</ImportLibrary>
+      <LinkIncremental>true</LinkIncremental>
+      <ProgramDataBaseFile>c:/Users/USER/Documents/Visual Studio 2010/Projects/MultitargetTracker4/vs2010/Debug/ObjectTracker.pdb</ProgramDataBaseFile>
+      <StackReserveSize>10000000</StackReserveSize>
+      <SubSystem>Console</SubSystem>
+      <Version>
+      </Version>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <AdditionalOptions> /Zm1000 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalIncludeDirectories>C:/Users/USER/Documents/opencv/opencv/modules/core/include;C:/Users/USER/Documents/opencv/opencv/modules/imgproc/include;C:/Users/USER/Documents/opencv/opencv/modules/flann/include;C:/Users/USER/Documents/opencv/opencv/modules/highgui/include;C:/Users/USER/Documents/opencv/opencv/modules/features2d/include;C:/Users/USER/Documents/opencv/opencv/modules/calib3d/include;C:/Users/USER/Documents/opencv/opencv/modules/ml/include;C:/Users/USER/Documents/opencv/opencv/modules/video/include;C:/Users/USER/Documents/opencv/opencv/modules/objdetect/include;C:/Users/USER/Documents/opencv/opencv/modules/contrib/include;C:/Users/USER/Documents/opencv/opencv/modules/photo/include;C:/Users/USER/Documents/opencv/opencv/modules/legacy/include;C:/Users/USER/Documents/opencv/opencv/modules/gpu/include;C:/Users/USER/Documents/opencv/opencv/modules/ocl/include;C:/Users/USER/Documents/opencv/opencv/modules/nonfree/include;C:/Users/USER/Documents/opencv/opencv/modules/softcascade/include;C:/Users/USER/Documents/opencv/opencv/modules/stitching/include;C:/Users/USER/Documents/opencv/opencv/modules/superres/include;C:/Users/USER/Documents/opencv/opencv/modules/ts/include;C:/Users/USER/Documents/opencv/opencv/modules/videostab/include;C:/Users/USER/Documents/Visual Studio 2010/Projects/MultitargetTracker4;c:/Users/USER/Documents/Visual Studio 2010/projects/opencv_64;C:/Users/USER/Documents/opencv/opencv/include;C:/Users/USER/Documents/opencv/opencv/include/opencv;C:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\vibe_src;C:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\HungarianAlg_src;C:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\Detector;C:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\Tracker;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <Optimization>MaxSpeed</Optimization>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR="Release";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AssemblerListingLocation>Release</AssemblerListingLocation>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <ProgramDataBaseFileName>c:/Users/USER/Documents/Visual Studio 2010/Projects/MultitargetTracker4/vs2010/Release/ObjectTracker.pdb</ProgramDataBaseFileName>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR=\"Release\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:/Users/USER/Documents/opencv/opencv/modules/core/include;C:/Users/USER/Documents/opencv/opencv/modules/imgproc/include;C:/Users/USER/Documents/opencv/opencv/modules/flann/include;C:/Users/USER/Documents/opencv/opencv/modules/highgui/include;C:/Users/USER/Documents/opencv/opencv/modules/features2d/include;C:/Users/USER/Documents/opencv/opencv/modules/calib3d/include;C:/Users/USER/Documents/opencv/opencv/modules/ml/include;C:/Users/USER/Documents/opencv/opencv/modules/video/include;C:/Users/USER/Documents/opencv/opencv/modules/objdetect/include;C:/Users/USER/Documents/opencv/opencv/modules/contrib/include;C:/Users/USER/Documents/opencv/opencv/modules/photo/include;C:/Users/USER/Documents/opencv/opencv/modules/legacy/include;C:/Users/USER/Documents/opencv/opencv/modules/gpu/include;C:/Users/USER/Documents/opencv/opencv/modules/ocl/include;C:/Users/USER/Documents/opencv/opencv/modules/nonfree/include;C:/Users/USER/Documents/opencv/opencv/modules/softcascade/include;C:/Users/USER/Documents/opencv/opencv/modules/stitching/include;C:/Users/USER/Documents/opencv/opencv/modules/superres/include;C:/Users/USER/Documents/opencv/opencv/modules/ts/include;C:/Users/USER/Documents/opencv/opencv/modules/videostab/include;C:/Users/USER/Documents/Visual Studio 2010/Projects/MultitargetTracker4;c:/Users/USER/Documents/Visual Studio 2010/projects/opencv_64;C:/Users/USER/Documents/opencv/opencv/include;C:/Users/USER/Documents/opencv/opencv/include/opencv;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>C:/Users/USER/Documents/opencv/opencv/modules/core/include;C:/Users/USER/Documents/opencv/opencv/modules/imgproc/include;C:/Users/USER/Documents/opencv/opencv/modules/flann/include;C:/Users/USER/Documents/opencv/opencv/modules/highgui/include;C:/Users/USER/Documents/opencv/opencv/modules/features2d/include;C:/Users/USER/Documents/opencv/opencv/modules/calib3d/include;C:/Users/USER/Documents/opencv/opencv/modules/ml/include;C:/Users/USER/Documents/opencv/opencv/modules/video/include;C:/Users/USER/Documents/opencv/opencv/modules/objdetect/include;C:/Users/USER/Documents/opencv/opencv/modules/contrib/include;C:/Users/USER/Documents/opencv/opencv/modules/photo/include;C:/Users/USER/Documents/opencv/opencv/modules/legacy/include;C:/Users/USER/Documents/opencv/opencv/modules/gpu/include;C:/Users/USER/Documents/opencv/opencv/modules/ocl/include;C:/Users/USER/Documents/opencv/opencv/modules/nonfree/include;C:/Users/USER/Documents/opencv/opencv/modules/softcascade/include;C:/Users/USER/Documents/opencv/opencv/modules/stitching/include;C:/Users/USER/Documents/opencv/opencv/modules/superres/include;C:/Users/USER/Documents/opencv/opencv/modules/ts/include;C:/Users/USER/Documents/opencv/opencv/modules/videostab/include;C:/Users/USER/Documents/Visual Studio 2010/Projects/MultitargetTracker4;c:/Users/USER/Documents/Visual Studio 2010/projects/opencv_64;C:/Users/USER/Documents/opencv/opencv/include;C:/Users/USER/Documents/opencv/opencv/include/opencv;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Link>
+      <AdditionalOptions> /machine:x64 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Release\opencv_calib3d249.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Release\opencv_contrib249.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Release\opencv_core249.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Release\opencv_features2d249.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Release\opencv_flann249.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Release\opencv_gpu249.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Release\opencv_highgui249.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Release\opencv_imgproc249.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Release\opencv_legacy249.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Release\opencv_ml249.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Release\opencv_nonfree249.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Release\opencv_objdetect249.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Release\opencv_ocl249.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Release\opencv_photo249.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Release\opencv_softcascade249.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Release\opencv_stitching249.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Release\opencv_superres249.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Release\opencv_ts249.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Release\opencv_video249.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Release\opencv_videostab249.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <ImportLibrary>c:/Users/USER/Documents/Visual Studio 2010/Projects/MultitargetTracker4/vs2010/Release/ObjectTracker.lib</ImportLibrary>
+      <ProgramDataBaseFile>c:/Users/USER/Documents/Visual Studio 2010/Projects/MultitargetTracker4/vs2010/Release/ObjectTracker.pdb</ProgramDataBaseFile>
+      <StackReserveSize>10000000</StackReserveSize>
+      <SubSystem>Console</SubSystem>
+      <Version>
+      </Version>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">
+    <ClCompile>
+      <AdditionalOptions> /Zm1000 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalIncludeDirectories>C:/Users/USER/Documents/opencv/opencv/modules/core/include;C:/Users/USER/Documents/opencv/opencv/modules/imgproc/include;C:/Users/USER/Documents/opencv/opencv/modules/flann/include;C:/Users/USER/Documents/opencv/opencv/modules/highgui/include;C:/Users/USER/Documents/opencv/opencv/modules/features2d/include;C:/Users/USER/Documents/opencv/opencv/modules/calib3d/include;C:/Users/USER/Documents/opencv/opencv/modules/ml/include;C:/Users/USER/Documents/opencv/opencv/modules/video/include;C:/Users/USER/Documents/opencv/opencv/modules/objdetect/include;C:/Users/USER/Documents/opencv/opencv/modules/contrib/include;C:/Users/USER/Documents/opencv/opencv/modules/photo/include;C:/Users/USER/Documents/opencv/opencv/modules/legacy/include;C:/Users/USER/Documents/opencv/opencv/modules/gpu/include;C:/Users/USER/Documents/opencv/opencv/modules/ocl/include;C:/Users/USER/Documents/opencv/opencv/modules/nonfree/include;C:/Users/USER/Documents/opencv/opencv/modules/softcascade/include;C:/Users/USER/Documents/opencv/opencv/modules/stitching/include;C:/Users/USER/Documents/opencv/opencv/modules/superres/include;C:/Users/USER/Documents/opencv/opencv/modules/ts/include;C:/Users/USER/Documents/opencv/opencv/modules/videostab/include;C:/Users/USER/Documents/Visual Studio 2010/Projects/MultitargetTracker4;c:/Users/USER/Documents/Visual Studio 2010/projects/opencv_64;C:/Users/USER/Documents/opencv/opencv/include;C:/Users/USER/Documents/opencv/opencv/include/opencv;C:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\vibe_src;C:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\HungarianAlg_src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <Optimization>MinSpace</Optimization>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR="MinSizeRel";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AssemblerListingLocation>MinSizeRel</AssemblerListingLocation>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <ProgramDataBaseFileName>c:/Users/USER/Documents/Visual Studio 2010/Projects/MultitargetTracker4/vs2010/MinSizeRel/ObjectTracker.pdb</ProgramDataBaseFileName>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR=\"MinSizeRel\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:/Users/USER/Documents/opencv/opencv/modules/core/include;C:/Users/USER/Documents/opencv/opencv/modules/imgproc/include;C:/Users/USER/Documents/opencv/opencv/modules/flann/include;C:/Users/USER/Documents/opencv/opencv/modules/highgui/include;C:/Users/USER/Documents/opencv/opencv/modules/features2d/include;C:/Users/USER/Documents/opencv/opencv/modules/calib3d/include;C:/Users/USER/Documents/opencv/opencv/modules/ml/include;C:/Users/USER/Documents/opencv/opencv/modules/video/include;C:/Users/USER/Documents/opencv/opencv/modules/objdetect/include;C:/Users/USER/Documents/opencv/opencv/modules/contrib/include;C:/Users/USER/Documents/opencv/opencv/modules/photo/include;C:/Users/USER/Documents/opencv/opencv/modules/legacy/include;C:/Users/USER/Documents/opencv/opencv/modules/gpu/include;C:/Users/USER/Documents/opencv/opencv/modules/ocl/include;C:/Users/USER/Documents/opencv/opencv/modules/nonfree/include;C:/Users/USER/Documents/opencv/opencv/modules/softcascade/include;C:/Users/USER/Documents/opencv/opencv/modules/stitching/include;C:/Users/USER/Documents/opencv/opencv/modules/superres/include;C:/Users/USER/Documents/opencv/opencv/modules/ts/include;C:/Users/USER/Documents/opencv/opencv/modules/videostab/include;C:/Users/USER/Documents/Visual Studio 2010/Projects/MultitargetTracker4;c:/Users/USER/Documents/Visual Studio 2010/projects/opencv_64;C:/Users/USER/Documents/opencv/opencv/include;C:/Users/USER/Documents/opencv/opencv/include/opencv;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>C:/Users/USER/Documents/opencv/opencv/modules/core/include;C:/Users/USER/Documents/opencv/opencv/modules/imgproc/include;C:/Users/USER/Documents/opencv/opencv/modules/flann/include;C:/Users/USER/Documents/opencv/opencv/modules/highgui/include;C:/Users/USER/Documents/opencv/opencv/modules/features2d/include;C:/Users/USER/Documents/opencv/opencv/modules/calib3d/include;C:/Users/USER/Documents/opencv/opencv/modules/ml/include;C:/Users/USER/Documents/opencv/opencv/modules/video/include;C:/Users/USER/Documents/opencv/opencv/modules/objdetect/include;C:/Users/USER/Documents/opencv/opencv/modules/contrib/include;C:/Users/USER/Documents/opencv/opencv/modules/photo/include;C:/Users/USER/Documents/opencv/opencv/modules/legacy/include;C:/Users/USER/Documents/opencv/opencv/modules/gpu/include;C:/Users/USER/Documents/opencv/opencv/modules/ocl/include;C:/Users/USER/Documents/opencv/opencv/modules/nonfree/include;C:/Users/USER/Documents/opencv/opencv/modules/softcascade/include;C:/Users/USER/Documents/opencv/opencv/modules/stitching/include;C:/Users/USER/Documents/opencv/opencv/modules/superres/include;C:/Users/USER/Documents/opencv/opencv/modules/ts/include;C:/Users/USER/Documents/opencv/opencv/modules/videostab/include;C:/Users/USER/Documents/Visual Studio 2010/Projects/MultitargetTracker4;c:/Users/USER/Documents/Visual Studio 2010/projects/opencv_64;C:/Users/USER/Documents/opencv/opencv/include;C:/Users/USER/Documents/opencv/opencv/include/opencv;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Link>
+      <AdditionalOptions> /machine:x64 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Release\opencv_calib3d249.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Release\opencv_contrib249.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Release\opencv_core249.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Release\opencv_features2d249.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Release\opencv_flann249.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Release\opencv_gpu249.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Release\opencv_highgui249.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Release\opencv_imgproc249.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Release\opencv_legacy249.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Release\opencv_ml249.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Release\opencv_nonfree249.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Release\opencv_objdetect249.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Release\opencv_ocl249.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Release\opencv_photo249.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Release\opencv_softcascade249.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Release\opencv_stitching249.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Release\opencv_superres249.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Release\opencv_ts249.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Release\opencv_video249.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Release\opencv_videostab249.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <ImportLibrary>c:/Users/USER/Documents/Visual Studio 2010/Projects/MultitargetTracker4/vs2010/MinSizeRel/ObjectTracker.lib</ImportLibrary>
+      <ProgramDataBaseFile>c:/Users/USER/Documents/Visual Studio 2010/Projects/MultitargetTracker4/vs2010/MinSizeRel/ObjectTracker.pdb</ProgramDataBaseFile>
+      <StackReserveSize>10000000</StackReserveSize>
+      <SubSystem>Console</SubSystem>
+      <Version>
+      </Version>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">
+    <ClCompile>
+      <AdditionalOptions> /Zm1000 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalIncludeDirectories>C:/Users/USER/Documents/opencv/opencv/modules/core/include;C:/Users/USER/Documents/opencv/opencv/modules/imgproc/include;C:/Users/USER/Documents/opencv/opencv/modules/flann/include;C:/Users/USER/Documents/opencv/opencv/modules/highgui/include;C:/Users/USER/Documents/opencv/opencv/modules/features2d/include;C:/Users/USER/Documents/opencv/opencv/modules/calib3d/include;C:/Users/USER/Documents/opencv/opencv/modules/ml/include;C:/Users/USER/Documents/opencv/opencv/modules/video/include;C:/Users/USER/Documents/opencv/opencv/modules/objdetect/include;C:/Users/USER/Documents/opencv/opencv/modules/contrib/include;C:/Users/USER/Documents/opencv/opencv/modules/photo/include;C:/Users/USER/Documents/opencv/opencv/modules/legacy/include;C:/Users/USER/Documents/opencv/opencv/modules/gpu/include;C:/Users/USER/Documents/opencv/opencv/modules/ocl/include;C:/Users/USER/Documents/opencv/opencv/modules/nonfree/include;C:/Users/USER/Documents/opencv/opencv/modules/softcascade/include;C:/Users/USER/Documents/opencv/opencv/modules/stitching/include;C:/Users/USER/Documents/opencv/opencv/modules/superres/include;C:/Users/USER/Documents/opencv/opencv/modules/ts/include;C:/Users/USER/Documents/opencv/opencv/modules/videostab/include;C:/Users/USER/Documents/Visual Studio 2010/Projects/MultitargetTracker4;c:/Users/USER/Documents/Visual Studio 2010/projects/opencv_64;C:/Users/USER/Documents/opencv/opencv/include;C:/Users/USER/Documents/opencv/opencv/include/opencv;C:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\vibe_src;C:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\HungarianAlg_src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <Optimization>MaxSpeed</Optimization>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR="RelWithDebInfo";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AssemblerListingLocation>RelWithDebInfo</AssemblerListingLocation>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <ProgramDataBaseFileName>c:/Users/USER/Documents/Visual Studio 2010/Projects/MultitargetTracker4/vs2010/RelWithDebInfo/ObjectTracker.pdb</ProgramDataBaseFileName>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR=\"RelWithDebInfo\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:/Users/USER/Documents/opencv/opencv/modules/core/include;C:/Users/USER/Documents/opencv/opencv/modules/imgproc/include;C:/Users/USER/Documents/opencv/opencv/modules/flann/include;C:/Users/USER/Documents/opencv/opencv/modules/highgui/include;C:/Users/USER/Documents/opencv/opencv/modules/features2d/include;C:/Users/USER/Documents/opencv/opencv/modules/calib3d/include;C:/Users/USER/Documents/opencv/opencv/modules/ml/include;C:/Users/USER/Documents/opencv/opencv/modules/video/include;C:/Users/USER/Documents/opencv/opencv/modules/objdetect/include;C:/Users/USER/Documents/opencv/opencv/modules/contrib/include;C:/Users/USER/Documents/opencv/opencv/modules/photo/include;C:/Users/USER/Documents/opencv/opencv/modules/legacy/include;C:/Users/USER/Documents/opencv/opencv/modules/gpu/include;C:/Users/USER/Documents/opencv/opencv/modules/ocl/include;C:/Users/USER/Documents/opencv/opencv/modules/nonfree/include;C:/Users/USER/Documents/opencv/opencv/modules/softcascade/include;C:/Users/USER/Documents/opencv/opencv/modules/stitching/include;C:/Users/USER/Documents/opencv/opencv/modules/superres/include;C:/Users/USER/Documents/opencv/opencv/modules/ts/include;C:/Users/USER/Documents/opencv/opencv/modules/videostab/include;C:/Users/USER/Documents/Visual Studio 2010/Projects/MultitargetTracker4;c:/Users/USER/Documents/Visual Studio 2010/projects/opencv_64;C:/Users/USER/Documents/opencv/opencv/include;C:/Users/USER/Documents/opencv/opencv/include/opencv;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>C:/Users/USER/Documents/opencv/opencv/modules/core/include;C:/Users/USER/Documents/opencv/opencv/modules/imgproc/include;C:/Users/USER/Documents/opencv/opencv/modules/flann/include;C:/Users/USER/Documents/opencv/opencv/modules/highgui/include;C:/Users/USER/Documents/opencv/opencv/modules/features2d/include;C:/Users/USER/Documents/opencv/opencv/modules/calib3d/include;C:/Users/USER/Documents/opencv/opencv/modules/ml/include;C:/Users/USER/Documents/opencv/opencv/modules/video/include;C:/Users/USER/Documents/opencv/opencv/modules/objdetect/include;C:/Users/USER/Documents/opencv/opencv/modules/contrib/include;C:/Users/USER/Documents/opencv/opencv/modules/photo/include;C:/Users/USER/Documents/opencv/opencv/modules/legacy/include;C:/Users/USER/Documents/opencv/opencv/modules/gpu/include;C:/Users/USER/Documents/opencv/opencv/modules/ocl/include;C:/Users/USER/Documents/opencv/opencv/modules/nonfree/include;C:/Users/USER/Documents/opencv/opencv/modules/softcascade/include;C:/Users/USER/Documents/opencv/opencv/modules/stitching/include;C:/Users/USER/Documents/opencv/opencv/modules/superres/include;C:/Users/USER/Documents/opencv/opencv/modules/ts/include;C:/Users/USER/Documents/opencv/opencv/modules/videostab/include;C:/Users/USER/Documents/Visual Studio 2010/Projects/MultitargetTracker4;c:/Users/USER/Documents/Visual Studio 2010/projects/opencv_64;C:/Users/USER/Documents/opencv/opencv/include;C:/Users/USER/Documents/opencv/opencv/include/opencv;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Link>
+      <AdditionalOptions> /machine:x64 /debug %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Release\opencv_calib3d249.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Release\opencv_contrib249.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Release\opencv_core249.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Release\opencv_features2d249.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Release\opencv_flann249.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Release\opencv_gpu249.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Release\opencv_highgui249.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Release\opencv_imgproc249.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Release\opencv_legacy249.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Release\opencv_ml249.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Release\opencv_nonfree249.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Release\opencv_objdetect249.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Release\opencv_ocl249.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Release\opencv_photo249.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Release\opencv_softcascade249.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Release\opencv_stitching249.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Release\opencv_superres249.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Release\opencv_ts249.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Release\opencv_video249.lib;c:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\lib\Release\opencv_videostab249.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <ImportLibrary>c:/Users/USER/Documents/Visual Studio 2010/Projects/MultitargetTracker4/vs2010/RelWithDebInfo/ObjectTracker.lib</ImportLibrary>
+      <LinkIncremental>true</LinkIncremental>
+      <ProgramDataBaseFile>c:/Users/USER/Documents/Visual Studio 2010/Projects/MultitargetTracker4/vs2010/RelWithDebInfo/ObjectTracker.pdb</ProgramDataBaseFile>
+      <StackReserveSize>10000000</StackReserveSize>
+      <SubSystem>Console</SubSystem>
+      <Version>
+      </Version>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <CustomBuild Include="..\CMakeLists.txt">
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building Custom Rule C:/Users/USER/Documents/Visual Studio 2010/Projects/MultitargetTracker4/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+"C:\Program Files (x86)\CMake 2.8\bin\cmake.exe" "-HC:/Users/USER/Documents/Visual Studio 2010/Projects/MultitargetTracker4" "-Bc:/Users/USER/Documents/Visual Studio 2010/Projects/MultitargetTracker4/vs2010" --check-stamp-file "c:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\vs2010\CMakeFiles\generate.stamp"
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:/Users/USER/Documents/Visual Studio 2010/Projects/MultitargetTracker4/CMakeLists.txt;C:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\CMakeLists.txt;c:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\vs2010\CMakeFiles\CMakeSystem.cmake;c:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\vs2010\CMakeFiles\CMakeCCompiler.cmake;c:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\vs2010\CMakeFiles\CMakeCXXCompiler.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeGenericSystem.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\Platform\Windows.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\Platform\WindowsPaths.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeCInformation.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\Platform\Windows-cl.cmake;c:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\vs2010\CMakeFiles\CMakeCPlatform.cmake;c:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\vs2010\CMakeFiles\CMakeCXXPlatform.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\Platform\cl.cmake;c:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\vs2010\CMakeFiles\CMakeRCCompiler.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeRCInformation.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeCXXInformation.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\Platform\Windows-cl.cmake;c:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\vs2010\CMakeFiles\CMakeCPlatform.cmake;c:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\vs2010\CMakeFiles\CMakeCXXPlatform.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\Platform\cl.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeCommonLanguageInclude.cmake;C:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\OpenCVConfig-version.cmake;C:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\OpenCVConfig.cmake;C:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\CMakeLists.txt;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">c:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\vs2010\CMakeFiles\generate.stamp</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building Custom Rule C:/Users/USER/Documents/Visual Studio 2010/Projects/MultitargetTracker4/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
+"C:\Program Files (x86)\CMake 2.8\bin\cmake.exe" "-HC:/Users/USER/Documents/Visual Studio 2010/Projects/MultitargetTracker4" "-Bc:/Users/USER/Documents/Visual Studio 2010/Projects/MultitargetTracker4/vs2010" --check-stamp-file "c:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\vs2010\CMakeFiles\generate.stamp"
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:/Users/USER/Documents/Visual Studio 2010/Projects/MultitargetTracker4/CMakeLists.txt;C:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\CMakeLists.txt;c:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\vs2010\CMakeFiles\CMakeSystem.cmake;c:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\vs2010\CMakeFiles\CMakeCCompiler.cmake;c:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\vs2010\CMakeFiles\CMakeCXXCompiler.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeGenericSystem.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\Platform\Windows.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\Platform\WindowsPaths.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeCInformation.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\Platform\Windows-cl.cmake;c:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\vs2010\CMakeFiles\CMakeCPlatform.cmake;c:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\vs2010\CMakeFiles\CMakeCXXPlatform.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\Platform\cl.cmake;c:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\vs2010\CMakeFiles\CMakeRCCompiler.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeRCInformation.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeCXXInformation.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\Platform\Windows-cl.cmake;c:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\vs2010\CMakeFiles\CMakeCPlatform.cmake;c:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\vs2010\CMakeFiles\CMakeCXXPlatform.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\Platform\cl.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeCommonLanguageInclude.cmake;C:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\OpenCVConfig-version.cmake;C:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\OpenCVConfig.cmake;C:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\CMakeLists.txt;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">c:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\vs2010\CMakeFiles\generate.stamp</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Building Custom Rule C:/Users/USER/Documents/Visual Studio 2010/Projects/MultitargetTracker4/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
+"C:\Program Files (x86)\CMake 2.8\bin\cmake.exe" "-HC:/Users/USER/Documents/Visual Studio 2010/Projects/MultitargetTracker4" "-Bc:/Users/USER/Documents/Visual Studio 2010/Projects/MultitargetTracker4/vs2010" --check-stamp-file "c:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\vs2010\CMakeFiles\generate.stamp"
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:/Users/USER/Documents/Visual Studio 2010/Projects/MultitargetTracker4/CMakeLists.txt;C:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\CMakeLists.txt;c:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\vs2010\CMakeFiles\CMakeSystem.cmake;c:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\vs2010\CMakeFiles\CMakeCCompiler.cmake;c:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\vs2010\CMakeFiles\CMakeCXXCompiler.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeGenericSystem.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\Platform\Windows.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\Platform\WindowsPaths.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeCInformation.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\Platform\Windows-cl.cmake;c:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\vs2010\CMakeFiles\CMakeCPlatform.cmake;c:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\vs2010\CMakeFiles\CMakeCXXPlatform.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\Platform\cl.cmake;c:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\vs2010\CMakeFiles\CMakeRCCompiler.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeRCInformation.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeCXXInformation.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\Platform\Windows-cl.cmake;c:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\vs2010\CMakeFiles\CMakeCPlatform.cmake;c:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\vs2010\CMakeFiles\CMakeCXXPlatform.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\Platform\cl.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeCommonLanguageInclude.cmake;C:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\OpenCVConfig-version.cmake;C:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\OpenCVConfig.cmake;C:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\CMakeLists.txt;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">c:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\vs2010\CMakeFiles\generate.stamp</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Building Custom Rule C:/Users/USER/Documents/Visual Studio 2010/Projects/MultitargetTracker4/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
+"C:\Program Files (x86)\CMake 2.8\bin\cmake.exe" "-HC:/Users/USER/Documents/Visual Studio 2010/Projects/MultitargetTracker4" "-Bc:/Users/USER/Documents/Visual Studio 2010/Projects/MultitargetTracker4/vs2010" --check-stamp-file "c:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\vs2010\CMakeFiles\generate.stamp"
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:/Users/USER/Documents/Visual Studio 2010/Projects/MultitargetTracker4/CMakeLists.txt;C:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\CMakeLists.txt;c:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\vs2010\CMakeFiles\CMakeSystem.cmake;c:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\vs2010\CMakeFiles\CMakeCCompiler.cmake;c:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\vs2010\CMakeFiles\CMakeCXXCompiler.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeGenericSystem.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\Platform\Windows.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\Platform\WindowsPaths.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeCInformation.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\Platform\Windows-cl.cmake;c:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\vs2010\CMakeFiles\CMakeCPlatform.cmake;c:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\vs2010\CMakeFiles\CMakeCXXPlatform.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\Platform\cl.cmake;c:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\vs2010\CMakeFiles\CMakeRCCompiler.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeRCInformation.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeCXXInformation.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\Platform\Windows-cl.cmake;c:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\vs2010\CMakeFiles\CMakeCPlatform.cmake;c:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\vs2010\CMakeFiles\CMakeCXXPlatform.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\Platform\cl.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeCommonLanguageInclude.cmake;C:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\OpenCVConfig-version.cmake;C:\Users\USER\Documents\Visual Studio 2010\Projects\opencv_64\OpenCVConfig.cmake;C:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\CMakeLists.txt;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">c:\Users\USER\Documents\Visual Studio 2010\Projects\MultitargetTracker4\vs2010\CMakeFiles\generate.stamp</Outputs>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\Detector\Detector.cpp" />
+    <ClCompile Include="..\HungarianAlg_src\HungarianAlg.cpp" />
+    <ClCompile Include="..\Kalman.cpp" />
+    <ClCompile Include="..\main.cpp" />
+    <ClCompile Include="..\Tracker\Ctracker.cpp" />
+    <ClCompile Include="..\vibe_src\BackgroundSubtract.cpp" />
+    <ClCompile Include="..\vibe_src\VIBE.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="c:/Users/USER/Documents/Visual Studio 2010/Projects/MultitargetTracker4/vs2010/ZERO_CHECK.vcxproj">
+      <Project>D8B6DE3C-939F-444D-ABBE-C116E4AB1A7C</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\Detector\Detector.h" />
+    <ClInclude Include="..\HungarianAlg.h" />
+    <ClInclude Include="..\Kalman.h" />
+    <ClInclude Include="..\Tracker\Ctracker.h" />
+    <ClInclude Include="..\vibe_src\BackgroundSubtract.h" />
+    <ClInclude Include="..\vibe_src\OpencvInclude.h" />
+    <ClInclude Include="..\vibe_src\VIBE.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
