@@ -1,4 +1,4 @@
-# Install script for directory: C:/Users/USER/Documents/Visual Studio 2010/Projects/MultitargetTracker4
+# Install script for directory: C:/Users/ANDREY/Documents/Visual Studio 2010/Projects/TRACKERS/MultitargetTracker4
 
 # Set the install prefix
 IF(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -33,7 +33,7 @@ ELSE(CMAKE_INSTALL_COMPONENT)
   SET(CMAKE_INSTALL_MANIFEST "install_manifest.txt")
 ENDIF(CMAKE_INSTALL_COMPONENT)
 
-FILE(WRITE "c:/Users/USER/Documents/Visual Studio 2010/Projects/MultitargetTracker4/vs2010/${CMAKE_INSTALL_MANIFEST}" "")
+FILE(WRITE "C:/Users/ANDREY/Documents/Visual Studio 2010/Projects/TRACKERS/MultitargetTracker4/vs2010/${CMAKE_INSTALL_MANIFEST}" "")
 FOREACH(file ${CMAKE_INSTALL_MANIFEST_FILES})
-  FILE(APPEND "c:/Users/USER/Documents/Visual Studio 2010/Projects/MultitargetTracker4/vs2010/${CMAKE_INSTALL_MANIFEST}" "${file}\n")
+  FILE(APPEND "C:/Users/ANDREY/Documents/Visual Studio 2010/Projects/TRACKERS/MultitargetTracker4/vs2010/${CMAKE_INSTALL_MANIFEST}" "${file}\n")
 ENDFOREACH(file)

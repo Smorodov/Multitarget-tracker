@@ -1,0 +1,24 @@
+﻿Build started 28.03.2014 14:30:55.
+     1>Project "C:\Users\ANDREY\Documents\Visual Studio 2010\Projects\TRACKERS\MultitargetTracker4\vs2010\CMakeFiles\2.8.11.2\CompilerIdC\CompilerIdC.vcxproj" on node 2 (build target(s)).
+     1>InitializeBuildStatus:
+         Creating "Debug\CompilerIdC.unsuccessfulbuild" because "AlwaysCreate" was specified.
+       ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\x86_amd64\CL.exe /c /nologo /W0 /WX- /Od /D _MBCS /Gm- /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc100.pdb" /Gd /TC /errorReport:prompt CMakeCCompilerId.c
+         CMakeCCompilerId.c
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\x86_amd64\link.exe /ERRORREPORT:PROMPT /OUT:".\CompilerIdC.exe" /INCREMENTAL:NO /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /ManifestFile:"Debug\CompilerIdC.exe.intermediate.manifest" /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /PDB:"C:\Users\ANDREY\Documents\Visual Studio 2010\Projects\TRACKERS\MultitargetTracker4\vs2010\CMakeFiles\2.8.11.2\CompilerIdC\CompilerIdC.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:".\CompilerIdC.lib" /MACHINE:X64 Debug\CMakeCCompilerId.obj
+         CompilerIdC.vcxproj -> C:\Users\ANDREY\Documents\Visual Studio 2010\Projects\TRACKERS\MultitargetTracker4\vs2010\CMakeFiles\2.8.11.2\CompilerIdC\.\CompilerIdC.exe
+       Manifest:
+         C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\bin\mt.exe /nologo /verbose /outputresource:".\CompilerIdC.exe;#1" /manifest Debug\CompilerIdC.exe.intermediate.manifest
+       PostBuildEvent:
+         for %%i in (cl.exe) do @echo CMAKE_C_COMPILER=%%~$PATH:i
+         :VCEnd
+         CMAKE_C_COMPILER=C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\x86_amd64\cl.exe
+       FinalizeBuildStatus:
+         Deleting file "Debug\CompilerIdC.unsuccessfulbuild".
+         Touching "Debug\CompilerIdC.lastbuildstate".
+     1>Done Building Project "C:\Users\ANDREY\Documents\Visual Studio 2010\Projects\TRACKERS\MultitargetTracker4\vs2010\CMakeFiles\2.8.11.2\CompilerIdC\CompilerIdC.vcxproj" (build target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:00.70

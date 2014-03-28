@@ -1,72 +1,71 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="..\main.cpp">
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{3D0AD0C1-6FE9-46C8-97A3-22DB237B1A42}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{AADD0250-322D-4582-9EFE-5FAC6EAC6553}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="VIBE">
+      <UniqueIdentifier>{3fd34e65-0dba-4af6-b885-5e1f9594adc1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="VIBE\Source">
+      <UniqueIdentifier>{43b47f42-b52c-4e67-9a37-f494febcc1b3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="VIBE\Headers">
+      <UniqueIdentifier>{53d35712-aaab-4bd8-b60a-442f74d0e5e5}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\Tracker\Ctracker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Detector\Detector.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\HungarianAlg\HungarianAlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KalmanFilter\Kalman.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\vibe_src\BackgroundSubtract.cpp">
-      <Filter>Source Files\Vibe</Filter>
+      <Filter>VIBE</Filter>
     </ClCompile>
     <ClCompile Include="..\vibe_src\VIBE.cpp">
-      <Filter>Source Files\Vibe</Filter>
+      <Filter>VIBE</Filter>
     </ClCompile>
-    <ClCompile Include="..\HungarianAlg_src\HungarianAlg.cpp">
-      <Filter>Source Files\HungarianAlg</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Detector\Detector.cpp">
-      <Filter>Source Files\Detector</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Tracker\Ctracker.cpp">
-      <Filter>Source Files\Tracker</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Kalman.cpp">
-      <Filter>Source Files\Kalman</Filter>
+    <ClCompile Include="..\main.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="..\CMakeLists.txt" />
-  </ItemGroup>
-  <ItemGroup>
-    <Filter Include="Source Files">
-      <UniqueIdentifier>{FBF6763F-9F3D-4F09-B431-E31629CE6BFF}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Vibe">
-      <UniqueIdentifier>{3e694306-e4ac-4fd9-87cb-33c8780968bb}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\HungarianAlg">
-      <UniqueIdentifier>{15e0baa5-761f-4973-995a-0c8a342a8584}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Kalman">
-      <UniqueIdentifier>{09fd959d-5d15-43a3-9135-e45077c99128}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Tracker">
-      <UniqueIdentifier>{9dd5475c-c5e6-4d13-9ba8-94555e282b98}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Detector">
-      <UniqueIdentifier>{41db31be-87e2-4ec1-a2f9-1eea70ab3cff}</UniqueIdentifier>
-    </Filter>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\vibe_src\BackgroundSubtract.h">
-      <Filter>Source Files\Vibe</Filter>
-    </ClInclude>
-    <ClInclude Include="..\vibe_src\OpencvInclude.h">
-      <Filter>Source Files\Vibe</Filter>
-    </ClInclude>
-    <ClInclude Include="..\vibe_src\VIBE.h">
-      <Filter>Source Files\Vibe</Filter>
-    </ClInclude>
-    <ClInclude Include="..\HungarianAlg.h">
-      <Filter>Source Files\HungarianAlg</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Kalman.h">
-      <Filter>Source Files\Kalman</Filter>
+    <ClInclude Include="..\Tracker\Ctracker.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\Detector\Detector.h">
-      <Filter>Source Files\Detector</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\Tracker\Ctracker.h">
-      <Filter>Source Files\Tracker</Filter>
+    <ClInclude Include="..\HungarianAlg\HungarianAlg.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\KalmanFilter\Kalman.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\vibe_src\BackgroundSubtract.h">
+      <Filter>VIBE\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\vibe_src\OpencvInclude.h">
+      <Filter>VIBE\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\vibe_src\VIBE.h">
+      <Filter>VIBE\Headers</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="..\CMakeLists.txt">
+      <Filter>VIBE</Filter>
+    </CustomBuild>
   </ItemGroup>
 </Project>

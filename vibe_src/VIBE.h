@@ -9,7 +9,6 @@
 #include <time.h>
 #include <stdlib.h>
 #include <omp.h>
-#include <process.h>
 #include <iostream>
 
 typedef struct

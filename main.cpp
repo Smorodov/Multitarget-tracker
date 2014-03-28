@@ -1,6 +1,8 @@
 #include "opencv2/opencv.hpp"
 #include "BackgroundSubtract.h"
 #include "Detector.h"
+
+#include <opencv2/highgui/highgui_c.h>
 #include "CTracker.h"
 #include <iostream>
 #include <vector>
@@ -16,7 +18,7 @@ RNG rng;
 //-----------------------------------------------------------------------------------------------------
 void mv_MouseCallback(int event, int x, int y, int /*flags*/, void* /*param*/)
 {
-	if(event == CV_EVENT_MOUSEMOVE)
+	if(event == cv::EVENT_MOUSEMOVE)
 	{
 		X=(float)x;
 		Y=(float)y;
@@ -25,7 +27,7 @@ void mv_MouseCallback(int event, int x, int y, int /*flags*/, void* /*param*/)
 
 int main(int ac, char** av)
 {
-/*
+
 	// Это пока рано :)
 	Scalar Colors[]={Scalar(255,0,0),Scalar(0,255,0),Scalar(0,0,255),Scalar(255,255,0),Scalar(0,255,255),Scalar(255,0,255),Scalar(255,127,255),Scalar(127,0,255),Scalar(127,0,127)};
 	VideoCapture capture("..\\..\\data\\TrackingBugs.mp4");
@@ -88,8 +90,9 @@ int main(int ac, char** av)
 	delete detector;
 	destroyAllWindows();
 	return 0;
-*/
 
+
+/*
 	int k=0;
 	Scalar Colors[]={Scalar(255,0,0),Scalar(0,255,0),Scalar(0,0,255),Scalar(255,255,0),Scalar(0,255,255),Scalar(255,255,255)};
 	namedWindow("Video");
@@ -148,4 +151,6 @@ int main(int ac, char** av)
 	vw.release();
 	destroyAllWindows();
 	return 0;
+*/
+
 }
