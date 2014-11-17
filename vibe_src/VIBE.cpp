@@ -69,16 +69,16 @@ unsigned char getRandPixel(const unsigned char *image_data, const unsigned int w
 int libvibeModelInit(vibeModel *model, const unsigned char *image_data, const unsigned int width, const unsigned int height, const unsigned int stride)
 {
 	if (!model || !image_data || !width || !height || !stride || (stride<width)) return 1;
-	// Сохранить размеры кадра
+	// Store frame size
 	model->width  = width;
 	model->height = height;
 	model->stride = stride;
-	// Создание модели для каждого пикселя
+	// Create a model for each pixel
 	model->pixels = 0;
 	model->pixels = (pixel*)calloc(model->width*model->height, sizeof(pixel));
 	if (!model->pixels) return 1;
 
-	// Выделяем память для каждой модели из N сэмплов
+	// Allocate memory for each model N samples
 	for (unsigned int i=0; i < model->width*model->height; i++)
 	{
 		model->pixels[i].numberOfSamples=model->numberOfSamples;
@@ -88,9 +88,10 @@ int libvibeModelInit(vibeModel *model, const unsigned char *image_data, const un
 		if (!model->pixels[i].samples) return 1;
 	}
 
-	// Заполняем модель
-	// Требуется заполнить сэмплы. При этом в один из них пишется само значение соответствующего пикселя,
-	//  а остальные случайным образом заполняются значениями соседних.
+	// Fill the model
+	// We need to fill samples.
+	// One of samples written with pixel value,
+	// others filled with random neighbour pixels values.
 	unsigned int n=0;
 	for (unsigned int j=0; j < model->height; j++)
 	{
@@ -119,17 +120,17 @@ int libvibeModelUpdate(vibeModel *model, const unsigned char *image_data, unsign
 		{
 
 			/****************************************************************/
-			/**********************Сравниваем пиксели************************/
+			/**********************Compare pixels****************************/
 			/****************************************************************/
 			bool flag=false;
 			unsigned int matchingCounter=0;
-			// Сравниваем со всеми сэмплами
+			// Compare with every sample
 			for(unsigned int t=0; t<model->pixels[n].numberOfSamples; t++)
 			{               
 				if (abs((int)image_data[n]-(int)model->pixels[n].samples[t]) < model->matchingThreshold)
 				{
-					// Если разница меньше порогового значения для количества сэмплов MatchingNumber,
-					// то считаем, что в данном месте нет отличий от фона
+					// If the difference less than threshold value for number of samples MatchingNumber,
+					// then assume, that there is no difference with background
 					matchingCounter++;
 					if (matchingCounter >= model->matchingNumber)
 					{
@@ -144,11 +145,11 @@ int libvibeModelUpdate(vibeModel *model, const unsigned char *image_data, unsign
 
 			if(flag)
 			{
-				// совпадает с фоном - обновляем модель в данной точке
+				// matches background - update modet for this point
 				segmentation_map[n] = 0;
 
 				/****************************************************************/
-				/**********************обновляем модель**************************/
+				/**********************Model update**************************/
 				/****************************************************************/
 				if(rnd[rndPos=(rndPos+1)%rndSize]%model->updateFactor)
 				{
@@ -269,7 +270,7 @@ int libvibeModelUpdate(vibeModel *model, const unsigned char *image_data, unsign
 			}
 			else
 			{
-				// отличие от фона
+				// background difference
 				segmentation_map[n] = 255;
 			}
 			n++;

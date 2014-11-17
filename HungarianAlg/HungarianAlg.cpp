@@ -12,14 +12,14 @@ AssignmentProblemSolver::~AssignmentProblemSolver()
 
 double AssignmentProblemSolver::Solve(vector<vector<double>>& DistMatrix,vector<int>& Assignment,TMethod Method)
 {
-	int N=DistMatrix.size(); // кол-во столбцов tracks
-	int M=DistMatrix[0].size(); // кол-во строк measurements
+	int N=DistMatrix.size(); // number of columns (tracks)
+	int M=DistMatrix[0].size(); // number of rows (measurements)
 
 	int *assignment		=new int[N];
 	double *distIn		=new double[N*M];
 
 	double  cost;
-	// Заполняем матрицу случайными числами
+	// Fill matrix with random numbers
 	for(int i=0; i<N; i++)
 	{
 		for(int j=0; j<M; j++)
@@ -36,7 +36,7 @@ double AssignmentProblemSolver::Solve(vector<vector<double>>& DistMatrix,vector<
 	case without_forbidden_assignments: assignmentoptimal(assignment, &cost, distIn, N, M); break;
 	}
 
-	// Вывод результата
+	// form result 
 	Assignment.clear();
 	for(int x=0; x<N; x++)
 	{
@@ -70,24 +70,24 @@ void AssignmentProblemSolver::assignmentoptimal(int *assignment, double *cost, d
 	int row;
 	int col;
 
-	// Иничиализация
+	// Init
 	*cost = 0;
 	for(row=0; row<nOfRows; row++)
 	{
 		assignment[row] = -1.0;
 	}
 
-	// Генерируем рабочую копию матрицы расстояний 
-	// и проверка элементов матрицы на позитивность :)
+	// Generate distance matrix 
+	// and check matrix elements positiveness :)
 
-	// Общее количество элементов
+	// Total elements number
 	nOfElements   = nOfRows * nOfColumns; 
-	// Выделяем память
+	// Memory allocation
 	distMatrix    = (double *)malloc(nOfElements * sizeof(double));
-	// Указатель на последний элемент
+	// Pointer to last element
 	distMatrixEnd = distMatrix + nOfElements;
 
-	// Цикл проверки и присвоения
+	// 
 	for(row=0; row<nOfElements; row++)
 	{
 		value = distMatrixIn[row];
@@ -98,7 +98,7 @@ void AssignmentProblemSolver::assignmentoptimal(int *assignment, double *cost, d
 		distMatrix[row] = value;
 	}
 
-	// Выделение памяти
+	// Memory allocation
 	coveredColumns = (bool *)calloc(nOfColumns,  sizeof(bool));
 	coveredRows    = (bool *)calloc(nOfRows,     sizeof(bool));
 	starMatrix     = (bool *)calloc(nOfElements, sizeof(bool));
@@ -756,18 +756,18 @@ void AssignmentProblemSolver::assignmentsuboptimal1(int *assignment, double *cos
 }
 /*
 // --------------------------------------------------------------------------
-// Пример использования
+// Usage example
 // --------------------------------------------------------------------------
 void main(void)
 {
-	// Размер матрицы
-	int N=8; // треки
-	int M=9; // детекты
-	// Инициализация генератора случайных чисел
+	// Matrix size
+	int N=8; // tracks
+	int M=9; // detects
+	// Random numbers generator initialization
 	srand (time(NULL));
-	// Матрица расстояний от N-ного трека до M-ного детекта.
+	// Distance matrix N-th track to M-th detect.
 	vector< vector<double> > Cost(N,vector<double>(M));
-	// Заполняем матрицу случайными числами
+	// Fill matrix with random values
 	for(int i=0; i<N; i++)
 	{
 		for(int j=0; j<M; j++)
@@ -784,7 +784,7 @@ void main(void)
 	
 	cout << APS.Solve(Cost,Assignment) << endl;
 	
-	// Вывод результата
+	// Output the result
 	for(int x=0; x<N; x++)
 	{
 		std::cout << x << ":" << Assignment[x] << "\t";

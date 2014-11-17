@@ -13,7 +13,7 @@ CDetector::CDetector(Mat& gray)
 }
 
 //----------------------------------------------------------------------
-// Детектор контуров, вывод результатов
+// Detector
 //----------------------------------------------------------------------
 void CDetector::DetectContour(Mat& img, vector<Rect>& Rects,vector<Point2d>& centers)
 {
@@ -39,8 +39,8 @@ void CDetector::DetectContour(Mat& img, vector<Rect>& Rects,vector<Point2d>& cen
 vector<Point2d> CDetector::Detect(Mat& gray)
 {
 		bs->subtract(gray,fg);
-		// rects - габаритные прямоугольники
-		// centers - центры габаритных прямоугольников
+		// rects - bounding rectangles
+		// centers - centers of bounding rectangles
 		/*
 		Mat fg2;
 		fg.convertTo(fg2,CV_32FC1);

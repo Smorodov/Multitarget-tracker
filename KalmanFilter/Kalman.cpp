@@ -9,18 +9,18 @@ using namespace std;
 //---------------------------------------------------------------------------
 TKalmanFilter::TKalmanFilter(Point2f pt,float dt,float Accel_noise_mag)
 {
-	//приращение времени (чем меньше эта величина, тем "инертнее" цель)
+	//time increment (lower values makes target more "massive")
 	deltatime = dt; //0.2
-	
-	// Ускорение мы не знаем, поэтому относим его к шуму процесса.
-	// Зато мы можем предполагать, какие величины ускорения может выдать отслеживаемый объект. 
-	// Шум процесса. (стандартное отклонение величины ускорения: м/с^2)
-	// показывает, насколько сильно объект может ускориться.
+
+	// We don't know acceleration, so, assume it to process noise.
+	// But we can guess, the range of acceleration values thich can be achieved by tracked object. 
+	// Process noise. (standard deviation of acceleration: м/с^2)
+	// shows, woh much target can accelerate.
 	//float Accel_noise_mag = 0.5; 
 
-	//4 переменных состояния, 2 переменных измерения
+	//4 state variables, 2 measurements
 	kalman = new KalmanFilter( 4, 2, 0 );  
-	// Матрица перехода
+	// Transition matrix
 	kalman->transitionMatrix = (Mat_<float>(4, 4) << 1,0,deltatime,0,   0,1,0,deltatime,  0,0,1,0,  0,0,0,1);
 
 	// init... 
@@ -69,18 +69,18 @@ Point2f TKalmanFilter::Update(Point2f p, bool DataCorrect)
 	Mat measurement(2,1,CV_32FC1);
 	if(!DataCorrect)
 	{
-		measurement.at<float>(0) = LastResult.x;  //уточняем используя предсказание
+		measurement.at<float>(0) = LastResult.x;  //update using prediction
 		measurement.at<float>(1) = LastResult.y;
 	}
 	else
 	{
-		measurement.at<float>(0) = p.x;  //уточняем, используя данные измерений
+		measurement.at<float>(0) = p.x;  //update using measurements
 		measurement.at<float>(1) = p.y;
 	}
-	// Коррекция
-		Mat estimated = kalman->correct(measurement);
-		LastResult.x=estimated.at<float>(0);  //уточняем, используя данные измерений
-		LastResult.y=estimated.at<float>(1);
+	// Correction
+	Mat estimated = kalman->correct(measurement);
+	LastResult.x=estimated.at<float>(0);   //update using measurements
+	LastResult.y=estimated.at<float>(1);
 	return LastResult;
 }
 //---------------------------------------------------------------------------

@@ -4,19 +4,18 @@ using namespace std;
 
 size_t CTrack::NextTrackID=0;
 // ---------------------------------------------------------------------------
-// Конструктор трека.
-// При создании, трек начинается с какой то точки,
-// эта точка и передается конструктору в качестве аргумента.
+// Track constructor.
+// The track begins from initial point (pt)
 // ---------------------------------------------------------------------------
 CTrack::CTrack(Point2f pt, float dt, float Accel_noise_mag)
 {
 	track_id=NextTrackID;
 
 	NextTrackID++;
-	// Каждый трек имеет свой фильтр Кальмана,
-	// при помощи которого делается прогноз, где должна быть следующая точка.
+	// Every track have its own Kalman filter,
+	// it user for next point position prediction.
 	KF = new TKalmanFilter(pt,dt,Accel_noise_mag);
-	// Здесь хранятся координаты точки, в которой трек прогнозирует следующее наблюдение (детект).
+	// Here stored points coordinates, used for next position prediction.
 	prediction=pt;
 	skipped_frames=0;
 }
@@ -25,12 +24,12 @@ CTrack::CTrack(Point2f pt, float dt, float Accel_noise_mag)
 // ---------------------------------------------------------------------------
 CTrack::~CTrack()
 {
-	// Освобождаем фильтр Кальмана.
+	// Free resources.
 	delete KF;
 }
 
 // ---------------------------------------------------------------------------
-// Трекер. Производит управление треками. Создает, удаляет, уточняет.
+// Tracker. Manage tracks. Create, remove, update.
 // ---------------------------------------------------------------------------
 CTracker::CTracker(float _dt, float _Accel_noise_mag, double _dist_thres, int _maximum_allowed_skipped_frames,int _max_trace_length)
 {
@@ -46,11 +45,11 @@ max_trace_length=_max_trace_length;
 void CTracker::Update(vector<Point2d>& detections)
 {
 	// -----------------------------------
-	// Если треков еще нет, то начнем для каждой точки по треку
+	// If there is no tracks yet, then every point begins its own track.
 	// -----------------------------------
 	if(tracks.size()==0)
 	{
-		// Если еще нет ни одного трека
+		// If no tracks yet
 		for(int i=0;i<detections.size();i++)
 		{
 			CTrack* tr=new CTrack(detections[i],dt,Accel_noise_mag);
@@ -84,15 +83,15 @@ void CTracker::Update(vector<Point2d>& detections)
 		}
 	}
 	// -----------------------------------
-	// Решаем задачу о назначениях (треки и прогнозы фильтра)
+	// Solving assignment problem (tracks and predictions of Kalman filter)
 	// -----------------------------------
 	AssignmentProblemSolver APS;
 	APS.Solve(Cost,assignment,AssignmentProblemSolver::optimal);
 
 	// -----------------------------------
-	// почистим assignment от пар с большим расстоянием
+	// clean assignment from pairs with large distance
 	// -----------------------------------
-	// Не назначенные треки
+	// Not assigned tracks
 	vector<int> not_assigned_tracks;
 
 	for(int i=0;i<assignment.size();i++)
@@ -102,21 +101,21 @@ void CTracker::Update(vector<Point2d>& detections)
 			if(Cost[i][assignment[i]]>dist_thres)
 			{
 				assignment[i]=-1;
-				// Отмечаем неназначенные треки, и увеличиваем счетчик пропущеных кадров,
-				// когда количество пропущенных кадров превысит пороговое значение, трек стирается.
+				// Mark unassigned tracks, and increment skipped frames counter,
+				// when skipped frames counter will be larger than threshold, track will be deleted.
 				not_assigned_tracks.push_back(i);
 			}
 		}
 		else
 		{			
-			// Если треку не назначен детект, то увеличиваем счетчик пропущеных кадров.
+			// If track have no assigned detect, then increment skipped frames counter.
 			tracks[i]->skipped_frames++;
 		}
 
 	}
 
 	// -----------------------------------
-	// Если трек долго не получает детектов, удаляем
+	// If track didn't get detects long time, remove it.
 	// -----------------------------------
 	for(int i=0;i<tracks.size();i++)
 	{
@@ -129,7 +128,7 @@ void CTracker::Update(vector<Point2d>& detections)
 		}
 	}
 	// -----------------------------------
-	// Выявляем неназначенные детекты
+	// Search for unassigned detects
 	// -----------------------------------
 	vector<int> not_assigned_detections;
 	vector<int>::iterator it;
@@ -143,7 +142,7 @@ void CTracker::Update(vector<Point2d>& detections)
 	}
 
 	// -----------------------------------
-	// и начинаем для них новые треки
+	// and start new tracks for them.
 	// -----------------------------------
 	if(not_assigned_detections.size()!=0)
 	{
@@ -154,19 +153,19 @@ void CTracker::Update(vector<Point2d>& detections)
 		}	
 	}
 
-	// Апдейтим состояние фильтров
+	// Update Kalman Filters state
 
 	for(int i=0;i<assignment.size();i++)
 	{
-		// Если трек апдейтился меньше одного раза, то состояние фильтра некорректно.
+		// If track updated less than one time, than filter state is not correct.
 
 		tracks[i]->KF->GetPrediction();
 
-		if(assignment[i]!=-1) // Если назначение есть то апдейтим по нему
+		if(assignment[i]!=-1) // If we have assigned detect, then update using its coordinates,
 		{
 			tracks[i]->skipped_frames=0;
 			tracks[i]->prediction=tracks[i]->KF->Update(detections[assignment[i]],1);
-		}else				  // Если нет, то продолжаем прогнозировать
+		}else				  // if not continue using predictions
 		{
 			tracks[i]->prediction=tracks[i]->KF->Update(Point2f(0,0),0);	
 		}
