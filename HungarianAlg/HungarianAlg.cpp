@@ -31,9 +31,9 @@ double AssignmentProblemSolver::Solve(vector<vector<double>>& DistMatrix,vector<
 	{
 	case optimal: assignmentoptimal(assignment, &cost, distIn, N, M); break;
 	
-	case many_forbidden_assignments: assignmentoptimal(assignment, &cost, distIn, N, M); break;
+	case many_forbidden_assignments: assignmentsuboptimal1(assignment, &cost, distIn, N, M); break;
 	
-	case without_forbidden_assignments: assignmentoptimal(assignment, &cost, distIn, N, M); break;
+	case without_forbidden_assignments: assignmentsuboptimal2(assignment, &cost, distIn, N, M); break;
 	}
 
 	// form result 
