@@ -47,7 +47,7 @@ int main(int ac, char** av)
 	cv::cvtColor(frame,gray,cv::COLOR_BGR2GRAY);
 	CDetector* detector=new CDetector(gray);
 	int k=0;
-	std::vector<cv::Point2d> centers;
+	std::vector<Point_t> centers;
 	while(k!=27)
 	{
 		capture >> frame;
@@ -104,7 +104,7 @@ int main(int ac, char** av)
 	cv::setMouseCallback("Video", mv_MouseCallback, 0);
 
 	CTracker tracker(0.2f, 0.5f, 60.0f, 25, 25);
-	float alpha = 0;
+	track_t alpha = 0;
 	while (k != 27)
 	{
 		frame = cv::Scalar::all(0);
@@ -114,11 +114,11 @@ int main(int ac, char** av)
 		Ymeasured = Y + static_cast<float>(rng.gaussian(2.0));
 
 		// Append circulating around mouse cv::Points (frequently intersecting)
-		std::vector<cv::Point2d> pts;
-		pts.push_back(cv::Point2d(Xmeasured + 100.0*sin(-alpha), Ymeasured + 100.0*cos(-alpha)));
-		pts.push_back(cv::Point2d(Xmeasured + 100.0*sin(alpha), Ymeasured + 100.0*cos(alpha)));
-		pts.push_back(cv::Point2d(Xmeasured + 100.0*sin(alpha / 2.0), Ymeasured + 100.0*cos(alpha / 2.0)));
-		pts.push_back(cv::Point2d(Xmeasured + 100.0*sin(alpha / 3.0), Ymeasured + 100.0*cos(alpha / 1.0)));
+		std::vector<Point_t> pts;
+		pts.push_back(Point_t(Xmeasured + 100.0f*sin(-alpha), Ymeasured + 100.0f*cos(-alpha)));
+		pts.push_back(Point_t(Xmeasured + 100.0f*sin(alpha), Ymeasured + 100.0f*cos(alpha)));
+		pts.push_back(Point_t(Xmeasured + 100.0f*sin(alpha / 2.0f), Ymeasured + 100.0f*cos(alpha / 2.0f)));
+		pts.push_back(Point_t(Xmeasured + 100.0f*sin(alpha / 3.0f), Ymeasured + 100.0f*cos(alpha / 1.0f)));
 		alpha += 0.05f;
 
 

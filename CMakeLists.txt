@@ -17,18 +17,19 @@ set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
 # ----------------------------------------------------------------------------
   set(folder_source  main.cpp
 		     Detector/Detector.cpp
-                     HungarianAlg/HungarianAlg.cpp
-                     KalmanFilter/Kalman.cpp
-vibe_src/BackgroundSubtract.cpp
-vibe_src/VIBE.cpp
-                     Tracker/Ctracker.cpp)
+             HungarianAlg/HungarianAlg.cpp
+             vibe_src/BackgroundSubtract.cpp
+             vibe_src/VIBE.cpp
+             Tracker/Ctracker.cpp
+             Tracker/Kalman.cpp)
 
   set(folder_header  Detector/Detector.h
 		     HungarianAlg/HungarianAlg.h
-                     KalmanFilter/Kalman.h
-vibe_src/BackgroundSubtract.h
-vibe_src/VIBE.h
-                     Tracker/Ctracker.h)
+             vibe_src/BackgroundSubtract.h
+             vibe_src/VIBE.h
+             Tracker/Ctracker.h
+             Tracker/Kalman.h
+             Tracker/defines.h)
 
   SOURCE_GROUP("Source Files" FILES ${folder_source})
   SOURCE_GROUP("Header Files" FILES ${folder_header})
@@ -42,8 +43,7 @@ vibe_src/VIBE.h
   INCLUDE_DIRECTORIES(
 		      ${PROJECT_SOURCE_DIR}/Detector
 		      ${PROJECT_SOURCE_DIR}/HungarianAlg
-		      ${PROJECT_SOURCE_DIR}/KalmanFilter
-                      ${PROJECT_SOURCE_DIR}/Tracker
+              ${PROJECT_SOURCE_DIR}/Tracker
 		      ${PROJECT_SOURCE_DIR}/vibe_src)
 
   INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR})
