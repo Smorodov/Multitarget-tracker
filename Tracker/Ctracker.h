@@ -4,6 +4,7 @@
 #include "opencv2/opencv.hpp"
 #include <iostream>
 #include <vector>
+#include <memory>
 
 class CTrack
 {
@@ -36,7 +37,7 @@ public:
 	// Максимальная длина следа
 	int max_trace_length;
 
-	std::vector<CTrack*> tracks;
+	std::vector<std::unique_ptr<CTrack>> tracks;
 	void Update(std::vector<cv::Point2d>& detections);
 	CTracker(float _dt, float _Accel_noise_mag, double _dist_thres=60, int _maximum_allowed_skipped_frames=10,int _max_trace_length=10);
 	~CTracker(void);

@@ -50,8 +50,7 @@ void CTracker::Update(std::vector<cv::Point2d>& detections)
 		// If no tracks yet
 		for(int i=0;i<detections.size();i++)
 		{
-			CTrack* tr=new CTrack(detections[i],dt,Accel_noise_mag);
-			tracks.push_back(tr);
+			tracks.push_back(std::make_unique<CTrack>(detections[i], dt, Accel_noise_mag));
 		}	
 	}
 
@@ -119,7 +118,6 @@ void CTracker::Update(std::vector<cv::Point2d>& detections)
 	{
 		if(tracks[i]->skipped_frames>maximum_allowed_skipped_frames)
 		{
-			delete tracks[i];
 			tracks.erase(tracks.begin()+i);
 			assignment.erase(assignment.begin()+i);
 			i--;
@@ -146,8 +144,7 @@ void CTracker::Update(std::vector<cv::Point2d>& detections)
 	{
 		for(int i=0;i<not_assigned_detections.size();i++)
 		{
-			CTrack* tr=new CTrack(detections[not_assigned_detections[i]],dt,Accel_noise_mag);
-			tracks.push_back(tr);
+			tracks.push_back(std::make_unique<CTrack>(detections[not_assigned_detections[i]], dt, Accel_noise_mag));
 		}	
 	}
 
@@ -183,9 +180,4 @@ void CTracker::Update(std::vector<cv::Point2d>& detections)
 // ---------------------------------------------------------------------------
 CTracker::~CTracker(void)
 {
-	for(int i=0;i<tracks.size();i++)
-	{
-	delete tracks[i];
-	}
-	tracks.clear();
 }
