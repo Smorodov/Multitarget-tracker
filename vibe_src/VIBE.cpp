@@ -26,8 +26,8 @@ vibeModel *libvibeModelNew()
 	if(model)
 	{
 		model->numberOfSamples = 20;
-		model->matchingThreshold = 20;
-		model->matchingNumber = 2;
+		model->MatchingThreshold = 20;
+		model->MatchingNumber = 2;
 		model->updateFactor = 16;
 		initRnd(65536);
 	}
@@ -121,16 +121,16 @@ int libvibeModelUpdate(vibeModel *model, const unsigned char *image_data, unsign
 			/**********************Compare pixels****************************/
 			/****************************************************************/
 			bool flag=false;
-			unsigned int matchingCounter=0;
+			unsigned int MatchingCounter=0;
 			// Compare with every sample
 			for(unsigned int t=0; t<model->pixels[n].numberOfSamples; t++)
 			{               
-				if (abs((int)image_data[n]-(int)model->pixels[n].samples[t]) < static_cast<int>(model->matchingThreshold))
+				if (abs((int)image_data[n]-(int)model->pixels[n].samples[t]) < static_cast<int>(model->MatchingThreshold))
 				{
-					// If the difference less than threshold value for number of samples MatchingNumber,
+					// If the difference less than threshold value for number of samples cv::MatchingNumber,
 					// then assume, that there is no difference with background
-					matchingCounter++;
-					if (matchingCounter >= model->matchingNumber)
+					MatchingCounter++;
+					if (MatchingCounter >= model->MatchingNumber)
 					{
 						flag=true;
 						break;
@@ -143,7 +143,7 @@ int libvibeModelUpdate(vibeModel *model, const unsigned char *image_data, unsign
 
 			if(flag)
 			{
-				// matches background - update modet for this point
+				// cv::Matches background - update modet for this cv::Point
 				segmentation_map[n] = 0;
 
 				/****************************************************************/

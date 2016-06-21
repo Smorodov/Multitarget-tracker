@@ -1,21 +1,19 @@
 #include "Ctracker.h"
-using namespace cv;
-using namespace std;
 
 size_t CTrack::NextTrackID=0;
 // ---------------------------------------------------------------------------
 // Track constructor.
-// The track begins from initial point (pt)
+// The track begins from initial cv::Point (pt)
 // ---------------------------------------------------------------------------
-CTrack::CTrack(Point2f pt, float dt, float Accel_noise_mag)
+CTrack::CTrack(cv::Point2f pt, float dt, float Accel_noise_mag)
 {
 	track_id=NextTrackID;
 
 	NextTrackID++;
 	// Every track have its own Kalman filter,
-	// it user for next point position prediction.
+	// it user for next cv::Point position prediction.
 	KF = new TKalmanFilter(pt,dt,Accel_noise_mag);
-	// Here stored points coordinates, used for next position prediction.
+	// Here stored cv::Points coordinates, used for next position prediction.
 	prediction=pt;
 	skipped_frames=0;
 }
@@ -42,10 +40,10 @@ max_trace_length=_max_trace_length;
 // ---------------------------------------------------------------------------
 //
 // ---------------------------------------------------------------------------
-void CTracker::Update(vector<Point2d>& detections)
+void CTracker::Update(std::vector<cv::Point2d>& detections)
 {
 	// -----------------------------------
-	// If there is no tracks yet, then every point begins its own track.
+	// If there is no tracks yet, then every cv::Point begins its own track.
 	// -----------------------------------
 	if(tracks.size()==0)
 	{
@@ -60,12 +58,12 @@ void CTracker::Update(vector<Point2d>& detections)
 	// -----------------------------------
 	// Здесь треки уже есть в любом случае
 	// -----------------------------------
-	int N=tracks.size();		// треки
-	int M=detections.size();	// детекты
+	size_t N = tracks.size();		// треки
+	size_t M = detections.size();	// детекты
 
 	// Матрица расстояний от N-ного трека до M-ного детекта.
-	vector< vector<double> > Cost(N,vector<double>(M));
-	vector<int> assignment; // назначения
+	std::vector< std::vector<double> > Cost(N,std::vector<double>(M));
+	std::vector<int> assignment; // назначения
 
 	// -----------------------------------
 	// Треки уже есть, составим матрицу расстояний
@@ -73,11 +71,11 @@ void CTracker::Update(vector<Point2d>& detections)
 	double dist;
 	for(int i=0;i<tracks.size();i++)
 	{	
-		// Point2d prediction=tracks[i]->prediction;
-		// cout << prediction << endl;
+		// cv::Point2d prediction=tracks[i]->prediction;
+		// std::cout << prediction << std::endl;
 		for(int j=0;j<detections.size();j++)
 		{
-			Point2d diff=(tracks[i]->prediction-detections[j]);
+			cv::Point2d diff=(tracks[i]->prediction-detections[j]);
 			dist=sqrtf(diff.x*diff.x+diff.y*diff.y);
 			Cost[i][j]=dist;
 		}
@@ -92,7 +90,7 @@ void CTracker::Update(vector<Point2d>& detections)
 	// clean assignment from pairs with large distance
 	// -----------------------------------
 	// Not assigned tracks
-	vector<int> not_assigned_tracks;
+	std::vector<int> not_assigned_tracks;
 
 	for(int i=0;i<assignment.size();i++)
 	{
@@ -130,8 +128,8 @@ void CTracker::Update(vector<Point2d>& detections)
 	// -----------------------------------
 	// Search for unassigned detects
 	// -----------------------------------
-	vector<int> not_assigned_detections;
-	vector<int>::iterator it;
+	std::vector<int> not_assigned_detections;
+	std::vector<int>::iterator it;
 	for(int i=0;i<detections.size();i++)
 	{
 		it=find(assignment.begin(), assignment.end(), i);
@@ -167,7 +165,7 @@ void CTracker::Update(vector<Point2d>& detections)
 			tracks[i]->prediction=tracks[i]->KF->Update(detections[assignment[i]],1);
 		}else				  // if not continue using predictions
 		{
-			tracks[i]->prediction=tracks[i]->KF->Update(Point2f(0,0),0);	
+			tracks[i]->prediction=tracks[i]->KF->Update(cv::Point2f(0,0),0);	
 		}
 		
 		if(tracks[i]->trace.size()>max_trace_length)

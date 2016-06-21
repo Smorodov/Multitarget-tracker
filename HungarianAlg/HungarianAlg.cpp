@@ -1,7 +1,5 @@
 #include "HungarianAlg.h"
 
-using namespace std;
-
 AssignmentProblemSolver::AssignmentProblemSolver()
 {
 }
@@ -10,21 +8,21 @@ AssignmentProblemSolver::~AssignmentProblemSolver()
 {
 }
 
-double AssignmentProblemSolver::Solve(vector<vector<double>>& DistMatrix,vector<int>& Assignment,TMethod Method)
+double AssignmentProblemSolver::Solve(std::vector<std::vector<double>>& distMatrix,std::vector<int>& Assignment,TMethod Method)
 {
-	size_t N=DistMatrix.size(); // number of columns (tracks)
-	size_t M = DistMatrix[0].size(); // number of rows (measurements)
+	size_t N=distMatrix.size(); // number of columns (tracks)
+	size_t M = distMatrix[0].size(); // number of rows (measurements)
 
 	int *assignment		=new int[N];
 	double *distIn		=new double[N*M];
 
 	double  cost;
-	// Fill matrix with random numbers
+	// Fill cv::Matrix with random numbers
 	for (size_t i = 0; i<N; i++)
 	{
 		for (size_t j = 0; j<M; j++)
 		{
-			distIn[i+N*j] = DistMatrix[i][j];
+			distIn[i+N*j] = distMatrix[i][j];
 		}
 	}
 	switch(Method)
@@ -62,7 +60,7 @@ void AssignmentProblemSolver::assignmentoptimal(int *assignment, double *cost, d
 	bool *coveredColumns;
 	bool *coveredRows;
 	bool *starMatrix;
-	bool *newStarMatrix;
+	bool *newstarMatrix;
 	bool *primeMatrix;
 
 	int nOfElements;
@@ -77,14 +75,14 @@ void AssignmentProblemSolver::assignmentoptimal(int *assignment, double *cost, d
 		assignment[row] = -1;
 	}
 
-	// Generate distance matrix 
-	// and check matrix elements positiveness :)
+	// Generate distance cv::Matrix 
+	// and check cv::Matrix elements positiveness :)
 
 	// Total elements number
 	nOfElements   = nOfRows * nOfColumns; 
 	// Memory allocation
 	distMatrix    = (double *)malloc(nOfElements * sizeof(double));
-	// Pointer to last element
+	// cv::Pointer to last element
 	distMatrixEnd = distMatrix + nOfElements;
 
 	// 
@@ -93,7 +91,7 @@ void AssignmentProblemSolver::assignmentoptimal(int *assignment, double *cost, d
 		value = distMatrixIn[row];
 		if(value < 0)
 		{
-			cout << "All matrix elements have to be non-negative." << endl;
+			std::cout << "All cv::Matrix elements have to be non-negative." << std::endl;
 		}
 		distMatrix[row] = value;
 	}
@@ -103,7 +101,7 @@ void AssignmentProblemSolver::assignmentoptimal(int *assignment, double *cost, d
 	coveredRows    = (bool *)calloc(nOfRows,     sizeof(bool));
 	starMatrix     = (bool *)calloc(nOfElements, sizeof(bool));
 	primeMatrix    = (bool *)calloc(nOfElements, sizeof(bool));
-	newStarMatrix  = (bool *)calloc(nOfElements, sizeof(bool)); /* used in step4 */
+	newstarMatrix  = (bool *)calloc(nOfElements, sizeof(bool)); /* used in step4 */
 
 	/* preliminary steps */
 	if(nOfRows <= nOfColumns)
@@ -197,7 +195,7 @@ void AssignmentProblemSolver::assignmentoptimal(int *assignment, double *cost, d
 		}
 	}
 	/* move to step 2b */
-	step2b(assignment, distMatrix, starMatrix, newStarMatrix, primeMatrix, coveredColumns, coveredRows, nOfRows, nOfColumns, minDim);
+	step2b(assignment, distMatrix, starMatrix, newstarMatrix, primeMatrix, coveredColumns, coveredRows, nOfRows, nOfColumns, minDim);
 	/* compute cost and remove invalid assignments */
 	computeassignmentcost(assignment, cost, distMatrixIn, nOfRows);
 	/* free allocated memory */
@@ -206,7 +204,7 @@ void AssignmentProblemSolver::assignmentoptimal(int *assignment, double *cost, d
 	free(coveredRows);
 	free(starMatrix);
 	free(primeMatrix);
-	free(newStarMatrix);
+	free(newstarMatrix);
 	return;
 }
 // --------------------------------------------------------------------------
@@ -246,7 +244,7 @@ void AssignmentProblemSolver::computeassignmentcost(int *assignment, double *cos
 // --------------------------------------------------------------------------
 //
 // --------------------------------------------------------------------------
-void AssignmentProblemSolver::step2a(int *assignment, double *distMatrix, bool *starMatrix, bool *newStarMatrix, bool *primeMatrix, bool *coveredColumns, bool *coveredRows, int nOfRows, int nOfColumns, int minDim)
+void AssignmentProblemSolver::step2a(int *assignment, double *distMatrix, bool *starMatrix, bool *newstarMatrix, bool *primeMatrix, bool *coveredColumns, bool *coveredRows, int nOfRows, int nOfColumns, int minDim)
 {
 	bool *starMatrixTemp, *columnEnd;
 	int col;
@@ -265,13 +263,13 @@ void AssignmentProblemSolver::step2a(int *assignment, double *distMatrix, bool *
 		}
 	}
 	/* move to step 3 */
-	step2b(assignment, distMatrix, starMatrix, newStarMatrix, primeMatrix, coveredColumns, coveredRows, nOfRows, nOfColumns, minDim);
+	step2b(assignment, distMatrix, starMatrix, newstarMatrix, primeMatrix, coveredColumns, coveredRows, nOfRows, nOfColumns, minDim);
 }
 
 // --------------------------------------------------------------------------
 //
 // --------------------------------------------------------------------------
-void AssignmentProblemSolver::step2b(int *assignment, double *distMatrix, bool *starMatrix, bool *newStarMatrix, bool *primeMatrix, bool *coveredColumns, bool *coveredRows, int nOfRows, int nOfColumns, int minDim)
+void AssignmentProblemSolver::step2b(int *assignment, double *distMatrix, bool *starMatrix, bool *newstarMatrix, bool *primeMatrix, bool *coveredColumns, bool *coveredRows, int nOfRows, int nOfColumns, int minDim)
 {
 	int col, nOfCoveredColumns;
 	/* count covered columns */
@@ -291,14 +289,14 @@ void AssignmentProblemSolver::step2b(int *assignment, double *distMatrix, bool *
 	else
 	{
 		/* move to step 3 */
-		step3(assignment, distMatrix, starMatrix, newStarMatrix, primeMatrix, coveredColumns, coveredRows, nOfRows, nOfColumns, minDim);
+		step3(assignment, distMatrix, starMatrix, newstarMatrix, primeMatrix, coveredColumns, coveredRows, nOfRows, nOfColumns, minDim);
 	}
 }
 
 // --------------------------------------------------------------------------
 //
 // --------------------------------------------------------------------------
-void AssignmentProblemSolver::step3(int *assignment, double *distMatrix, bool *starMatrix, bool *newStarMatrix, bool *primeMatrix, bool *coveredColumns, bool *coveredRows, int nOfRows, int nOfColumns, int minDim)
+void AssignmentProblemSolver::step3(int *assignment, double *distMatrix, bool *starMatrix, bool *newstarMatrix, bool *primeMatrix, bool *coveredColumns, bool *coveredRows, int nOfRows, int nOfColumns, int minDim)
 {
 	bool zerosFound;
 	int row, col, starCol;
@@ -325,7 +323,7 @@ void AssignmentProblemSolver::step3(int *assignment, double *distMatrix, bool *s
 							if(starCol == nOfColumns) /* no starred zero found */
 							{
 								/* move to step 4 */
-								step4(assignment, distMatrix, starMatrix, newStarMatrix, primeMatrix, coveredColumns, coveredRows, nOfRows, nOfColumns, minDim, row, col);
+								step4(assignment, distMatrix, starMatrix, newstarMatrix, primeMatrix, coveredColumns, coveredRows, nOfRows, nOfColumns, minDim, row, col);
 								return;
 							}
 							else
@@ -341,23 +339,23 @@ void AssignmentProblemSolver::step3(int *assignment, double *distMatrix, bool *s
 		}
 	}
 	/* move to step 5 */
-	step5(assignment, distMatrix, starMatrix, newStarMatrix, primeMatrix, coveredColumns, coveredRows, nOfRows, nOfColumns, minDim);
+	step5(assignment, distMatrix, starMatrix, newstarMatrix, primeMatrix, coveredColumns, coveredRows, nOfRows, nOfColumns, minDim);
 }
 
 // --------------------------------------------------------------------------
 //
 // --------------------------------------------------------------------------
-void AssignmentProblemSolver::step4(int *assignment, double *distMatrix, bool *starMatrix, bool *newStarMatrix, bool *primeMatrix, bool *coveredColumns, bool *coveredRows, int nOfRows, int nOfColumns, int minDim, int row, int col)
+void AssignmentProblemSolver::step4(int *assignment, double *distMatrix, bool *starMatrix, bool *newstarMatrix, bool *primeMatrix, bool *coveredColumns, bool *coveredRows, int nOfRows, int nOfColumns, int minDim, int row, int col)
 {
 	int n, starRow, starCol, primeRow, primeCol;
 	int nOfElements = nOfRows*nOfColumns;
 	/* generate temporary copy of starMatrix */
 	for(n=0; n<nOfElements; n++)
 	{
-		newStarMatrix[n] = starMatrix[n];
+		newstarMatrix[n] = starMatrix[n];
 	}
 	/* star current zero */
-	newStarMatrix[row + nOfRows*col] = true;
+	newstarMatrix[row + nOfRows*col] = true;
 	/* find starred zero in current column */
 	starCol = col;
 	for(starRow=0; starRow<nOfRows; starRow++)
@@ -370,7 +368,7 @@ void AssignmentProblemSolver::step4(int *assignment, double *distMatrix, bool *s
 	while(starRow<nOfRows)
 	{
 		/* unstar the starred zero */
-		newStarMatrix[starRow + nOfRows*starCol] = false;
+		newstarMatrix[starRow + nOfRows*starCol] = false;
 		/* find primed zero in current row */
 		primeRow = starRow;
 		for(primeCol=0; primeCol<nOfColumns; primeCol++)
@@ -381,7 +379,7 @@ void AssignmentProblemSolver::step4(int *assignment, double *distMatrix, bool *s
 			}
 		}
 		/* star the primed zero */
-		newStarMatrix[primeRow + nOfRows*primeCol] = true;
+		newstarMatrix[primeRow + nOfRows*primeCol] = true;
 		/* find starred zero in current column */
 		starCol = primeCol;
 		for(starRow=0; starRow<nOfRows; starRow++)
@@ -397,20 +395,20 @@ void AssignmentProblemSolver::step4(int *assignment, double *distMatrix, bool *s
 	for(n=0; n<nOfElements; n++)
 	{
 		primeMatrix[n] = false;
-		starMatrix[n]  = newStarMatrix[n];
+		starMatrix[n]  = newstarMatrix[n];
 	}
 	for(n=0; n<nOfRows; n++)
 	{
 		coveredRows[n] = false;
 	}
 	/* move to step 2a */
-	step2a(assignment, distMatrix, starMatrix, newStarMatrix, primeMatrix, coveredColumns, coveredRows, nOfRows, nOfColumns, minDim);
+	step2a(assignment, distMatrix, starMatrix, newstarMatrix, primeMatrix, coveredColumns, coveredRows, nOfRows, nOfColumns, minDim);
 }
 
 // --------------------------------------------------------------------------
 //
 // --------------------------------------------------------------------------
-void AssignmentProblemSolver::step5(int *assignment, double *distMatrix, bool *starMatrix, bool *newStarMatrix, bool *primeMatrix, bool *coveredColumns, bool *coveredRows, int nOfRows, int nOfColumns, int minDim)
+void AssignmentProblemSolver::step5(int *assignment, double *distMatrix, bool *starMatrix, bool *newstarMatrix, bool *primeMatrix, bool *coveredColumns, bool *coveredRows, int nOfRows, int nOfColumns, int minDim)
 {
 	double h, value;
 	int row, col;
@@ -456,7 +454,7 @@ void AssignmentProblemSolver::step5(int *assignment, double *distMatrix, bool *s
 		}
 	}
 	/* move to step 3 */
-	step3(assignment, distMatrix, starMatrix, newStarMatrix, primeMatrix, coveredColumns, coveredRows, nOfRows, nOfColumns, minDim);
+	step3(assignment, distMatrix, starMatrix, newstarMatrix, primeMatrix, coveredColumns, coveredRows, nOfRows, nOfColumns, minDim);
 }
 
 
@@ -469,7 +467,7 @@ void AssignmentProblemSolver::assignmentsuboptimal2(int *assignment, double *cos
 	double value, minValue, *distMatrix;
 
 
-	/* make working copy of distance Matrix */
+	/* make working copy of distance cv::Matrix */
 	nOfElements   = nOfRows * nOfColumns;
 	distMatrix    = (double *)malloc(nOfElements * sizeof(double));
 	for(n=0; n<nOfElements; n++)
@@ -532,7 +530,7 @@ void AssignmentProblemSolver::assignmentsuboptimal1(int *assignment, double *cos
 	double value, minValue, *distMatrix;
 
 
-	/* make working copy of distance Matrix */
+	/* make working copy of distance cv::Matrix */
 	nOfElements   = nOfRows * nOfColumns;
 	distMatrix    = (double *)malloc(nOfElements * sizeof(double));
 	for(n=0; n<nOfElements; n++)
@@ -760,34 +758,34 @@ void AssignmentProblemSolver::assignmentsuboptimal1(int *assignment, double *cos
 // --------------------------------------------------------------------------
 void main(void)
 {
-	// Matrix size
+	// cv::Matrix size
 	int N=8; // tracks
 	int M=9; // detects
 	// Random numbers generator initialization
 	srand (time(NULL));
-	// Distance matrix N-th track to M-th detect.
-	vector< vector<double> > Cost(N,vector<double>(M));
-	// Fill matrix with random values
+	// Distance cv::Matrix N-th track to M-th detect.
+	std::vector< std::vector<double> > Cost(N,std::vector<double>(M));
+	// Fill cv::Matrix with random values
 	for(int i=0; i<N; i++)
 	{
 		for(int j=0; j<M; j++)
 		{
 			Cost[i][j] = (double)(rand()%1000)/1000.0;
-			std::cout << Cost[i][j] << "\t";
+			std::std::cout << Cost[i][j] << "\t";
 		}
-		std::cout << std::endl;
+		std::std::cout << std::std::endl;
 	}
 
 	AssignmentProblemSolver APS;
 
-	vector<int> Assignment;
+	std::vector<int> Assignment;
 	
-	cout << APS.Solve(Cost,Assignment) << endl;
+	std::cout << APS.Solve(Cost,Assignment) << std::endl;
 	
 	// Output the result
 	for(int x=0; x<N; x++)
 	{
-		std::cout << x << ":" << Assignment[x] << "\t";
+		std::std::cout << x << ":" << Assignment[x] << "\t";
 	}
 
 	getchar();

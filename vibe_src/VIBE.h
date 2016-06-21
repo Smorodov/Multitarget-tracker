@@ -25,8 +25,8 @@ typedef struct
 	unsigned int height;
 	unsigned int stride;
 	unsigned int numberOfSamples;
-	unsigned int matchingThreshold;
-	unsigned int matchingNumber;
+	unsigned int MatchingThreshold;
+	unsigned int MatchingNumber;
 	unsigned int updateFactor;
 }vibeModel;
 
