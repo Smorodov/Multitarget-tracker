@@ -2,7 +2,7 @@
 
 void initRnd(unsigned int size)
 {
-	unsigned int seed = time(0);
+	unsigned int seed = static_cast<unsigned int>(time(0));
 	srand(seed);
 	rndSize=size;
 	rnd=(unsigned int*)calloc(rndSize, sizeof(unsigned int));
@@ -36,12 +36,10 @@ vibeModel *libvibeModelNew()
 
 unsigned char getRandPixel(const unsigned char *image_data, const unsigned int width, const unsigned int height, const unsigned int stride, const unsigned int x, const unsigned int y)
 {
-	unsigned int neighborRange=1;
-	int dx;
-	int dy;
-	dx = (x-neighborRange) + rnd[rndPos=(rndPos+1)%rndSize]%(2*neighborRange);
-	dy = (y-neighborRange) + rnd[rndPos=(rndPos+1)%rndSize]%(2*neighborRange);
-	if((dx<0)||(dx>=width))
+	int neighborRange=1;
+	int dx = (x - neighborRange) + rnd[rndPos = (rndPos + 1) % rndSize] % (2 * neighborRange);
+	int dy = (y - neighborRange) + rnd[rndPos = (rndPos + 1) % rndSize] % (2 * neighborRange);
+	if((dx < 0) || (dx >= static_cast<int>(width)))
 	{
 		if(dx<0)
 		{
@@ -52,7 +50,7 @@ unsigned char getRandPixel(const unsigned char *image_data, const unsigned int w
 			dx = (x-neighborRange) + rnd[rndPos=(rndPos+1)%rndSize]%(width - x + neighborRange-1);
 		}
 	}
-	if((dy<0)||(dy>=height))
+	if ((dy < 0) || (dy >= static_cast<int>(height)))
 	{
 		if(dy<0)
 		{
@@ -114,9 +112,9 @@ int libvibeModelUpdate(vibeModel *model, const unsigned char *image_data, unsign
 	if (model->stride < model->width) return 1;
 
 	unsigned int n=0;
-	for (int j=0; j < model->height; j++)
+	for (unsigned int j = 0; j < model->height; j++)
 	{
-		for (int i=0; i < model->width; i++)
+		for (unsigned int i = 0; i < model->width; i++)
 		{
 
 			/****************************************************************/
@@ -127,7 +125,7 @@ int libvibeModelUpdate(vibeModel *model, const unsigned char *image_data, unsign
 			// Compare with every sample
 			for(unsigned int t=0; t<model->pixels[n].numberOfSamples; t++)
 			{               
-				if (abs((int)image_data[n]-(int)model->pixels[n].samples[t]) < model->matchingThreshold)
+				if (abs((int)image_data[n]-(int)model->pixels[n].samples[t]) < static_cast<int>(model->matchingThreshold))
 				{
 					// If the difference less than threshold value for number of samples MatchingNumber,
 					// then assume, that there is no difference with background

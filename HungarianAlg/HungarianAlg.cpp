@@ -12,17 +12,17 @@ AssignmentProblemSolver::~AssignmentProblemSolver()
 
 double AssignmentProblemSolver::Solve(vector<vector<double>>& DistMatrix,vector<int>& Assignment,TMethod Method)
 {
-	int N=DistMatrix.size(); // number of columns (tracks)
-	int M=DistMatrix[0].size(); // number of rows (measurements)
+	size_t N=DistMatrix.size(); // number of columns (tracks)
+	size_t M = DistMatrix[0].size(); // number of rows (measurements)
 
 	int *assignment		=new int[N];
 	double *distIn		=new double[N*M];
 
 	double  cost;
 	// Fill matrix with random numbers
-	for(int i=0; i<N; i++)
+	for (size_t i = 0; i<N; i++)
 	{
-		for(int j=0; j<M; j++)
+		for (size_t j = 0; j<M; j++)
 		{
 			distIn[i+N*j] = DistMatrix[i][j];
 		}
@@ -38,7 +38,7 @@ double AssignmentProblemSolver::Solve(vector<vector<double>>& DistMatrix,vector<
 
 	// form result 
 	Assignment.clear();
-	for(int x=0; x<N; x++)
+	for (size_t x = 0; x<N; x++)
 	{
 		Assignment.push_back(assignment[x]);
 	}
@@ -74,7 +74,7 @@ void AssignmentProblemSolver::assignmentoptimal(int *assignment, double *cost, d
 	*cost = 0;
 	for(row=0; row<nOfRows; row++)
 	{
-		assignment[row] = -1.0;
+		assignment[row] = -1;
 	}
 
 	// Generate distance matrix 
@@ -481,7 +481,7 @@ void AssignmentProblemSolver::assignmentsuboptimal2(int *assignment, double *cos
 	*cost = 0;
 	for(row=0; row<nOfRows; row++)
 	{
-		assignment[row] = -1.0;
+		assignment[row] = -1;
 	}
 
 	/* recursively search for the minimum element and do the assignment */
@@ -544,7 +544,7 @@ void AssignmentProblemSolver::assignmentsuboptimal1(int *assignment, double *cos
 
 	for(row=0; row<nOfRows; row++)
 	{
-		assignment[row] = -1.0;
+		assignment[row] = -1;
 	}
 
 	/* allocate memory */

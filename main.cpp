@@ -106,15 +106,15 @@ int main(int ac, char** av)
 	// Set mouse callback
 	cv::setMouseCallback("Video",mv_MouseCallback,0);
 
-	CTracker tracker(0.2,0.5,60.0,25,25);
+	CTracker tracker(0.2f, 0.5f, 60.0f, 25, 25);
 	float alpha=0;
 	while(k!=27)
 	{
 		frame=Scalar::all(0);
 		
 		// Noise addition (measurements/detections simulation )
-		Xmeasured=X+rng.gaussian(2.0);
-		Ymeasured=Y+rng.gaussian(2.0);
+		Xmeasured = X + static_cast<float>(rng.gaussian(2.0));
+		Ymeasured = Y + static_cast<float>(rng.gaussian(2.0));
 
 		// Append circulating around mouse points (frequently intersecting)
 		vector<Point2d> pts;
@@ -122,7 +122,7 @@ int main(int ac, char** av)
 		pts.push_back(Point2d(Xmeasured+100.0*sin(alpha),Ymeasured+100.0*cos(alpha)));
 		pts.push_back(Point2d(Xmeasured+100.0*sin(alpha/2.0),Ymeasured+100.0*cos(alpha/2.0)));
 		pts.push_back(Point2d(Xmeasured+100.0*sin(alpha/3.0),Ymeasured+100.0*cos(alpha/1.0)));
-		alpha+=0.05;
+		alpha+=0.05f;
 
 
 	for(int i=0; i<pts.size(); i++)
