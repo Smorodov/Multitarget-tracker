@@ -7,21 +7,18 @@
 #include <iostream>
 #include <vector>
 
-using namespace cv;
-using namespace std;
-
-float X=0,Y=0;
-float Xmeasured=0,Ymeasured=0;
-RNG rng;
+float X = 0, Y = 0;
+float Xmeasured = 0, Ymeasured = 0;
+cv::RNG rng;
 //------------------------------------------------------------------------
 // Mouse callbacks
 //------------------------------------------------------------------------
 void mv_MouseCallback(int event, int x, int y, int /*flags*/, void* /*param*/)
 {
-	if(event == cv::EVENT_MOUSEMOVE)
+	if (event == cv::EVENT_MOUSEMOVE)
 	{
-		X=(float)x;
-		Y=(float)y;
+		X = (float)x;
+		Y = (float)y;
 	}
 }
 
@@ -29,126 +26,126 @@ void mv_MouseCallback(int event, int x, int y, int /*flags*/, void* /*param*/)
 // set to 0 for Bugs tracking example
 // set to 1 for mouse tracking example
 // ----------------------------------------------------------------------
-#define ExampleNum 1
+#define ExampleNum 0
 
 int main(int ac, char** av)
 {
-#if ExampleNum==0
-	Scalar Colors[]={Scalar(255,0,0),Scalar(0,255,0),Scalar(0,0,255),Scalar(255,255,0),Scalar(0,255,255),Scalar(255,0,255),Scalar(255,127,255),Scalar(127,0,255),Scalar(127,0,127)};
-	VideoCapture capture("..\\..\\data\\TrackingBugs.mp4");
+#if ExampleNum
+	cv::Scalar Colors[] = { cv::Scalar(255, 0, 0), cv::Scalar(0, 255, 0), cv::Scalar(0, 0, 255), cv::Scalar(255, 255, 0), cv::Scalar(0, 255, 255), cv::Scalar(255, 0, 255), cv::Scalar(255, 127, 255), cv::Scalar(127, 0, 255), cv::Scalar(127, 0, 127) };
+	cv::VideoCapture capture("..\\..\\data\\TrackingBugs.mp4");
 	if(!capture.isOpened())
 	{
-	return 0;
+		return 0;
 	}
-	namedWindow("Video");
-	Mat frame;
-	Mat gray;
+	cv::namedWindow("Video");
+	cv::Mat frame;
+	cv::Mat gray;
 
 	CTracker tracker(0.2,0.5,60.0,10,10);
-	
+
 	capture >> frame;
 	cv::cvtColor(frame,gray,cv::COLOR_BGR2GRAY);
 	CDetector* detector=new CDetector(gray);
 	int k=0;
-	vector<Point2d> centers;
+	std::vector<Point_t> centers;
 	while(k!=27)
 	{
-	capture >> frame;
-	if(frame.empty())
-	{
-	capture.set(CAP_PROP_POS_FRAMES,0);
-	continue;
-	}
-	cv::cvtColor(frame,gray,cv::COLOR_BGR2GRAY);
-
-	centers=detector->Detect(gray);
-
-	for(int i=0; i<centers.size(); i++)
-	{
-	circle(frame,centers[i],3,Scalar(0,255,0),1,CV_AA);
-	}
-
-
-	if(centers.size()>0)
-	{
-		tracker.Update(centers);
-		
-		cout << tracker.tracks.size()  << endl;
-
-		for(int i=0;i<tracker.tracks.size();i++)
+		capture >> frame;
+		if(frame.empty())
 		{
-			if(tracker.tracks[i]->trace.size()>1)
+			capture.set(cv::CAP_PROP_POS_FRAMES, 0);
+			continue;
+		}
+		cv::cvtColor(frame,gray,cv::COLOR_BGR2GRAY);
+
+		centers=detector->Detect(gray);
+
+		for(int i=0; i<centers.size(); i++)
+		{
+			cv::circle(frame, centers[i], 3, cv::Scalar(0, 255, 0), 1, CV_AA);
+		}
+
+
+		if(centers.size()>0)
+		{
+			tracker.Update(centers);
+
+			std::cout << tracker.tracks.size()  << std::endl;
+
+			for(int i=0;i<tracker.tracks.size();i++)
 			{
-				for(int j=0;j<tracker.tracks[i]->trace.size()-1;j++)
+				if(tracker.tracks[i]->trace.size()>1)
 				{
-					line(frame,tracker.tracks[i]->trace[j],tracker.tracks[i]->trace[j+1],Colors[tracker.tracks[i]->track_id%9],2,CV_AA);
+					for(int j=0;j<tracker.tracks[i]->trace.size()-1;j++)
+					{
+						cv::line(frame, tracker.tracks[i]->trace[j], tracker.tracks[i]->trace[j + 1], Colors[tracker.tracks[i]->track_id % 9], 2, CV_AA);
+					}
 				}
 			}
 		}
-	}
 
-	imshow("Video",frame);
+		cv::imshow("Video", frame);
 
-	k=waitKey(20);
+		k = cv::waitKey(20);
 	}
 	delete detector;
-	destroyAllWindows();
+	cv::destroyAllWindows();
 	return 0;
 #else
 
-	int k=0;
-	Scalar Colors[]={Scalar(255,0,0),Scalar(0,255,0),Scalar(0,0,255),Scalar(255,255,0),Scalar(0,255,255),Scalar(255,255,255)};
+	int k = 0;
+	cv::Scalar Colors[] = { cv::Scalar(255, 0, 0), cv::Scalar(0, 255, 0), cv::Scalar(0, 0, 255), cv::Scalar(255, 255, 0), cv::Scalar(0, 255, 255), cv::Scalar(255, 255, 255) };
 	cv::namedWindow("Video");
-	Mat frame=Mat(800,800,CV_8UC3);
+	cv::Mat frame = cv::Mat(800, 800, CV_8UC3);
 
-	VideoWriter vw=VideoWriter::VideoWriter("output.mpeg", CV_FOURCC('P','I','M','1'), 20, frame.size());
+	cv::VideoWriter vw = cv::VideoWriter::VideoWriter("output.mpeg", CV_FOURCC('P', 'I', 'M', '1'), 20, frame.size());
 
 	// Set mouse callback
-	cv::setMouseCallback("Video",mv_MouseCallback,0);
+	cv::setMouseCallback("Video", mv_MouseCallback, 0);
 
-	CTracker tracker(0.2,0.5,60.0,25,25);
-	float alpha=0;
-	while(k!=27)
+	CTracker tracker(0.2f, 0.5f, 60.0f, 25, 25);
+	track_t alpha = 0;
+	while (k != 27)
 	{
-		frame=Scalar::all(0);
-		
+		frame = cv::Scalar::all(0);
+
 		// Noise addition (measurements/detections simulation )
-		Xmeasured=X+rng.gaussian(2.0);
-		Ymeasured=Y+rng.gaussian(2.0);
+		Xmeasured = X + static_cast<float>(rng.gaussian(2.0));
+		Ymeasured = Y + static_cast<float>(rng.gaussian(2.0));
 
-		// Append circulating around mouse points (frequently intersecting)
-		vector<Point2d> pts;
-		pts.push_back(Point2d(Xmeasured+100.0*sin(-alpha),Ymeasured+100.0*cos(-alpha)));
-		pts.push_back(Point2d(Xmeasured+100.0*sin(alpha),Ymeasured+100.0*cos(alpha)));
-		pts.push_back(Point2d(Xmeasured+100.0*sin(alpha/2.0),Ymeasured+100.0*cos(alpha/2.0)));
-		pts.push_back(Point2d(Xmeasured+100.0*sin(alpha/3.0),Ymeasured+100.0*cos(alpha/1.0)));
-		alpha+=0.05;
+		// Append circulating around mouse cv::Points (frequently intersecting)
+		std::vector<Point_t> pts;
+		pts.push_back(Point_t(Xmeasured + 100.0f*sin(-alpha), Ymeasured + 100.0f*cos(-alpha)));
+		pts.push_back(Point_t(Xmeasured + 100.0f*sin(alpha), Ymeasured + 100.0f*cos(alpha)));
+		pts.push_back(Point_t(Xmeasured + 100.0f*sin(alpha / 2.0f), Ymeasured + 100.0f*cos(alpha / 2.0f)));
+		pts.push_back(Point_t(Xmeasured + 100.0f*sin(alpha / 3.0f), Ymeasured + 100.0f*cos(alpha / 1.0f)));
+		alpha += 0.05f;
 
 
-	for(int i=0; i<pts.size(); i++)
-	{
-	circle(frame,pts[i],3,Scalar(0,255,0),1,CV_AA);
-	}
+		for (int i = 0; i < pts.size(); i++)
+		{
+			cv::circle(frame, pts[i], 3, cv::Scalar(0, 255, 0), 1, CV_AA);
+		}
 
 		tracker.Update(pts);
-		
-		std::cout << tracker.tracks.size()  << endl;
 
-		for(int i=0;i<tracker.tracks.size();i++)
+		std::cout << tracker.tracks.size() << std::endl;
+
+		for (int i = 0; i < tracker.tracks.size(); i++)
 		{
-			if(tracker.tracks[i]->trace.size()>1)
+			if (tracker.tracks[i]->trace.size()>1)
 			{
-				for(int j=0;j<tracker.tracks[i]->trace.size()-1;j++)
+				for (int j = 0; j < tracker.tracks[i]->trace.size() - 1; j++)
 				{
-					line(frame,tracker.tracks[i]->trace[j],tracker.tracks[i]->trace[j+1],Colors[i%6],2,CV_AA);
+					cv::line(frame, tracker.tracks[i]->trace[j], tracker.tracks[i]->trace[j + 1], Colors[i % 6], 2, CV_AA);
 				}
 			}
 		}
 
-		imshow("Video",frame);
+		cv::imshow("Video", frame);
 		vw << frame;
 
-		k=waitKey(10);
+		k = cv::waitKey(10);
 	}
 
 	vw.release();

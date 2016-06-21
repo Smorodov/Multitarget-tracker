@@ -3,19 +3,18 @@
 #include "BackgroundSubtract.h"
 #include <iostream>
 #include <vector>
-using namespace cv;
-using namespace std;
+
 class CDetector
 {
 private:
-	void DetectContour(Mat& img, vector<Rect>& Rects,vector<Point2d>& centers);
+	void DetectContour(cv::Mat& img, std::vector<cv::Rect>& Rects,std::vector<cv::Point2d>& centers);
 	BackgroundSubtract* bs;
-	vector<Rect> rects;
-	vector<Point2d> centers;
-	Mat fg;
+	std::vector<cv::Rect> rects;
+	std::vector<cv::Point2d> centers;
+	cv::Mat fg;
 public:
-	CDetector(Mat& gray);
-	vector<Point2d> Detect(Mat& gray);
+	CDetector(cv::Mat& gray);
+	std::vector<cv::Point2d> Detect(cv::Mat& gray);
 	~CDetector(void);
 };
 
