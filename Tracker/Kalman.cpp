@@ -64,7 +64,7 @@ Point_t TKalmanFilter::GetPrediction()
 //---------------------------------------------------------------------------
 Point_t TKalmanFilter::Update(Point_t p, bool DataCorrect)
 {
-	cv::Mat measurement(2,1,CV_32FC1);
+	cv::Mat measurement(2, 1, Mat_t(1));
 	if(!DataCorrect)
 	{
 		measurement.at<track_t>(0) = LastResult.x;  //update using prediction
