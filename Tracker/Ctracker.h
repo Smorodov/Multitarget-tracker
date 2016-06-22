@@ -33,13 +33,13 @@ public:
 	// превышающем этот порог, то эта пара не рассматривается в задаче о назначениях.
 	track_t dist_thres;
 	// Максимальное количество кадров которое трек сохраняется не получая данных о измерений.
-	int maximum_allowed_skipped_frames;
+    size_t maximum_allowed_skipped_frames;
 	// Максимальная длина следа
-	int max_trace_length;
+    size_t max_trace_length;
 
 	std::vector<std::unique_ptr<CTrack>> tracks;
 	void Update(std::vector<Point_t>& detections);
-	CTracker(track_t _dt, track_t _Accel_noise_mag, track_t _dist_thres = 60, int _maximum_allowed_skipped_frames = 10, int _max_trace_length = 10);
+    CTracker(track_t dt_, track_t Accel_noise_mag_, track_t dist_thres_ = 60, size_t maximum_allowed_skipped_frames_ = 10, size_t max_trace_length_ = 10);
 	~CTracker(void);
 };
 

@@ -31,5 +31,5 @@ public:
 	enum TMethod { optimal, many_forbidden_assignments, without_forbidden_assignments };
 	AssignmentProblemSolver();
 	~AssignmentProblemSolver();
-	track_t Solve(std::vector<std::vector<track_t>>& distMatrix,std::vector<int>& Assignment,TMethod Method=optimal);
+    track_t Solve(std::vector<std::vector<track_t>>& distMatrix,std::vector<int>& Assignment,TMethod Method=optimal);
 };

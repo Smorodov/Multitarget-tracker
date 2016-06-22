@@ -29,13 +29,20 @@ CTrack::~CTrack()
 // ---------------------------------------------------------------------------
 // Tracker. Manage tracks. Create, remove, update.
 // ---------------------------------------------------------------------------
-CTracker::CTracker(track_t _dt, track_t _Accel_noise_mag, track_t _dist_thres, int _maximum_allowed_skipped_frames, int _max_trace_length)
+CTracker::CTracker(
+        track_t dt_,
+        track_t Accel_noise_mag_,
+        track_t dist_thres_,
+        size_t maximum_allowed_skipped_frames_,
+        size_t max_trace_length_
+        )
+    :
+      dt(dt_),
+      Accel_noise_mag(Accel_noise_mag_),
+      dist_thres(dist_thres_),
+      maximum_allowed_skipped_frames(maximum_allowed_skipped_frames_),
+      max_trace_length(max_trace_length_)
 {
-	dt = _dt;
-	Accel_noise_mag = _Accel_noise_mag;
-	dist_thres = _dist_thres;
-	maximum_allowed_skipped_frames = _maximum_allowed_skipped_frames;
-	max_trace_length = _max_trace_length;
 }
 // ---------------------------------------------------------------------------
 //
@@ -48,9 +55,9 @@ void CTracker::Update(std::vector<Point_t>& detections)
 	if (tracks.size() == 0)
 	{
 		// If no tracks yet
-		for (int i = 0; i < detections.size(); i++)
+        for (auto d : detections)
 		{
-			tracks.push_back(std::make_unique<CTrack>(detections[i], dt, Accel_noise_mag));
+            tracks.push_back(std::make_unique<CTrack>(d, dt, Accel_noise_mag));
 		}
 	}
 
@@ -67,11 +74,11 @@ void CTracker::Update(std::vector<Point_t>& detections)
 	// -----------------------------------
 	// Треки уже есть, составим матрицу расстояний
 	// -----------------------------------
-	for (int i = 0; i < tracks.size(); i++)
+    for (size_t i = 0; i < tracks.size(); i++)
 	{
 		// Point_t prediction=tracks[i]->prediction;
 		// std::cout << prediction << std::endl;
-		for (int j = 0; j < detections.size(); j++)
+        for (size_t j = 0; j < detections.size(); j++)
 		{
 			Point_t diff = (tracks[i]->prediction - detections[j]);
 			track_t dist = sqrtf(diff.x*diff.x + diff.y*diff.y);
@@ -90,7 +97,7 @@ void CTracker::Update(std::vector<Point_t>& detections)
 	// Not assigned tracks
 	std::vector<int> not_assigned_tracks;
 
-	for (int i = 0; i<assignment.size(); i++)
+    for (size_t i = 0; i<assignment.size(); i++)
 	{
 		if (assignment[i] != -1)
 		{
@@ -113,7 +120,7 @@ void CTracker::Update(std::vector<Point_t>& detections)
 	// -----------------------------------
 	// If track didn't get detects long time, remove it.
 	// -----------------------------------
-	for (int i = 0; i < tracks.size(); i++)
+    for (int i = 0; i < static_cast<int>(tracks.size()); i++)
 	{
 		if (tracks[i]->skipped_frames > maximum_allowed_skipped_frames)
 		{
@@ -126,11 +133,9 @@ void CTracker::Update(std::vector<Point_t>& detections)
 	// Search for unassigned detects
 	// -----------------------------------
 	std::vector<int> not_assigned_detections;
-	std::vector<int>::iterator it;
-	for (int i = 0; i < detections.size(); i++)
+    for (int i = 0; i < static_cast<int>(detections.size()); i++)
 	{
-		it = find(assignment.begin(), assignment.end(), i);
-		if (it == assignment.end())
+        if (find(assignment.begin(), assignment.end(), i) == assignment.end())
 		{
 			not_assigned_detections.push_back(i);
 		}
@@ -141,15 +146,15 @@ void CTracker::Update(std::vector<Point_t>& detections)
 	// -----------------------------------
 	if (not_assigned_detections.size() != 0)
 	{
-		for (int i = 0; i < not_assigned_detections.size(); i++)
+        for (auto nadet : not_assigned_detections)
 		{
-			tracks.push_back(std::make_unique<CTrack>(detections[not_assigned_detections[i]], dt, Accel_noise_mag));
+            tracks.push_back(std::make_unique<CTrack>(detections[nadet], dt, Accel_noise_mag));
 		}
 	}
 
 	// Update Kalman Filters state
 
-	for (int i = 0; i<assignment.size(); i++)
+    for (size_t i = 0; i<assignment.size(); i++)
 	{
 		// If track updated less than one time, than filter state is not correct.
 
@@ -165,7 +170,7 @@ void CTracker::Update(std::vector<Point_t>& detections)
 			tracks[i]->prediction = tracks[i]->KF->Update(Point_t(0, 0), 0);
 		}
 
-		if (tracks[i]->trace.size()>max_trace_length)
+        if (tracks[i]->trace.size() > max_trace_length)
 		{
 			tracks[i]->trace.erase(tracks[i]->trace.begin(), tracks[i]->trace.end() - max_trace_length);
 		}

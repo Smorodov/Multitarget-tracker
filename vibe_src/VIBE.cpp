@@ -257,7 +257,7 @@ int libvibeModelUpdate(vibeModel *model, const unsigned char *image_data, unsign
 						}
 						break;
 					default:
-						puts("You should not see this message!!!");
+                        printf("You should not see this message!!!");
 						break;
 					}
 					model->pixels[m].samples[rnd[rndPos=(rndPos+1)%rndSize]%model->numberOfSamples]=image_data[n];
