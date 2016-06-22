@@ -14,4 +14,3 @@ public:
 	Point_t GetPrediction();
 	Point_t Update(Point_t p, bool DataCorrect);
 };
-

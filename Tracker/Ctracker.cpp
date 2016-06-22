@@ -106,7 +106,7 @@ void CTracker::Update(std::vector<Point_t>& detections)
 				assignment[i] = -1;
 				// Mark unassigned tracks, and increment skipped frames counter,
 				// when skipped frames counter will be larger than threshold, track will be deleted.
-				not_assigned_tracks.push_back(i);
+				not_assigned_tracks.push_back(static_cast<int>(i));
 			}
 		}
 		else
