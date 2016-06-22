@@ -3,7 +3,7 @@
 #include "Detector.h"
 
 #include <opencv2/highgui/highgui_c.h>
-#include "CTracker.h"
+#include "Ctracker.h"
 #include <iostream>
 #include <vector>
 
@@ -98,7 +98,7 @@ int main(int ac, char** av)
 	cv::namedWindow("Video");
 	cv::Mat frame = cv::Mat(800, 800, CV_8UC3);
 
-	cv::VideoWriter vw = cv::VideoWriter::VideoWriter("output.mpeg", CV_FOURCC('P', 'I', 'M', '1'), 20, frame.size());
+    cv::VideoWriter vw = cv::VideoWriter("output.mpeg", CV_FOURCC('P', 'I', 'M', '1'), 20, frame.size());
 
 	// Set mouse callback
 	cv::setMouseCallback("Video", mv_MouseCallback, 0);
@@ -122,7 +122,7 @@ int main(int ac, char** av)
 		alpha += 0.05f;
 
 
-		for (int i = 0; i < pts.size(); i++)
+        for (size_t i = 0; i < pts.size(); i++)
 		{
 			cv::circle(frame, pts[i], 3, cv::Scalar(0, 255, 0), 1, CV_AA);
 		}
@@ -131,13 +131,15 @@ int main(int ac, char** av)
 
 		std::cout << tracker.tracks.size() << std::endl;
 
-		for (int i = 0; i < tracker.tracks.size(); i++)
+        for (size_t i = 0; i < tracker.tracks.size(); i++)
 		{
-			if (tracker.tracks[i]->trace.size()>1)
+            const auto& tracks = tracker.tracks[i];
+
+            if (tracks->trace.size()>1)
 			{
-				for (int j = 0; j < tracker.tracks[i]->trace.size() - 1; j++)
+                for (size_t j = 0; j < tracks->trace.size() - 1; j++)
 				{
-					cv::line(frame, tracker.tracks[i]->trace[j], tracker.tracks[i]->trace[j + 1], Colors[i % 6], 2, CV_AA);
+                    cv::line(frame, tracks->trace[j], tracks->trace[j + 1], Colors[i % 6], 2, CV_AA);
 				}
 			}
 		}

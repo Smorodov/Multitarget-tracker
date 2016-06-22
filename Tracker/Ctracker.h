@@ -24,22 +24,22 @@ class CTracker
 {
 public:
 	
-	// Шаг времени опроса фильтра
+	// РЁР°Рі РІСЂРµРјРµРЅРё РѕРїСЂРѕСЃР° С„РёР»СЊС‚СЂР°
 	track_t dt;
 
 	track_t Accel_noise_mag;
 
-	// Порог расстояния. Если точки находятся дуг от друга на расстоянии,
-	// превышающем этот порог, то эта пара не рассматривается в задаче о назначениях.
+	// РџРѕСЂРѕРі СЂР°СЃСЃС‚РѕСЏРЅРёСЏ. Р•СЃР»Рё С‚РѕС‡РєРё РЅР°С…РѕРґСЏС‚СЃСЏ РґСѓРі РѕС‚ РґСЂСѓРіР° РЅР° СЂР°СЃСЃС‚РѕСЏРЅРёРё,
+	// РїСЂРµРІС‹С€Р°СЋС‰РµРј СЌС‚РѕС‚ РїРѕСЂРѕРі, С‚Рѕ СЌС‚Р° РїР°СЂР° РЅРµ СЂР°СЃСЃРјР°С‚СЂРёРІР°РµС‚СЃСЏ РІ Р·Р°РґР°С‡Рµ Рѕ РЅР°Р·РЅР°С‡РµРЅРёСЏС….
 	track_t dist_thres;
-	// Максимальное количество кадров которое трек сохраняется не получая данных о измерений.
-	int maximum_allowed_skipped_frames;
-	// Максимальная длина следа
-	int max_trace_length;
+	// РњР°РєСЃРёРјР°Р»СЊРЅРѕРµ РєРѕР»РёС‡РµСЃС‚РІРѕ РєР°РґСЂРѕРІ РєРѕС‚РѕСЂРѕРµ С‚СЂРµРє СЃРѕС…СЂР°РЅСЏРµС‚СЃСЏ РЅРµ РїРѕР»СѓС‡Р°СЏ РґР°РЅРЅС‹С… Рѕ РёР·РјРµСЂРµРЅРёР№.
+    size_t maximum_allowed_skipped_frames;
+	// РњР°РєСЃРёРјР°Р»СЊРЅР°СЏ РґР»РёРЅР° СЃР»РµРґР°
+    size_t max_trace_length;
 
 	std::vector<std::unique_ptr<CTrack>> tracks;
 	void Update(std::vector<Point_t>& detections);
-	CTracker(track_t _dt, track_t _Accel_noise_mag, track_t _dist_thres = 60, int _maximum_allowed_skipped_frames = 10, int _max_trace_length = 10);
+    CTracker(track_t dt_, track_t Accel_noise_mag_, track_t dist_thres_ = 60, size_t maximum_allowed_skipped_frames_ = 10, size_t max_trace_length_ = 10);
 	~CTracker(void);
 };
 

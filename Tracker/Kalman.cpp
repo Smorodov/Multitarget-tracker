@@ -1,4 +1,3 @@
-#pragma once
 #include "Kalman.h"
 #include "opencv2/opencv.hpp"
 #include <iostream>
@@ -13,7 +12,7 @@ TKalmanFilter::TKalmanFilter(Point_t pt, track_t dt, track_t Accel_noise_mag)
 
 	// We don't know acceleration, so, assume it to process noise.
 	// But we can guess, the range of acceleration values thich can be achieved by tracked object. 
-	// Process noise. (standard deviation of acceleration: ì/ñ^2)
+    // Process noise. (standard deviation of acceleration: m/s^2)
 	// shows, woh much target can accelerate.
 	//track_t Accel_noise_mag = 0.5; 
 

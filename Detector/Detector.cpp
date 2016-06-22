@@ -15,7 +15,6 @@ CDetector::CDetector(cv::Mat& gray)
 //----------------------------------------------------------------------
 void CDetector::DetectContour(cv::Mat& img, std::vector<cv::Rect>& Rects,std::vector<cv::Point2d>& centers)
 {
-	double area=0;
 	Rects.clear();
 	centers.clear();
 	std::vector<std::vector<cv::Point> > contours;
@@ -25,7 +24,7 @@ void CDetector::DetectContour(cv::Mat& img, std::vector<cv::Rect>& Rects,std::ve
 	findContours(edges,contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, cv::Point());
 	if(contours.size()>0)
 	{
-		for( int i = 0; i < contours.size(); i++ )
+        for (size_t i = 0; i < contours.size(); i++ )
 		{
 			cv::Rect r=cv::boundingRect(contours[i]);
 			Rects.push_back(r);
