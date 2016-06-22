@@ -7,18 +7,19 @@
 #include <iostream>
 #include <vector>
 
-float X = 0, Y = 0;
-float Xmeasured = 0, Ymeasured = 0;
-cv::RNG rng;
 //------------------------------------------------------------------------
 // Mouse callbacks
 //------------------------------------------------------------------------
-void mv_MouseCallback(int event, int x, int y, int /*flags*/, void* /*param*/)
+void mv_MouseCallback(int event, int x, int y, int /*flags*/, void* param)
 {
 	if (event == cv::EVENT_MOUSEMOVE)
 	{
-		X = (float)x;
-		Y = (float)y;
+		cv::Point2f* p = (cv::Point2f*)param;
+		if (p)
+		{
+			p->x = static_cast<float>(x);
+			p->y = static_cast<float>(y);
+		}
 	}
 }
 
@@ -101,17 +102,19 @@ int main(int ac, char** av)
     cv::VideoWriter vw = cv::VideoWriter("output.mpeg", CV_FOURCC('P', 'I', 'M', '1'), 20, frame.size());
 
 	// Set mouse callback
-	cv::setMouseCallback("Video", mv_MouseCallback, 0);
+	cv::Point2f pointXY;
+	cv::setMouseCallback("Video", mv_MouseCallback, (void*)&pointXY);
 
 	CTracker tracker(0.2f, 0.5f, 60.0f, 25, 25);
 	track_t alpha = 0;
+	cv::RNG rng;
 	while (k != 27)
 	{
 		frame = cv::Scalar::all(0);
 
 		// Noise addition (measurements/detections simulation )
-		Xmeasured = X + static_cast<float>(rng.gaussian(2.0));
-		Ymeasured = Y + static_cast<float>(rng.gaussian(2.0));
+		float Xmeasured = pointXY.x + static_cast<float>(rng.gaussian(2.0));
+		float Ymeasured = pointXY.y + static_cast<float>(rng.gaussian(2.0));
 
 		// Append circulating around mouse cv::Points (frequently intersecting)
 		std::vector<Point_t> pts;
