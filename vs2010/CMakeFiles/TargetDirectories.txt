@@ -1,3 +1,0 @@
-C:/Users/ANDREY/Documents/Visual Studio 2010/Projects/TRACKERS/MultitargetTracker4/vs2010/CMakeFiles/ALL_BUILD.dir
-C:/Users/ANDREY/Documents/Visual Studio 2010/Projects/TRACKERS/MultitargetTracker4/vs2010/CMakeFiles/ObjectTracker.dir
-C:/Users/ANDREY/Documents/Visual Studio 2010/Projects/TRACKERS/MultitargetTracker4/vs2010/CMakeFiles/ZERO_CHECK.dir

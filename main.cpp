@@ -27,7 +27,7 @@ void mv_MouseCallback(int event, int x, int y, int /*flags*/, void* param)
 // set to 0 for Bugs tracking example
 // set to 1 for mouse tracking example
 // ----------------------------------------------------------------------
-#define ExampleNum 1
+// #define ExampleNum 1
 
 int main(int ac, char** av)
 {
@@ -48,7 +48,7 @@ int main(int ac, char** av)
 	cv::Mat frame;
 	cv::Mat gray;
 
-	CTracker tracker(0.2f, 0.5f, 60.0f, 10, 10);
+	CTracker tracker(0.2f, 0.1f, 60.0f, 5, 10);
 
 	capture >> frame;
 	cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
@@ -110,7 +110,7 @@ int main(int ac, char** av)
 	cv::Point2f pointXY;
 	cv::setMouseCallback("Video", mv_MouseCallback, (void*)&pointXY);
 
-	CTracker tracker(0.2f, 0.5f, 60.0f, 25, 25);
+	CTracker tracker(0.3f, 0.5f, 60.0f, 25, 25);
 	track_t alpha = 0;
 	cv::RNG rng;
 	while (k != 27)
