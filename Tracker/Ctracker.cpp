@@ -68,7 +68,7 @@ void CTracker::Update(std::vector<Point_t>& detections)
 	size_t M = detections.size();	// детекты
 
 	// Матрица расстояний от N-ного трека до M-ного детекта.
-	std::vector< std::vector<track_t> > Cost(N, std::vector<track_t>(M));
+	distMatrix_t Cost(N * M);
 	std::vector<int> assignment; // назначения
 
 	// -----------------------------------
@@ -76,20 +76,18 @@ void CTracker::Update(std::vector<Point_t>& detections)
 	// -----------------------------------
     for (size_t i = 0; i < tracks.size(); i++)
 	{
-		// Point_t prediction=tracks[i]->prediction;
-		// std::cout << prediction << std::endl;
         for (size_t j = 0; j < detections.size(); j++)
 		{
 			Point_t diff = (tracks[i]->prediction - detections[j]);
 			track_t dist = sqrtf(diff.x*diff.x + diff.y*diff.y);
-			Cost[i][j] = dist;
+			Cost[i * M + j] = dist;
 		}
 	}
 	// -----------------------------------
 	// Solving assignment problem (tracks and predictions of Kalman filter)
 	// -----------------------------------
 	AssignmentProblemSolver APS;
-	APS.Solve(Cost, assignment, AssignmentProblemSolver::optimal);
+	APS.Solve(Cost, N, M, assignment, AssignmentProblemSolver::optimal);
 
 	// -----------------------------------
 	// clean assignment from pairs with large distance
@@ -101,7 +99,7 @@ void CTracker::Update(std::vector<Point_t>& detections)
 	{
 		if (assignment[i] != -1)
 		{
-			if (Cost[i][assignment[i]]>dist_thres)
+			if (Cost[i * M + assignment[i]] > dist_thres)
 			{
 				assignment[i] = -1;
 				// Mark unassigned tracks, and increment skipped frames counter,
