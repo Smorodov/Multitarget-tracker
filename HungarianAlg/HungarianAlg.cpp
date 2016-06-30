@@ -9,12 +9,13 @@ AssignmentProblemSolver::~AssignmentProblemSolver()
 {
 }
 
-track_t AssignmentProblemSolver::Solve(std::vector<std::vector<track_t>>& distMatrix, std::vector<int>& Assignment, TMethod Method)
+track_t AssignmentProblemSolver::Solve(std::vector<std::vector<track_t>>& distMatrix, std::vector<int>& assignment, TMethod Method)
 {
+	assignment.clear();
+
 	size_t N = distMatrix.size(); // number of columns (tracks)
 	size_t M = distMatrix[0].size(); // number of rows (measurements)
 
-	int* assignment = new int[N];
 	track_t* distIn = new track_t[N*M];
 
 	track_t cost = 0;
@@ -41,21 +42,13 @@ track_t AssignmentProblemSolver::Solve(std::vector<std::vector<track_t>>& distMa
 		break;
 	}
 
-	// form result 
-	Assignment.clear();
-	for (size_t x = 0; x < N; x++)
-	{
-		Assignment.push_back(assignment[x]);
-	}
-
-	delete[] assignment;
 	delete[] distIn;
 	return cost;
 }
 // --------------------------------------------------------------------------
 // Computes the optimal assignment (minimum overall costs) using Munkres algorithm.
 // --------------------------------------------------------------------------
-void AssignmentProblemSolver::assignmentoptimal(int *assignment, track_t *cost, track_t *distMatrixIn, int nOfRows, int nOfColumns)
+void AssignmentProblemSolver::assignmentoptimal(assignments_t& assignment, track_t *cost, track_t *distMatrixIn, int nOfRows, int nOfColumns)
 {
 	track_t *distMatrix;
 	track_t *distMatrixTemp;
@@ -96,10 +89,7 @@ void AssignmentProblemSolver::assignmentoptimal(int *assignment, track_t *cost, 
 	for (row = 0; row < nOfElements; row++)
 	{
 		value = distMatrixIn[row];
-		if (value < 0)
-		{
-			std::cout << "All matrix elements have to be non-negative." << std::endl;
-		}
+		assert(value >= 0);
 		distMatrix[row] = value;
 	}
 
@@ -217,7 +207,7 @@ void AssignmentProblemSolver::assignmentoptimal(int *assignment, track_t *cost, 
 // --------------------------------------------------------------------------
 //
 // --------------------------------------------------------------------------
-void AssignmentProblemSolver::buildassignmentvector(int *assignment, bool *starMatrix, int nOfRows, int nOfColumns)
+void AssignmentProblemSolver::buildassignmentvector(assignments_t& assignment, bool *starMatrix, int nOfRows, int nOfColumns)
 {
 	for (int row = 0; row < nOfRows; row++)
 	{
@@ -234,7 +224,7 @@ void AssignmentProblemSolver::buildassignmentvector(int *assignment, bool *starM
 // --------------------------------------------------------------------------
 //
 // --------------------------------------------------------------------------
-void AssignmentProblemSolver::computeassignmentcost(int *assignment, track_t *cost, track_t *distMatrix, int nOfRows)
+void AssignmentProblemSolver::computeassignmentcost(const assignments_t& assignment, track_t *cost, track_t *distMatrix, int nOfRows)
 {
 	for (int row = 0; row < nOfRows; row++)
 	{
@@ -249,13 +239,13 @@ void AssignmentProblemSolver::computeassignmentcost(int *assignment, track_t *co
 // --------------------------------------------------------------------------
 //
 // --------------------------------------------------------------------------
-void AssignmentProblemSolver::step2a(int *assignment, track_t *distMatrix, bool *starMatrix, bool *newStarMatrix, bool *primeMatrix, bool *coveredColumns, bool *coveredRows, int nOfRows, int nOfColumns, int minDim)
+void AssignmentProblemSolver::step2a(assignments_t& assignment, track_t *distMatrix, bool *starMatrix, bool *newStarMatrix, bool *primeMatrix, bool *coveredColumns, bool *coveredRows, int nOfRows, int nOfColumns, int minDim)
 {
 	bool *starMatrixTemp, *columnEnd;
 	/* cover every column containing a starred zero */
 	for (int col = 0; col < nOfColumns; col++)
 	{
-		starMatrixTemp = starMatrix + nOfRows*col;
+		starMatrixTemp = starMatrix + nOfRows * col;
 		columnEnd = starMatrixTemp + nOfRows;
 		while (starMatrixTemp < columnEnd)
 		{
@@ -273,7 +263,7 @@ void AssignmentProblemSolver::step2a(int *assignment, track_t *distMatrix, bool 
 // --------------------------------------------------------------------------
 //
 // --------------------------------------------------------------------------
-void AssignmentProblemSolver::step2b(int *assignment, track_t *distMatrix, bool *starMatrix, bool *newStarMatrix, bool *primeMatrix, bool *coveredColumns, bool *coveredRows, int nOfRows, int nOfColumns, int minDim)
+void AssignmentProblemSolver::step2b(assignments_t& assignment, track_t *distMatrix, bool *starMatrix, bool *newStarMatrix, bool *primeMatrix, bool *coveredColumns, bool *coveredRows, int nOfRows, int nOfColumns, int minDim)
 {
 	/* count covered columns */
 	int nOfCoveredColumns = 0;
@@ -299,7 +289,7 @@ void AssignmentProblemSolver::step2b(int *assignment, track_t *distMatrix, bool 
 // --------------------------------------------------------------------------
 //
 // --------------------------------------------------------------------------
-void AssignmentProblemSolver::step3(int *assignment, track_t *distMatrix, bool *starMatrix, bool *newStarMatrix, bool *primeMatrix, bool *coveredColumns, bool *coveredRows, int nOfRows, int nOfColumns, int minDim)
+void AssignmentProblemSolver::step3(assignments_t& assignment, track_t *distMatrix, bool *starMatrix, bool *newStarMatrix, bool *primeMatrix, bool *coveredColumns, bool *coveredRows, int nOfRows, int nOfColumns, int minDim)
 {
 	bool zerosFound = true;
 	while (zerosFound)
@@ -349,7 +339,7 @@ void AssignmentProblemSolver::step3(int *assignment, track_t *distMatrix, bool *
 // --------------------------------------------------------------------------
 //
 // --------------------------------------------------------------------------
-void AssignmentProblemSolver::step4(int *assignment, track_t *distMatrix, bool *starMatrix, bool *newStarMatrix, bool *primeMatrix, bool *coveredColumns, bool *coveredRows, int nOfRows, int nOfColumns, int minDim, int row, int col)
+void AssignmentProblemSolver::step4(assignments_t& assignment, track_t *distMatrix, bool *starMatrix, bool *newStarMatrix, bool *primeMatrix, bool *coveredColumns, bool *coveredRows, int nOfRows, int nOfColumns, int minDim, int row, int col)
 {
 	const int nOfElements = nOfRows * nOfColumns;
 	/* generate temporary copy of starMatrix */
@@ -413,7 +403,7 @@ void AssignmentProblemSolver::step4(int *assignment, track_t *distMatrix, bool *
 // --------------------------------------------------------------------------
 //
 // --------------------------------------------------------------------------
-void AssignmentProblemSolver::step5(int *assignment, track_t *distMatrix, bool *starMatrix, bool *newStarMatrix, bool *primeMatrix, bool *coveredColumns, bool *coveredRows, int nOfRows, int nOfColumns, int minDim)
+void AssignmentProblemSolver::step5(assignments_t& assignment, track_t *distMatrix, bool *starMatrix, bool *newStarMatrix, bool *primeMatrix, bool *coveredColumns, bool *coveredRows, int nOfRows, int nOfColumns, int minDim)
 {
 	/* find smallest uncovered element h */
 	float h = std::numeric_limits<track_t>::max();
@@ -464,7 +454,7 @@ void AssignmentProblemSolver::step5(int *assignment, track_t *distMatrix, bool *
 // --------------------------------------------------------------------------
 // Computes a suboptimal solution. Good for cases without forbidden assignments.
 // --------------------------------------------------------------------------
-void AssignmentProblemSolver::assignmentsuboptimal2(int *assignment, track_t *cost, track_t *distMatrixIn, int nOfRows, int nOfColumns)
+void AssignmentProblemSolver::assignmentsuboptimal2(assignments_t& assignment, track_t *cost, track_t *distMatrixIn, int nOfRows, int nOfColumns)
 {
 	/* make working copy of distance Matrix */
 	const int nOfElements = nOfRows * nOfColumns;
@@ -526,7 +516,7 @@ void AssignmentProblemSolver::assignmentsuboptimal2(int *assignment, track_t *co
 // --------------------------------------------------------------------------
 // Computes a suboptimal solution. Good for cases with many forbidden assignments.
 // --------------------------------------------------------------------------
-void AssignmentProblemSolver::assignmentsuboptimal1(int *assignment, track_t *cost, track_t *distMatrixIn, int nOfRows, int nOfColumns)
+void AssignmentProblemSolver::assignmentsuboptimal1(assignments_t& assignment, track_t *cost, track_t *distMatrixIn, int nOfRows, int nOfColumns)
 {
 	/* make working copy of distance Matrix */
 	const int nOfElements = nOfRows * nOfColumns;
