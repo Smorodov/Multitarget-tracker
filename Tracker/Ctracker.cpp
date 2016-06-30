@@ -69,7 +69,7 @@ void CTracker::Update(std::vector<Point_t>& detections)
 
 	// Матрица расстояний от N-ного трека до M-ного детекта.
 	distMatrix_t Cost(N * M);
-	std::vector<int> assignment; // назначения
+	assignments_t assignment; // назначения
 
 	if (!tracks.empty())
 	{
