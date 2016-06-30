@@ -80,7 +80,7 @@ void CTracker::Update(std::vector<Point_t>& detections)
 		{
 			Point_t diff = (tracks[i]->prediction - detections[j]);
 			track_t dist = sqrtf(diff.x*diff.x + diff.y*diff.y);
-			Cost[i * M + j] = dist;
+			Cost[i + j * N] = dist;
 		}
 	}
 	// -----------------------------------
@@ -99,7 +99,7 @@ void CTracker::Update(std::vector<Point_t>& detections)
 	{
 		if (assignment[i] != -1)
 		{
-			if (Cost[i * M + assignment[i]] > dist_thres)
+			if (Cost[i + assignment[i] * N] > dist_thres)
 			{
 				assignment[i] = -1;
 				// Mark unassigned tracks, and increment skipped frames counter,
