@@ -71,62 +71,65 @@ void CTracker::Update(std::vector<Point_t>& detections)
 	distMatrix_t Cost(N * M);
 	std::vector<int> assignment; // назначения
 
-	// -----------------------------------
-	// Треки уже есть, составим матрицу расстояний
-	// -----------------------------------
-    for (size_t i = 0; i < tracks.size(); i++)
+	if (!tracks.empty())
 	{
-        for (size_t j = 0; j < detections.size(); j++)
+		// -----------------------------------
+		// Треки уже есть, составим матрицу расстояний
+		// -----------------------------------
+		for (size_t i = 0; i < tracks.size(); i++)
 		{
-			Point_t diff = (tracks[i]->prediction - detections[j]);
-			track_t dist = sqrtf(diff.x*diff.x + diff.y*diff.y);
-			Cost[i + j * N] = dist;
-		}
-	}
-	// -----------------------------------
-	// Solving assignment problem (tracks and predictions of Kalman filter)
-	// -----------------------------------
-	AssignmentProblemSolver APS;
-	APS.Solve(Cost, N, M, assignment, AssignmentProblemSolver::optimal);
-
-	// -----------------------------------
-	// clean assignment from pairs with large distance
-	// -----------------------------------
-	// Not assigned tracks
-	std::vector<int> not_assigned_tracks;
-
-    for (size_t i = 0; i<assignment.size(); i++)
-	{
-		if (assignment[i] != -1)
-		{
-			if (Cost[i + assignment[i] * N] > dist_thres)
+			for (size_t j = 0; j < detections.size(); j++)
 			{
-				assignment[i] = -1;
-				// Mark unassigned tracks, and increment skipped frames counter,
-				// when skipped frames counter will be larger than threshold, track will be deleted.
-				not_assigned_tracks.push_back(static_cast<int>(i));
+				Point_t diff = (tracks[i]->prediction - detections[j]);
+				track_t dist = sqrtf(diff.x*diff.x + diff.y*diff.y);
+				Cost[i + j * N] = dist;
 			}
 		}
-		else
+		// -----------------------------------
+		// Solving assignment problem (tracks and predictions of Kalman filter)
+		// -----------------------------------
+		AssignmentProblemSolver APS;
+		APS.Solve(Cost, N, M, assignment, AssignmentProblemSolver::optimal);
+
+		// -----------------------------------
+		// clean assignment from pairs with large distance
+		// -----------------------------------
+		// Not assigned tracks
+		std::vector<int> not_assigned_tracks;
+
+		for (size_t i = 0; i < assignment.size(); i++)
 		{
-			// If track have no assigned detect, then increment skipped frames counter.
-			tracks[i]->skipped_frames++;
+			if (assignment[i] != -1)
+			{
+				if (Cost[i + assignment[i] * N] > dist_thres)
+				{
+					assignment[i] = -1;
+					// Mark unassigned tracks, and increment skipped frames counter,
+					// when skipped frames counter will be larger than threshold, track will be deleted.
+					not_assigned_tracks.push_back(static_cast<int>(i));
+				}
+			}
+			else
+			{
+				// If track have no assigned detect, then increment skipped frames counter.
+				tracks[i]->skipped_frames++;
+			}
 		}
 
-	}
-
-	// -----------------------------------
-	// If track didn't get detects long time, remove it.
-	// -----------------------------------
-    for (int i = 0; i < static_cast<int>(tracks.size()); i++)
-	{
-		if (tracks[i]->skipped_frames > maximum_allowed_skipped_frames)
+		// -----------------------------------
+		// If track didn't get detects long time, remove it.
+		// -----------------------------------
+		for (int i = 0; i < static_cast<int>(tracks.size()); i++)
 		{
-			tracks.erase(tracks.begin() + i);
-			assignment.erase(assignment.begin() + i);
-			i--;
+			if (tracks[i]->skipped_frames > maximum_allowed_skipped_frames)
+			{
+				tracks.erase(tracks.begin() + i);
+				assignment.erase(assignment.begin() + i);
+				i--;
+			}
 		}
 	}
+
 	// -----------------------------------
 	// Search for unassigned detects
 	// -----------------------------------
