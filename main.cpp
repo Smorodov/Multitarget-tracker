@@ -27,7 +27,7 @@ void mv_MouseCallback(int event, int x, int y, int /*flags*/, void* param)
 // set to 0 for Bugs tracking example
 // set to 1 for mouse tracking example
 // ----------------------------------------------------------------------
-// #define ExampleNum 1
+ #define ExampleNum 1
 
 int main(int ac, char** av)
 {
