@@ -11,10 +11,10 @@ AssignmentProblemSolver::~AssignmentProblemSolver()
 
 track_t AssignmentProblemSolver::Solve(std::vector<std::vector<track_t>>& distMatrix, std::vector<int>& assignment, TMethod Method)
 {
-	assignment.clear();
-
 	size_t N = distMatrix.size(); // number of columns (tracks)
 	size_t M = distMatrix[0].size(); // number of rows (measurements)
+
+	assignment.resize(N, -1);
 
 	track_t* distIn = new track_t[N*M];
 
@@ -70,10 +70,6 @@ void AssignmentProblemSolver::assignmentoptimal(assignments_t& assignment, track
 
 	// Init
 	*cost = 0;
-	for (row = 0; row < nOfRows; row++)
-	{
-		assignment[row] = -1;
-	}
 
 	// Generate distance cv::Matrix 
 	// and check cv::Matrix elements positiveness :)
@@ -466,10 +462,6 @@ void AssignmentProblemSolver::assignmentsuboptimal2(assignments_t& assignment, t
 
 	/* initialization */
 	*cost = 0;
-	for (int row = 0; row < nOfRows; row++)
-	{
-		assignment[row] = -1;
-	}
 
 	/* recursively search for the minimum element and do the assignment */
 	for (;;)
@@ -527,11 +519,6 @@ void AssignmentProblemSolver::assignmentsuboptimal1(assignments_t& assignment, t
 	}
 	/* initialization */
 	*cost = 0;
-
-	for (int row = 0; row < nOfRows; row++)
-	{
-		assignment[row] = -1;
-	}
 
 	/* allocate memory */
 	int* nOfValidObservations = (int *)calloc(nOfRows, sizeof(int));
