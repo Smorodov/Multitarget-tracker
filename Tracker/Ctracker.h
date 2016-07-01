@@ -38,7 +38,7 @@ public:
     size_t max_trace_length;
 
 	std::vector<std::unique_ptr<CTrack>> tracks;
-	void Update(std::vector<Point_t>& detections);
+	void Update(const std::vector<Point_t>& detections);
     CTracker(track_t dt_, track_t Accel_noise_mag_, track_t dist_thres_ = 60, size_t maximum_allowed_skipped_frames_ = 10, size_t max_trace_length_ = 10);
 	~CTracker(void);
 };
