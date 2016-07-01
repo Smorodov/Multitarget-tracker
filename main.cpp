@@ -27,7 +27,7 @@ void mv_MouseCallback(int event, int x, int y, int /*flags*/, void* param)
 // set to 0 for Bugs tracking example
 // set to 1 for mouse tracking example
 // ----------------------------------------------------------------------
- #define ExampleNum 1
+ #define ExampleNum 0
 
 int main(int ac, char** av)
 {
@@ -54,38 +54,46 @@ int main(int ac, char** av)
 	cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
 	CDetector* detector = new CDetector(gray);
 	int k = 0;
+
+	double freq = cv::getTickFrequency();
+
+	int64 allTime = 0;
+
 	while (k != 27)
 	{
 		capture >> frame;
 		if (frame.empty())
 		{
-			capture.set(cv::CAP_PROP_POS_FRAMES, 0);
-			continue;
+			//capture.set(cv::CAP_PROP_POS_FRAMES, 0);
+			//continue;
+			break;
 		}
 		cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
 
-		std::vector<Point_t> centers(detector->Detect(gray));
+		int64 t1 = cv::getTickCount();
+
+		const std::vector<Point_t>& centers = detector->Detect(gray);
+
+		tracker.Update(centers);
+
+		int64 t2 = cv::getTickCount();
+
+		allTime += t2 - t1;
 
 		for (int i = 0; i < centers.size(); i++)
 		{
 			cv::circle(frame, centers[i], 3, cv::Scalar(0, 255, 0), 1, CV_AA);
 		}
 
+		std::cout << tracker.tracks.size() << std::endl;
 
-		if (centers.size() > 0)
+		for (int i = 0; i < tracker.tracks.size(); i++)
 		{
-			tracker.Update(centers);
-
-			std::cout << tracker.tracks.size() << std::endl;
-
-			for (int i = 0; i < tracker.tracks.size(); i++)
+			if (tracker.tracks[i]->trace.size()>1)
 			{
-				if (tracker.tracks[i]->trace.size()>1)
+				for (int j = 0; j < tracker.tracks[i]->trace.size() - 1; j++)
 				{
-					for (int j = 0; j < tracker.tracks[i]->trace.size() - 1; j++)
-					{
-						cv::line(frame, tracker.tracks[i]->trace[j], tracker.tracks[i]->trace[j + 1], Colors[tracker.tracks[i]->track_id % 9], 2, CV_AA);
-					}
+					cv::line(frame, tracker.tracks[i]->trace[j], tracker.tracks[i]->trace[j + 1], Colors[tracker.tracks[i]->track_id % 9], 2, CV_AA);
 				}
 			}
 		}
@@ -94,7 +102,12 @@ int main(int ac, char** av)
 
 		k = cv::waitKey(20);
 	}
+
+	std::cout << "work time = " << (allTime / freq) << std::endl;
+
 	delete detector;
+
+
 	cv::destroyAllWindows();
 	return 0;
 #else

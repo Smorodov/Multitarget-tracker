@@ -47,7 +47,7 @@ CTracker::CTracker(
 // ---------------------------------------------------------------------------
 //
 // ---------------------------------------------------------------------------
-void CTracker::Update(std::vector<Point_t>& detections)
+void CTracker::Update(const std::vector<Point_t>& detections)
 {
 	// -----------------------------------
 	// If there is no tracks yet, then every cv::Point begins its own track.
