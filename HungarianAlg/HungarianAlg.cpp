@@ -708,4 +708,5 @@ void AssignmentProblemSolver::assignmentsuboptimal1(assignments_t& assignment, t
 	/* free allocated memory */
 	free(nOfValidObservations);
 	free(nOfValidTracks);
+	free(distMatrix);
 }
