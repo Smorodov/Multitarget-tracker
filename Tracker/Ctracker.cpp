@@ -131,25 +131,13 @@ void CTracker::Update(const std::vector<Point_t>& detections)
 	}
 
 	// -----------------------------------
-	// Search for unassigned detects
+    // Search for unassigned detects and start new tracks for them.
 	// -----------------------------------
-	std::vector<int> not_assigned_detections;
-    for (int i = 0; i < static_cast<int>(detections.size()); i++)
+    for (size_t i = 0; i < detections.size(); ++i)
 	{
         if (find(assignment.begin(), assignment.end(), i) == assignment.end())
 		{
-			not_assigned_detections.push_back(i);
-		}
-	}
-
-	// -----------------------------------
-	// and start new tracks for them.
-	// -----------------------------------
-	if (not_assigned_detections.size() != 0)
-	{
-        for (auto nadet : not_assigned_detections)
-		{
-            tracks.push_back(std::make_unique<CTrack>(detections[nadet], dt, Accel_noise_mag));
+            tracks.push_back(std::make_unique<CTrack>(detections[i], dt, Accel_noise_mag));
 		}
 	}
 
