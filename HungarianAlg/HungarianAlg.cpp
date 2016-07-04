@@ -180,7 +180,7 @@ void AssignmentProblemSolver::buildassignmentvector(assignments_t& assignment, b
 		{
 			if (starMatrix[row + nOfRows * col])
 			{
-				assignment[row] = col;
+				assignment[row] = static_cast<int>(col);
 				break;
 			}
 		}
@@ -649,7 +649,7 @@ void AssignmentProblemSolver::assignmentsuboptimal1(assignments_t& assignment, t
 
 				if (allSinglyValidated)
 				{
-					assignment[tmpRow] = col;
+					assignment[tmpRow] = static_cast<int>(col);
 					cost += minValue;
 					for (size_t n = 0; n < nOfRows; n++)
 					{
