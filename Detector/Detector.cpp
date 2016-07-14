@@ -2,55 +2,60 @@
 
 CDetector::CDetector(cv::Mat& gray)
 {
-	fg = gray.clone();
-	bs = new BackgroundSubtract;
-	bs->init(gray);
+	m_fg = gray.clone();
+	m_bs = std::make_unique<BackgroundSubtract>(gray.channels());
+	m_bs->init(gray);
+
+	m_minObjectSize.width = std::max(5, gray.cols / 100);
+	m_minObjectSize.height = m_minObjectSize.width;
+}
+
+CDetector::~CDetector(void)
+{
+}
+
+void CDetector::SetMinObjectSize(cv::Size minObjectSize)
+{
+	m_minObjectSize = minObjectSize;
 }
 
 //----------------------------------------------------------------------
 // Detector
 //----------------------------------------------------------------------
-void CDetector::DetectContour(cv::Mat& img, std::vector<cv::Rect>& Rects, std::vector<Point_t>& centers)
+void CDetector::DetectContour()
 {
-	Rects.clear();
-	centers.clear();
+	m_rects.clear();
+	m_centers.clear();
 	std::vector<std::vector<cv::Point> > contours;
 	std::vector<cv::Vec4i> hierarchy;
-	cv::Mat edges = img.clone();
-	cv::Canny(img, edges, 50, 190, 3);
+	cv::Mat edges;
+	cv::Canny(m_fg, edges, 50, 190, 3);
 	cv::findContours(edges, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, cv::Point());
 	if (contours.size() > 0)
 	{
 		for (size_t i = 0; i < contours.size(); i++)
 		{
 			cv::Rect r = cv::boundingRect(contours[i]);
-			Rects.push_back(r);
-			centers.push_back((r.br() + r.tl())*0.5);
+
+			if (r.width >= m_minObjectSize.width &&
+				r.height >= m_minObjectSize.height)
+			{
+				m_rects.push_back(r);
+				m_centers.push_back((r.br() + r.tl())*0.5);
+			}
 		}
 	}
 }
 
 const std::vector<Point_t>& CDetector::Detect(cv::Mat& gray)
 {
-	bs->subtract(gray, fg);
-	// rects - bounding rectangles
-	// centers - centers of bounding rectangles
-	/*
-	cv::Mat fg2;
-	fg.convertTo(fg2,CV_32FC1);
-	cv::GaussianBlur(fg2,fg2,Size(5,5),1.0);
-	cv::Laplacian(fg2,fg2,CV_32FC1);
+	m_bs->subtract(gray, m_fg);
 
-	normalize(fg2,fg2,0,255,cv::NORM_MINMAX);
-	fg2.convertTo(fg2,CV_8UC1);
-	cv::applyColorMap(fg2,fg2,COLORMAP_JET);
-	imshow("Foreground",fg2);
-	*/
-	DetectContour(fg, rects, centers);
-	return centers;
+	DetectContour();
+	return m_centers;
 }
 
-CDetector::~CDetector(void)
+const std::vector<cv::Rect>& CDetector::GetDetects() const
 {
-	delete bs;
+	return m_rects;
 }

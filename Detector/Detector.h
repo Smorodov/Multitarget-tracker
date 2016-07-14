@@ -7,14 +7,21 @@
 class CDetector
 {
 private:
-	void DetectContour(cv::Mat& img, std::vector<cv::Rect>& Rects, std::vector<Point_t>& centers);
-	BackgroundSubtract* bs;
-	std::vector<cv::Rect> rects;
-	std::vector<Point_t> centers;
-	cv::Mat fg;
+	void DetectContour();
+
+	std::unique_ptr<BackgroundSubtract> m_bs;
+	std::vector<cv::Rect> m_rects;
+	std::vector<Point_t> m_centers;
+	cv::Mat m_fg;
+
+	cv::Size m_minObjectSize;
+
 public:
 	CDetector(cv::Mat& gray);
 	const std::vector<Point_t>& Detect(cv::Mat& gray);
 	~CDetector(void);
-};
 
+	void SetMinObjectSize(cv::Size minObjectSize);
+
+	const std::vector<cv::Rect>& GetDetects() const;
+};

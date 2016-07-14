@@ -94,9 +94,6 @@ void CTracker::Update(const std::vector<Point_t>& detections)
 		// -----------------------------------
 		// clean assignment from pairs with large distance
 		// -----------------------------------
-		// Not assigned tracks
-		std::vector<int> not_assigned_tracks;
-
 		for (size_t i = 0; i < assignment.size(); i++)
 		{
 			if (assignment[i] != -1)
@@ -104,9 +101,7 @@ void CTracker::Update(const std::vector<Point_t>& detections)
 				if (Cost[i + assignment[i] * N] > dist_thres)
 				{
 					assignment[i] = -1;
-					// Mark unassigned tracks, and increment skipped frames counter,
-					// when skipped frames counter will be larger than threshold, track will be deleted.
-					not_assigned_tracks.push_back(static_cast<int>(i));
+					tracks[i]->skipped_frames = 1;
 				}
 			}
 			else
