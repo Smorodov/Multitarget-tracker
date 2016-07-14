@@ -48,11 +48,12 @@ int main(int ac, char** av)
 	cv::Mat frame;
 	cv::Mat gray;
 
-	CTracker tracker(0.2f, 0.1f, 60.0f, 5, 10);
+	CTracker tracker(0.2f, 0.1f, 60.0f, 10, 50);
 
 	capture >> frame;
 	cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
-	CDetector* detector = new CDetector(gray);
+	CDetector detector(gray);
+	detector.SetMinObjectSize(cv::Size(gray.cols / 50, gray.rows / 20));
 	int k = 0;
 
 	double freq = cv::getTickFrequency();
@@ -72,7 +73,8 @@ int main(int ac, char** av)
 
 		int64 t1 = cv::getTickCount();
 
-		const std::vector<Point_t>& centers = detector->Detect(gray);
+		const std::vector<Point_t>& centers = detector.Detect(gray);
+		const std::vector<cv::Rect>& rects = detector.GetDetects();
 
 		tracker.Update(centers);
 
@@ -80,9 +82,13 @@ int main(int ac, char** av)
 
 		allTime += t2 - t1;
 
-		for (int i = 0; i < centers.size(); i++)
+		for (auto p : centers)
 		{
-			cv::circle(frame, centers[i], 3, cv::Scalar(0, 255, 0), 1, CV_AA);
+			cv::circle(frame, p, 3, cv::Scalar(0, 255, 0), 1, CV_AA);
+		}
+		for (auto r : rects)
+		{
+			cv::rectangle(frame, r, cv::Scalar(0, 255, 0), 1, CV_AA);
 		}
 
 		std::cout << tracker.tracks.size() << std::endl;
@@ -104,9 +110,6 @@ int main(int ac, char** av)
 	}
 
 	std::cout << "work time = " << (allTime / freq) << std::endl;
-
-	delete detector;
-
 
 	cv::destroyAllWindows();
 	return 0;

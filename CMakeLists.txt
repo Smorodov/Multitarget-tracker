@@ -28,14 +28,14 @@ set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
 		     Detector/Detector.cpp
              HungarianAlg/HungarianAlg.cpp
              vibe_src/BackgroundSubtract.cpp
-             vibe_src/VIBE.cpp
+             vibe_src/vibe.cpp
              Tracker/Ctracker.cpp
              Tracker/Kalman.cpp)
 
   set(folder_header  Detector/Detector.h
 		     HungarianAlg/HungarianAlg.h
              vibe_src/BackgroundSubtract.h
-             vibe_src/VIBE.h
+             vibe_src/vibe.hpp
              Tracker/Ctracker.h
              Tracker/Kalman.h
              Tracker/defines.h)
