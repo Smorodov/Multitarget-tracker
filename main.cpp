@@ -27,7 +27,7 @@ void mv_MouseCallback(int event, int x, int y, int /*flags*/, void* param)
 // set to 0 for Bugs tracking example
 // set to 1 for mouse tracking example
 // ----------------------------------------------------------------------
- #define ExampleNum 0
+ #define ExampleNum 1
 
 int main(int ac, char** av)
 {
@@ -76,7 +76,7 @@ int main(int ac, char** av)
 		const std::vector<Point_t>& centers = detector.Detect(gray);
 		const std::vector<cv::Rect>& rects = detector.GetDetects();
 
-		tracker.Update(centers, rects);
+		tracker.Update(centers, rects, CTracker::RectsDist);
 
 		int64 t2 = cv::getTickCount();
 
@@ -155,7 +155,7 @@ int main(int ac, char** av)
 			cv::circle(frame, pts[i], 3, cv::Scalar(0, 255, 0), 1, CV_AA);
 		}
 
-		tracker.Update(pts, rects);
+		tracker.Update(pts, rects, CTracker::CentersDist);
 
 		std::cout << tracker.tracks.size() << std::endl;
 

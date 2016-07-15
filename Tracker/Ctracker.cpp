@@ -24,7 +24,9 @@ CTracker::CTracker(
 // ---------------------------------------------------------------------------
 void CTracker::Update(
 	const std::vector<Point_t>& detections,
-	const std::vector<cv::Rect>& rects)
+	const std::vector<cv::Rect>& rects,
+	DistType distType
+	)
 {
 	assert(detections.size() == rects.size());
 
@@ -53,15 +55,29 @@ void CTracker::Update(
 		// -----------------------------------
 		// Треки уже есть, составим матрицу расстояний
 		// -----------------------------------
-		for (size_t i = 0; i < tracks.size(); i++)
+		switch (distType)
 		{
-			for (size_t j = 0; j < detections.size(); j++)
+		case CentersDist:
+			for (size_t i = 0; i < tracks.size(); i++)
 			{
-				Point_t diff = tracks[i]->prediction - detections[j];
-				track_t dist = sqrtf(diff.x*diff.x + diff.y*diff.y);
-				Cost[i + j * N] = dist;
+				for (size_t j = 0; j < detections.size(); j++)
+				{
+					Cost[i + j * N] = tracks[i]->CalcDist(detections[j]);
+				}
 			}
+			break;
+
+		case RectsDist:
+			for (size_t i = 0; i < tracks.size(); i++)
+			{
+				for (size_t j = 0; j < detections.size(); j++)
+				{
+					Cost[i + j * N] = tracks[i]->CalcDist(rects[j]);
+				}
+			}
+			break;
 		}
+
 		// -----------------------------------
 		// Solving assignment problem (tracks and predictions of Kalman filter)
 		// -----------------------------------
