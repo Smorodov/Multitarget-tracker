@@ -55,7 +55,7 @@ void CTracker::Update(const std::vector<Point_t>& detections)
 		{
 			for (size_t j = 0; j < detections.size(); j++)
 			{
-				Point_t diff = (tracks[i]->prediction - detections[j]);
+				Point_t diff = tracks[i]->prediction - detections[j];
 				track_t dist = sqrtf(diff.x*diff.x + diff.y*diff.y);
 				Cost[i + j * N] = dist;
 			}
@@ -117,25 +117,15 @@ void CTracker::Update(const std::vector<Point_t>& detections)
 	{
 		// If track updated less than one time, than filter state is not correct.
 
-		tracks[i]->KF.GetPrediction();
-
 		if (assignment[i] != -1) // If we have assigned detect, then update using its coordinates,
 		{
 			tracks[i]->skipped_frames = 0;
-			tracks[i]->prediction = tracks[i]->KF.Update(detections[assignment[i]], 1);
+			tracks[i]->Update(detections[assignment[i]], true, max_trace_length);
 		}
-		else				  // if not continue using predictions
+		else				     // if not continue using predictions
 		{
-			tracks[i]->prediction = tracks[i]->KF.Update(Point_t(0, 0), 0);
+			tracks[i]->Update(Point_t(0, 0), false, max_trace_length);
 		}
-
-        if (tracks[i]->trace.size() > max_trace_length)
-		{
-			tracks[i]->trace.erase(tracks[i]->trace.begin(), tracks[i]->trace.end() - max_trace_length);
-		}
-
-		tracks[i]->trace.push_back(tracks[i]->prediction);
-		tracks[i]->KF.LastResult = tracks[i]->prediction;
 	}
 
 }

@@ -13,16 +13,31 @@ public:
 	CTrack(Point_t p, track_t dt, track_t Accel_noise_mag, size_t trackID)
 		:
 		track_id(trackID),
-		prediction(p),
 		skipped_frames(0),
+		prediction(p),
 		KF(p, dt, Accel_noise_mag)
 	{
+	}
+
+	void Update(Point_t p, bool dataCorrect, size_t max_trace_length)
+	{
+		KF.GetPrediction();
+		prediction = KF.Update(p, dataCorrect);
+
+		if (trace.size() > max_trace_length)
+		{
+			trace.erase(trace.begin(), trace.end() - max_trace_length);
+		}
+
+		trace.push_back(prediction);
 	}
 
 	std::vector<Point_t> trace;
 	size_t track_id;
 	size_t skipped_frames; 
 	Point_t prediction;
+
+private:
 	TKalmanFilter KF;
 };
 
