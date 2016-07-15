@@ -22,32 +22,34 @@ CTracker::CTracker(
 // ---------------------------------------------------------------------------
 //
 // ---------------------------------------------------------------------------
-void CTracker::Update(const std::vector<Point_t>& detections)
+void CTracker::Update(
+	const std::vector<Point_t>& detections,
+	const std::vector<cv::Rect>& rects)
 {
+	assert(detections.size() == rects.size());
+
 	// -----------------------------------
 	// If there is no tracks yet, then every cv::Point begins its own track.
 	// -----------------------------------
 	if (tracks.size() == 0)
 	{
 		// If no tracks yet
-        for (auto d : detections)
+		for (size_t i = 0; i < detections.size(); ++i)
 		{
-            tracks.push_back(std::make_unique<CTrack>(d, dt, Accel_noise_mag, NextTrackID++));
+			tracks.push_back(std::make_unique<CTrack>(detections[i], rects[i], dt, Accel_noise_mag, NextTrackID++));
 		}
 	}
 
-	// -----------------------------------
-	// Здесь треки уже есть в любом случае
-	// -----------------------------------
 	size_t N = tracks.size();		// треки
 	size_t M = detections.size();	// детекты
 
-	// Матрица расстояний от N-ного трека до M-ного детекта.
-	distMatrix_t Cost(N * M);
 	assignments_t assignment; // назначения
 
 	if (!tracks.empty())
 	{
+		// Матрица расстояний от N-ного трека до M-ного детекта.
+		distMatrix_t Cost(N * M);
+
 		// -----------------------------------
 		// Треки уже есть, составим матрицу расстояний
 		// -----------------------------------
@@ -107,7 +109,7 @@ void CTracker::Update(const std::vector<Point_t>& detections)
 	{
         if (find(assignment.begin(), assignment.end(), i) == assignment.end())
 		{
-			tracks.push_back(std::make_unique<CTrack>(detections[i], dt, Accel_noise_mag, NextTrackID++));
+			tracks.push_back(std::make_unique<CTrack>(detections[i], rects[i], dt, Accel_noise_mag, NextTrackID++));
 		}
 	}
 
@@ -120,11 +122,11 @@ void CTracker::Update(const std::vector<Point_t>& detections)
 		if (assignment[i] != -1) // If we have assigned detect, then update using its coordinates,
 		{
 			tracks[i]->skipped_frames = 0;
-			tracks[i]->Update(detections[assignment[i]], true, max_trace_length);
+			tracks[i]->Update(detections[assignment[i]], rects[assignment[i]], true, max_trace_length);
 		}
 		else				     // if not continue using predictions
 		{
-			tracks[i]->Update(Point_t(0, 0), false, max_trace_length);
+			tracks[i]->Update(Point_t(), cv::Rect(), false, max_trace_length);
 		}
 	}
 

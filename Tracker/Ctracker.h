@@ -6,23 +6,29 @@
 #include <vector>
 #include <memory>
 
-//template<typename TRACK_OBJ>
+// --------------------------------------------------------------------------
 class CTrack
 {
 public:
-	CTrack(Point_t p, track_t dt, track_t Accel_noise_mag, size_t trackID)
+	CTrack(const Point_t& p, const cv::Rect& rect, track_t dt, track_t Accel_noise_mag, size_t trackID)
 		:
 		track_id(trackID),
 		skipped_frames(0),
 		prediction(p),
+		lastRect(rect),
 		KF(p, dt, Accel_noise_mag)
 	{
 	}
 
-	void Update(Point_t p, bool dataCorrect, size_t max_trace_length)
+	void Update(const Point_t& p, const cv::Rect& rect, bool dataCorrect, size_t max_trace_length)
 	{
 		KF.GetPrediction();
 		prediction = KF.Update(p, dataCorrect);
+
+		if (dataCorrect)
+		{
+			lastRect = rect;
+		}
 
 		if (trace.size() > max_trace_length)
 		{
@@ -35,13 +41,24 @@ public:
 	std::vector<Point_t> trace;
 	size_t track_id;
 	size_t skipped_frames; 
+	
 	Point_t prediction;
 
+	cv::Rect GetLastRect()
+	{
+		return cv::Rect(
+			static_cast<int>(prediction.x - lastRect.width / 2),
+			static_cast<int>(prediction.y - lastRect.height / 2),
+			lastRect.width,
+			lastRect.height);
+	}
+
 private:
+	cv::Rect lastRect;
 	TKalmanFilter KF;
 };
 
-
+// --------------------------------------------------------------------------
 class CTracker
 {
 public:
@@ -49,7 +66,7 @@ public:
 	~CTracker(void);
 
 	std::vector<std::unique_ptr<CTrack>> tracks;
-	void Update(const std::vector<Point_t>& detections);
+	void Update(const std::vector<Point_t>& detections, const std::vector<cv::Rect>& rects);
 
 private:
 	// Шаг времени опроса фильтра
