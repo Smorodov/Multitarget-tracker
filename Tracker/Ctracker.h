@@ -6,17 +6,24 @@
 #include <vector>
 #include <memory>
 
+//template<typename TRACK_OBJ>
 class CTrack
 {
 public:
+	CTrack(Point_t p, track_t dt, track_t Accel_noise_mag, size_t trackID)
+		:
+		track_id(trackID),
+		prediction(p),
+		skipped_frames(0),
+		KF(p, dt, Accel_noise_mag)
+	{
+	}
+
 	std::vector<Point_t> trace;
-	static size_t NextTrackID;
 	size_t track_id;
 	size_t skipped_frames; 
 	Point_t prediction;
-	TKalmanFilter* KF;
-	CTrack(Point_t p, track_t dt, track_t Accel_noise_mag);
-	~CTrack();
+	TKalmanFilter KF;
 };
 
 
@@ -42,5 +49,7 @@ private:
     size_t maximum_allowed_skipped_frames;
 	// Максимальная длина следа
     size_t max_trace_length;
+
+	size_t NextTrackID;
 };
 

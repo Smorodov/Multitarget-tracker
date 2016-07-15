@@ -1,31 +1,5 @@
 #include "Ctracker.h"
 
-size_t CTrack::NextTrackID = 0;
-// ---------------------------------------------------------------------------
-// Track constructor.
-// The track begins from initial cv::Point (pt)
-// ---------------------------------------------------------------------------
-CTrack::CTrack(Point_t pt, track_t dt, track_t Accel_noise_mag)
-{
-	track_id = NextTrackID;
-
-	NextTrackID++;
-	// Every track have its own Kalman filter,
-	// it user for next cv::Point position prediction.
-	KF = new TKalmanFilter(pt, dt, Accel_noise_mag);
-	// Here stored cv::Points coordinates, used for next position prediction.
-	prediction = pt;
-	skipped_frames = 0;
-}
-// ---------------------------------------------------------------------------
-//
-// ---------------------------------------------------------------------------
-CTrack::~CTrack()
-{
-	// Free resources.
-	delete KF;
-}
-
 // ---------------------------------------------------------------------------
 // Tracker. Manage tracks. Create, remove, update.
 // ---------------------------------------------------------------------------
@@ -41,7 +15,8 @@ CTracker::CTracker(
       Accel_noise_mag(Accel_noise_mag_),
       dist_thres(dist_thres_),
       maximum_allowed_skipped_frames(maximum_allowed_skipped_frames_),
-      max_trace_length(max_trace_length_)
+      max_trace_length(max_trace_length_),
+	  NextTrackID(0)
 {
 }
 // ---------------------------------------------------------------------------
@@ -57,7 +32,7 @@ void CTracker::Update(const std::vector<Point_t>& detections)
 		// If no tracks yet
         for (auto d : detections)
 		{
-            tracks.push_back(std::make_unique<CTrack>(d, dt, Accel_noise_mag));
+            tracks.push_back(std::make_unique<CTrack>(d, dt, Accel_noise_mag, NextTrackID++));
 		}
 	}
 
@@ -132,7 +107,7 @@ void CTracker::Update(const std::vector<Point_t>& detections)
 	{
         if (find(assignment.begin(), assignment.end(), i) == assignment.end())
 		{
-            tracks.push_back(std::make_unique<CTrack>(detections[i], dt, Accel_noise_mag));
+			tracks.push_back(std::make_unique<CTrack>(detections[i], dt, Accel_noise_mag, NextTrackID++));
 		}
 	}
 
@@ -142,16 +117,16 @@ void CTracker::Update(const std::vector<Point_t>& detections)
 	{
 		// If track updated less than one time, than filter state is not correct.
 
-		tracks[i]->KF->GetPrediction();
+		tracks[i]->KF.GetPrediction();
 
 		if (assignment[i] != -1) // If we have assigned detect, then update using its coordinates,
 		{
 			tracks[i]->skipped_frames = 0;
-			tracks[i]->prediction = tracks[i]->KF->Update(detections[assignment[i]], 1);
+			tracks[i]->prediction = tracks[i]->KF.Update(detections[assignment[i]], 1);
 		}
 		else				  // if not continue using predictions
 		{
-			tracks[i]->prediction = tracks[i]->KF->Update(Point_t(0, 0), 0);
+			tracks[i]->prediction = tracks[i]->KF.Update(Point_t(0, 0), 0);
 		}
 
         if (tracks[i]->trace.size() > max_trace_length)
@@ -160,7 +135,7 @@ void CTracker::Update(const std::vector<Point_t>& detections)
 		}
 
 		tracks[i]->trace.push_back(tracks[i]->prediction);
-		tracks[i]->KF->LastResult = tracks[i]->prediction;
+		tracks[i]->KF.LastResult = tracks[i]->prediction;
 	}
 
 }
