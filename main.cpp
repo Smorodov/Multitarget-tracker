@@ -29,13 +29,21 @@ void mv_MouseCallback(int event, int x, int y, int /*flags*/, void* param)
 // ----------------------------------------------------------------------
  #define ExampleNum 1
 
-int main(int ac, char** av)
+int main(int argc, char** argv)
 {
 	std::string inFile("..\\..\\data\\TrackingBugs.mp4");
-	if (ac > 1)
+	if (argc > 1)
 	{
-		inFile = av[1];
+		inFile = argv[1];
 	}
+
+	std::string outFile;
+	if (argc > 2)
+	{
+		outFile = argv[2];
+	}
+
+	cv::VideoWriter writer;
 
 #if ExampleNum
 	cv::Scalar Colors[] = { cv::Scalar(255, 0, 0), cv::Scalar(0, 255, 0), cv::Scalar(0, 0, 255), cv::Scalar(255, 255, 0), cv::Scalar(0, 255, 255), cv::Scalar(255, 0, 255), cv::Scalar(255, 127, 255), cv::Scalar(127, 0, 255), cv::Scalar(127, 0, 127) };
@@ -71,6 +79,11 @@ int main(int ac, char** av)
 		}
 		cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
 
+		if (!writer.isOpened())
+		{
+			writer.open(outFile, cv::VideoWriter::fourcc('M', 'J', 'P', 'G'), capture.get(cv::CAP_PROP_FPS), frame.size(), true);
+		}
+
 		int64 t1 = cv::getTickCount();
 
 		const std::vector<Point_t>& centers = detector.Detect(gray);
@@ -89,13 +102,13 @@ int main(int ac, char** av)
 
 		std::cout << tracker.tracks.size() << std::endl;
 
-		for (int i = 0; i < tracker.tracks.size(); i++)
+		for (size_t i = 0; i < tracker.tracks.size(); i++)
 		{
 			cv::rectangle(frame, tracker.tracks[i]->GetLastRect(), cv::Scalar(0, 255, 0), 1, CV_AA);
 
 			if (tracker.tracks[i]->trace.size() > 1)
 			{
-				for (int j = 0; j < tracker.tracks[i]->trace.size() - 1; j++)
+				for (size_t j = 0; j < tracker.tracks[i]->trace.size() - 1; j++)
 				{
 					cv::line(frame, tracker.tracks[i]->trace[j], tracker.tracks[i]->trace[j + 1], Colors[tracker.tracks[i]->track_id % 9], 2, CV_AA);
 				}
@@ -104,13 +117,16 @@ int main(int ac, char** av)
 
 		cv::imshow("Video", frame);
 
+		if (writer.isOpened())
+		{
+			writer << frame;
+		}
+
 		k = cv::waitKey(20);
 	}
 
 	std::cout << "work time = " << (allTime / freq) << std::endl;
 
-	cv::destroyAllWindows();
-	return 0;
 #else
 
 	int k = 0;
@@ -118,7 +134,10 @@ int main(int ac, char** av)
 	cv::namedWindow("Video");
 	cv::Mat frame = cv::Mat(800, 800, CV_8UC3);
 
-	cv::VideoWriter vw = cv::VideoWriter("output.mpeg", CV_FOURCC('P', 'I', 'M', '1'), 20, frame.size());
+	if (!writer.isOpened())
+	{
+		writer.open(outFile, cv::VideoWriter::fourcc('P', 'I', 'M', '1'), 20, frame.size(), true);
+	}
 
 	// Set mouse callback
 	cv::Point2f pointXY;
@@ -173,14 +192,16 @@ int main(int ac, char** av)
 		}
 
 		cv::imshow("Video", frame);
-		vw << frame;
+		
+		if (writer.isOpened())
+		{
+			writer << frame;
+		}
 
 		k = cv::waitKey(10);
 	}
+#endif
 
-	vw.release();
 	cv::destroyAllWindows();
 	return 0;
-
-#endif
 }
