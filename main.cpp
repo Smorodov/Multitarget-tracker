@@ -60,6 +60,8 @@ int main(int ac, char** av)
 
 	int64 allTime = 0;
 
+    bool manualMode = false;
+
 	while (k != 27)
 	{
 		capture >> frame;
@@ -89,7 +91,7 @@ int main(int ac, char** av)
 
 		std::cout << tracker.tracks.size() << std::endl;
 
-		for (int i = 0; i < tracker.tracks.size(); i++)
+        for (size_t i = 0; i < tracker.tracks.size(); i++)
 		{
 			cv::rectangle(frame, tracker.tracks[i]->GetLastRect(), cv::Scalar(0, 255, 0), 1, CV_AA);
 
@@ -104,7 +106,13 @@ int main(int ac, char** av)
 
 		cv::imshow("Video", frame);
 
-		k = cv::waitKey(20);
+        int waitTime = manualMode ? 0 : 20;
+        k = cv::waitKey(waitTime);
+
+        if (k == 'm' || k == 'M')
+        {
+            manualMode = !manualMode;
+        }
 	}
 
 	std::cout << "work time = " << (allTime / freq) << std::endl;
