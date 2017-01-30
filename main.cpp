@@ -31,7 +31,7 @@ void mv_MouseCallback(int event, int x, int y, int /*flags*/, void* param)
 
 int main(int ac, char** av)
 {
-	std::string inFile("..\\..\\data\\TrackingBugs.mp4");
+    std::string inFile("../data/atrium.avi");
 	if (ac > 1)
 	{
 		inFile = av[1];
@@ -76,9 +76,9 @@ int main(int ac, char** av)
 		int64 t1 = cv::getTickCount();
 
 		const std::vector<Point_t>& centers = detector.Detect(gray);
-		const std::vector<cv::Rect>& rects = detector.GetDetects();
+        const regions_t& regions = detector.GetDetects();
 
-		tracker.Update(centers, rects, CTracker::RectsDist);
+        tracker.Update(centers, regions, CTracker::RectsDist);
 
 		int64 t2 = cv::getTickCount();
 
@@ -151,10 +151,10 @@ int main(int ac, char** av)
 		pts.push_back(Point_t(Xmeasured + 100.0f*sin(alpha / 3.0f), Ymeasured + 100.0f*cos(alpha / 1.0f)));
 		alpha += 0.05f;
 
-		std::vector<cv::Rect> rects;
+        regions_t regions;
 		for (auto p : pts)
 		{
-			rects.push_back(cv::Rect(static_cast<int>(p.x - 1), static_cast<int>(p.y - 1), 3, 3));
+            regions.push_back(CRegion(cv::Rect(static_cast<int>(p.x - 1), static_cast<int>(p.y - 1), 3, 3)));
 		}
 
 
@@ -163,7 +163,7 @@ int main(int ac, char** av)
 			cv::circle(frame, pts[i], 3, cv::Scalar(0, 255, 0), 1, CV_AA);
 		}
 
-		tracker.Update(pts, rects, CTracker::CentersDist);
+        tracker.Update(pts, regions, CTracker::CentersDist);
 
 		std::cout << tracker.tracks.size() << std::endl;
 

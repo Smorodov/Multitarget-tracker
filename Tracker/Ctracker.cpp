@@ -24,11 +24,11 @@ CTracker::CTracker(
 // ---------------------------------------------------------------------------
 void CTracker::Update(
 	const std::vector<Point_t>& detections,
-	const std::vector<cv::Rect>& rects,
+    const regions_t& regions,
 	DistType distType
 	)
 {
-	assert(detections.size() == rects.size());
+    assert(detections.size() == regions.size());
 
 	// -----------------------------------
 	// If there is no tracks yet, then every cv::Point begins its own track.
@@ -38,7 +38,7 @@ void CTracker::Update(
 		// If no tracks yet
 		for (size_t i = 0; i < detections.size(); ++i)
 		{
-			tracks.push_back(std::make_unique<CTrack>(detections[i], rects[i], dt, Accel_noise_mag, NextTrackID++));
+            tracks.push_back(std::make_unique<CTrack>(detections[i], regions[i].m_rect, dt, Accel_noise_mag, NextTrackID++));
 		}
 	}
 
@@ -72,7 +72,7 @@ void CTracker::Update(
 			{
 				for (size_t j = 0; j < detections.size(); j++)
 				{
-					Cost[i + j * N] = tracks[i]->CalcDist(rects[j]);
+                    Cost[i + j * N] = tracks[i]->CalcDist(regions[j].m_rect);
 				}
 			}
 			break;
@@ -125,7 +125,7 @@ void CTracker::Update(
 	{
         if (find(assignment.begin(), assignment.end(), i) == assignment.end())
 		{
-			tracks.push_back(std::make_unique<CTrack>(detections[i], rects[i], dt, Accel_noise_mag, NextTrackID++));
+            tracks.push_back(std::make_unique<CTrack>(detections[i], regions[i].m_rect, dt, Accel_noise_mag, NextTrackID++));
 		}
 	}
 
@@ -138,7 +138,7 @@ void CTracker::Update(
 		if (assignment[i] != -1) // If we have assigned detect, then update using its coordinates,
 		{
 			tracks[i]->skipped_frames = 0;
-			tracks[i]->Update(detections[assignment[i]], rects[assignment[i]], true, max_trace_length);
+            tracks[i]->Update(detections[assignment[i]], regions[assignment[i]].m_rect, true, max_trace_length);
 		}
 		else				     // if not continue using predictions
 		{

@@ -29,8 +29,6 @@ public:
 
 	track_t CalcDist(const cv::Rect& r)
 	{
-		cv::Rect rect = GetLastRect();
-
 		std::array<track_t, 4> diff;
 		diff[0] = prediction.x - lastRect.width / 2 - r.x;
 		diff[1] = prediction.y - lastRect.height / 2 - r.y;
@@ -96,7 +94,9 @@ public:
 	};
 
 	std::vector<std::unique_ptr<CTrack>> tracks;
-	void Update(const std::vector<Point_t>& detections, const std::vector<cv::Rect>& rects, DistType distType);
+    void Update(const std::vector<Point_t>& detections, const regions_t& regions, DistType distType);
+
+    void LocalTracking();
 
 private:
 	// Шаг времени опроса фильтра
