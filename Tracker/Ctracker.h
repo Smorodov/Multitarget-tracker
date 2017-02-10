@@ -1,11 +1,13 @@
 #pragma once
-#include "Kalman.h"
-#include "HungarianAlg.h"
-#include "defines.h"
 #include <iostream>
 #include <vector>
 #include <memory>
 #include <array>
+
+#include "defines.h"
+#include "Kalman.h"
+#include "HungarianAlg.h"
+#include "LocalTracker.h"
 
 // --------------------------------------------------------------------------
 class CTrack
@@ -94,9 +96,7 @@ public:
 	};
 
 	std::vector<std::unique_ptr<CTrack>> tracks;
-    void Update(const std::vector<Point_t>& detections, const regions_t& regions, DistType distType);
-
-    void LocalTracking();
+    void Update(const std::vector<Point_t>& detections, const regions_t& regions, DistType distType, cv::Mat gray_frame);
 
 private:
 	// Шаг времени опроса фильтра
@@ -113,4 +113,6 @@ private:
     size_t max_trace_length;
 
 	size_t NextTrackID;
+
+    LocalTracker localTracker;
 };

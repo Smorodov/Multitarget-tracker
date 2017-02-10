@@ -19,16 +19,28 @@ CTracker::CTracker(
 	  NextTrackID(0)
 {
 }
+
+// ---------------------------------------------------------------------------
+//
+// ---------------------------------------------------------------------------
+CTracker::~CTracker(void)
+{
+}
+
 // ---------------------------------------------------------------------------
 //
 // ---------------------------------------------------------------------------
 void CTracker::Update(
 	const std::vector<Point_t>& detections,
     const regions_t& regions,
-	DistType distType
+    DistType distType,
+    cv::Mat gray_frame
 	)
 {
     assert(detections.size() == regions.size());
+
+    regions_t trackedRegions;
+    localTracker.Update(regions, trackedRegions, gray_frame);
 
 	// -----------------------------------
 	// If there is no tracks yet, then every cv::Point begins its own track.
@@ -145,11 +157,4 @@ void CTracker::Update(
 			tracks[i]->Update(Point_t(), cv::Rect(), false, max_trace_length);
 		}
 	}
-
-}
-// ---------------------------------------------------------------------------
-//
-// ---------------------------------------------------------------------------
-CTracker::~CTracker(void)
-{
 }

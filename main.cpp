@@ -91,7 +91,7 @@ int main(int argc, char** argv)
 		const std::vector<Point_t>& centers = detector.Detect(gray);
         const regions_t& regions = detector.GetDetects();
 
-        tracker.Update(centers, regions, CTracker::RectsDist);
+        tracker.Update(centers, regions, CTracker::RectsDist, gray);
 
 		int64 t2 = cv::getTickCount();
 
