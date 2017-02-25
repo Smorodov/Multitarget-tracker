@@ -32,8 +32,8 @@ void LocalTracker::Update(
 
     std::vector<cv::Point2f> points[2];
 
-    points[0].reserve(8 * srcRegions.size());
-    for (const CRegion& region : srcRegions)
+    points[0].reserve(8 * prevRegions.size());
+    for (const CRegion& region : prevRegions)
     {
         for (const auto& pt : region.m_points)
         {
@@ -59,11 +59,11 @@ void LocalTracker::Update(
 
     size_t k = 0;
     size_t i = 0;
-    for (size_t ri = 0; ri < srcRegions.size(); ++ri)
+    for (size_t ri = 0; ri < prevRegions.size(); ++ri)
     {
-        const CRegion& srcReg = srcRegions[ri];
+        const CRegion& reg = prevRegions[ri];
 
-        trackedRegions.push_back(CRegion(srcReg.m_rect));
+        trackedRegions.push_back(CRegion(reg.m_rect));
 
         for (size_t pi = 0; pi < srcReg.m_points.size(); ++pi)
         {
