@@ -25,18 +25,21 @@ set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
 # ищем все .cpp и .h файлы и добавляем их в наш проект 
 # ----------------------------------------------------------------------------
   set(folder_source  main.cpp
-		     Detector/Detector.cpp
+             Detector/Detector.cpp
              HungarianAlg/HungarianAlg.cpp
              vibe_src/BackgroundSubtract.cpp
              vibe_src/vibe.cpp
              Tracker/Ctracker.cpp
+             Tracker/LocalTracker.cpp
              Tracker/Kalman.cpp)
 
   set(folder_header  Detector/Detector.h
-		     HungarianAlg/HungarianAlg.h
+             HungarianAlg/HungarianAlg.h
              vibe_src/BackgroundSubtract.h
              vibe_src/vibe.hpp
+             Tracker/track.h
              Tracker/Ctracker.h
+             Tracker/LocalTracker.h
              Tracker/Kalman.h
              Tracker/defines.h)
 

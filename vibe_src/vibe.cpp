@@ -94,14 +94,13 @@ void VIBE::update(const cv::Mat& img)
                     if (std::abs(img_ptr[img_idx + c] - model_[model_idx + c]) < distance_threshold_)
                     {
                         channels_counter++;
-//                        matching_counter++;
                     }
                 }
                 if (channels_counter == channels_)
                 {
                     matching_counter++;
                 }
-                if ( matching_counter > matching_threshold_)
+                if (matching_counter > matching_threshold_)
                 {
                     flag = true;
                     break;
@@ -111,7 +110,7 @@ void VIBE::update(const cv::Mat& img)
             if (flag)
             {
                 mask_.data[size_.width * i + j] = 0;
-                if(0 == rng_[ rng_idx_ = ( rng_idx_ + 1 ) % RANDOM_BUFFER_SIZE] % update_factor_)
+                if (0 == rng_[ rng_idx_ = ( rng_idx_ + 1 ) % RANDOM_BUFFER_SIZE] % update_factor_)
                 {
                     int sample = rng_[ rng_idx_ = ( rng_idx_ + 1 ) % RANDOM_BUFFER_SIZE] % samples_;
                     int model_idx = channels_ * samples_ * size_.width * i + channels_ * samples_ * j + channels_ * sample;
