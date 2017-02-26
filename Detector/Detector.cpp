@@ -3,7 +3,11 @@
 // ---------------------------------------------------------------------------
 //
 // ---------------------------------------------------------------------------
-CDetector::CDetector(cv::Mat& gray)
+CDetector::CDetector(
+        bool collectPoints,
+        cv::Mat& gray
+        )
+    : m_collectPoints(collectPoints)
 {
 	m_fg = gray.clone();
 	m_bs = std::make_unique<BackgroundSubtract>(gray.channels());
@@ -50,27 +54,30 @@ void CDetector::DetectContour()
 				r.height >= m_minObjectSize.height)
 			{
                 CRegion region(r);
+                cv::Point2f center(r.x + 0.5f * r.width, r.y + 0.5f * r.height);
 
-                const int yStep = 3;
-                const int xStep = 3;
-
-                for (int y = r.y; y < r.y + r.height; y += yStep)
+                if (m_collectPoints)
                 {
-                    cv::Point2f pt(0, y);
-                    for (int x = r.x; x < r.x + r.width; x += xStep)
+                    const int yStep = 3;
+                    const int xStep = 3;
+
+                    for (int y = r.y; y < r.y + r.height; y += yStep)
                     {
-                        pt.x = x;
-                        if (cv::pointPolygonTest(contours[i], pt, false) > 0)
+                        cv::Point2f pt(0, y);
+                        for (int x = r.x; x < r.x + r.width; x += xStep)
                         {
-                            region.m_points.push_back(pt);
+                            pt.x = x;
+                            if (cv::pointPolygonTest(contours[i], pt, false) > 0)
+                            {
+                                region.m_points.push_back(pt);
+                            }
                         }
                     }
-                }
 
-                cv::Point2f center(r.x + 0.5f * r.width, r.y + 0.5f * r.height);
-                if (region.m_points.empty())
-                {
-                    region.m_points.push_back(center);
+                    if (region.m_points.empty())
+                    {
+                        region.m_points.push_back(center);
+                    }
                 }
 
                 m_regions.push_back(region);

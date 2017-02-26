@@ -56,11 +56,13 @@ int main(int argc, char** argv)
 	cv::Mat frame;
 	cv::Mat gray;
 
-    CTracker tracker(true, 0.2f, 0.1f, 60.0f, 10, 50);
+    bool useLocalTracking = true;
+
+    CTracker tracker(useLocalTracking, 0.2f, 0.1f, 60.0f, 10, 50);
 
 	capture >> frame;
 	cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
-	CDetector detector(gray);
+    CDetector detector(useLocalTracking, gray);
 	detector.SetMinObjectSize(cv::Size(gray.cols / 50, gray.rows / 20));
 	int k = 0;
 
@@ -151,7 +153,9 @@ int main(int argc, char** argv)
 	cv::Point2f pointXY;
 	cv::setMouseCallback("Video", mv_MouseCallback, (void*)&pointXY);
 
-    CTracker tracker(false, 0.3f, 0.5f, 60.0f, 25, 25);
+    bool useLocalTracking = false;
+
+    CTracker tracker(useLocalTracking, 0.3f, 0.5f, 60.0f, 25, 25);
 	track_t alpha = 0;
 	cv::RNG rng;
 	while (k != 27)

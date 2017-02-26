@@ -19,8 +19,10 @@ private:
 
 	cv::Size m_minObjectSize;
 
+    bool m_collectPoints;
+
 public:
-	CDetector(cv::Mat& gray);
+    CDetector(bool collectPoints, cv::Mat& gray);
 	const std::vector<Point_t>& Detect(cv::Mat& gray);
 	~CDetector(void);
 
