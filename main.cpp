@@ -56,7 +56,7 @@ int main(int argc, char** argv)
 	cv::Mat frame;
 	cv::Mat gray;
 
-	CTracker tracker(0.2f, 0.1f, 60.0f, 10, 50);
+    CTracker tracker(true, 0.2f, 0.1f, 60.0f, 10, 50);
 
 	capture >> frame;
 	cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
@@ -151,7 +151,7 @@ int main(int argc, char** argv)
 	cv::Point2f pointXY;
 	cv::setMouseCallback("Video", mv_MouseCallback, (void*)&pointXY);
 
-	CTracker tracker(0.3f, 0.5f, 60.0f, 25, 25);
+    CTracker tracker(false, 0.3f, 0.5f, 60.0f, 25, 25);
 	track_t alpha = 0;
 	cv::RNG rng;
 	while (k != 27)
@@ -182,7 +182,7 @@ int main(int argc, char** argv)
 			cv::circle(frame, pts[i], 3, cv::Scalar(0, 255, 0), 1, CV_AA);
 		}
 
-        tracker.Update(pts, regions, CTracker::CentersDist);
+        tracker.Update(pts, regions, CTracker::CentersDist, cv::Mat());
 
 		std::cout << tracker.tracks.size() << std::endl;
 

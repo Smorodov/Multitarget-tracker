@@ -4,6 +4,7 @@
 // Tracker. Manage tracks. Create, remove, update.
 // ---------------------------------------------------------------------------
 CTracker::CTracker(
+        bool useLocalTracking,
         track_t dt_,
         track_t Accel_noise_mag_,
         track_t dist_thres_,
@@ -11,6 +12,7 @@ CTracker::CTracker(
         size_t max_trace_length_
         )
     :
+      m_useLocalTracking(useLocalTracking),
       dt(dt_),
       Accel_noise_mag(Accel_noise_mag_),
       dist_thres(dist_thres_),
@@ -39,8 +41,10 @@ void CTracker::Update(
 {
     assert(detections.size() == regions.size());
 
-    regions_t trackedRegions;
-    localTracker.Update(regions, trackedRegions, gray_frame);
+    if (m_useLocalTracking)
+    {
+        localTracker.Update(tracks, gray_frame);
+    }
 
 	// -----------------------------------
 	// If there is no tracks yet, then every cv::Point begins its own track.
@@ -50,7 +54,7 @@ void CTracker::Update(
 		// If no tracks yet
 		for (size_t i = 0; i < detections.size(); ++i)
 		{
-            tracks.push_back(std::make_unique<CTrack>(detections[i], regions[i].m_rect, dt, Accel_noise_mag, NextTrackID++));
+            tracks.push_back(std::make_unique<CTrack>(detections[i], regions[i], dt, Accel_noise_mag, NextTrackID++));
 		}
 	}
 
@@ -87,7 +91,7 @@ void CTracker::Update(
                     Cost[i + j * N] = tracks[i]->CalcDist(regions[j].m_rect);
 				}
 			}
-			break;
+            break;
 		}
 
 		// -----------------------------------
@@ -137,7 +141,7 @@ void CTracker::Update(
 	{
         if (find(assignment.begin(), assignment.end(), i) == assignment.end())
 		{
-            tracks.push_back(std::make_unique<CTrack>(detections[i], regions[i].m_rect, dt, Accel_noise_mag, NextTrackID++));
+            tracks.push_back(std::make_unique<CTrack>(detections[i], regions[i], dt, Accel_noise_mag, NextTrackID++));
 		}
 	}
 
@@ -150,11 +154,11 @@ void CTracker::Update(
 		if (assignment[i] != -1) // If we have assigned detect, then update using its coordinates,
 		{
 			tracks[i]->skipped_frames = 0;
-            tracks[i]->Update(detections[assignment[i]], regions[assignment[i]].m_rect, true, max_trace_length);
+            tracks[i]->Update(detections[assignment[i]], regions[assignment[i]], true, max_trace_length);
 		}
 		else				     // if not continue using predictions
 		{
-			tracks[i]->Update(Point_t(), cv::Rect(), false, max_trace_length);
+            tracks[i]->Update(Point_t(), CRegion(), false, max_trace_length);
 		}
 	}
 }

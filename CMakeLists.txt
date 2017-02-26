@@ -37,6 +37,7 @@ set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
              HungarianAlg/HungarianAlg.h
              vibe_src/BackgroundSubtract.h
              vibe_src/vibe.hpp
+             Tracker/track.h
              Tracker/Ctracker.h
              Tracker/LocalTracker.h
              Tracker/Kalman.h

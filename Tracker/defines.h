@@ -15,6 +15,10 @@ typedef cv::Point_<track_t> Point_t;
 class CRegion
 {
 public:
+    CRegion()
+    {
+    }
+
     CRegion(const cv::Rect& rect)
         : m_rect(rect)
     {

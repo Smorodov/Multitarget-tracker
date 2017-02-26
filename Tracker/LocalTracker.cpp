@@ -18,24 +18,23 @@ LocalTracker::~LocalTracker(void)
 //
 // ---------------------------------------------------------------------------
 void LocalTracker::Update(
-        const regions_t& srcRegions,
-        regions_t& trackedRegions,
+        tracks_t& tracks,
         cv::Mat grayFrame
         )
 {
     if (m_prevFrame.size() != grayFrame.size())
     {
         m_prevFrame = grayFrame;
-        prevRegions.assign(srcRegions.begin(), srcRegions.end());
         return;
     }
 
     std::vector<cv::Point2f> points[2];
 
-    points[0].reserve(8 * prevRegions.size());
-    for (const CRegion& region : prevRegions)
+    points[0].reserve(8 * tracks.size());
+    for (auto& track : tracks)
     {
-        for (const auto& pt : region.m_points)
+        track->pointsCount = 0;
+        for (const auto& pt : track->lastRegion.m_points)
         {
             points[0].push_back(pt);
         }
@@ -43,6 +42,7 @@ void LocalTracker::Update(
 
     if (points[0].empty())
     {
+        m_prevFrame = grayFrame;
         return;
     }
 
@@ -59,17 +59,16 @@ void LocalTracker::Update(
 
     size_t k = 0;
     size_t i = 0;
-    for (size_t ri = 0; ri < prevRegions.size(); ++ri)
+    for (auto& track : tracks)
     {
-        const CRegion& reg = prevRegions[ri];
-
-        trackedRegions.push_back(CRegion(reg.m_rect));
-
-        for (size_t pi = 0; pi < srcReg.m_points.size(); ++pi)
+        track->averagePoint = Point_t(0, 0);
+        track->pointsCount = 0;
+        for (size_t pi = 0, stop = track->lastRegion.m_points.size(); pi < stop; ++pi)
         {
             if (status[i])
             {
-                trackedRegions[ri].m_points.push_back(points[1][i]);
+                ++track->pointsCount;
+                track->averagePoint += points[1][i];
 
                 points[1][k++] = points[1][i];
                 //circle(image, points[1][i], 3, cv::Scalar(0,255,0), -1, 8);
@@ -77,8 +76,13 @@ void LocalTracker::Update(
 
             ++i;
         }
+
+        if (track->pointsCount)
+        {
+            track->averagePoint /= track->pointsCount;
+        }
+        track->lastRegion.m_points.clear();
     }
 
     m_prevFrame = grayFrame;
-    prevRegions.assign(srcRegions.begin(), srcRegions.end());
 }

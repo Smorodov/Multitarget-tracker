@@ -1,5 +1,6 @@
 #pragma once
 #include "defines.h"
+#include "track.h"
 
 // --------------------------------------------------------------------------
 // Tracking only founded regions between two frames (now used LK optical flow)
@@ -10,11 +11,9 @@ public:
     LocalTracker();
     ~LocalTracker(void);
 
-    void Update(const regions_t& srcRegions,
-                regions_t& trackedRegions,
+    void Update(tracks_t& tracks,
                 cv::Mat grayFrame);
 
 private:
     cv::Mat m_prevFrame;
-    regions_t prevRegions;
 };
