@@ -13,7 +13,7 @@ private:
 	void DetectContour();
 
 	std::unique_ptr<BackgroundSubtract> m_bs;
-    std::vector<CRegion> m_regions;
+    regions_t m_regions;
 	std::vector<Point_t> m_centers;
 	cv::Mat m_fg;
 

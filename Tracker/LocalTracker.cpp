@@ -71,7 +71,6 @@ void LocalTracker::Update(
                 track->averagePoint += points[1][i];
 
                 points[1][k++] = points[1][i];
-                //circle(image, points[1][i], 3, cv::Scalar(0,255,0), -1, 8);
             }
 
             ++i;
