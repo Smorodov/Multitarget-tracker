@@ -12,8 +12,8 @@ class CDetector
 private:
 	void DetectContour();
 
-	std::unique_ptr<BackgroundSubtract> m_bs;
-    std::vector<CRegion> m_regions;
+	std::unique_ptr<BackgroundSubtract> m_backgroundSubst;
+    regions_t m_regions;
 	std::vector<Point_t> m_centers;
 	cv::Mat m_fg;
 
@@ -22,7 +22,7 @@ private:
     bool m_collectPoints;
 
 public:
-    CDetector(bool collectPoints, cv::Mat& gray);
+	CDetector(BackgroundSubtract::BGFG_ALGS algType, bool collectPoints, cv::Mat& gray);
 	const std::vector<Point_t>& Detect(cv::Mat& gray);
 	~CDetector(void);
 

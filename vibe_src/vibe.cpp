@@ -47,8 +47,15 @@ cv::Vec2i VIBE::getRndNeighbor(int i, int j)
 void VIBE::init(const cv::Mat &img)
 {
     CV_Assert(img.channels() == channels_);
+
     size_ = img.size();
+
+	if (model_ != nullptr)
+	{
+		delete[] model_;
+	}
     model_ = new unsigned char[channels_ * samples_ * size_.width * size_.height];
+
     mask_ = cv::Mat(size_, CV_8UC1, cv::Scalar::all(0));
 
     unsigned char* image = img.data;
@@ -76,7 +83,14 @@ void VIBE::init(const cv::Mat &img)
 
 void VIBE::update(const cv::Mat& img)
 {
-    CV_Assert(channels_ == img.channels() && size_ == img.size());
+    CV_Assert(channels_ == img.channels());
+
+	if (size_ != img.size())
+	{
+		init(img);
+		return;
+	}
+
     unsigned char *img_ptr = img.data;
     for (int i = 0; i < img.rows; i++)
     {
