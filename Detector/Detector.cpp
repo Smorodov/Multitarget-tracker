@@ -10,7 +10,7 @@ CDetector::CDetector(
     : m_collectPoints(collectPoints)
 {
 	m_fg = gray.clone();
-	m_bs = std::make_unique<BackgroundSubtract>(gray.channels());
+	m_backgrounfSubst = std::make_unique<BackgroundSubtract>(BackgroundSubtract::GMG_t, gray.channels());
 
 	m_minObjectSize.width = std::max(5, gray.cols / 100);
 	m_minObjectSize.height = m_minObjectSize.width;
@@ -89,7 +89,7 @@ void CDetector::DetectContour()
 // ---------------------------------------------------------------------------
 const std::vector<Point_t>& CDetector::Detect(cv::Mat& gray)
 {
-	m_bs->subtract(gray, m_fg);
+	m_backgrounfSubst->subtract(gray, m_fg);
 
 	DetectContour();
 	return m_centers;
