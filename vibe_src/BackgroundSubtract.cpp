@@ -4,7 +4,7 @@
 //
 //----------------------------------------------------------------------
 BackgroundSubtract::BackgroundSubtract(
-	BGFG_TYPE algType,
+	BGFG_ALGS algType,
 	int channels,
 	int samples,
 	int pixel_neighbor,
@@ -18,15 +18,15 @@ BackgroundSubtract::BackgroundSubtract(
 {
 	switch (m_algType)
 	{
-	case Vibe_t:
+	case VIBE_ALG:
 		m_modelVibe = std::make_unique<vibe::VIBE>(m_channels, samples, pixel_neighbor, distance_threshold, matching_threshold, update_factor);
 		break;
 
-	case MOG_t:
+	case MOG_ALG:
 		m_modelOCV = cv::bgsegm::createBackgroundSubtractorMOG(100, 3, 0.7, 0);
 		break;
 
-	case GMG_t:
+	case GMG_ALG:
 		m_modelOCV = cv::bgsegm::createBackgroundSubtractorGMG(50, 0.7);
 		break;
 	}
@@ -66,13 +66,13 @@ void BackgroundSubtract::subtract(const cv::Mat& image, cv::Mat& foreground)
 
 	switch (m_algType)
 	{
-	case Vibe_t:
+	case VIBE_ALG:
 		m_modelVibe->update(GetImg());
 		foreground = m_modelVibe->getMask();
 		break;
 
-	case MOG_t:
-	case GMG_t:
+	case MOG_ALG:
+	case GMG_ALG:
 		m_modelOCV->apply(GetImg(), foreground);
 		break;
 	}

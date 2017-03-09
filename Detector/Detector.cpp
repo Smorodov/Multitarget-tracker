@@ -4,13 +4,14 @@
 //
 // ---------------------------------------------------------------------------
 CDetector::CDetector(
-        bool collectPoints,
-        cv::Mat& gray
-        )
-    : m_collectPoints(collectPoints)
+	BackgroundSubtract::BGFG_ALGS algType,
+	bool collectPoints,
+	cv::Mat& gray
+	)
+	: m_collectPoints(collectPoints)
 {
 	m_fg = gray.clone();
-	m_backgrounfSubst = std::make_unique<BackgroundSubtract>(BackgroundSubtract::GMG_t, gray.channels());
+	m_backgroundSubst = std::make_unique<BackgroundSubtract>(algType, gray.channels());
 
 	m_minObjectSize.width = std::max(5, gray.cols / 100);
 	m_minObjectSize.height = m_minObjectSize.width;
@@ -36,7 +37,7 @@ void CDetector::SetMinObjectSize(cv::Size minObjectSize)
 //----------------------------------------------------------------------
 void CDetector::DetectContour()
 {
-    m_regions.clear();
+	m_regions.clear();
 	m_centers.clear();
 	std::vector<std::vector<cv::Point> > contours;
 	std::vector<cv::Vec4i> hierarchy;
@@ -50,35 +51,35 @@ void CDetector::DetectContour()
 			if (r.width >= m_minObjectSize.width &&
 				r.height >= m_minObjectSize.height)
 			{
-                CRegion region(r);
-                cv::Point2f center(r.x + 0.5f * r.width, r.y + 0.5f * r.height);
+				CRegion region(r);
+				cv::Point2f center(r.x + 0.5f * r.width, r.y + 0.5f * r.height);
 
-                if (m_collectPoints)
-                {
-                    const int yStep = 3;
-                    const int xStep = 3;
+				if (m_collectPoints)
+				{
+					const int yStep = 3;
+					const int xStep = 3;
 
-                    for (int y = r.y; y < r.y + r.height; y += yStep)
-                    {
-                        cv::Point2f pt(0, y);
-                        for (int x = r.x; x < r.x + r.width; x += xStep)
-                        {
-                            pt.x = x;
-                            if (cv::pointPolygonTest(contours[i], pt, false) > 0)
-                            {
-                                region.m_points.push_back(pt);
-                            }
-                        }
-                    }
+					for (int y = r.y; y < r.y + r.height; y += yStep)
+					{
+						cv::Point2f pt(0, static_cast<float>(y));
+						for (int x = r.x; x < r.x + r.width; x += xStep)
+						{
+							pt.x = static_cast<float>(x);
+							if (cv::pointPolygonTest(contours[i], pt, false) > 0)
+							{
+								region.m_points.push_back(pt);
+							}
+						}
+					}
 
-                    if (region.m_points.empty())
-                    {
-                        region.m_points.push_back(center);
-                    }
-                }
+					if (region.m_points.empty())
+					{
+						region.m_points.push_back(center);
+					}
+				}
 
-                m_regions.push_back(region);
-                m_centers.push_back(Point_t(center.x, center.y));
+				m_regions.push_back(region);
+				m_centers.push_back(Point_t(center.x, center.y));
 			}
 		}
 	}
@@ -89,7 +90,7 @@ void CDetector::DetectContour()
 // ---------------------------------------------------------------------------
 const std::vector<Point_t>& CDetector::Detect(cv::Mat& gray)
 {
-	m_backgrounfSubst->subtract(gray, m_fg);
+	m_backgroundSubst->subtract(gray, m_fg);
 
 	DetectContour();
 	return m_centers;
@@ -100,5 +101,5 @@ const std::vector<Point_t>& CDetector::Detect(cv::Mat& gray)
 // ---------------------------------------------------------------------------
 const regions_t& CDetector::GetDetects() const
 {
-    return m_regions;
+	return m_regions;
 }
