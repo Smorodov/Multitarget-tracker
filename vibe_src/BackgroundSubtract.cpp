@@ -66,10 +66,10 @@ void BackgroundSubtract::subtract(const cv::Mat& image, cv::Mat& foreground)
 
 	foreground = m_model->getMask();
 
-        cv::imshow("before", foreground);
+	cv::imshow("before", foreground);
 
-	cv::erode(foreground, foreground, erodeElement, cv::Point(-1, -1), 1);
-	cv::dilate(foreground, foreground, dilateElement, cv::Point(-1, -1), 2);
+	cv::medianBlur(foreground, foreground, 3);
+	cv::dilate(foreground, foreground, dilateElement, cv::Point(-1, -1), 1);
 
-        cv::imshow("after", foreground);
+	cv::imshow("after", foreground);
 }
