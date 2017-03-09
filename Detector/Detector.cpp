@@ -41,9 +41,7 @@ void CDetector::DetectContour()
 	m_centers.clear();
 	std::vector<std::vector<cv::Point> > contours;
 	std::vector<cv::Vec4i> hierarchy;
-	cv::Mat edges;
-	cv::Canny(m_fg, edges, 50, 190, 3);
-	cv::findContours(edges, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, cv::Point());
+	cv::findContours(m_fg, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, cv::Point());
 	if (contours.size() > 0)
 	{
 		for (size_t i = 0; i < contours.size(); i++)
