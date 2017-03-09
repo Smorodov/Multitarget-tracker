@@ -16,29 +16,6 @@ BackgroundSubtract::~BackgroundSubtract()
 {
 }
 
-void BackgroundSubtract::init(const cv::Mat& image)
-{
-	if (image.channels() != m_model->GetChannels())
-	{
-		if (image.channels() == 1)
-		{
-			cv::Mat newImg;
-			cv::cvtColor(image, newImg, CV_GRAY2BGR);
-			m_model->init(newImg);
-		}
-		else if (image.channels() == 3)
-		{
-			cv::Mat newImg;
-			cv::cvtColor(image, newImg, CV_BGR2GRAY);
-			m_model->init(newImg);
-		}
-	}
-	else
-	{
-		m_model->init(image);
-	}
-}
-
 void BackgroundSubtract::subtract(const cv::Mat& image, cv::Mat& foreground)
 {
 	cv::Mat erodeElement = cv::getStructuringElement(0, cv::Size(5, 5), cv::Point(-1, -1));

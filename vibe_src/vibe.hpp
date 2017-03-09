@@ -15,7 +15,7 @@ public:
 
     VIBE(int channels = 1, int samples = 20, int pixel_neighbor = 1, int distance_threshold = 20, int matching_threshold = 3, int update_factor = 16);
     ~VIBE();
-    void init(const cv::Mat& img);
+
     void update(const cv::Mat& img);
     cv::Mat& getMask();
 
@@ -41,6 +41,7 @@ private:
     int rng_idx_;
 
     cv::Vec2i getRndNeighbor(int i, int j);
+	void init(const cv::Mat& img);
 };
 
 }

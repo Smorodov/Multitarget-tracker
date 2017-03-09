@@ -11,7 +11,6 @@ CDetector::CDetector(
 {
 	m_fg = gray.clone();
 	m_bs = std::make_unique<BackgroundSubtract>(gray.channels());
-	m_bs->init(gray);
 
 	m_minObjectSize.width = std::max(5, gray.cols / 100);
 	m_minObjectSize.height = m_minObjectSize.width;
