@@ -99,19 +99,16 @@ int main(int argc, char** argv)
 
 		allTime += t2 - t1;
 
-		for (auto p : centers)
-		{
-			cv::circle(frame, p, 3, cv::Scalar(0, 255, 0), 1, CV_AA);
-		}
-
 		std::cout << tracker.tracks.size() << std::endl;
 
         for (size_t i = 0; i < tracker.tracks.size(); i++)
 		{
-			cv::rectangle(frame, tracker.tracks[i]->GetLastRect(), cv::Scalar(0, 255, 0), 1, CV_AA);
-
-			if (tracker.tracks[i]->trace.size() > 1)
+            if (tracker.tracks[i]->trace.size() > 30)
 			{
+                cv::circle(frame, centers[i], 3, cv::Scalar(0, 255, 0), 1, CV_AA);
+
+                cv::rectangle(frame, tracker.tracks[i]->GetLastRect(), cv::Scalar(0, 255, 0), 1, CV_AA);
+
 				for (size_t j = 0; j < tracker.tracks[i]->trace.size() - 1; j++)
 				{
 					cv::line(frame, tracker.tracks[i]->trace[j], tracker.tracks[i]->trace[j + 1], Colors[tracker.tracks[i]->track_id % 9], 2, CV_AA);
