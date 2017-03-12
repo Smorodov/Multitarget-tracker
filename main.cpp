@@ -62,7 +62,7 @@ int main(int argc, char** argv)
 
 	capture >> frame;
 	cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
-	CDetector detector(BackgroundSubtract::MOG_ALG, useLocalTracking, gray);
+    CDetector detector(BackgroundSubtract::ALG_MOG, useLocalTracking, gray);
 	detector.SetMinObjectSize(cv::Size(gray.cols / 50, gray.rows / 20));
 	int k = 0;
 
