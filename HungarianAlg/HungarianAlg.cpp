@@ -247,58 +247,149 @@ void AssignmentProblemSolver::step2b(assignments_t& assignment, track_t *distMat
 	else
 	{
 		/* move to step 3 */
-		step3(assignment, distMatrix, starMatrix, newStarMatrix, primeMatrix, coveredColumns, coveredRows, nOfRows, nOfColumns, minDim);
+		step3_5(assignment, distMatrix, starMatrix, newStarMatrix, primeMatrix, coveredColumns, coveredRows, nOfRows, nOfColumns, minDim);
 	}
 }
 
 // --------------------------------------------------------------------------
 //
 // --------------------------------------------------------------------------
-void AssignmentProblemSolver::step3(assignments_t& assignment, track_t *distMatrix, bool *starMatrix, bool *newStarMatrix, bool *primeMatrix, bool *coveredColumns, bool *coveredRows, size_t nOfRows, size_t nOfColumns, size_t minDim)
+void AssignmentProblemSolver::step3_5(assignments_t& assignment, track_t *distMatrix, bool *starMatrix, bool *newStarMatrix, bool *primeMatrix, bool *coveredColumns, bool *coveredRows, size_t nOfRows, size_t nOfColumns, size_t minDim)
 {
-	bool zerosFound = true;
-	while (zerosFound)
+	for (;;)
 	{
-		zerosFound = false;
+		/* step 3 */
+		bool zerosFound = true;
+		while (zerosFound)
+		{
+			zerosFound = false;
+			for (size_t col = 0; col < nOfColumns; col++)
+			{
+				if (!coveredColumns[col])
+				{
+					for (size_t row = 0; row < nOfRows; row++)
+					{
+						if ((!coveredRows[row]) && (distMatrix[row + nOfRows*col] == 0))
+						{
+							/* prime zero */
+							primeMatrix[row + nOfRows*col] = true;
+							/* find starred zero in current row */
+							size_t starCol = 0;
+							for (; starCol < nOfColumns; starCol++)
+							{
+								if (starMatrix[row + nOfRows * starCol])
+								{
+									break;
+								}
+							}
+							if (starCol == nOfColumns) /* no starred zero found */
+							{
+								/* move to step 4 */
+								step4(assignment, distMatrix, starMatrix, newStarMatrix, primeMatrix, coveredColumns, coveredRows, nOfRows, nOfColumns, minDim, row, col);
+								return;
+							}
+							else
+							{
+								coveredRows[row] = true;
+								coveredColumns[starCol] = false;
+								zerosFound = true;
+								break;
+							}
+						}
+					}
+				}
+			}
+		}
+		/* step 5 */
+#if 0
+		/* find smallest uncovered element h */
+		track_t h = std::numeric_limits<track_t>::max();
+		for (size_t row = 0; row < nOfRows; row++)
+		{
+			if (!coveredRows[row])
+			{
+				const track_t* val = &distMatrix[row];
+				const bool* covCol = coveredColumns;
+				for (const track_t* stop_val = val + nOfColumns * nOfRows; val < stop_val; val += nOfRows)
+				{
+					if (!*covCol)
+					{
+						if (*val < h)
+						{
+							h = *val;
+						}
+					}
+					++covCol;
+				}
+			}
+		}
+		/* add h to each covered row */
+		for (size_t row = 0; row < nOfRows; row++)
+		{
+			if (coveredRows[row])
+			{
+				track_t* val = &distMatrix[row];
+				for (track_t* stop_val = val + nOfColumns * nOfRows; val < stop_val; val += nOfRows)
+				{
+					*val += h;
+				}
+			}
+		}
+		/* subtract h from each uncovered column */
+		for (size_t col = 0; col < nOfColumns; col++)
+		{
+			if (!coveredColumns[col])
+			{
+				track_t* val = &distMatrix[nOfRows*col];
+				for (track_t* stop_val = val + nOfRows; val < stop_val; ++val)
+				{
+					*val -= h;
+				}
+			}
+		}
+#else
+		float h = std::numeric_limits<track_t>::max();
+		for (size_t row = 0; row < nOfRows; row++)
+		{
+			if (!coveredRows[row])
+			{
+				for (size_t col = 0; col < nOfColumns; col++)
+				{
+					if (!coveredColumns[col])
+					{
+						const float value = distMatrix[row + nOfRows*col];
+						if (value < h)
+						{
+							h = value;
+						}
+					}
+				}
+			}
+		}
+		/* add h to each covered row */
+		for (size_t row = 0; row < nOfRows; row++)
+		{
+			if (coveredRows[row])
+			{
+				for (size_t col = 0; col < nOfColumns; col++)
+				{
+					distMatrix[row + nOfRows*col] += h;
+				}
+			}
+		}
+		/* subtract h from each uncovered column */
 		for (size_t col = 0; col < nOfColumns; col++)
 		{
 			if (!coveredColumns[col])
 			{
 				for (size_t row = 0; row < nOfRows; row++)
 				{
-					if ((!coveredRows[row]) && (distMatrix[row + nOfRows*col] == 0))
-					{
-						/* prime zero */
-						primeMatrix[row + nOfRows*col] = true;
-						/* find starred zero in current row */
-                        size_t starCol = 0;
-						for (; starCol < nOfColumns; starCol++)
-						{
-							if (starMatrix[row + nOfRows * starCol])
-							{
-								break;
-							}
-						}
-						if (starCol == nOfColumns) /* no starred zero found */
-						{
-							/* move to step 4 */
-							step4(assignment, distMatrix, starMatrix, newStarMatrix, primeMatrix, coveredColumns, coveredRows, nOfRows, nOfColumns, minDim, row, col);
-							return;
-						}
-						else
-						{
-							coveredRows[row] = true;
-							coveredColumns[starCol] = false;
-							zerosFound = true;
-							break;
-						}
-					}
+					distMatrix[row + nOfRows*col] -= h;
 				}
 			}
 		}
+#endif
 	}
-	/* move to step 5 */
-	step5(assignment, distMatrix, starMatrix, newStarMatrix, primeMatrix, coveredColumns, coveredRows, nOfRows, nOfColumns, minDim);
 }
 
 // --------------------------------------------------------------------------
@@ -366,64 +457,13 @@ void AssignmentProblemSolver::step4(assignments_t& assignment, track_t *distMatr
 }
 
 // --------------------------------------------------------------------------
-//
-// --------------------------------------------------------------------------
-void AssignmentProblemSolver::step5(assignments_t& assignment, track_t *distMatrix, bool *starMatrix, bool *newStarMatrix, bool *primeMatrix, bool *coveredColumns, bool *coveredRows, size_t nOfRows, size_t nOfColumns, size_t minDim)
-{
-	/* find smallest uncovered element h */
-	float h = std::numeric_limits<track_t>::max();
-	for (size_t row = 0; row < nOfRows; row++)
-	{
-		if (!coveredRows[row])
-		{
-			for (size_t col = 0; col < nOfColumns; col++)
-			{
-				if (!coveredColumns[col])
-				{
-					const float value = distMatrix[row + nOfRows*col];
-					if (value < h)
-					{
-						h = value;
-					}
-				}
-			}
-		}
-	}
-	/* add h to each covered row */
-	for (size_t row = 0; row < nOfRows; row++)
-	{
-		if (coveredRows[row])
-		{
-			for (size_t col = 0; col < nOfColumns; col++)
-			{
-				distMatrix[row + nOfRows*col] += h;
-			}
-		}
-	}
-	/* subtract h from each uncovered column */
-	for (size_t col = 0; col < nOfColumns; col++)
-	{
-		if (!coveredColumns[col])
-		{
-			for (size_t row = 0; row < nOfRows; row++)
-			{
-				distMatrix[row + nOfRows*col] -= h;
-			}
-		}
-	}
-	/* move to step 3 */
-	step3(assignment, distMatrix, starMatrix, newStarMatrix, primeMatrix, coveredColumns, coveredRows, nOfRows, nOfColumns, minDim);
-}
-
-
-// --------------------------------------------------------------------------
 // Computes a suboptimal solution. Good for cases without forbidden assignments.
 // --------------------------------------------------------------------------
 void AssignmentProblemSolver::assignmentsuboptimal2(assignments_t& assignment, track_t& cost, const distMatrix_t& distMatrixIn, size_t nOfRows, size_t nOfColumns)
 {
 	/* make working copy of distance Matrix */
 	const size_t nOfElements = nOfRows * nOfColumns;
-	float* distMatrix = (float*)malloc(nOfElements * sizeof(float));
+	track_t* distMatrix = (track_t*)malloc(nOfElements * sizeof(track_t));
 	for (size_t n = 0; n < nOfElements; n++)
 	{
 		distMatrix[n] = distMatrixIn[n];
@@ -433,14 +473,14 @@ void AssignmentProblemSolver::assignmentsuboptimal2(assignments_t& assignment, t
 	for (;;)
 	{
 		/* find minimum distance observation-to-track pair */
-		float minValue = std::numeric_limits<track_t>::max();
+		track_t minValue = std::numeric_limits<track_t>::max();
 		size_t tmpRow = 0;
 		size_t tmpCol = 0;
 		for (size_t row = 0; row < nOfRows; row++)
 		{
 			for (size_t col = 0; col < nOfColumns; col++)
 			{
-				const float value = distMatrix[row + nOfRows*col];
+				const track_t value = distMatrix[row + nOfRows*col];
 				if (value != std::numeric_limits<track_t>::max() && (value < minValue))
 				{
 					minValue = value;
@@ -478,7 +518,7 @@ void AssignmentProblemSolver::assignmentsuboptimal1(assignments_t& assignment, t
 {
 	/* make working copy of distance Matrix */
 	const size_t nOfElements = nOfRows * nOfColumns;
-	float* distMatrix = (float *)malloc(nOfElements * sizeof(float));
+	track_t* distMatrix = (track_t *)malloc(nOfElements * sizeof(track_t));
     for (size_t n = 0; n < nOfElements; n++)
 	{
 		distMatrix[n] = distMatrixIn[n];
@@ -585,11 +625,11 @@ void AssignmentProblemSolver::assignmentsuboptimal1(assignments_t& assignment, t
 			if (nOfValidObservations[row] > 1)
 			{
 				bool allSinglyValidated = true;
-				float minValue = std::numeric_limits<track_t>::max();
+				track_t minValue = std::numeric_limits<track_t>::max();
 				size_t tmpCol = 0;
                 for (size_t col = 0; col < nOfColumns; col++)
 				{
-					const float value = distMatrix[row + nOfRows*col];
+					const track_t value = distMatrix[row + nOfRows*col];
 					if (value != std::numeric_limits<track_t>::max())
 					{
 						if (nOfValidTracks[col] > 1)
@@ -627,11 +667,11 @@ void AssignmentProblemSolver::assignmentsuboptimal1(assignments_t& assignment, t
 			if (nOfValidTracks[col] > 1)
 			{
 				bool allSinglyValidated = true;
-				float minValue = std::numeric_limits<track_t>::max();
+				track_t minValue = std::numeric_limits<track_t>::max();
 				size_t tmpRow = 0;
 				for (size_t row = 0; row < nOfRows; row++)
 				{
-					const float value = distMatrix[row + nOfRows*col];
+					const track_t value = distMatrix[row + nOfRows*col];
 					if (value != std::numeric_limits<track_t>::max())
 					{
 						if (nOfValidObservations[row] > 1)
@@ -669,14 +709,14 @@ void AssignmentProblemSolver::assignmentsuboptimal1(assignments_t& assignment, t
 	for (;;)
 	{
 		/* find minimum distance observation-to-track pair */
-		float minValue = std::numeric_limits<track_t>::max();
+		track_t minValue = std::numeric_limits<track_t>::max();
 		size_t tmpRow = 0;
 		size_t tmpCol = 0;
 		for (size_t row = 0; row < nOfRows; row++)
 		{
 			for (size_t col = 0; col < nOfColumns; col++)
 			{
-				const float value = distMatrix[row + nOfRows*col];
+				const track_t value = distMatrix[row + nOfRows*col];
 				if (value != std::numeric_limits<track_t>::max() && (value < minValue))
 				{
 					minValue = value;
