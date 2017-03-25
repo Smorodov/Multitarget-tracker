@@ -56,14 +56,17 @@ int main(int argc, char** argv)
 	cv::Mat frame;
 	cv::Mat gray;
 
-    bool useLocalTracking = true;
+    bool useLocalTracking = false;
 
     CTracker tracker(useLocalTracking, 0.2f, 0.1f, 60.0f, 10, 50);
 
 	capture >> frame;
 	cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
+
     CDetector detector(BackgroundSubtract::ALG_MOG, useLocalTracking, gray);
-	detector.SetMinObjectSize(cv::Size(gray.cols / 50, gray.rows / 20));
+	//detector.SetMinObjectSize(cv::Size(gray.cols / 100, gray.rows / 100));
+	detector.SetMinObjectSize(cv::Size(2, 2));
+
 	int k = 0;
 
 	double freq = cv::getTickFrequency();
@@ -71,7 +74,7 @@ int main(int argc, char** argv)
 	int64 allTime = 0;
 
     bool manualMode = false;
-
+	int framesCounter = 1;
 	while (k != 27)
 	{
 		capture >> frame;
@@ -99,11 +102,11 @@ int main(int argc, char** argv)
 
 		allTime += t2 - t1;
 
-		std::cout << tracker.tracks.size() << std::endl;
+		std::cout << "Frame " << framesCounter << ": tracks = " << tracker.tracks.size() << ", time = " << ((t2 - t1) / freq) << std::endl;
 
         for (size_t i = 0; i < tracker.tracks.size(); i++)
 		{
-            if (tracker.tracks[i]->trace.size() > 30)
+            if (tracker.tracks[i]->trace.size() > 10)
 			{
                 cv::circle(frame, centers[i], 3, cv::Scalar(0, 255, 0), 1, CV_AA);
 
@@ -130,9 +133,15 @@ int main(int argc, char** argv)
 		{
 			writer << frame;
 		}
+
+        if (++framesCounter > 50)
+		{
+			break;
+		}
 	}
 
 	std::cout << "work time = " << (allTime / freq) << std::endl;
+    //cv::waitKey(0);
 
 #else
 
