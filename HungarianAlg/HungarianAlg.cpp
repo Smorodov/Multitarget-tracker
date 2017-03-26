@@ -1,14 +1,23 @@
 #include "HungarianAlg.h"
 #include <limits>
 
+// --------------------------------------------------------------------------
+//
+// --------------------------------------------------------------------------
 AssignmentProblemSolver::AssignmentProblemSolver()
 {
 }
 
+// --------------------------------------------------------------------------
+//
+// --------------------------------------------------------------------------
 AssignmentProblemSolver::~AssignmentProblemSolver()
 {
 }
 
+// --------------------------------------------------------------------------
+//
+// --------------------------------------------------------------------------
 track_t AssignmentProblemSolver::Solve(
 	const distMatrix_t& distMatrixIn,
 	size_t nOfRows,
@@ -73,7 +82,7 @@ void AssignmentProblemSolver::assignmentoptimal(assignments_t& assignment, track
 		for (size_t row = 0; row < nOfRows; row++)
 		{
 			/* find the smallest element in the row */
-			track_t* distMatrixTemp = distMatrix + row;
+            track_t* distMatrixTemp = distMatrix + row;
 			track_t  minValue = *distMatrixTemp;
 			distMatrixTemp += nOfRows;
 			while (distMatrixTemp < distMatrixEnd)
@@ -206,22 +215,22 @@ void AssignmentProblemSolver::computeassignmentcost(const assignments_t& assignm
 // --------------------------------------------------------------------------
 void AssignmentProblemSolver::step2a(assignments_t& assignment, track_t *distMatrix, bool *starMatrix, bool *newStarMatrix, bool *primeMatrix, bool *coveredColumns, bool *coveredRows, size_t nOfRows, size_t nOfColumns, size_t minDim)
 {
-	bool *starMatrixTemp, *columnEnd;
-	/* cover every column containing a starred zero */
-	for (size_t col = 0; col < nOfColumns; col++)
-	{
-		starMatrixTemp = starMatrix + nOfRows * col;
-		columnEnd = starMatrixTemp + nOfRows;
-		while (starMatrixTemp < columnEnd)
-		{
-			if (*starMatrixTemp++)
-			{
-				coveredColumns[col] = true;
-				break;
-			}
-		}
-	}
-	/* move to step 3 */
+    bool *starMatrixTemp, *columnEnd;
+    /* cover every column containing a starred zero */
+    for (size_t col = 0; col < nOfColumns; col++)
+    {
+        starMatrixTemp = starMatrix + nOfRows * col;
+        columnEnd = starMatrixTemp + nOfRows;
+        while (starMatrixTemp < columnEnd)
+        {
+            if (*starMatrixTemp++)
+            {
+                coveredColumns[col] = true;
+                break;
+            }
+        }
+    }
+    /* move to step 3 */
 	step2b(assignment, distMatrix, starMatrix, newStarMatrix, primeMatrix, coveredColumns, coveredRows, nOfRows, nOfColumns, minDim);
 }
 
@@ -301,7 +310,7 @@ void AssignmentProblemSolver::step3_5(assignments_t& assignment, track_t *distMa
 			}
 		}
 		/* step 5 */
-		float h = std::numeric_limits<track_t>::max();
+        track_t h = std::numeric_limits<track_t>::max();
 		for (size_t row = 0; row < nOfRows; row++)
 		{
 			if (!coveredRows[row])
@@ -310,7 +319,7 @@ void AssignmentProblemSolver::step3_5(assignments_t& assignment, track_t *distMa
 				{
 					if (!coveredColumns[col])
 					{
-						const float value = distMatrix[row + nOfRows*col];
+                        const track_t value = distMatrix[row + nOfRows*col];
 						if (value < h)
 						{
 							h = value;
