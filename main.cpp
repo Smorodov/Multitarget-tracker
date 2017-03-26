@@ -133,12 +133,7 @@ int main(int argc, char** argv)
 		{
 			writer << frame;
 		}
-
-        if (++framesCounter > 50)
-		{
-			break;
-		}
-	}
+    }
 
 	std::cout << "work time = " << (allTime / freq) << std::endl;
     //cv::waitKey(0);
