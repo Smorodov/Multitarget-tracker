@@ -6,11 +6,19 @@
 class TKalmanFilter
 {
 public:
-	cv::KalmanFilter* kalman;
-	track_t deltatime; //приращение времени
-	Point_t LastResult;
-	TKalmanFilter(Point_t p, track_t dt = 0.2, track_t Accel_noise_mag = 0.5);
+    TKalmanFilter(Point_t pt, track_t deltaTime = 0.2, track_t accelNoiseMag = 0.5);
+    TKalmanFilter(cv::Rect rect, track_t deltaTime = 0.2, track_t accelNoiseMag = 0.5);
 	~TKalmanFilter();
-	Point_t GetPrediction();
-	Point_t Update(Point_t p, bool DataCorrect);
+
+    Point_t GetPointPrediction();
+    Point_t Update(Point_t p, bool dataCorrect);
+
+    cv::Rect GetRectPrediction();
+    cv::Rect Update(cv::Rect rect, bool dataCorrect);
+
+private:
+    cv::KalmanFilter* kalman;
+    Point_t lastPointResult;
+    cv::Rect_<track_t> lastRectResult;
+    cv::Rect_<track_t> lastRect;
 };

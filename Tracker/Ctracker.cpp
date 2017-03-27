@@ -5,16 +5,20 @@
 // ---------------------------------------------------------------------------
 CTracker::CTracker(
         bool useLocalTracking,
+        DistType distType,
+        KalmanType kalmanType,
         track_t dt_,
-        track_t Accel_noise_mag_,
+        track_t accelNoiseMag_,
         track_t dist_thres_,
         size_t maximum_allowed_skipped_frames_,
         size_t max_trace_length_
         )
     :
       m_useLocalTracking(useLocalTracking),
+      m_distType(distType),
+      m_kalmanType(kalmanType),
       dt(dt_),
-      Accel_noise_mag(Accel_noise_mag_),
+      accelNoiseMag(accelNoiseMag_),
       dist_thres(dist_thres_),
       maximum_allowed_skipped_frames(maximum_allowed_skipped_frames_),
       max_trace_length(max_trace_length_),
@@ -35,7 +39,6 @@ CTracker::~CTracker(void)
 void CTracker::Update(
         const std::vector<Point_t>& detections,
         const regions_t& regions,
-        DistType distType,
         cv::Mat gray_frame
         )
 {
@@ -54,7 +57,7 @@ void CTracker::Update(
         // If no tracks yet
         for (size_t i = 0; i < detections.size(); ++i)
         {
-            tracks.push_back(std::make_unique<CTrack>(detections[i], regions[i], dt, Accel_noise_mag, NextTrackID++));
+            tracks.push_back(std::make_unique<CTrack>(detections[i], regions[i], dt, accelNoiseMag, NextTrackID++, m_kalmanType == FilterRect));
         }
     }
 
@@ -71,7 +74,7 @@ void CTracker::Update(
         // -----------------------------------
         // Треки уже есть, составим матрицу расстояний
         // -----------------------------------
-        switch (distType)
+        switch (m_distType)
         {
         case CentersDist:
             for (size_t i = 0; i < tracks.size(); i++)
@@ -140,7 +143,7 @@ void CTracker::Update(
     {
         if (find(assignment.begin(), assignment.end(), i) == assignment.end())
         {
-            tracks.push_back(std::make_unique<CTrack>(detections[i], regions[i], dt, Accel_noise_mag, NextTrackID++));
+            tracks.push_back(std::make_unique<CTrack>(detections[i], regions[i], dt, accelNoiseMag, NextTrackID++, m_kalmanType == FilterRect));
         }
     }
 

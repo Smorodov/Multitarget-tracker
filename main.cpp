@@ -56,16 +56,18 @@ int main(int argc, char** argv)
 	cv::Mat frame;
 	cv::Mat gray;
 
-    bool useLocalTracking = false;
-
-    CTracker tracker(useLocalTracking, 0.2f, 0.1f, 60.0f, 10, 50);
-
 	capture >> frame;
 	cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
 
+    // If true then trajectories will be more smooth and accurate
+    // But on high resolution videos with many objects may be to slow
+    bool useLocalTracking = true;
+
     CDetector detector(BackgroundSubtract::ALG_MOG, useLocalTracking, gray);
-	//detector.SetMinObjectSize(cv::Size(gray.cols / 100, gray.rows / 100));
-	detector.SetMinObjectSize(cv::Size(2, 2));
+    detector.SetMinObjectSize(cv::Size(gray.cols / 50, gray.rows / 50));
+    //detector.SetMinObjectSize(cv::Size(2, 2));
+
+    CTracker tracker(useLocalTracking, CTracker::RectsDist, CTracker::FilterRect, 0.2f, 0.1f, gray.cols / 10.0f, 10, 50);
 
 	int k = 0;
 
@@ -96,7 +98,7 @@ int main(int argc, char** argv)
 		const std::vector<Point_t>& centers = detector.Detect(gray);
         const regions_t& regions = detector.GetDetects();
 
-        tracker.Update(centers, regions, CTracker::RectsDist, gray);
+        tracker.Update(centers, regions, gray);
 
 		int64 t2 = cv::getTickCount();
 
