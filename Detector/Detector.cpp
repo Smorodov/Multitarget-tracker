@@ -56,8 +56,8 @@ void CDetector::DetectContour()
 
 				if (m_collectPoints)
 				{
-					const int yStep = 3;
-					const int xStep = 3;
+                    const int yStep = 4;
+                    const int xStep = 4;
 
 					for (int y = r.y; y < r.y + r.height; y += yStep)
 					{

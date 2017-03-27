@@ -18,15 +18,15 @@ BackgroundSubtract::BackgroundSubtract(
 {
 	switch (m_algType)
 	{
-	case VIBE_ALG:
+	case ALG_VIBE:
 		m_modelVibe = std::make_unique<vibe::VIBE>(m_channels, samples, pixel_neighbor, distance_threshold, matching_threshold, update_factor);
 		break;
 
-	case MOG_ALG:
+	case ALG_MOG:
 		m_modelOCV = cv::bgsegm::createBackgroundSubtractorMOG(100, 3, 0.7, 0);
 		break;
 
-	case GMG_ALG:
+	case ALG_GMG:
 		m_modelOCV = cv::bgsegm::createBackgroundSubtractorGMG(50, 0.7);
 		break;
 	}
@@ -66,23 +66,23 @@ void BackgroundSubtract::subtract(const cv::Mat& image, cv::Mat& foreground)
 
 	switch (m_algType)
 	{
-	case VIBE_ALG:
+	case ALG_VIBE:
 		m_modelVibe->update(GetImg());
 		foreground = m_modelVibe->getMask();
 		break;
 
-	case MOG_ALG:
-	case GMG_ALG:
+	case ALG_MOG:
+	case ALG_GMG:
 		m_modelOCV->apply(GetImg(), foreground);
 		break;
 	}
 
-	cv::imshow("before", foreground);
+    //cv::imshow("before", foreground);
 
 	cv::medianBlur(foreground, foreground, 3);
 
 	cv::Mat dilateElement = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3), cv::Point(-1, -1));
 	cv::dilate(foreground, foreground, dilateElement, cv::Point(-1, -1), 1);
 
-	cv::imshow("after", foreground);
+    //cv::imshow("after", foreground);
 }

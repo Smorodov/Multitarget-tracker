@@ -56,14 +56,19 @@ int main(int argc, char** argv)
 	cv::Mat frame;
 	cv::Mat gray;
 
-    bool useLocalTracking = true;
-
-    CTracker tracker(useLocalTracking, 0.2f, 0.1f, 60.0f, 10, 50);
-
 	capture >> frame;
 	cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
-	CDetector detector(BackgroundSubtract::MOG_ALG, useLocalTracking, gray);
-	detector.SetMinObjectSize(cv::Size(gray.cols / 50, gray.rows / 20));
+
+    // If true then trajectories will be more smooth and accurate
+    // But on high resolution videos with many objects may be to slow
+    bool useLocalTracking = true;
+
+    CDetector detector(BackgroundSubtract::ALG_MOG, useLocalTracking, gray);
+    detector.SetMinObjectSize(cv::Size(gray.cols / 50, gray.rows / 50));
+    //detector.SetMinObjectSize(cv::Size(2, 2));
+
+    CTracker tracker(useLocalTracking, CTracker::RectsDist, CTracker::FilterRect, 0.2f, 0.1f, gray.cols / 10.0f, 10, 50);
+
 	int k = 0;
 
 	double freq = cv::getTickFrequency();
@@ -71,7 +76,7 @@ int main(int argc, char** argv)
 	int64 allTime = 0;
 
     bool manualMode = false;
-
+	int framesCounter = 1;
 	while (k != 27)
 	{
 		capture >> frame;
@@ -93,25 +98,20 @@ int main(int argc, char** argv)
 		const std::vector<Point_t>& centers = detector.Detect(gray);
         const regions_t& regions = detector.GetDetects();
 
-        tracker.Update(centers, regions, CTracker::RectsDist, gray);
+        tracker.Update(centers, regions, gray);
 
 		int64 t2 = cv::getTickCount();
 
 		allTime += t2 - t1;
 
-		for (auto p : centers)
-		{
-			cv::circle(frame, p, 3, cv::Scalar(0, 255, 0), 1, CV_AA);
-		}
-
-		std::cout << tracker.tracks.size() << std::endl;
+		std::cout << "Frame " << framesCounter << ": tracks = " << tracker.tracks.size() << ", time = " << ((t2 - t1) / freq) << std::endl;
 
         for (size_t i = 0; i < tracker.tracks.size(); i++)
 		{
-			cv::rectangle(frame, tracker.tracks[i]->GetLastRect(), cv::Scalar(0, 255, 0), 1, CV_AA);
-
-			if (tracker.tracks[i]->trace.size() > 1)
+            if (tracker.tracks[i]->trace.size() > 10)
 			{
+                cv::rectangle(frame, tracker.tracks[i]->GetLastRect(), cv::Scalar(0, 255, 0), 1, CV_AA);
+
 				for (size_t j = 0; j < tracker.tracks[i]->trace.size() - 1; j++)
 				{
 					cv::line(frame, tracker.tracks[i]->trace[j], tracker.tracks[i]->trace[j + 1], Colors[tracker.tracks[i]->track_id % 9], 2, CV_AA);
@@ -133,9 +133,10 @@ int main(int argc, char** argv)
 		{
 			writer << frame;
 		}
-	}
+    }
 
 	std::cout << "work time = " << (allTime / freq) << std::endl;
+    //cv::waitKey(0);
 
 #else
 
