@@ -110,8 +110,6 @@ int main(int argc, char** argv)
 		{
             if (tracker.tracks[i]->trace.size() > 10)
 			{
-                cv::circle(frame, centers[i], 3, cv::Scalar(0, 255, 0), 1, CV_AA);
-
                 cv::rectangle(frame, tracker.tracks[i]->GetLastRect(), cv::Scalar(0, 255, 0), 1, CV_AA);
 
 				for (size_t j = 0; j < tracker.tracks[i]->trace.size() - 1; j++)

@@ -65,36 +65,30 @@ public:
         {
             m_kalman->GetRectPrediction();
 
-            if (pointsCount)
-            {
-                if (dataCorrect)
-                {
-                    cv::Rect prect(
-                                static_cast<int>(averagePoint.x - region.m_rect.width / 2),
-                                static_cast<int>(averagePoint.y - region.m_rect.height / 2),
-                                region.m_rect.width,
-                                region.m_rect.height);
+			if (boundidgRect.area() > 0)
+			{
+				if (dataCorrect)
+				{
+					cv::Rect prect(
+						(boundidgRect.x + region.m_rect.x) / 2,
+						(boundidgRect.y + region.m_rect.y) / 2,
+						(boundidgRect.width + region.m_rect.width) / 2,
+						(boundidgRect.height + region.m_rect.height) / 2);
 
-                    m_predictionRect = m_kalman->Update(prect, dataCorrect);
-                }
-                else
-                {
-                    cv::Rect prect(
-                                static_cast<int>(averagePoint.x - lastRegion.m_rect.width / 2),
-                                static_cast<int>(averagePoint.y - lastRegion.m_rect.height / 2),
-                                lastRegion.m_rect.width,
-                                lastRegion.m_rect.height);
-
-                    m_predictionRect = m_kalman->Update(prect, dataCorrect);
-                }
-            }
-            else
+					m_predictionRect = m_kalman->Update(prect, dataCorrect);
+				}
+				else
+				{
+					m_predictionRect = m_kalman->Update(boundidgRect, dataCorrect);
+				}
+			}
+			else
             {
                 m_predictionRect = m_kalman->Update(region.m_rect, dataCorrect);
             }
             m_predictionPoint = (m_predictionRect.tl() + m_predictionRect.br()) / 2;
         }
-        else
+        else // Kalman filter only for object center
         {
             m_kalman->GetPointPrediction();
 
@@ -133,7 +127,8 @@ public:
 	size_t skipped_frames; 
     CRegion lastRegion;
     int pointsCount;
-    Point_t averagePoint;
+    Point_t averagePoint;   ///< Average point after LocalTracking
+	cv::Rect boundidgRect;  ///< Bounding rect after LocalTracking
 
     cv::Rect GetLastRect() const
 	{

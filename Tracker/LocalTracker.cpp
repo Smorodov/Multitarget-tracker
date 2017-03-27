@@ -62,13 +62,21 @@ void LocalTracker::Update(
     for (auto& track : tracks)
     {
         track->averagePoint = Point_t(0, 0);
+		track->boundidgRect = cv::Rect(0, 0, 0, 0);
         track->pointsCount = 0;
+		size_t from = points[1].size();
+
         for (size_t pi = 0, stop = track->lastRegion.m_points.size(); pi < stop; ++pi)
         {
             if (status[i])
             {
                 ++track->pointsCount;
                 track->averagePoint += points[1][i];
+
+				if (k < from)
+				{
+					from = k;
+				}
 
                 points[1][k++] = points[1][i];
             }
@@ -79,6 +87,33 @@ void LocalTracker::Update(
         if (track->pointsCount)
         {
             track->averagePoint /= track->pointsCount;
+
+			cv::Rect br = cv::boundingRect(std::vector<cv::Point2f>(points[1].begin() + from, points[1].begin() + k));
+			br.x -= subPixWinSize.width;
+			br.width += 2 * subPixWinSize.width;
+			if (br.x < 0)
+			{
+				br.width += br.x;
+				br.x = 0;
+			}
+			if (br.x + br.width >= grayFrame.cols)
+			{
+				br.x = grayFrame.cols - br.width - 1;
+			}
+
+			br.y -= subPixWinSize.height;
+			br.height += 2 * subPixWinSize.height;
+			if (br.y < 0)
+			{
+				br.height += br.y;
+				br.y = 0;
+			}
+			if (br.y + br.height >= grayFrame.rows)
+			{
+				br.y = grayFrame.rows - br.height - 1;
+			}
+
+			track->boundidgRect = br;
         }
         track->lastRegion.m_points.clear();
     }
