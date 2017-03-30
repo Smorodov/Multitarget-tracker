@@ -1,6 +1,11 @@
 #include "Ctracker.h"
 #include "HungarianAlg.h"
 
+#include <GTL/GTL.h>
+#include "mygraph.h"
+#include "mwbmatching.h"
+#include "tokenise.h"
+
 // ---------------------------------------------------------------------------
 // Tracker. Manage tracks. Create, remove, update.
 // ---------------------------------------------------------------------------
@@ -75,14 +80,20 @@ void CTracker::Update(
         // -----------------------------------
         // Треки уже есть, составим матрицу расстояний
         // -----------------------------------
-        switch (m_distType)
+		track_t maxCost = 0;
+		switch (m_distType)
         {
         case CentersDist:
             for (size_t i = 0; i < tracks.size(); i++)
             {
                 for (size_t j = 0; j < detections.size(); j++)
                 {
-                    Cost[i + j * N] = tracks[i]->CalcDist(detections[j]);
+					auto dist = tracks[i]->CalcDist(detections[j]);
+					Cost[i + j * N] = dist;
+					if (dist > maxCost)
+					{
+						maxCost = dist;
+					}
                 }
             }
             break;
@@ -92,7 +103,12 @@ void CTracker::Update(
             {
                 for (size_t j = 0; j < detections.size(); j++)
                 {
-                    Cost[i + j * N] = tracks[i]->CalcDist(regions[j].m_rect);
+					auto dist = tracks[i]->CalcDist(regions[j].m_rect);
+					Cost[i + j * N] = dist;
+					if (dist > maxCost)
+					{
+						maxCost = dist;
+					}
                 }
             }
             break;
@@ -100,8 +116,86 @@ void CTracker::Update(
         // -----------------------------------
         // Solving assignment problem (tracks and predictions of Kalman filter)
         // -----------------------------------
-        AssignmentProblemSolver APS;
+#if 0
+		AssignmentProblemSolver APS;
         APS.Solve(Cost, N, M, assignment, AssignmentProblemSolver::optimal);
+#else
+		assignment.resize(N, -1);
+
+		MyGraph G;
+		G.make_directed();
+
+		std::vector<node> nodes(N + M);
+
+		for (size_t i = 0; i < nodes.size(); ++i)
+		{
+			nodes[i] = G.new_node();
+		}
+
+		for (size_t i = 0; i < tracks.size(); i++)
+		{
+			int maxDist = 0;
+			bool haveEdge = false;
+			int maxj = 0;
+			for (size_t j = 0; j < detections.size(); j++)
+			{
+				track_t currCost = Cost[i + j * N];
+
+				if (currCost < dist_thres)
+				{
+					int dist = maxCost - currCost  + 1;
+
+					edge e = G.new_edge(nodes[i], nodes[N + j]);
+					G.set_edge_weight(e, dist);
+
+					haveEdge = true;
+
+					if (dist > maxDist)
+					{
+
+					}
+				}
+			}
+			if (!haveEdge)
+			{
+
+			}
+		}
+
+		edge_map<int> weights(G, 100);
+		for (graph::edge_iterator eit = G.edges_begin(), eend = G.edges_end(); eit != eend; ++eit)
+		{
+			weights[*eit] = G.get_edge_weight(*eit);
+		}
+
+		list<edge> L = MAX_WEIGHT_BIPARTITE_MATCHING(G, weights);
+
+		list <edge> edges;
+		for (graph::edge_iterator eit = G.edges_begin(), eend = G.edges_end(); eit != eend; ++eit)
+		{
+			edges.push_back(*eit);
+		}
+
+		list<edge>::iterator lit = edges.begin();
+		list<edge>::iterator lend = edges.end();
+		while (lit != lend)
+		{
+			G.hide_edge(*lit);
+			lit++;
+		}
+
+		for (list<edge>::iterator it = L.begin(); it != L.end(); ++it)
+		{
+			edge e = *it;
+			G.restore_edge(e);
+
+			node a = e.source();
+			node b = e.target();
+
+			assignment[b.id()] = a.id() - N;
+		}
+#endif
+
 
 		// -----------------------------------
 		// clean assignment from pairs with large distance
