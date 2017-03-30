@@ -1,4 +1,5 @@
 #include "Ctracker.h"
+#include "HungarianAlg.h"
 
 // ---------------------------------------------------------------------------
 // Tracker. Manage tracks. Create, remove, update.
@@ -102,27 +103,27 @@ void CTracker::Update(
         AssignmentProblemSolver APS;
         APS.Solve(Cost, N, M, assignment, AssignmentProblemSolver::optimal);
 
-        // -----------------------------------
-        // clean assignment from pairs with large distance
-        // -----------------------------------
-        for (size_t i = 0; i < assignment.size(); i++)
-        {
-            if (assignment[i] != -1)
-            {
-                if (Cost[i + assignment[i] * N] > dist_thres)
-                {
-                    assignment[i] = -1;
-                    tracks[i]->skipped_frames++;
-                }
-            }
-            else
-            {
-                // If track have no assigned detect, then increment skipped frames counter.
-                tracks[i]->skipped_frames++;
-            }
-        }
+		// -----------------------------------
+		// clean assignment from pairs with large distance
+		// -----------------------------------
+		for (size_t i = 0; i < assignment.size(); i++)
+		{
+			if (assignment[i] != -1)
+			{
+				if (Cost[i + assignment[i] * N] > dist_thres)
+				{
+					assignment[i] = -1;
+					tracks[i]->skipped_frames++;
+				}
+			}
+			else
+			{
+				// If track have no assigned detect, then increment skipped frames counter.
+				tracks[i]->skipped_frames++;
+			}
+		}
 
-        // -----------------------------------
+		// -----------------------------------
         // If track didn't get detects long time, remove it.
         // -----------------------------------
         for (int i = 0; i < static_cast<int>(tracks.size()); i++)

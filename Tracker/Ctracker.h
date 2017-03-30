@@ -6,7 +6,6 @@
 
 #include "defines.h"
 #include "track.h"
-#include "HungarianAlg.h"
 #include "LocalTracker.h"
 
 // --------------------------------------------------------------------------
