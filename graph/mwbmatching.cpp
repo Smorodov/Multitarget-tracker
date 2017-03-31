@@ -301,14 +301,14 @@ list<edge> MAX_WEIGHT_BIPARTITE_MATCHING (graph &G, edge_map<int> weights)
 	int match = 0;
 
 	mwbmatching mwbm;
-	mwbm.set_vars (weights);
+	mwbm.set_vars(weights);
 	
-	if (mwbm.check(G) != algorithm::GTL_OK)
-	{
-		cout << "Maximum weight bipartite matching algorithm check failed" << endl;
+	//if (mwbm.check(G) != algorithm::GTL_OK)
+	//{
+	//	cout << "Maximum weight bipartite matching algorithm check failed" << endl;
 		//exit(1);
-	}
-	else
+	//}
+	//else
 	{
 		if (mwbm.run(G) != algorithm::GTL_OK)
 		{

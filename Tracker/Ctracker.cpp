@@ -13,6 +13,7 @@ CTracker::CTracker(
         bool useLocalTracking,
         DistType distType,
         KalmanType kalmanType,
+		MatchType matchType,
         track_t dt_,
         track_t accelNoiseMag_,
         track_t dist_thres_,
@@ -23,6 +24,7 @@ CTracker::CTracker(
       m_useLocalTracking(useLocalTracking),
       m_distType(distType),
       m_kalmanType(kalmanType),
+	  m_matchType(matchType),
       dt(dt_),
       accelNoiseMag(accelNoiseMag_),
       dist_thres(dist_thres_),
@@ -70,7 +72,7 @@ void CTracker::Update(
     size_t N = tracks.size();		// треки
     size_t M = detections.size();	// детекты
 
-    assignments_t assignment; // назначения
+    assignments_t assignment(N, -1); // назначения
 
     if (!tracks.empty())
     {
@@ -116,86 +118,45 @@ void CTracker::Update(
         // -----------------------------------
         // Solving assignment problem (tracks and predictions of Kalman filter)
         // -----------------------------------
-#if 0
-		AssignmentProblemSolver APS;
-        APS.Solve(Cost, N, M, assignment, AssignmentProblemSolver::optimal);
-#else
-		assignment.resize(N, -1);
-
-		MyGraph G;
-		G.make_directed();
-
-		std::vector<node> nodes(N + M);
-
-		for (size_t i = 0; i < nodes.size(); ++i)
+		if (m_matchType == MatchHungrian)
 		{
-			nodes[i] = G.new_node();
+			AssignmentProblemSolver APS;
+			APS.Solve(Cost, N, M, assignment, AssignmentProblemSolver::optimal);
 		}
-
-		for (size_t i = 0; i < tracks.size(); i++)
+		else
 		{
-			int maxDist = 0;
-			bool haveEdge = false;
-			int maxj = 0;
-			for (size_t j = 0; j < detections.size(); j++)
-			{
-				track_t currCost = Cost[i + j * N];
+			MyGraph G;
+			G.make_directed();
 
-				if (currCost < dist_thres)
+			std::vector<node> nodes(N + M);
+
+			for (size_t i = 0; i < nodes.size(); ++i)
+			{
+				nodes[i] = G.new_node();
+			}
+
+			edge_map<int> weights(G, 100);
+			for (size_t i = 0; i < tracks.size(); i++)
+			{
+				for (size_t j = 0; j < detections.size(); j++)
 				{
-					int dist = maxCost - currCost  + 1;
+					track_t currCost = Cost[i + j * N];
 
 					edge e = G.new_edge(nodes[i], nodes[N + j]);
-					G.set_edge_weight(e, dist);
-
-					haveEdge = true;
-
-					if (dist > maxDist)
-					{
-
-					}
+					int weight = static_cast<int>((currCost < dist_thres) ? (maxCost - currCost + 1) : 0);
+					G.set_edge_weight(e, weight);
+					weights[e] = weight;
 				}
 			}
-			if (!haveEdge)
-			{
 
+			list<edge> L = MAX_WEIGHT_BIPARTITE_MATCHING(G, weights);
+			for (list<edge>::iterator it = L.begin(); it != L.end(); ++it)
+			{
+				node a = it->source();
+				node b = it->target();
+				assignment[b.id()] = a.id() - N;
 			}
 		}
-
-		edge_map<int> weights(G, 100);
-		for (graph::edge_iterator eit = G.edges_begin(), eend = G.edges_end(); eit != eend; ++eit)
-		{
-			weights[*eit] = G.get_edge_weight(*eit);
-		}
-
-		list<edge> L = MAX_WEIGHT_BIPARTITE_MATCHING(G, weights);
-
-		list <edge> edges;
-		for (graph::edge_iterator eit = G.edges_begin(), eend = G.edges_end(); eit != eend; ++eit)
-		{
-			edges.push_back(*eit);
-		}
-
-		list<edge>::iterator lit = edges.begin();
-		list<edge>::iterator lend = edges.end();
-		while (lit != lend)
-		{
-			G.hide_edge(*lit);
-			lit++;
-		}
-
-		for (list<edge>::iterator it = L.begin(); it != L.end(); ++it)
-		{
-			edge e = *it;
-			G.restore_edge(e);
-
-			node a = e.source();
-			node b = e.target();
-
-			assignment[b.id()] = a.id() - N;
-		}
-#endif
-
 
 		// -----------------------------------
 		// clean assignment from pairs with large distance

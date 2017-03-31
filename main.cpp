@@ -70,11 +70,12 @@ int main(int argc, char** argv)
 
     CDetector detector(BackgroundSubtract::ALG_MOG, useLocalTracking, gray);
     detector.SetMinObjectSize(cv::Size(gray.cols / 50, gray.rows / 50));
-    //detector.SetMinObjectSize(cv::Size(4, 2));
+    detector.SetMinObjectSize(cv::Size(4, 2));
 
     CTracker tracker(useLocalTracking,
 		CTracker::RectsDist,
 		CTracker::FilterRect,
+		CTracker::MatchBitpart,
 		0.2f,                // Delta time for Kalman filter
 		0.1f,                // Accel noise magnitude for Kalman filter
 		gray.cols / 100.0f,  // Distance threshold between two frames
@@ -114,7 +115,7 @@ int main(int argc, char** argv)
 		int64 t2 = cv::getTickCount();
 
 		allTime += t2 - t1;
-		int currTime = static_cast<int>((t2 - t1) / freq + 0.5);
+		int currTime = static_cast<int>(1000 * (t2 - t1) / freq + 0.5);
 
 		std::cout << "Frame " << framesCounter << ": tracks = " << tracker.tracks.size() << ", time = " << currTime << std::endl;
 
@@ -147,7 +148,7 @@ int main(int argc, char** argv)
 		}
 
 		++framesCounter;
-		if (framesCounter > 500)
+		if (framesCounter > 50)
 		{
 			//break;
 		}
