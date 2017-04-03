@@ -211,7 +211,7 @@ int st_number::check (graph& G)
 }
 
 
-int st_number::run (graph& G) 
+int st_number::run (graph& /*G*/) 
 {
     std::list<node> order;
     node t = s.opposite (st);

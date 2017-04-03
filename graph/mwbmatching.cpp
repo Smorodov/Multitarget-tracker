@@ -175,11 +175,11 @@ int mwbmatching::augment(graph& G, node a)
 		}
 	}
 
-	while (true)
+	for (;;)
 	{
 		// Find node with minimum distance db
 		int node_id;
-		long db;
+		long db = 0;
 		if (pq->n == 0)
 		{
 			node_id = -1;
@@ -283,7 +283,7 @@ int mwbmatching::augment(graph& G, node a)
 	return 0;
 }
 
-void mwbmatching::augment_path_to (graph &G, node v)
+void mwbmatching::augment_path_to (graph &/*G*/, node v)
 {
 	int i = pred[v];
 	while (i != -1)
@@ -298,7 +298,6 @@ void mwbmatching::augment_path_to (graph &G, node v)
 std::list<edge> MAX_WEIGHT_BIPARTITE_MATCHING (graph &G, edge_map<int> weights)
 {
 	std::list<edge> L;
-	int match = 0;
 
 	mwbmatching mwbm;
 	mwbm.set_vars(weights);

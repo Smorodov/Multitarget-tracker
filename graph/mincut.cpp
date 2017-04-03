@@ -63,7 +63,6 @@ int mincut::run(graph& G)
 	node_map <node> orig (g);
 
 	node x;
-	int counter = 0;
 	forall_nodes (x, G)
 	{
 		partner[x] = g.new_node(); 

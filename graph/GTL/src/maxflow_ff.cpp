@@ -314,7 +314,7 @@ void maxflow_ff::create_back_edge(graph& G, const edge& org_edge)
 }
 
 
-void maxflow_ff::comp_max_flow(const graph& G)
+void maxflow_ff::comp_max_flow(const graph& /*G*/)
 {
     max_graph_flow = 0.0;
 

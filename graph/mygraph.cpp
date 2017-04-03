@@ -37,7 +37,7 @@ void MyGraph::load_edge_info_handler (edge e, GML_pair* list)
 	}
 }
 
-void MyGraph::store_edge_double (edge e, char *key, double value)
+void MyGraph::store_edge_double (edge /*e*/, char * /*key*/, double /*value*/)
 {
 }
 
@@ -97,12 +97,12 @@ void MyGraph::load_node_info_handler(node n, GML_pair* list )
 	}
 }
 
-void MyGraph::store_node_double (node n, char *key, double value)
+void MyGraph::store_node_double (node /*n*/, char * /*key*/, double /*value*/)
 {
 }
 
 
-void MyGraph::store_node_integer (node n, char *key, int value)
+void MyGraph::store_node_integer (node /*n*/, char * /*key*/, int /*value*/)
 {
 }
 

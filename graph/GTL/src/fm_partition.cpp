@@ -82,7 +82,7 @@ void fm_partition::set_vars(const graph& G,
 }
 
 
-void fm_partition::set_vars(const graph& G,
+void fm_partition::set_vars(const graph& /*G*/,
     const node_map<int>& node_weight, const edge_map<int>& edge_weight,
     const node_map<side_type>& init_side, 
     const node_map<fix_type>& fixed)
@@ -781,7 +781,7 @@ bool fm_partition::move_vertex(const graph& G, node& moved_node)
 }
 
 
-bool fm_partition::balance_holds(const graph& G, const node cur_node)
+bool fm_partition::balance_holds(const graph& /*G*/, const node cur_node)
 {
     if (side[cur_node] == A)
     {

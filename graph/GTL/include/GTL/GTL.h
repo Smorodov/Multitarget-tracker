@@ -98,14 +98,7 @@ for (iter_t GTL_FORALL_VAR(__LINE__) = (cont).iter##begin();    \
 #    pragma warning( disable : 4786 )
 #    pragma warning( disable : 4251 )
 
-#    if defined(GTL_STATIC)
-#      define GTL_EXTERN
-#    elif defined(GTL_EXPORTS)
-#      define GTL_EXTERN __declspec(dllexport)
-#    else
-#      define GTL_EXTERN __declspec(dllimport)
-#    endif
-
+#    define GTL_EXTERN
 #  else
 
 #    error "Need at least version 5.0 of MS Visual C++ to compile GTL."

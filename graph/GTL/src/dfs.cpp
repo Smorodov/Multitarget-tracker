@@ -58,7 +58,7 @@ void dfs::reset ()
 }
 
 
-int dfs::check (graph& G) 
+int dfs::check (graph& /*G*/) 
 {
     return GTL_OK;
 }
