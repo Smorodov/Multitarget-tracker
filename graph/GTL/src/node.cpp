@@ -21,7 +21,7 @@ node::node() :
 {
 }
 
-GTL_EXTERN ostream& operator<< (ostream& os, const node& n) {
+GTL_EXTERN std::ostream& operator<< (std::ostream& os, const node& n) {
     if (n != node()) {
 	return os << "[" << n.id() << "]";
     } else {
@@ -121,10 +121,10 @@ const node& node::opposite(edge e) const
 	return s;
 }
 
-list<node> node::opposites(edge) const
+std::list<node> node::opposites(edge) const
 {
     // not implemented yet
-    return list<node>(); // to avoid compiler warnings
+    return std::list<node>(); // to avoid compiler warnings
 }
 
 bool node::is_hidden () const

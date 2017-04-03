@@ -136,7 +136,7 @@ public:
      * @return begin of additional edges
      * @sa biconnectivity::make_biconnected
      */
-    list<edge>::iterator additional_begin ()
+	std::list<edge>::iterator additional_begin()
 	{ return additional.begin (); }
 
     /**
@@ -145,13 +145,13 @@ public:
      * @return end of additional edges
      * @sa biconnectivity::make_biconnected
      */
-    list<edge>::iterator additional_end ()
+	std::list<edge>::iterator additional_end()
 	{ return additional.end (); }
     
     /**
      * @internal
      */
-    typedef list<node>::iterator cutpoint_iterator;
+	typedef std::list<node>::iterator cutpoint_iterator;
 
     /**
      * @brief Start iteration over all cutpoints found.
@@ -178,7 +178,7 @@ public:
     /**
      * @internal
      */
-    typedef list<pair<list<node>, list<edge> > >::iterator component_iterator;
+	typedef std::list<std::pair<std::list<node>, std::list<edge> > >::iterator component_iterator;
 
     /**
      * @brief Start iteration over all biconnected components (if enabled during
@@ -262,7 +262,7 @@ protected:
     /**
      * @internal
      */
-    list<edge> self_loops;
+	std::list<edge> self_loops;
 
     /**
      * @internal
@@ -292,19 +292,19 @@ protected:
     /**
      * @internal
      */
-    stack<node> node_stack;
+	std::stack<node> node_stack;
     /**
      * @internal
      */
-    stack<edge> edge_stack;
+	std::stack<edge> edge_stack;
     /**
      * @internal
      */
-    list<pair<list<node>, list<edge> > > components;
+	std::list<std::pair<std::list<node>, std::list<edge> > > components;
     /**
      * @internal
      */
-    list<node> cut_points;
+	std::list<node> cut_points;
     /**
      * @internal
      */
@@ -312,7 +312,7 @@ protected:
     /**
      * @internal
      */
-    list<edge> additional;
+	std::list<edge> additional;
     /**
      * @internal
      */

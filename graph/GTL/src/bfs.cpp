@@ -60,7 +60,7 @@ void bfs::store_preds (bool set)
 void bfs::store_non_tree_edges (bool set) 
 {
     if (set && !non_tree) {
-	non_tree = new list<edge>;
+	non_tree = new std::list<edge>;
     } else if (!set && non_tree) {
 	delete non_tree;
 	non_tree = 0;

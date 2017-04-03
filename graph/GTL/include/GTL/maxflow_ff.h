@@ -154,7 +154,7 @@ protected:
     /**
      * @internal edges to remove from G after run
      */
-    list<edge> edges_not_org;
+	std::list<edge> edges_not_org;
 
     /**
      * @internal original edge or inserted back edge
@@ -206,7 +206,7 @@ protected:
      */
     int comp_sp(
 	const graph& G, 
-	queue<node>& next_nodes, 
+	std::queue<node>& next_nodes,
 	node_map<bool>& visited, 
 	node_map<edge>& last_edge);
 

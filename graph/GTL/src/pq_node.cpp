@@ -69,9 +69,9 @@ inline void p_node::full (iterator it)
 }
 
 
-inline void p_node::write (ostream& os, int _id) 
+inline void p_node::write(std::ostream& os, int _id)
 {
-    os << "node [\n" << "id " << _id << endl;
+	os << "node [\n" << "id " << _id << std::endl;
     os << "label \"" << id << "\nP" << "\"\n";
     os << "graphics [\n" << "x 100\n" << "y 100\n"; 
     if (mark == UNBLOCKED) {
@@ -79,9 +79,9 @@ inline void p_node::write (ostream& os, int _id)
     } else if (mark == BLOCKED) {
 	os << "outline \"#ff0000\"\n";
     }
-    os << "type \"oval\"\n" << "]" << endl;
+	os << "type \"oval\"\n" << "]" << std::endl;
     os << "LabelGraphics [\n";
-    os << "type \"text\"\n]\n]" << endl;
+	os << "type \"text\"\n]\n]" << std::endl;
 } 
 
 //--------------------------------------------------------------------------
@@ -264,9 +264,9 @@ inline void q_node::clear ()
     pert_end = symlist<pq_node*>::iterator();
 }
 
-inline void q_node::write (ostream& os, int _id) 
+inline void q_node::write(std::ostream& os, int _id)
 {
-    os << "node [\n" << "id " << _id << endl;
+	os << "node [\n" << "id " << _id << std::endl;
     os << "label \"" << id << "\n" << "Q" << "\"\n";
     os << "graphics [\n" << "x 100\n" << "y 100 \n"; 
     if (mark == UNBLOCKED) {
@@ -276,7 +276,7 @@ inline void q_node::write (ostream& os, int _id)
     }
     os << "]\n";
     os << "LabelGraphics [\n";
-    os << "type \"text\"\n]\n]" << endl;
+	os << "type \"text\"\n]\n]" << std::endl;
 } 
 
 q_node* q_node::merge (iterator it) 
@@ -321,9 +321,9 @@ pq_leaf::pq_leaf (int id_, int other_, edge e_, node n_) : pq_node (n_, id_)
     e = e_;
 }
 
-inline void pq_leaf::write (ostream& os, int _id) 
+inline void pq_leaf::write(std::ostream& os, int _id)
 {
-    os << "node [\n" << "id " << _id << endl;
+	os << "node [\n" << "id " << _id << std::endl;
     os << "label \"" << other_id << "\n" << id << "\"\n";
     os << "graphics [\n" << "x 100\n" << "y 100 \n"; 
     if (mark == UNBLOCKED) {
@@ -333,13 +333,13 @@ inline void pq_leaf::write (ostream& os, int _id)
     }
     os << "]\n";
     os << "LabelGraphics [\n";
-    os << "type \"text\"\n]\n]" << endl;
+	os << "type \"text\"\n]\n]" << std::endl;
 } 
 
 
-void direction_indicator::write (ostream& os, int _id) 
+void direction_indicator::write(std::ostream& os, int _id)
 {
-    os << "node [\n" << "id " << _id << endl;
+	os << "node [\n" << "id " << _id << std::endl;
     os << "label \"DIR\n" << id << "\"\n";
     os << "graphics [\n" << "x 100\n" << "y 100 \n"; 
     if (mark == UNBLOCKED) {
@@ -349,7 +349,7 @@ void direction_indicator::write (ostream& os, int _id)
     }
     os << "]\n";
     os << "LabelGraphics [\n";
-    os << "type \"text\"\n]\n]" << endl;
+	os << "type \"text\"\n]\n]" << std::endl;
 }
 
 __GTL_END_NAMESPACE

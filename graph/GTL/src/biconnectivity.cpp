@@ -130,7 +130,7 @@ void biconnectivity::new_start_handler (graph& /*G*/, node& st)
 	if (store_comp) {
 	    component_iterator li = components.insert (
 		components.end(), 
-		pair<list<node>,list<edge> > (list<node> (), list<edge> ()));
+		std::pair<std::list<node>, std::list<edge> >(std::list<node>(), std::list<edge>()));
 	
 	    (*li).first.push_back(st);
 	    in_component[st] = li;
@@ -162,10 +162,10 @@ void biconnectivity::after_recursive_call_handler (graph& G, edge& e, node& n)
 	if (store_comp) {
 	    component_iterator li = components.insert (
 		components.end(), 
-		pair<list<node>,list<edge> > (list<node> (), list<edge> ()));
+		std::pair<std::list<node>, std::list<edge> >(std::list<node>(), std::list<edge>()));
 
-	    list<node>& component = (*li).first;
-	    list<edge>& co_edges = (*li).second;
+	    std::list<node>& component = (*li).first;
+	    std::list<edge>& co_edges = (*li).second;
 
 	    //
 	    // Nodes of biconnected component
@@ -255,8 +255,8 @@ void biconnectivity::leave_handler (graph& /*G*/, node& n, node& /*f*/)
 
 void biconnectivity::end_handler (graph& G) 
 {
-    list<edge>::iterator it = self_loops.begin();
-    list<edge>::iterator end = self_loops.end();
+    std::list<edge>::iterator it = self_loops.begin();
+    std::list<edge>::iterator end = self_loops.end();
     
     while (it != end) {
 	G.restore_edge(*it);

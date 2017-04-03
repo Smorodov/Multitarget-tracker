@@ -11,7 +11,7 @@
  * A pair of nodes
  */
 
-typedef pair<node, node> node_pair;
+typedef std::pair<node, node> node_pair;
 
 class GTL_EXTERN mincut : public algorithm
 {
@@ -81,7 +81,7 @@ protected:
     /**
      * @internal
      */
-	list<node_pair> st_list;
+	std::list<node_pair> st_list;
 
 
 

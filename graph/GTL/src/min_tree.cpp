@@ -31,13 +31,13 @@ void min_tree::set_distances (const edge_map<int>& dist) {
     is_set_distances = true;
 }
 
-set<edge> min_tree::get_min_tree() { 
+std::set<edge> min_tree::get_min_tree() {
     return this->tree;
 }
  
 int min_tree::get_min_tree_length() { 
     int sum;
-    set<edge>::iterator tree_it;
+	std::set<edge>::iterator tree_it;
  
     sum = 0;
 
@@ -48,10 +48,10 @@ int min_tree::get_min_tree_length() {
 }
  
 int min_tree::run (graph& g) { 
-    priority_queue <TSP_A_VALUE, vector<TSP_A_VALUE>, input_comp> node_distances;
+	std::priority_queue <TSP_A_VALUE, std::vector<TSP_A_VALUE>, input_comp> node_distances;
     node::adj_edges_iterator adj_it, adj_end;
-    set<node> tree_nodes;
-    set<node>::iterator tree_it;
+	std::set<node> tree_nodes;
+	std::set<node>::iterator tree_it;
     edge curr;
     node new_node;
     graph::edge_iterator edge_it, edges_end;

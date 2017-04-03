@@ -64,8 +64,8 @@ int mwbmatching::run(graph& G)
 	free.init (G, true);
 	dist.init (G, 0);
 	
-	list<node> A;
-	list<node> B;
+	std::list<node> A;
+	std::list<node> B;
 	node n;
 	// Partition graph based on direction of edges
 	forall_nodes (n, G)
@@ -92,8 +92,8 @@ int mwbmatching::run(graph& G)
 			C = edge_weight[e];	
 	}
 
-	list<node>::iterator it = A.begin();
-	list<node>::iterator end = A.end();
+	std::list<node>::iterator it = A.begin();
+	std::list<node>::iterator end = A.end();
 	while (it != end)
 	{
 		pot[*it] = C;
@@ -143,9 +143,9 @@ int mwbmatching::augment(graph& G, node a)
 	long minA = pot[a];
 	long delta;
 	
-	stack<node, vector<node> > RA;
+	std::stack<node, std::vector<node> > RA;
 	RA.push(a);
-	stack<node, vector<node> > RB;
+	std::stack<node, std::vector<node> > RB;
 	
 	node a1 = a;
 	edge e;
@@ -295,9 +295,9 @@ void mwbmatching::augment_path_to (graph &G, node v)
 
 }
 
-list<edge> MAX_WEIGHT_BIPARTITE_MATCHING (graph &G, edge_map<int> weights)
+std::list<edge> MAX_WEIGHT_BIPARTITE_MATCHING (graph &G, edge_map<int> weights)
 {
-	list<edge> L;
+	std::list<edge> L;
 	int match = 0;
 
 	mwbmatching mwbm;
@@ -312,7 +312,7 @@ list<edge> MAX_WEIGHT_BIPARTITE_MATCHING (graph &G, edge_map<int> weights)
 	{
 		if (mwbm.run(G) != algorithm::GTL_OK)
 		{
-			cout << "Error running maximum weight bipartite matching algorithm" << endl;
+			std::cout << "Error running maximum weight bipartite matching algorithm" << std::endl;
 			//exit(1);
 		}
 		else

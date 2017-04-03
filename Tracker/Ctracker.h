@@ -25,7 +25,7 @@ public:
 	enum MatchType
 	{
 		MatchHungrian = 0,
-		MatchBitpart = 1
+		MatchBipart = 1
 	};
 
     CTracker(bool useLocalTracking,

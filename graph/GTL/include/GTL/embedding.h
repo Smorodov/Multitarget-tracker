@@ -218,7 +218,7 @@ public:
      *
      * @param st st-numbers
      */
-    void write_st(ostream& os, st_number& st);
+	void write_st(std::ostream& os, st_number& st);
 
     /**
      * 
@@ -227,7 +227,7 @@ public:
      *
      * @retval list of selfloops
      */
-    list<edge>& selfloops()
+	std::list<edge>& selfloops()
     {
 	return self;
     }
@@ -239,7 +239,7 @@ public:
      *
      * @retval list of selfloops
      */
-    const list<edge>& selfloops() const
+	const std::list<edge>& selfloops() const
     {
 	return self;
     }
@@ -254,7 +254,7 @@ public:
      *
      * @retval list of multiple edges
      */
-    list<edge>& multiple_edges()
+	std::list<edge>& multiple_edges()
     {
 	return multi;
     }
@@ -269,7 +269,7 @@ public:
      *
      * @retval list of multiple edges
      */
-    const list<edge>& multiple_edges() const
+	const std::list<edge>& multiple_edges() const
     {
 	return multi;
     }
@@ -299,7 +299,7 @@ public:
     /**
      * @internal
      */
-    GTL_EXTERN friend ostream& operator<< (ostream&, planar_embedding&);
+	GTL_EXTERN friend std::ostream& operator<< (std::ostream&, planar_embedding&);
 private:
     /**
      * @internal
@@ -329,13 +329,13 @@ private:
      * @internal
      * Selfloops.
      */
-    list<edge> self;
+	std::list<edge> self;
 
     /**
      * @internal
      * Multiple edges.
      */
-    list<edge> multi;
+	std::list<edge> multi;
 };
 
 

@@ -99,7 +99,7 @@ int mincut::run(graph& G)
 		
 		fheap_t *pq = fh_alloc (n);
 		node_map<int> vertex_number (g, 0);
-		map <int, node, less<int> > nv;
+		std::map <int, node, std::less<int> > nv;
 		int vertex_count = 0;
 			
 		// Nodes in $A$ are not in the queue

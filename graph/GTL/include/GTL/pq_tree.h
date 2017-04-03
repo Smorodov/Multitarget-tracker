@@ -54,7 +54,7 @@ public:
      * @param n node in the %graph to which the P-node refers
      * @param le list of children
      */
-    pq_tree(int id, node n, const list<pq_leaf*>& le);
+	pq_tree(int id, node n, const std::list<pq_leaf*>& le);
 
     /**
      * @brief Deletes PQ-tree.
@@ -77,7 +77,7 @@ public:
      * @retval true if tree was successfully reduced
      * @retval false if reduction failed
      */
-    bool reduce(list<pq_leaf*>& leaves);
+	bool reduce(std::list<pq_leaf*>& leaves);
 
     /**
      * @brief Replaces all the pertinent parts of the PQ-tree after a
@@ -99,9 +99,9 @@ public:
      */
     void replace_pert(int id,
 		      node n,
-		      const list<pq_leaf*>& le,
+			  const std::list<pq_leaf*>& le,
 		      planar_embedding* em = 0,
-		      list<direction_indicator>* dirs = 0);
+			  std::list<direction_indicator>* dirs = 0);
     
     /**
      * @brief Scans whole tree from left to right and stores edges (in the
@@ -116,7 +116,7 @@ public:
      * @param em planar embedding 
      * @param dirs direction indicators in tree
      */
-    void get_frontier (planar_embedding& em, list<direction_indicator>& dirs);
+	void get_frontier(planar_embedding& em, std::list<direction_indicator>& dirs);
 
     /**
      * @brief After a (successful) reduction @c reset has to be called in
@@ -188,7 +188,7 @@ private:
      *
      * @retval true iff bubble-up succeeded
      */
-    bool bubble_up (list<pq_leaf*>& leaves);
+	bool bubble_up(std::list<pq_leaf*>& leaves);
     
     /**
      * @internal
@@ -202,7 +202,7 @@ private:
      */
     void dfs(pq_node* p,
 	     planar_embedding& em,
-	     list<direction_indicator>& dirs);
+		 std::list<direction_indicator>& dirs);
 
     /**
      * @internal
@@ -244,7 +244,7 @@ private:
      *
      * @return root of the minimum subtree
      */
-    pq_node* where_bubble_up_failed(list<pq_leaf*>& leaves); 
+	pq_node* where_bubble_up_failed(std::list<pq_leaf*>& leaves);
 
 
     /**
@@ -329,7 +329,7 @@ private:
      * @internal
      * List of (PQ-) nodes to be cleared if the reduction stopped now.
      */
-    list<pq_node*> clear_me;
+	std::list<pq_node*> clear_me;
 
     /**
      * @internal
@@ -380,7 +380,7 @@ private:
      * @internal
      * Allow operator<< private access.
      */
-    GTL_EXTERN friend ostream& operator<< (ostream&, const pq_tree&);
+	GTL_EXTERN friend std::ostream& operator<< (std::ostream&, const pq_tree&);
 };
 
 __GTL_END_NAMESPACE

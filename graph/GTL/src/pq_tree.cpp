@@ -16,13 +16,13 @@
 
 __GTL_BEGIN_NAMESPACE
 
-pq_tree::pq_tree (int id, node n, const list<pq_leaf*>& li)
+pq_tree::pq_tree (int id, node n, const std::list<pq_leaf*>& li)
 {
 #ifdef _DEBUG  
     GTL_debug::init_debug();
 #endif
-    list<pq_leaf*>::const_iterator it;
-    list<pq_leaf*>::const_iterator end = li.end();
+    std::list<pq_leaf*>::const_iterator it;
+    std::list<pq_leaf*>::const_iterator end = li.end();
     sons_list sons;
     pq_leaf* tmp;
     
@@ -50,9 +50,9 @@ pq_tree::~pq_tree ()
 }
 
 
-bool pq_tree::bubble_up (list<pq_leaf*>& leaves) 
+bool pq_tree::bubble_up (std::list<pq_leaf*>& leaves) 
 {
-    queue<pq_node*> qu;
+	std::queue<pq_node*> qu;
     int block_count = 0;
     int blocked_siblings = 0;
     pert_leaves_count = 0;
@@ -61,8 +61,8 @@ bool pq_tree::bubble_up (list<pq_leaf*>& leaves)
     
     assert (clear_me.empty());
     
-    list<pq_leaf*>::const_iterator it = leaves.begin(); 
-    list<pq_leaf*>::const_iterator lend = leaves.end();
+    std::list<pq_leaf*>::const_iterator it = leaves.begin(); 
+    std::list<pq_leaf*>::const_iterator lend = leaves.end();
     
     while (it != lend) {
 	qu.push (*it);
@@ -228,7 +228,7 @@ bool pq_tree::bubble_up (list<pq_leaf*>& leaves)
 }
 
 
-pq_node* pq_tree::where_bubble_up_failed (list<pq_leaf*>& leaves)
+pq_node* pq_tree::where_bubble_up_failed (std::list<pq_leaf*>& leaves)
 {
 
     //
@@ -238,8 +238,8 @@ pq_node* pq_tree::where_bubble_up_failed (list<pq_leaf*>& leaves)
     pq_leaf* le;
     pq_node* blocked = 0;
     
-    list<pq_leaf*>::iterator l_it = leaves.begin();
-    list<pq_leaf*>::iterator l_end = leaves.end();
+    std::list<pq_leaf*>::iterator l_it = leaves.begin();
+    std::list<pq_leaf*>::iterator l_end = leaves.end();
     q_node* father = 0;
 
     while (l_it != l_end ) {
@@ -370,7 +370,7 @@ pq_node* pq_tree::leads_to_blocked (pq_node* le)
 }
 
 
-bool pq_tree::reduce (list<pq_leaf*>& leaves) 
+bool pq_tree::reduce (std::list<pq_leaf*>& leaves) 
 {   
 
     GTL_debug::debug_message ("REDUCING %d\n", leaves.front()->id);
@@ -386,10 +386,10 @@ bool pq_tree::reduce (list<pq_leaf*>& leaves)
 	fail = where_bubble_up_failed (leaves);
     }
     
-    queue<pq_node*> qu;
+	std::queue<pq_node*> qu;
     pq_leaf* le;
-    list<pq_leaf*>::iterator l_it = leaves.begin();
-    list<pq_leaf*>::iterator l_end = leaves.end();
+    std::list<pq_leaf*>::iterator l_it = leaves.begin();
+    std::list<pq_leaf*>::iterator l_end = leaves.end();
     
     while (l_it != l_end ) {
 	le = *l_it;
@@ -668,7 +668,7 @@ void pq_tree::reset ()
 
 
 void pq_tree::dfs (pq_node* act, planar_embedding& em,
-		   list<direction_indicator>& dirs) 
+		   std::list<direction_indicator>& dirs) 
 {
     if (act->kind() == pq_node::LEAF) {
 	em.push_back (act->n, ((pq_leaf*) act)->e);
@@ -703,14 +703,14 @@ void pq_tree::dfs (pq_node* act, planar_embedding& em,
 }
 
 
-void pq_tree::replace_pert (int id, node _n, const list<pq_leaf*>& li,
-			    planar_embedding* em, list<direction_indicator>* dirs) 
+void pq_tree::replace_pert (int id, node _n, const std::list<pq_leaf*>& li,
+			    planar_embedding* em, std::list<direction_indicator>* dirs) 
 {
     assert (pert_root);
     assert (!li.empty());
     pq_leaf* tmp = 0;
-    list<pq_leaf*>::const_iterator it;
-    list<pq_leaf*>::const_iterator end = li.end();
+    std::list<pq_leaf*>::const_iterator it;
+    std::list<pq_leaf*>::const_iterator end = li.end();
     sons_list sons;
     int size = 0;
     
@@ -838,7 +838,7 @@ void pq_tree::replace_pert (int id, node _n, const list<pq_leaf*>& li,
 }	    
 
 void pq_tree::get_frontier (planar_embedding& em, 
-			    list<direction_indicator>& dirs)
+			    std::list<direction_indicator>& dirs)
 {
     dfs (root, em, dirs);
 }
@@ -1332,16 +1332,16 @@ bool pq_tree::Q3 (q_node* x)
 
 
 
-GTL_EXTERN ostream& operator<< (ostream& os, const pq_tree& tree) 
+GTL_EXTERN std::ostream& operator<< (std::ostream& os, const pq_tree& tree)
 {
     if (!tree.root) return os;
     
     int id = 0;
-    pair<pq_node*,int> tmp;
-    queue<pair<pq_node*,int> > qu;
+	std::pair<pq_node*, int> tmp;
+	std::queue<std::pair<pq_node*, int> > qu;
     pq_node* act;
     
-    os << "graph [\n" << "directed 1" << endl;
+	os << "graph [\n" << "directed 1" << std::endl;
     tree.root->write (os, id);
     tmp.first = tree.root;
     tmp.second = id;
@@ -1360,10 +1360,10 @@ GTL_EXTERN ostream& operator<< (ostream& os, const pq_tree& tree)
 		act = *it;
 		act->write (os, id);
 		
-		os << "edge [\n" << "source " << tmp.second << endl;
-		os << "target " << id << "\n]" << endl;
+		os << "edge [\n" << "source " << tmp.second << std::endl;
+		os << "target " << id << "\n]" << std::endl;
 		
-		qu.push (pair<pq_node*,int> (act, id));
+		qu.push(std::pair<pq_node*, int>(act, id));
 		++id;
 	    }
         }
@@ -1377,10 +1377,10 @@ GTL_EXTERN ostream& operator<< (ostream& os, const pq_tree& tree)
                 act = *it;
                 act->write (os, id);
 
-                os << "edge [\n" << "source " << tmp.second << endl;
-                os << "target " << id << "\n]" << endl;
+				os << "edge [\n" << "source " << tmp.second << std::endl;
+				os << "target " << id << "\n]" << std::endl;
 
-                qu.push (pair<pq_node*,int> (act, id));
+				qu.push(std::pair<pq_node*, int>(act, id));
                 ++id;
             }
             
@@ -1391,16 +1391,16 @@ GTL_EXTERN ostream& operator<< (ostream& os, const pq_tree& tree)
                 act = *it;
                 act->write (os, id);
 
-                os << "edge [\n" << "source " << tmp.second << endl;
-                os << "target " << id << "\n]" << endl;
+				os << "edge [\n" << "source " << tmp.second << std::endl;
+				os << "target " << id << "\n]" << std::endl;
 
-                qu.push (pair<pq_node*,int> (act, id));
+				qu.push(std::pair<pq_node*, int>(act, id));
                 ++id;
             }            
         }
     }
     
-    os << "]" << endl;
+	os << "]" << std::endl;
     
     return os;
 }
@@ -1424,7 +1424,7 @@ bool pq_tree::integrity_check () const
 {    
     if (!root) return true;
     
-    queue<pq_node*> qu;
+	std::queue<pq_node*> qu;
     qu.push (root);
     pq_node* tmp;
     

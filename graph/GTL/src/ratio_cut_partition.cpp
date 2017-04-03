@@ -219,7 +219,7 @@ int ratio_cut_partition::run(graph& G)
 	return GTL_OK;
     }
 
-    list<edge> artificial_edges;
+    std::list<edge> artificial_edges;
     if (!G.is_connected())
     {
 	make_connected(G, artificial_edges);
@@ -395,7 +395,7 @@ void ratio_cut_partition::divide_up(const graph& G)
 
 
 void ratio_cut_partition::make_connected(graph& G,
-    list<edge>& artificial_edges)
+    std::list<edge>& artificial_edges)
 {
     dfs conn;
     conn.scan_whole_graph(true);
@@ -419,10 +419,10 @@ void ratio_cut_partition::make_connected(graph& G,
 }
 
 
-void ratio_cut_partition::restore(graph& G, list<edge>& artificial_edges)
+void ratio_cut_partition::restore(graph& G, std::list<edge>& artificial_edges)
 {
-    list<edge>::iterator edge_it = artificial_edges.begin();
-    list<edge>::iterator edges_end = artificial_edges.end();
+    std::list<edge>::iterator edge_it = artificial_edges.begin();
+    std::list<edge>::iterator edges_end = artificial_edges.end();
     while (edge_it != edges_end)
     {
 	G.del_edge(*edge_it);
@@ -744,7 +744,7 @@ void ratio_cut_partition::compute_target_node(const graph& G)
 {
     node cur_node, next;
     node_map<bool> visited(G, false);
-    queue<node> next_nodes;
+	std::queue<node> next_nodes;
     next_nodes.push(source_node);
     visited[source_node] = true;
 
@@ -791,8 +791,8 @@ void ratio_cut_partition::right_shift_op(const graph& G)
     int step_number = 0;
     int best_tentative_move = 0;
     int best_bal = node_weight_on_sideA * node_weight_on_sideB;
-    vector<node> tentative_moves(G.number_of_nodes() + 1);
-    vector<double> tentative_cutratio(G.number_of_nodes() + 1);
+	std::vector<node> tentative_moves(G.number_of_nodes() + 1);
+	std::vector<double> tentative_cutratio(G.number_of_nodes() + 1);
     node moved_node;
     tentative_cutratio[0] = cur_cutratio;
     int best_cutsize = cur_cutsize;
@@ -840,8 +840,8 @@ void ratio_cut_partition::left_shift_op(const graph& G)
     int step_number = 0;
     int best_tentative_move = 0;
     int best_bal = node_weight_on_sideA * node_weight_on_sideB;
-    vector<node> tentative_moves(G.number_of_nodes() + 1);
-    vector<double> tentative_cutratio(G.number_of_nodes() + 1);
+	std::vector<node> tentative_moves(G.number_of_nodes() + 1);
+	std::vector<double> tentative_cutratio(G.number_of_nodes() + 1);
     node moved_node;
     tentative_cutratio[0] = cur_cutratio;
     int best_cutsize = cur_cutsize;
@@ -921,7 +921,7 @@ bool ratio_cut_partition::move_vertex_B2A(const graph &/*G*/, node& moved_node)
 }
 
 
-node ratio_cut_partition::compute_highest_ratio_node(list<node> node_list)
+node ratio_cut_partition::compute_highest_ratio_node(std::list<node> node_list)
 {
     node cons_node = node_list.front();
     double ratio, best_ratio;
@@ -934,8 +934,8 @@ node ratio_cut_partition::compute_highest_ratio_node(list<node> node_list)
 	best_ratio = ratio_of_node_B2A(cons_node);
     }
 	
-    list<node>::iterator node_it = node_list.begin();
-    list<node>::iterator nodes_end = node_list.end();
+    std::list<node>::iterator node_it = node_list.begin();
+    std::list<node>::iterator nodes_end = node_list.end();
     while (node_it != nodes_end)
     {
 	if (side[cons_node] == A)
@@ -1013,8 +1013,8 @@ void ratio_cut_partition::update_data_structure_A2B(const node cur_node,
 	--aside[*adj_edge_it];
 	if (aside[*adj_edge_it] == 0)
 	{
-	    list<node>::iterator node_it = unlockedB[*adj_edge_it].begin();
-	    list<node>::iterator nodes_end = unlockedB[*adj_edge_it].end();
+	    std::list<node>::iterator node_it = unlockedB[*adj_edge_it].begin();
+	    std::list<node>::iterator nodes_end = unlockedB[*adj_edge_it].end();
 	    while (node_it != nodes_end)
 	    {
 		update_bucketB(*node_it, gain_value[*node_it], 
@@ -1026,8 +1026,8 @@ void ratio_cut_partition::update_data_structure_A2B(const node cur_node,
 	}
 	else if (aside[*adj_edge_it] == 1)
 	{
-	    list<node>::iterator node_it = unlockedA[*adj_edge_it].begin();
-	    list<node>::iterator nodes_end = unlockedA[*adj_edge_it].end();
+	    std::list<node>::iterator node_it = unlockedA[*adj_edge_it].begin();
+	    std::list<node>::iterator nodes_end = unlockedA[*adj_edge_it].end();
 	    while (node_it != nodes_end)
 	    {
 		update_bucketA(*node_it, gain_value[*node_it],
@@ -1041,8 +1041,8 @@ void ratio_cut_partition::update_data_structure_A2B(const node cur_node,
 	++bside[*adj_edge_it];
 	if (bside[*adj_edge_it] == 1)
 	{
-	    list<node>::iterator node_it = unlockedA[*adj_edge_it].begin();
-	    list<node>::iterator nodes_end = unlockedA[*adj_edge_it].end();
+	    std::list<node>::iterator node_it = unlockedA[*adj_edge_it].begin();
+	    std::list<node>::iterator nodes_end = unlockedA[*adj_edge_it].end();
 	    while (node_it != nodes_end)
 	    {
 		update_bucketA(*node_it, gain_value[*node_it],
@@ -1054,8 +1054,8 @@ void ratio_cut_partition::update_data_structure_A2B(const node cur_node,
 	}
 	else if (bside[*adj_edge_it] == 2)
 	{
-	    list<node>::iterator node_it = unlockedB[*adj_edge_it].begin();
-	    list<node>::iterator nodes_end = unlockedB[*adj_edge_it].end();
+	    std::list<node>::iterator node_it = unlockedB[*adj_edge_it].begin();
+	    std::list<node>::iterator nodes_end = unlockedB[*adj_edge_it].end();
 	    while (node_it != nodes_end)
 	    {
 		update_bucketB(*node_it, gain_value[*node_it],
@@ -1090,8 +1090,8 @@ void ratio_cut_partition::update_data_structure_B2A(const node cur_node,
 	bside[*adj_edge_it] -= 1;
 	if (bside[*adj_edge_it] == 0)
 	{
-	    list<node>::iterator node_it = unlockedA[*adj_edge_it].begin();
-	    list<node>::iterator nodes_end = unlockedA[*adj_edge_it].end();
+	    std::list<node>::iterator node_it = unlockedA[*adj_edge_it].begin();
+	    std::list<node>::iterator nodes_end = unlockedA[*adj_edge_it].end();
 	    while (node_it != nodes_end)
 	    {
 		update_bucketA(*node_it, gain_value[*node_it],
@@ -1103,8 +1103,8 @@ void ratio_cut_partition::update_data_structure_B2A(const node cur_node,
 	}
 	else if (bside[*adj_edge_it] == 1)
 	{
-	    list<node>::iterator node_it = unlockedB[*adj_edge_it].begin();
-	    list<node>::iterator nodes_end = unlockedB[*adj_edge_it].end();
+	    std::list<node>::iterator node_it = unlockedB[*adj_edge_it].begin();
+	    std::list<node>::iterator nodes_end = unlockedB[*adj_edge_it].end();
 	    while (node_it != nodes_end)
 	    {
 		update_bucketB(*node_it, gain_value[*node_it],
@@ -1118,8 +1118,8 @@ void ratio_cut_partition::update_data_structure_B2A(const node cur_node,
 	aside[*adj_edge_it] += 1;
 	if (aside[*adj_edge_it] == 1)
 	{
-	    list<node>::iterator node_it = unlockedB[*adj_edge_it].begin();
-	    list<node>::iterator nodes_end = unlockedB[*adj_edge_it].end();
+	    std::list<node>::iterator node_it = unlockedB[*adj_edge_it].begin();
+	    std::list<node>::iterator nodes_end = unlockedB[*adj_edge_it].end();
 	    while (node_it != nodes_end)
 	    {
 		update_bucketB(*node_it, gain_value[*node_it],
@@ -1131,8 +1131,8 @@ void ratio_cut_partition::update_data_structure_B2A(const node cur_node,
 	}
 	else if (aside[*adj_edge_it] == 2)
 	{
-	    list<node>::iterator node_it = unlockedA[*adj_edge_it].begin();
-	    list<node>::iterator nodes_end = unlockedA[*adj_edge_it].end();
+	    std::list<node>::iterator node_it = unlockedA[*adj_edge_it].begin();
+	    std::list<node>::iterator nodes_end = unlockedA[*adj_edge_it].end();
 	    while (node_it != nodes_end)
 	    {
 		update_bucketA(*node_it, gain_value[*node_it],
@@ -1335,8 +1335,8 @@ bool ratio_cut_partition::move_manager(const graph& G)
     int step_number = 0;
     int best_tentative_move = 0;
     int best_bal = node_weight_on_sideA * node_weight_on_sideB;
-    vector<node> tentative_moves(G.number_of_nodes() + 1);
-    vector<double> tentative_cutratio(G.number_of_nodes() + 1);
+	std::vector<node> tentative_moves(G.number_of_nodes() + 1);
+	std::vector<double> tentative_cutratio(G.number_of_nodes() + 1);
     node moved_node;
     tentative_cutratio[0] = cur_cutratio;
     int best_cutsize = cur_cutsize;
@@ -1526,20 +1526,20 @@ void ratio_cut_partition::compute_nodesAB(const graph& G)
 void ratio_cut_partition::print_bucketA()
 {
     GTL_debug::init_debug();
-    GTL_debug::os() << endl << "bucketA:" << endl;
+	GTL_debug::os() << std::endl << "bucketA:" << std::endl;
     for (int i = 0; i <= 2 * max_vertex_degree * max_edge_weight; i++)
     {
 	GTL_debug::os() << range_down(i) << ": ";
-	list<node>::iterator node_it = bucketA[i].begin();
-	list<node>::iterator nodes_end = bucketA[i].end();
+	std::list<node>::iterator node_it = bucketA[i].begin();
+	std::list<node>::iterator nodes_end = bucketA[i].end();
 	while (node_it != nodes_end)
 	{
 	    GTL_debug::os() << *node_it << "  ";
 	    ++node_it;
 	}
-	GTL_debug::os() << endl;
+	GTL_debug::os() << std::endl;
     }
-    GTL_debug::os() << endl;
+	GTL_debug::os() << std::endl;
     GTL_debug::close_debug();
 }
 
@@ -1547,20 +1547,20 @@ void ratio_cut_partition::print_bucketA()
 void ratio_cut_partition::print_bucketB()
 {
     GTL_debug::init_debug();
-    GTL_debug::os() << endl << "bucketB:" << endl;
+	GTL_debug::os() << std::endl << "bucketB:" << std::endl;
     for (int i = 0; i <= 2 * max_vertex_degree * max_edge_weight; i++)
     {
 	GTL_debug::os() << range_down(i) << ": ";
-	list<node>::iterator node_it = bucketB[i].begin();
-	list<node>::iterator nodes_end = bucketB[i].end();
+	std::list<node>::iterator node_it = bucketB[i].begin();
+	std::list<node>::iterator nodes_end = bucketB[i].end();
 	while (node_it != nodes_end)
 	{
 	    GTL_debug::os() << *node_it << "  ";
 	    ++node_it;
 	}
-	GTL_debug::os() << endl;
+	GTL_debug::os() << std::endl;
     }
-    GTL_debug::os() << endl;
+	GTL_debug::os() << std::endl;
     GTL_debug::close_debug();
 }
 #endif	// _DEBUG

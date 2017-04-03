@@ -14,7 +14,7 @@
 
 __GTL_BEGIN_NAMESPACE
 
-ostream* GTL_debug::GTLerr = 0;
+std::ostream* GTL_debug::GTLerr = 0;
 
 void GTL_debug::debug_message (const char* message, ...) 
 {
@@ -34,7 +34,7 @@ void GTL_debug::init_debug ()
 {
     if (!GTLerr) {
 #ifdef __GTL_MSVCC
-	GTLerr = new ofstream ("ERRLOG.txt", ios::out | ios::app);
+		GTLerr = new std::ofstream("ERRLOG.txt", std::ios::out | std::ios::app);
 #else
 	GTLerr = &cerr;
 #endif
@@ -45,7 +45,7 @@ void GTL_debug::close_debug ()
 {
     if (GTLerr) {
 #ifdef __GTL_MSVCC 
-	((ofstream*) GTLerr)->close();
+		((std::ofstream*) GTLerr)->close();
 	delete GTLerr;
 	GTLerr = 0;
 #endif

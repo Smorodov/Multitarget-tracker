@@ -266,7 +266,7 @@ public:
     /**
      * Iterator type for edges which belong to the cut.
      */
-    typedef list<edge>::const_iterator cut_edges_iterator;
+	typedef std::list<edge>::const_iterator cut_edges_iterator;
 
     /**
      * Iterate through all edges which belong to the cut, that means
@@ -291,7 +291,7 @@ public:
     /**
      * Iterator type of nodes of a side.
      */
-    typedef list<node>::const_iterator nodes_of_one_side_iterator;
+	typedef std::list<node>::const_iterator nodes_of_one_side_iterator;
 
     /**
      * Iterate through all nodes which belong to side <code>A</code>.
@@ -350,7 +350,7 @@ protected:
      * @internal
      * List of edges which belong to the cut.
      */
-    list<edge> cut_edges;
+	std::list<edge> cut_edges;
 
     /**
      * @internal
@@ -363,13 +363,13 @@ protected:
      * @internal
      * List of nodes which belong to side <code>A</code>.
      */
-    list<node> nodesA;
+	std::list<node> nodesA;
 
     /**
      * @internal
      * List of nodes which belong to side <code>A</code>.
      */
-    list<node> nodesB;
+	std::list<node> nodesB;
 
     /**
      * @internal
@@ -458,7 +458,7 @@ protected:
      * @internal
      * Corresponds to CELL array in [FidMat82]
      */
-    node_map<list<node>::iterator> position_in_bucket;
+	node_map<std::list<node>::iterator> position_in_bucket;
 		
     /**
      * @internal
@@ -483,14 +483,14 @@ protected:
      * Contains the unlocked nodes of an edge on side <code>A</code>.
      * (max. 2)
      */
-    edge_map<list<node> > unlockedA;
+	edge_map<std::list<node> > unlockedA;
 
     /**
      * @internal
      * Contains the unlocked nodes of an edge on side <code>B</code>.
      * (max. 2)
      */
-    edge_map<list<node> > unlockedB;
+	edge_map<std::list<node> > unlockedB;
 
     /**
      * @internal
@@ -530,7 +530,7 @@ protected:
      * on side <code>A</code>. (open hashing, collisions in gain buckets
      * are organized through LIFO lists)
      */
-    vector<list<node> > bucketA;
+	std::vector<std::list<node> > bucketA;
 
     /**
      * @internal
@@ -538,7 +538,7 @@ protected:
      * on side <code>B</code>. (open hashing, collisions in gain buckets
      * are organized through LIFO lists)
      */
-    vector<list<node> > bucketB;
+	std::vector<std::list<node> > bucketB;
 
     /**
      * @internal
@@ -587,7 +587,7 @@ protected:
      * vector_size</code>.
      */
     void shuffle_vector(const int vector_size,
-	vector<graph::node_iterator>& node_vector);
+		std::vector<graph::node_iterator>& node_vector);
 		
     /**
      * @internal

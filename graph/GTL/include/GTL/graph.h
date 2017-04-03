@@ -71,7 +71,7 @@ public:
      * @param <code>nodes</code> nodes of <code>G</code>, which form 
      *        the induced subgraph this graph will be isomorphic to.
      */
-    graph (const graph& G, const list<node>& nodes);
+	graph(const graph& G, const std::list<node>& nodes);
     
     /**
      * Makes new graph isomorphic to the subgraph induced by the nodes
@@ -84,8 +84,8 @@ public:
      * @param <code>end</code> end of nodes     
      */
     graph (const graph& G, 
-	list<node>::const_iterator it, 
-	list<node>::const_iterator end);
+		std::list<node>::const_iterator it,
+		std::list<node>::const_iterator end);
     
     /**
      * Destructor. Deletes all nodes and edges.
@@ -197,7 +197,7 @@ public:
     /**
      * @internal
      */
-    virtual edge new_edge(const list<node> &sources, const list<node> &targets);
+	virtual edge new_edge(const std::list<node> &sources, const std::list<node> &targets);
 
     //================================================== Deletion
 
@@ -246,11 +246,11 @@ public:
     /**
      * @internal
      */
-    typedef list<node>::const_iterator node_iterator;
+	typedef std::list<node>::const_iterator node_iterator;
     /**
      * @internal
      */
-    typedef list<edge>::const_iterator edge_iterator;
+	typedef std::list<edge>::const_iterator edge_iterator;
     
     /**
      * Iterate through all nodes in the graph.
@@ -286,13 +286,13 @@ public:
      * @deprecated
      * @return a list of all nodes of the graph
      */
-    list<node> all_nodes() const;
+	std::list<node> all_nodes() const;
 
     /**
      * @deprecated
      * @return a list of all edges of the graph
      */
-    list<edge> all_edges() const;
+	std::list<edge> all_edges() const;
  
     /**
      * @deprecated
@@ -332,7 +332,7 @@ public:
      * @param <code>e</code> node to be hidden
      * @return list of implicitly hidden, incident edges
      */
-    list<edge> hide_node (node n);
+	std::list<edge> hide_node(node n);
 
     /**
      * Restores a hidden node. This only restores the node itself. It
@@ -357,7 +357,7 @@ public:
      * @param <code>subgraph_nodes</code> nodes of subgraph.
      * @see graph#restore_graph
      */
-    void induced_subgraph (list<node>& subgraph_nodes);
+	void induced_subgraph(std::list<node>& subgraph_nodes);
 
     /**
      * Restores all hidden nodes and edges
@@ -378,7 +378,7 @@ public:
      * inserts for all edges of the graph a reverse edge
      * NOTE: this functions does NOT care about existing reverse edges
      */
-    list<edge> insert_reverse_edges();
+	std::list<edge> insert_reverse_edges();
     
     //================================================== I/O
 
@@ -398,7 +398,7 @@ public:
      *   see @ref GML_error#err_num.
      */
     
-    GML_error load (const string& filename, bool preserve_ids = false) 
+	GML_error load(const std::string& filename, bool preserve_ids = false)
 	{ return load (filename.c_str(), preserve_ids); }
 
     
@@ -436,7 +436,7 @@ public:
      * @param <code>file</code> output stream defaults to cout.
      */
     
-    void save (ostream* file = &cout) const;
+	void save(std::ostream* file = &std::cout) const;
 
     //================================================== Node handlers
     
@@ -659,7 +659,7 @@ public:
      * @param <code>os</code> output stream.
      * @see graph#save 
      */
-    virtual void pre_graph_save_handler (ostream* /*os*/) const { };
+	virtual void pre_graph_save_handler(std::ostream* /*os*/) const { };
 
     /**
      * Called before the closing bracket of the list belonging to the
@@ -670,7 +670,7 @@ public:
      * @param <code>os</code> output stream.
      * @see graph#save 
      */
-    virtual void save_graph_info_handler (ostream*) const { };
+	virtual void save_graph_info_handler(std::ostream*) const { };
     
     /**
      * Called before the closing bracket of the list belonging to the key
@@ -681,7 +681,7 @@ public:
      * @param <code>os</code> output stream.
      * @see graph#save 
      */
-    virtual void save_node_info_handler (ostream*, node) const { };
+	virtual void save_node_info_handler(std::ostream*, node) const { };
 
     /**
      * Called before the closing bracket of the list belonging to the key
@@ -692,7 +692,7 @@ public:
      * @param <code>os</code> output stream.
      * @see graph#save
      */
-    virtual void save_edge_info_handler (ostream*, edge) const { };
+	virtual void save_edge_info_handler(std::ostream*, edge) const { };
 
     /**
      * Called after writing the graph key to <code>os</code>. This can be
@@ -702,7 +702,7 @@ public:
      * @param <code>os</code> output stream.
      * @see graph#save 
      */
-    virtual void after_graph_save_handler (ostream* ) const { };
+	virtual void after_graph_save_handler(std::ostream*) const { };
 
     /**
      * Called after the graph is completely built. The topmost list
@@ -757,14 +757,14 @@ private:
 
     //================================================== Visible Nodes/Edges
     
-    list<node> nodes;
-    list<edge> edges;
+	std::list<node> nodes;
+	std::list<edge> edges;
     int nodes_count, edges_count;
 
     //================================================== Hidden Nodes/Edges
     
-    list<node> hidden_nodes;
-    list<edge> hidden_edges;
+	std::list<node> hidden_nodes;
+	std::list<edge> hidden_edges;
     int hidden_nodes_count, hidden_edges_count; 
 
     //================================================== Node/edge numbering
@@ -775,8 +775,8 @@ private:
     //================================================== Copy 
     
     void copy (const graph& G, 
-	list<node>::const_iterator it, 
-	list<node>::const_iterator end);
+		std::list<node>::const_iterator it,
+		std::list<node>::const_iterator end);
 
 public: // needs to be public, because template friends are not possible
     /**
@@ -790,16 +790,16 @@ public: // needs to be public, because template friends are not possible
     int number_of_ids(edge) const;
     
 private:
-    list<int> free_node_ids;
-    list<int> free_edge_ids;
+	std::list<int> free_node_ids;
+	std::list<int> free_edge_ids;
     int free_node_ids_count, free_edge_ids_count;
 
     //================================================== utilities
     
-    void del_list(list<node> &);
-    void del_list(list<edge> &);
+	void del_list(std::list<node> &);
+	void del_list(std::list<edge> &);
 
-    GTL_EXTERN friend ostream& operator<< (ostream& os, const graph& G);
+	GTL_EXTERN friend std::ostream& operator<< (std::ostream& os, const graph& G);
 };
 
 __GTL_END_NAMESPACE

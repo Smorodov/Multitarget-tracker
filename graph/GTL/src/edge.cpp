@@ -22,7 +22,7 @@ edge::edge() :
 {
 }
 
-GTL_EXTERN ostream& operator<< (ostream& os, const edge& e) {
+GTL_EXTERN std::ostream& operator<< (std::ostream& os, const edge& e) {
     if (e != edge ()) {
 	return os << e.source() << "-->" << e.target();
     } else {
@@ -46,8 +46,8 @@ void edge::change_source (node new_source) {
     // and clear the list of sources 
     //
     
-    list<node>::iterator the_nodes = data->nodes[0].begin();
-    list<node>::iterator the_nodes_end = data->nodes[0].end();
+    std::list<node>::iterator the_nodes = data->nodes[0].begin();
+    std::list<node>::iterator the_nodes_end = data->nodes[0].end();
 
     while(the_nodes != the_nodes_end)
     {
@@ -85,8 +85,8 @@ void edge::change_target (node new_target) {
     // and clear the list of targets
     //
     
-    list<node>::iterator the_nodes = data->nodes[1].begin();
-    list<node>::iterator the_nodes_end = data->nodes[1].end();
+    std::list<node>::iterator the_nodes = data->nodes[1].begin();
+    std::list<node>::iterator the_nodes_end = data->nodes[1].end();
 
     while(the_nodes != the_nodes_end)
     {
@@ -124,8 +124,8 @@ void edge::reverse ()
     // First delete this edge from all adjacency lists
     //
     
-    list<node>::iterator the_nodes = data->nodes[0].begin();
-    list<node>::iterator the_nodes_end = data->nodes[0].end();
+    std::list<node>::iterator the_nodes = data->nodes[0].begin();
+    std::list<node>::iterator the_nodes_end = data->nodes[0].end();
 
     while(the_nodes != the_nodes_end)
     {
@@ -183,19 +183,19 @@ void edge::reverse ()
     // swap nodes[0] and nodes[1]
     // 
     
-    list<node> tmp = data->nodes[0];
+    std::list<node> tmp = data->nodes[0];
     data->nodes[0] = data->nodes[1];
     data->nodes[1] = tmp;
 }
 
     
 
-list<node> edge::sources() const
+std::list<node> edge::sources() const
 {
     return data->nodes[0];
 }
 
-list<node> edge::targets() const
+std::list<node> edge::targets() const
 {
     return data->nodes[1];
 }
@@ -212,10 +212,10 @@ bool edge::is_hidden () const
 
 void edge::remove_from(int where) const
 {
-    list<node>::iterator the_nodes = data->nodes[where].begin();
-    list<node>::iterator the_nodes_end = data->nodes[where].end();
+    std::list<node>::iterator the_nodes = data->nodes[where].begin();
+    std::list<node>::iterator the_nodes_end = data->nodes[where].end();
 
-    list<list<edge>::iterator>::iterator the_adj_pos =
+    std::list<std::list<edge>::iterator>::iterator the_adj_pos =
 	data->adj_pos[where].begin();
 
     while(the_nodes != the_nodes_end)

@@ -162,7 +162,7 @@ protected:
     /**
      * @internal edges to remove from G after run
      */
-    list<edge> edges_not_org;
+	std::list<edge> edges_not_org;
 
 	/**
      * @internal
@@ -207,7 +207,7 @@ protected:
     /**
      * @internal
      */
-	void comp_dist_labels(const graph& G, vector<int>& numb);
+	void comp_dist_labels(const graph& G, std::vector<int>& numb);
 
     /**
      * @internal
@@ -230,7 +230,7 @@ protected:
 	bool retreat(const int number_of_nodes,
 				 node& cur_node,
 				 const node_map<edge>& last_edge,
-				 vector<int>& numb);
+				 std::vector<int>& numb);
 
     /**
      * @internal

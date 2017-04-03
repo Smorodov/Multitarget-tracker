@@ -96,12 +96,12 @@ public:
     /**
      * @internal
      */
-    list<node> sources() const;
+    std::list<node> sources() const;
 
     /**
      * @internal
      */
-    list<node> targets() const;
+	std::list<node> targets() const;
 
     /**
      * @internal
@@ -132,7 +132,7 @@ private:
     GTL_EXTERN friend bool operator==(edge, edge);
     GTL_EXTERN friend bool operator!=(edge, edge);
     GTL_EXTERN friend bool operator<(edge, edge);
-    GTL_EXTERN friend ostream& operator<< (ostream& os, const edge& e);
+	GTL_EXTERN friend std::ostream& operator<< (std::ostream& os, const edge& e);
 };
 
 __GTL_END_NAMESPACE

@@ -231,7 +231,7 @@ public:
      * @sa #get_obstruction_nodes
      * @sa #calc_obstruction
      */
-    list<edge>& get_obstruction_edges()
+	std::list<edge>& get_obstruction_edges()
     {
 	return ob_edges;
     }
@@ -245,7 +245,7 @@ public:
      * @sa #get_obstruction_edges
      * @sa #calc_obstruction
      */
-    list<node>& get_obstruction_nodes()
+	std::list<node>& get_obstruction_nodes()
     {
 	return ob_nodes;
     }
@@ -287,7 +287,7 @@ private:
      */
     void correct_embedding(planar_embedding& em,
 			   st_number& st,
-			   node_map<list<direction_indicator> >& dirs);
+			   node_map<std::list<direction_indicator> >& dirs);
 
     /**
      * @internal
@@ -347,7 +347,7 @@ private:
 			     pq_node* fail,
 			     bool failed_at_root,
 			     planar_embedding& em,
-			     node_map<list<direction_indicator> >& dirs,
+				 node_map<std::list<direction_indicator> >& dirs,
 			     pq_tree* PQ); 
 
     /**
@@ -572,18 +572,18 @@ private:
     /**
      * @internal
      */    
-    void write_node(ostream& os, int id, int label, int mark);
+	void write_node(std::ostream& os, int id, int label, int mark);
 #endif
     
     /**
      * @internal
      */
-    list<edge> ob_edges;
+	std::list<edge> ob_edges;
     
     /**
      * @internal
      */
-    list<node> ob_nodes;
+	std::list<node> ob_nodes;
     
     /**
      * @internal

@@ -33,12 +33,12 @@ public:
     /**
      * @brief Iterator type for traversing %nodes on one shortest path.
      */
-    typedef list<node>::const_iterator shortest_path_node_iterator;
+	typedef std::list<node>::const_iterator shortest_path_node_iterator;
 
     /**
      * @brief Iterator type for traversing %edges on one shortest path.
      */
-    typedef list<edge>::const_iterator shortest_path_edge_iterator;
+	typedef std::list<edge>::const_iterator shortest_path_edge_iterator;
 
     /**
      * @internal
@@ -371,7 +371,7 @@ private:
      * @sa dijkstra::shortest_path_nodes_begin
      * @sa dijkstra::shortest_path_nodes_end
      */
-    node_map<list<node> > shortest_path_node_list;
+	node_map<std::list<node> > shortest_path_node_list;
 
     /**
      * @internal
@@ -383,7 +383,7 @@ private:
      * @sa dijkstra::shortest_path_edges_begin
      * @sa dijkstra::shortest_path_edges_end
      */
-    node_map<list<edge> > shortest_path_edge_list;
+	node_map<std::list<edge> > shortest_path_edge_list;
 
     /**
      * @internal

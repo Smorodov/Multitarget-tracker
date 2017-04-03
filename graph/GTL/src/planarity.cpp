@@ -100,18 +100,18 @@ bool planarity::run_on_biconnected (graph& G, planar_embedding& em)
 	em.init (G);
     }
 	
-    list<pq_leaf*> neighbors;
+    std::list<pq_leaf*> neighbors;
     st_number::iterator st_it = st_.begin();
     node curr = *st_it;
     node::out_edges_iterator o_it = curr.out_edges_begin();
     node::out_edges_iterator o_end = curr.out_edges_end();
     node::in_edges_iterator i_it = curr.in_edges_begin();
     node::in_edges_iterator i_end = curr.in_edges_end();
-    list<edge> self_loops;
+    std::list<edge> self_loops;
     node opp;
     node_map<int> visited_from (G, 0);
     pq_leaf* tmp_leaf;
-    vector< list<pq_leaf*> > leaves (size);
+	std::vector< std::list<pq_leaf*> > leaves(size);
     
     for (; o_it != o_end; ++o_it) {
 	opp = curr.opposite (*o_it);
@@ -146,7 +146,7 @@ bool planarity::run_on_biconnected (graph& G, planar_embedding& em)
 	} 
     }
 
-    node_map<list<direction_indicator> > dirs;
+    node_map<std::list<direction_indicator> > dirs;
 
     //
     // There is a problem with node/edge maps of iterators with Visual C++
@@ -173,8 +173,8 @@ bool planarity::run_on_biconnected (graph& G, planar_embedding& em)
 #else 
 	snprintf (buffer, 12, "%s%d.gml", filename, st_[curr]);
 #endif
-	ofstream os (buffer, ios::out | ios::trunc);
-	os << PQ << endl;
+	std::ofstream os(buffer, std::ios::out | std::ios::trunc);
+	os << PQ << std::endl;
 	os.close();
 	bool ret_flag = PQ.integrity_check();
 	assert(ret_flag);
@@ -182,8 +182,8 @@ bool planarity::run_on_biconnected (graph& G, planar_embedding& em)
 		
 	if (!PQ.reduce (leaves[st_[curr]-1])) {
 #ifdef _DEBUG
-	    os.open ("fail.gml", ios::out | ios::trunc);
-	    os << PQ << endl;
+		os.open("fail.gml", std::ios::out | std::ios::trunc);
+		os << PQ << std::endl;
 	    os.close ();
 #endif	    	
 	    if (kup) {
@@ -250,9 +250,9 @@ bool planarity::run_on_biconnected (graph& G, planar_embedding& em)
 	    for (adit = em.adj_edges_begin (curr), adend = em.adj_edges_end (curr); adit != adend; ++adit) {
 		GTL_debug::os() << "[" << st_[curr.opposite (*adit)] << "]";
 	    }
-	    GTL_debug::os() << endl;
+		GTL_debug::os() << std::endl;
 	    GTL_debug::os() << "Direction Indicators for: " << st_[curr] << ":: ";
-	    list<direction_indicator>::iterator dit, dend;
+	    std::list<direction_indicator>::iterator dit, dend;
 
 	    for (dit = dirs[curr].begin(), dend = dirs[curr].end(); dit != dend; ++dit) {
 		GTL_debug::os() << "[";
@@ -262,7 +262,7 @@ bool planarity::run_on_biconnected (graph& G, planar_embedding& em)
 		    GTL_debug::os() << "<< " << (*dit).id << " <<";
 		GTL_debug::os() << "]";
 	    }
-	    GTL_debug::os() << endl;
+		GTL_debug::os() << std::endl;
 #endif
 
 	} else {
@@ -353,8 +353,8 @@ int planarity::run (graph& G)
 	    switch_to_component (G, c_it);
 	    
 #ifdef _DEBUG
-	    GTL_debug::os() << "Component is: " << endl;
-	    GTL_debug::os() << G << endl;
+		GTL_debug::os() << "Component is: " << std::endl;
+		GTL_debug::os() << G << std::endl;
 #endif
 	    if (!run_on_biconnected (G, em)) {
 		if (directed) {
@@ -392,7 +392,7 @@ int planarity::run (graph& G)
     }
 
     if (bip) {
-	list<edge>::iterator it, end;
+	std::list<edge>::iterator it, end;
 	it = biconn.additional_begin();
 	end = biconn.additional_end();
 	
@@ -453,7 +453,7 @@ void planarity::reset ()
 void planarity::correct_embedding (
     planar_embedding& em, 
     st_number& st_, 
-    node_map<list<direction_indicator> >& dirs) 
+    node_map<std::list<direction_indicator> >& dirs) 
 {
     st_number::reverse_iterator it = st_.rbegin();
     st_number::reverse_iterator end = st_.rend();
@@ -470,7 +470,7 @@ void planarity::correct_embedding (
 	    em.adjacency(curr).reverse();
 	} 
 		
-	list<direction_indicator>::iterator d_it = dirs[curr].begin();
+	std::list<direction_indicator>::iterator d_it = dirs[curr].begin();
 		
 	while (!dirs[curr].empty()) {
 			
@@ -519,15 +519,15 @@ void planarity::switch_to_component (graph& G,
     // hide all nodes 
     //
 
-    list<node> dummy;
+    std::list<node> dummy;
     G.induced_subgraph (dummy);
 
     //
     // Restore nodes in this component.
     // 
 
-    list<node>::iterator it = (*c_it).first.begin();
-    list<node>::iterator end = (*c_it).first.end();
+    std::list<node>::iterator it = (*c_it).first.begin();
+    std::list<node>::iterator end = (*c_it).first.end();
 
     for (; it != end; ++it) {
 	G.restore_node (*it);
@@ -537,8 +537,8 @@ void planarity::switch_to_component (graph& G,
     // Restore edges in this component.
     //
 
-    list<edge>::iterator e_it = (*c_it).second.begin();
-    list<edge>::iterator e_end = (*c_it).second.end();
+    std::list<edge>::iterator e_it = (*c_it).second.begin();
+    std::list<edge>::iterator e_end = (*c_it).second.end();
   
     for (; e_it != e_end; ++e_it) {
 	G.restore_edge (*e_it);
@@ -551,7 +551,7 @@ void planarity::examine_obstruction (graph& G,
 				     pq_node* fail, 
 				     bool is_root,
 				     planar_embedding& em,
-				     node_map<list<direction_indicator> >& dirs,
+				     node_map<std::list<direction_indicator> >& dirs,
 				     pq_tree* PQ)
 {
     node_map<int> used (G, 0);
@@ -660,7 +660,7 @@ void planarity::examine_obstruction (graph& G,
 	}
 	*/
 #ifdef _DEBUG
-	GTL_debug::os() << "Embedding so far (st_numbered): " << endl;
+	GTL_debug::os() << "Embedding so far (st_numbered): " << std::endl;
 	em.write_st (GTL_debug::os(), st_);
 #endif 
 
@@ -937,7 +937,7 @@ void planarity::case_A (p_node* p_fail,
     
     
     if (tmp_node != t_node) {
-	list<edge>::iterator it, end;
+	std::list<edge>::iterator it, end;
 	int max_st = st_[tmp_node];
 	
 	it = ob_edges.begin();
@@ -1150,7 +1150,7 @@ void planarity::case_D (node* nodes,
     //
 
     if (tmp != st_.s_node()) {
-	list<edge>::iterator it, end;
+	std::list<edge>::iterator it, end;
 	int min_st = st_[tmp];
 	it = ob_edges.begin();
 	end = ob_edges.end();
@@ -1195,7 +1195,7 @@ void planarity::case_D (node* nodes,
     
     
     if (tmp != t_node) {
-	list<edge>::iterator it, end;
+	std::list<edge>::iterator it, end;
 	int max_st = st_[tmp];
 	it = ob_edges.begin();
 	end = ob_edges.end();
@@ -1257,8 +1257,8 @@ void planarity::case_E (node* nodes,
     // back to y_0, because some of them will be eventually deleted later.
     //
 
-    list<edge>::iterator paths_begin[3];
-    list<edge>::iterator l_it, l_end;
+    std::list<edge>::iterator paths_begin[3];
+    std::list<edge>::iterator l_it, l_end;
     node next = y_0;
 
     for (l_it = ob_edges.begin(), l_end = ob_edges.end(); l_it != l_end; ++l_it) {
@@ -1306,8 +1306,8 @@ void planarity::case_E (node* nodes,
     node y[3];
     int i;
     node_map<int> mark (G, 0);
-    list<edge> from_act[3];
-    list<edge>::iterator pos;
+    std::list<edge> from_act[3];
+    std::list<edge>::iterator pos;
 
     for (i = 0; i < 2; ++i) {
 	mark[nodes[i]] = 1;    
@@ -1603,15 +1603,15 @@ void planarity::dfs_bushform (node n,
 
 #ifdef _DEBUG
 
-void planarity::write_node(ostream& os, int id, int label, int mark) {
-    os << "node [\n" << "id " << id << endl;
+void planarity::write_node(std::ostream& os, int id, int label, int mark) {
+	os << "node [\n" << "id " << id << std::endl;
     os << "label \"" << label << "\"\n";
     os << "graphics [\n" << "x 100\n" << "y 100 \n";
     if (mark == 1) {
         os << "outline \"#ff0000\"\n";
     }
     os << "]\n";    
-    os << "]" << endl;    
+	os << "]" << std::endl;
 }
 #endif
 
@@ -1623,9 +1623,9 @@ void planarity::write_bushform(graph& G, st_number& st_, int k, const char* name
     st_number::iterator st_it, st_end; 
     int id = 0;
     node_map<int> ids (G);
-    ofstream os (name, ios::out | ios::trunc);
+	std::ofstream os(name, std::ios::out | std::ios::trunc);
 
-    os << "graph [\n" << "directed 1" << endl;
+	os << "graph [\n" << "directed 1" << std::endl;
     
     for (st_it = st_.begin(), st_end = st_.end(); st_it != st_end && st_[*st_it] <= k; ++st_it) {
         write_node(os, id, st_[*st_it], mark[*st_it]);
@@ -1648,17 +1648,17 @@ void planarity::write_bushform(graph& G, st_number& st_, int k, const char* name
                     other_id = ids[other];
                 }
 
-                os << "edge [\n" << "source " << ids[*st_it] << "\ntarget " << other_id << endl;
+				os << "edge [\n" << "source " << ids[*st_it] << "\ntarget " << other_id << std::endl;
                 if (*ait == to_father[*st_it] || *ait == to_father[other]) {
-                    os << "graphics [\n" << "fill \"#0000ff\"" << endl;
-                    os << "width 4.0\n]" << endl;
+					os << "graphics [\n" << "fill \"#0000ff\"" << std::endl;
+					os << "width 4.0\n]" << std::endl;
                 } 
-                os << "\n]" << endl;
+				os << "\n]" << std::endl;
             }
         }
     }
 
-    os << "]" << endl;
+	os << "]" << std::endl;
 }
 
 #endif

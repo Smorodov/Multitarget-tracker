@@ -38,7 +38,7 @@ int components::check (graph& G)
 void components::new_start_handler (graph& /*G*/, node& st) 
 {
     li = comp.insert (comp.end(), 
-	pair<list<node>,list<edge> > (list<node> (), list<edge> ()));
+		std::pair<std::list<node>, std::list<edge> >(std::list<node>(), std::list<edge>()));
     (*li).first.push_back (st);
     ++num_of_components;
 }

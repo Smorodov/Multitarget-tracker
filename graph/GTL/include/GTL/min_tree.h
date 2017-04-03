@@ -74,7 +74,7 @@ public:
      * @return Set of edges of representing the minimal spanning
      * tree 
      */
-    set<edge> get_min_tree();
+	std::set<edge> get_min_tree();
     
     /**
      * @brief Weight of minimal spanning tree.
@@ -84,7 +84,7 @@ public:
     int get_min_tree_length();
     
 private:
-    typedef pair<int, node::adj_edges_iterator> TSP_A_VALUE;
+	typedef std::pair<int, node::adj_edges_iterator> TSP_A_VALUE;
 
     class input_comp {
     public:
@@ -94,7 +94,7 @@ private:
 
     edge_map<int> dist;
     int weight;
-    set<edge> tree;
+	std::set<edge> tree;
     bool is_set_distances;
 };
 

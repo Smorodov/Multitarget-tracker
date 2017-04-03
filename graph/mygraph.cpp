@@ -58,7 +58,7 @@ void MyGraph::store_edge_string (edge e, char *key, char *value)
 		if (labels_as_weights)
 		{
 			// Treat edge label as a weight
-			istringstream iss (value);
+			std::istringstream iss(value);
 			iss >> weight[e];
 		}
 		else
@@ -116,36 +116,36 @@ void MyGraph::store_node_string (node n, char *key, char *value)
 
 
 //------------------------------------------------------------------------------
-void MyGraph::save_edge_info_handler (ostream *os, edge e) const
+void MyGraph::save_edge_info_handler(std::ostream *os, edge e) const
 {
 	graph::save_edge_info_handler (os, e);	
-	*os << "weight " << weight[e] << endl;
-	*os << "label \"" << edge_label[e] << "\"" << endl;
+	*os << "weight " << weight[e] << std::endl;
+	*os << "label \"" << edge_label[e] << "\"" << std::endl;
 
 	// Line width 1 pt
-	*os << "graphics [" << endl;
-	*os << "width 1.0" << endl;
-	*os << "]" << endl;
+	*os << "graphics [" << std::endl;
+	*os << "width 1.0" << std::endl;
+	*os << "]" << std::endl;
 	
 	// Use standard Postscript font
-	*os << "LabelGraphics [" << endl;
-	*os << "type \"text\"" << endl;
-	*os << "font \"Helvetica\"" << endl;
-	*os << "]" << endl;	
+	*os << "LabelGraphics [" << std::endl;
+	*os << "type \"text\"" << std::endl;
+	*os << "font \"Helvetica\"" << std::endl;
+	*os << "]" << std::endl;
 }
 
 //------------------------------------------------------------------------------
-void MyGraph::save_node_info_handler (ostream *os, node n) const
+void MyGraph::save_node_info_handler(std::ostream *os, node n) const
 {
 	graph::save_node_info_handler (os, n);
 	if (label[n] != "")	
-		*os << "label \"" << label[n] << "\"" << endl;
+		*os << "label \"" << label[n] << "\"" << std::endl;
 
 	// Use standard Postscript font
-	*os << "LabelGraphics [" << endl;
-	*os << "type \"text\"" << endl;
-	*os << "font \"Helvetica\"" << endl;
-	*os << "]" << endl;	
+	*os << "LabelGraphics [" << std::endl;
+	*os << "type \"text\"" << std::endl;
+	*os << "font \"Helvetica\"" << std::endl;
+	*os << "]" << std::endl;
 
 }
 
@@ -159,7 +159,7 @@ void MyGraph::save_dot (char *fname, bool weights)
 }
 
 //------------------------------------------------------------------------------
-void MyGraph::save_dot (ostream &f, bool weights)
+void MyGraph::save_dot(std::ostream &f, bool weights)
 {
 	node_map <int> index;
 	graph::node_iterator nit = nodes_begin();
@@ -176,11 +176,11 @@ void MyGraph::save_dot (ostream &f, bool weights)
 	else
 		f << "graph";
 	
-	f << " G {" << endl;
+	f << " G {" << std::endl;
 
 	// Try and make the graph look nice
-	f << "   node [width=.2,height=.2,fontsize=10];" << endl;
-   	f << "   edge [fontsize=10,len=2];" << endl;
+	f << "   node [width=.2,height=.2,fontsize=10];" << std::endl;
+	f << "   edge [fontsize=10,len=2];" << std::endl;
 	
 	// Write node labels
 	nit = nodes_begin();
@@ -192,7 +192,7 @@ void MyGraph::save_dot (ostream &f, bool weights)
 		{
 			f << ", color=" << node_colour[*nit] << ", style=filled";
 		}
-		f << "];" << endl;
+		f << "];" << std::endl;
 		
 		nit++;
 	}
@@ -218,19 +218,19 @@ void MyGraph::save_dot (ostream &f, bool weights)
 		}
 		else
 		{
-			string s = edge_label[*it];
+			std::string s = edge_label[*it];
 			if (s != "")
 				f << "label=\"" << s << "\", ";
 		}
 		
-		f << " color=" << edge_colour[*it] << "];" << endl;
+		f << " color=" << edge_colour[*it] << "];" << std::endl;
 		
 		
 		
 		it++;
 	}
 	
-	f << "}" << endl;
+	f << "}" << std::endl;
 }
 
 //------------------------------------------------------------------------------
@@ -340,7 +340,7 @@ double MyGraph::node_cliqueishness (node &n)
 	if (possconnections > 0)
 	{
 		// Build list of all nodes adjacent to n (n's neighbours)
-		std::list <node> neighbours;
+		std::list<node> neighbours;
 		
 		node::adj_nodes_iterator nit = n.adj_nodes_begin ();
 		node::adj_nodes_iterator nend = n.adj_nodes_end ();

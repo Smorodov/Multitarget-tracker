@@ -32,11 +32,11 @@ public:
     static void debug_message (const char*, ...); 
     static void init_debug();
     static void close_debug();
-    static ostream& os ()
+	static std::ostream& os()
 	{ return *GTLerr; }
 
 private:
-	static ostream* GTLerr;
+	static std::ostream* GTLerr;
 };
 
 __GTL_END_NAMESPACE

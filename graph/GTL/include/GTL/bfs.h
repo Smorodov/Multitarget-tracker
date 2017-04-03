@@ -287,7 +287,7 @@ public:
     /**
      * @brief Iterator for tree-edges. 
      */
-    typedef list<edge>::const_iterator tree_edges_iterator;
+	typedef std::list<edge>::const_iterator tree_edges_iterator;
 
     /**
      * @brief Iterate through all tree-edges of last BFS. 
@@ -313,7 +313,7 @@ public:
     /**
      * @brief Iterator for nodes in BFS-order. 
      */
-    typedef list<node>::const_iterator bfs_iterator; 
+	typedef std::list<node>::const_iterator bfs_iterator;
 
     /**
      * @brief Iterate through all (reached) nodes in BFS-Order.
@@ -335,7 +335,7 @@ public:
     /**
      * @brief Iterator for non-tree-edges.
      */
-    typedef list<edge>::const_iterator non_tree_edges_iterator;
+	typedef std::list<edge>::const_iterator non_tree_edges_iterator;
 
     /**
      * @brief Iterate through all non-tree-edges (if enabled).
@@ -359,7 +359,7 @@ public:
     /**
      * @brief Iterator for roots of trees in BFS-forest.
      */
-    typedef list<bfs_iterator>::const_iterator roots_iterator;
+	typedef std::list<bfs_iterator>::const_iterator roots_iterator;
 
     /**
      * @brief Iterator pointing towards the first root in the
@@ -503,21 +503,21 @@ protected:
     /**
      * @brief queue used in BFS.
      */
-    deque<node> qu;
+	std::deque<node> qu;
 
     /**
      * @brief List of nodes in BFS-order
      * 
      * @sa bfs::begin, bfs::end
      */
-    list<node> bfs_order;
+	std::list<node> bfs_order;
 
     /**
      * @brief List of all edges of the BFS-tree
      * 
      * @sa bfs::tree_edges_begin, bfs::tree_edges_end
      */
-    list<edge> tree;
+	std::list<edge> tree;
 
     /**
      * @brief Stores BFS-number of nodes. 
@@ -534,7 +534,7 @@ protected:
      * 
      * @sa bfs::roots_begin, bfs::roots_end
      */
-    list<bfs_iterator> roots;
+	std::list<bfs_iterator> roots;
 
     //-----------------------------------------------------------------------
     //   Optional
@@ -566,7 +566,7 @@ protected:
      * 
      * @sa bfs::store_non_tree_edges
      */
-    list<edge>* non_tree;
+	std::list<edge>* non_tree;
 
     /**
      * @brief Stores father of each %node (if enabled)

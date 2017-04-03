@@ -149,8 +149,8 @@ void CTracker::Update(
 				}
 			}
 
-			list<edge> L = MAX_WEIGHT_BIPARTITE_MATCHING(G, weights);
-			for (list<edge>::iterator it = L.begin(); it != L.end(); ++it)
+			std::list<edge> L = MAX_WEIGHT_BIPARTITE_MATCHING(G, weights);
+			for (std::list<edge>::iterator it = L.begin(); it != L.end(); ++it)
 			{
 				node a = it->source();
 				node b = it->target();

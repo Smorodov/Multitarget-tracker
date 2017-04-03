@@ -42,7 +42,7 @@ node MyTree::root() const
 
 void MyTree::postorder_traversal()
 { 
-	stack < node, vector<node> > S;	
+	std::stack < node, std::vector<node> > S;
 	S.push (root());
 	int num = 1;
 	do {

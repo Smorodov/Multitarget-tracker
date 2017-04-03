@@ -19,7 +19,7 @@ __GTL_BEGIN_NAMESPACE
  * @internal
  * Binary predicate that compares two nodes according to their distance.
  */
-class less_dist : public binary_function<node, node, bool>
+class less_dist : public std::binary_function<node, node, bool>
 {
 public:
     /**

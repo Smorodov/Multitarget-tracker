@@ -87,7 +87,7 @@ protected:
      * @internal
      * Used to write a description of this node into a stream.
      */
-    virtual void write(ostream&, int) = 0;
+	virtual void write(std::ostream&, int) = 0;
 
     /**
      * @internal
@@ -199,7 +199,7 @@ protected:
      * and deleted from this list. But even if the reduction is successful
      * not all nodes touched in the first phase really get matched.
      */
-    list<pq_node*>::iterator lpos;
+    std::list<pq_node*>::iterator lpos;
 
     //
     // Application specific data (should become template parameter)
@@ -258,7 +258,7 @@ protected:
      * @internal
      * Allow operator<< private access.
      */
-    GTL_EXTERN friend ostream& operator<<(ostream&, const pq_tree&);
+	GTL_EXTERN friend std::ostream& operator<<(std::ostream&, const pq_tree&);
 };
 
 
@@ -305,7 +305,7 @@ private:
      * @internal
      * Print this %node in gml format.
      */
-    void write (ostream&, int);
+	void write(std::ostream&, int);
 
     /**
      * @internal
@@ -409,7 +409,7 @@ private:
      * @internal
      * Allow operator<< private access.
      */
-    GTL_EXTERN friend ostream& operator<<(ostream&, const pq_tree&);
+	GTL_EXTERN friend std::ostream& operator<<(std::ostream&, const pq_tree&);
 };
 
 
@@ -451,7 +451,7 @@ private:
      * @internal
      * Print this %node in gml format.
      */
-    void write(ostream&, int);
+	void write(std::ostream&, int);
 
     /**
      * @internal
@@ -608,7 +608,7 @@ private:
      * @internal
      * Print this %node in gml format.
      */
-    void write (ostream&, int);
+	void write(std::ostream&, int);
 
     // type-casts
 
@@ -711,7 +711,7 @@ private:
      * @internal
      * Print this %node in gml format.
      */
-    void write (ostream& os, int);
+	void write(std::ostream& os, int);
 
     // type-casts 
 

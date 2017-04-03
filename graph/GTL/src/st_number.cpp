@@ -17,9 +17,9 @@ pathfinder::pathfinder (const graph& G, edge st, node s)
     node t = s.opposite (st);
     dfs_num.init (G, 0);
     low_num.init (G);
-    tree.init (G, list<edge>());
-    back.init (G, list<edge>());
-    forward.init (G, list<edge>());
+    tree.init (G, std::list<edge>());
+    back.init (G, std::list<edge>());
+    forward.init (G, std::list<edge>());
 
     //
     // There is a problem with node/edge maps of iterators with Visual C++
@@ -71,7 +71,7 @@ void pathfinder::dfs_sub (node& curr, node& father)
 		
 	if (dfs_num[opp] == 0) {	    
 			
-	    list<edge>::iterator tmp = 
+	    std::list<edge>::iterator tmp = 
 		tree[curr].insert (tree[curr].end(), adj);
 	    to_father[opp] = tmp;
 			
@@ -87,9 +87,9 @@ void pathfinder::dfs_sub (node& curr, node& father)
 	    }
 			
 	} else if (opp != father && dfs_num[opp] < dfs_num[curr]) { 
-	    list<edge>::iterator back_pos = 
+	    std::list<edge>::iterator back_pos = 
 		back[curr].insert (back[curr].end(), adj);
-	    list<edge>::iterator forward_pos = 
+	    std::list<edge>::iterator forward_pos = 
 		forward[opp].insert (forward[opp].end(), adj);
 	    pos[adj] = pos_pair (forward_pos, back_pos);
 			
@@ -142,7 +142,7 @@ pathfinder::const_iterator::const_iterator (pathfinder& _pf, node n) :
 
 pathfinder::const_iterator& pathfinder::const_iterator::operator++ () 
 {
-    list<edge>::iterator tmp;
+    std::list<edge>::iterator tmp;
     edge adj;
     node opp;
 	
@@ -213,7 +213,7 @@ int st_number::check (graph& G)
 
 int st_number::run (graph& G) 
 {
-    list<node> order;
+    std::list<node> order;
     node t = s.opposite (st);
     order.push_back (t);
     node tmp = s;
@@ -222,7 +222,7 @@ int st_number::run (graph& G)
 	
     while (tmp != t) {
 	pathfinder::const_iterator it = pf->path (tmp);
-	list<node>::iterator pos;
+	std::list<node>::iterator pos;
 		
 	if (it == end) {
 	    st_num[tmp] = act_st++;

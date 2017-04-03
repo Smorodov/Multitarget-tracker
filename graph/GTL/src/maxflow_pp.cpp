@@ -205,7 +205,7 @@ int maxflow_pp::leveling(graph& G)
 {
     bool source_target_con = false;
     node_map<int> level(G, -1);	// -1 means no level yet!
-    queue<node> next_nodes;
+	std::queue<node> next_nodes;
     next_nodes.push(net_source);
     level[net_source] = 0;
     node cur_node;
@@ -255,7 +255,7 @@ void maxflow_pp::hide_unreachable_nodes(graph& G)
 {
     node_map<bool> reachable_from_net_source(G, false);
     node_map<bool> reachable_from_net_target(G, false);
-    queue<node> next_nodes;
+	std::queue<node> next_nodes;
     node cur_node;
 
     next_nodes.push(net_source);
@@ -393,7 +393,7 @@ double maxflow_pp::comp_min_throughput(const node cur_node) const
 void maxflow_pp::get_sp_ahead(const graph& G, const node& start_node, 
     node_map<edge>& last_edge)
 {
-    queue<node> next_nodes;
+	std::queue<node> next_nodes;
     node_map<bool> visited(G, false);
     next_nodes.push(start_node);
     visited[start_node] = true;
@@ -428,7 +428,7 @@ void maxflow_pp::get_sp_ahead(const graph& G, const node& start_node,
 void maxflow_pp::get_sp_backwards(const graph& G, const node& start_node, 
     node_map<edge>& prev_edge)
 {
-    queue<node> next_nodes;
+    std::queue<node> next_nodes;
     node_map<bool> visited(G, false);
     next_nodes.push(start_node);
     visited[start_node] = true;
@@ -574,15 +574,15 @@ void maxflow_pp::comp_rem_net(graph& G)
 	single_edge_update(G, *edge_it);
 	++edge_it;
     }
-    list<edge>::iterator list_it = full_edges.begin();
-    list<edge>::iterator list_end = full_edges.end();
+    std::list<edge>::iterator list_it = full_edges.begin();
+    std::list<edge>::iterator list_end = full_edges.end();
     while (list_it != list_end)
     {
 	G.restore_edge(*list_it);
 	if (flow_update[*list_it] > 0.0)
 	{
 	    single_edge_update(G, *list_it);
-	    list<edge>::iterator temp_it = list_it;
+	    std::list<edge>::iterator temp_it = list_it;
 	    ++list_it;
 	    full_edges.erase(temp_it);	// now it's visible again
 	}
@@ -600,15 +600,15 @@ void maxflow_pp::comp_rem_net(graph& G)
 
 	
     // make hidden levels visible again
-    list<node>::iterator temp_un_node_it = temp_unvisible_nodes.begin();
-    list<node>::iterator temp_un_nodes_end = temp_unvisible_nodes.end();
+    std::list<node>::iterator temp_un_node_it = temp_unvisible_nodes.begin();
+    std::list<node>::iterator temp_un_nodes_end = temp_unvisible_nodes.end();
     while (temp_un_node_it != temp_un_nodes_end)
     {
 	G.restore_node(*temp_un_node_it);
 	++temp_un_node_it;
     }
-    list<edge>::iterator temp_un_edge_it = temp_unvisible_edges.begin();
-    list<edge>::iterator temp_un_edges_end = temp_unvisible_edges.end();
+    std::list<edge>::iterator temp_un_edge_it = temp_unvisible_edges.begin();
+    std::list<edge>::iterator temp_un_edges_end = temp_unvisible_edges.end();
     while (temp_un_edge_it != temp_un_edges_end)
     {
 	G.restore_edge(*temp_un_edge_it);

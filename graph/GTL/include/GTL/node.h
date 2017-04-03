@@ -99,7 +99,7 @@ public:
     /**
      * @internal
      */
-    list<node> opposites(edge) const;
+    std::list<node> opposites(edge) const;
 
     /**
      * Returns true iff node is hidden.
@@ -123,11 +123,11 @@ public:
     /**
      * @internal
      */
-    typedef list<edge>::const_iterator in_edges_iterator;
+    typedef std::list<edge>::const_iterator in_edges_iterator;
     /**
      * @internal
      */
-    typedef list<edge>::const_iterator out_edges_iterator;
+    typedef std::list<edge>::const_iterator out_edges_iterator;
     
     /**
      * @internal
@@ -231,7 +231,7 @@ private:
     GTL_EXTERN friend bool operator==(node, node);
     GTL_EXTERN friend bool operator!=(node, node);
     GTL_EXTERN friend bool operator<(node, node);
-    GTL_EXTERN friend ostream& operator<< (ostream& os, const node& n);
+	GTL_EXTERN friend std::ostream& operator<< (std::ostream& os, const node& n);
 };
 
 

@@ -142,71 +142,8 @@ for (iter_t GTL_FORALL_VAR(__LINE__) = (cont).iter##begin();    \
 namespace GTL {};
 using namespace GTL;
 
-namespace std {};
-using namespace std;
-
 #endif // __GTL_USE_NAMESPACES
 
-//--------------------------------------------------------------------------
-//   Bugfix for EGCS & GCC < 2.95
-//--------------------------------------------------------------------------
-
-#if defined(__GNUC__) && __GNUC__ == 2 && __GNUC_MINOR__ < 95
-
-#include <map>
-#include <memory>
-
-/**
- * @internal
- */
-template <class T>
-class allocator : public alloc
-{
-};
-
-#endif
-
-//--------------------------------------------------------------------------
-//   MSVC 6 does not define min and max in <algorithm>
-//--------------------------------------------------------------------------
-
-#if defined(__GTL_MSVCC) && _MSC_VER < 1300
-
-#ifndef min
-template<class T>
-const T& min(const T& x, const T& y)
-{
-    return ( x < y ? x : y);
-}
-#endif
-
-#ifndef max
-template<class T>
-const T& max(const T& x, const T& y)
-{
-    return ( x > y ? x : y);
-}
-#endif
-
-#endif
-
-//--------------------------------------------------------------------------
-//  enable debugging of memory leaks in debug mode of MSVC
-//--------------------------------------------------------------------------
-/*
-#ifdef __GTL_MSVCC
-#   ifdef _DEBUG
-#	define WINVER 0x0400	// compatibility with at least WinNT4
-	// usually the followin two lines are defined in Microsoft's
-	// generated stdafx.h
-#	define VC_EXTRALEAN // do not include rarely used parts
-#	include <afxwin.h>  // MFC core und standard components
-	// extra definition for check whether all needed headers are included
-#	undef SEARCH_MEMORY_LEAKS_ENABLED
-#	define SEARCH_MEMORY_LEAKS_ENABLED
-#   endif   // _DEBUG
-#endif	// __GTL_MSVCC
-	*/
 #endif // GTL_GTL_H
 	
 //--------------------------------------------------------------------------

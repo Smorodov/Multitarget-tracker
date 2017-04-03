@@ -63,7 +63,7 @@ public:
 	 * @return list of edges in maximum weight bipartite matching 
 	 *
 	 */
-	list<edge> get_match() { return result; };
+	std::list<edge> get_match() { return result; };
 	
 protected:
     /**
@@ -81,14 +81,14 @@ protected:
      */
     edge_map<int> edge_weight;
     
-    list<edge> result;
+	std::list<edge> result;
     
 	node_map<long> pot;
 	node_map<bool> free;
 	node_map<long> dist;
 	node_map<long> pred;
-	map <int, node, less<int> > node_from_id;
-	map <int, edge, less<int> > edge_from_id;
+	std::map <int, node, std::less<int> > node_from_id;
+	std::map <int, edge, std::less<int> > edge_from_id;
 	
     fheap_t *pq;
 	
@@ -107,7 +107,7 @@ protected:
  * how to partition the nodes.
  *
  */
-list<edge> MAX_WEIGHT_BIPARTITE_MATCHING (graph &G, edge_map<int> weights);
+std::list<edge> MAX_WEIGHT_BIPARTITE_MATCHING(graph &G, edge_map<int> weights);
 
 
 

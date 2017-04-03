@@ -29,8 +29,8 @@ public:
 	void set_edge_weight (edge e, int w) { weight[e] = w; };
 
 
-	string get_edge_label (edge e) const { return edge_label[e]; };	
-	void set_edge_label (edge e, string s) { edge_label[e] = s; };
+	std::string get_edge_label(edge e) const { return edge_label[e]; };
+	void set_edge_label(edge e, std::string s) { edge_label[e] = s; };
 	
 	/**
 	 * Returns true if an edge exists between a pair of nodes.
@@ -108,7 +108,11 @@ public:
      * @param <code>e</code> created edge 
      * @see graph#new_edge
      */
-    virtual void post_new_edge_handler(edge e) { weight[e] = 1; edge_label[e] = ""; edge_colour[e] = "black";};       
+    virtual void post_new_edge_handler(edge e) {
+		//weight[e] = 1;
+		//edge_label[e] = "";
+		//edge_colour[e] = "black";
+	}
 
 	/**
 	 * Extends graph::save_edge_info_handler to write the weight of the edge
@@ -117,7 +121,7 @@ public:
 	 * @param e the edge
 	 * 
 	 */
-	virtual void save_edge_info_handler (ostream *os, edge e) const;
+	virtual void save_edge_info_handler(std::ostream *os, edge e) const;
 
 
 	/**
@@ -154,9 +158,13 @@ public:
      * @param <code>n</code> created node 
      * @see graph#new_node
      */
-	virtual void post_new_node_handler(node n) { label[n] = ""; node_colour[n] = "white"; };       
+	virtual void post_new_node_handler(node n)
+	{
+		//label[n] = "";
+		//node_colour[n] = "white";
+	}
 
-	virtual void save_node_info_handler (ostream *os, node n) const;
+	virtual void save_node_info_handler(std::ostream *os, node n) const;
 	
 	/**
 	 * @param f output stream
@@ -165,7 +173,7 @@ public:
 	 * <a href="http://www.research.att.com/sw/tools/graphviz/">GraphViz</A>
 	 * package.
 	 */
-	virtual void save_dot (ostream &f, bool weights = false);
+	virtual void save_dot(std::ostream &f, bool weights = false);
 	
 	/**
 	 * @param fname output file name
@@ -176,11 +184,11 @@ public:
 	 */
 	virtual void save_dot (char *fname, bool weights = false);
 	
-	string get_node_label (node n) { return label[n]; };
-	void set_node_label (node n, string s) { label[n] = s; };
+	std::string get_node_label(node n) { return label[n]; };
+	void set_node_label(node n, std::string s) { label[n] = s; };
 	
-	void set_edge_colour (edge e, string colour) { edge_colour[e] = colour; };
-	void set_node_colour (node n, string colour) { node_colour[n] = colour; };
+	void set_edge_colour(edge e, std::string colour) { edge_colour[e] = colour; };
+	void set_node_colour(node n, std::string colour) { node_colour[n] = colour; };
 
 
 	double node_cliqueishness (node &n);
@@ -194,14 +202,14 @@ protected:
 	 *
 	 */
 	edge_map<int> weight;
-	edge_map<string> edge_label;
-	node_map<string> label;
+	edge_map<std::string> edge_label;
+	node_map<std::string> label;
 	
 	bool labels_as_weights;
 	
 	// Styles
-	node_map<string> node_colour;
-	edge_map<string> edge_colour;
+	node_map<std::string> node_colour;
+	edge_map<std::string> edge_colour;
 
 
 	

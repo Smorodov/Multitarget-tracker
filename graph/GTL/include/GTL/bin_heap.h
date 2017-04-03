@@ -171,13 +171,13 @@ private:
      * @internal
      * Data container.
      */
-    vector<heap_node<T>* > container;
+	std::vector<heap_node<T>* > container;
 
     /**
      * @internal
      * Mapping between data member T and its heap_node.
      */
-    map<T, heap_node<T>* > heap_node_map;
+	std::map<T, heap_node<T>* > heap_node_map;
 
     /**
      * @internal

@@ -72,7 +72,7 @@ public:
 #if defined(__GTL_MSVCC) && _MSC_VER < 1310
     typedef Value& value_reference;
 #else
-    typedef typename vector<Value, Alloc>::reference value_reference;
+	typedef typename std::vector<Value, Alloc>::reference value_reference;
 #endif
 
     /**
@@ -81,7 +81,7 @@ public:
 #if defined(__GTL_MSVCC) && _MSC_VER < 1310
     typedef const Value& const_value_reference;
 #else
-    typedef typename vector<Value, Alloc>::const_reference const_value_reference;
+	typedef typename std::vector<Value, Alloc>::const_reference const_value_reference;
 #endif
     
     /**
@@ -128,7 +128,7 @@ public:
     //================================================== Implementation
     
 private:
-    vector<Value, Alloc> data;
+	std::vector<Value, Alloc> data;
 };
 
 // Implementation Begin

@@ -182,7 +182,7 @@ planar_embedding::check ()
 
 
 void 
-planar_embedding::write_st (ostream& os, st_number& st)
+planar_embedding::write_st(std::ostream& os, st_number& st)
 {
     st_number::iterator n_it = st.begin();
     st_number::iterator n_end = st.end();
@@ -199,22 +199,22 @@ planar_embedding::write_st (ostream& os, st_number& st)
 	    os << "[" << st[n.opposite (*it)] << "]";
 	}
 		
-	os << endl;
+	os << std::endl;
     }
     
-    os << "SELFLOOPS:" << endl;
-    list<edge>::iterator e_it, e_end;
+	os << "SELFLOOPS:" << std::endl;
+    std::list<edge>::iterator e_it, e_end;
     for (e_it = self.begin(), e_end = self.end(); e_it != e_end; ++e_it) {
-	os << st[(*e_it).source()] << "---" << st[(*e_it).target()] << endl;
+		os << st[(*e_it).source()] << "---" << st[(*e_it).target()] << std::endl;
     }
     
-    os << "MULTIPLE EDGES:" << endl;
+	os << "MULTIPLE EDGES:" << std::endl;
     for (e_it = multi.begin(), e_end = multi.end(); e_it != e_end; ++e_it) {
-	os << st[(*e_it).source()] << "---" << st[(*e_it).target()] << endl;
+		os << st[(*e_it).source()] << "---" << st[(*e_it).target()] << std::endl;
     }
 }
 
-GTL_EXTERN ostream& operator<< (ostream& os, planar_embedding& em)
+GTL_EXTERN std::ostream& operator<< (std::ostream& os, planar_embedding& em)
 {
     graph::node_iterator n_it = em.G->nodes_begin();
     graph::node_iterator n_end = em.G->nodes_end();
@@ -231,18 +231,18 @@ GTL_EXTERN ostream& operator<< (ostream& os, planar_embedding& em)
 	    os << n.opposite (*it) << "*";
 	}
 		
-	os << endl;
+	os << std::endl;
     }
 
-    os << "SELFLOOPS:" << endl;
-    list<edge>::iterator e_it, e_end;
+	os << "SELFLOOPS:" << std::endl;
+    std::list<edge>::iterator e_it, e_end;
     for (e_it = em.self.begin(), e_end = em.self.end(); e_it != e_end; ++e_it) {
-	os << *e_it << endl;
+		os << *e_it << std::endl;
     }
 
-    os << "MULTIPLE EDGES:" << endl;
+	os << "MULTIPLE EDGES:" << std::endl;
     for (e_it = em.multi.begin(), e_end = em.multi.end(); e_it != e_end; ++e_it) {
-	os << *e_it << endl;
+		os << *e_it << std::endl;
     }
 
     return os;

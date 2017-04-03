@@ -51,7 +51,7 @@ graph::graph(const graph &G) :
 }
 
 
-graph::graph (const graph& G, const list<node>& nod) :
+graph::graph (const graph& G, const std::list<node>& nod) :
     directed(G.directed),
     nodes_count(0), edges_count(0),
     hidden_nodes_count(0), hidden_edges_count(0),
@@ -62,8 +62,8 @@ graph::graph (const graph& G, const list<node>& nod) :
 
 
 graph::graph (const graph& G, 
-    list<node>::const_iterator it,
-    list<node>::const_iterator end) :
+    std::list<node>::const_iterator it,
+    std::list<node>::const_iterator end) :
     directed(G.directed),
     nodes_count(0), edges_count(0),
     hidden_nodes_count(0), hidden_edges_count(0),
@@ -73,12 +73,12 @@ graph::graph (const graph& G,
 }
 
 void graph::copy (const graph& G, 
-    list<node>::const_iterator it,
-    list<node>::const_iterator end) 
+    std::list<node>::const_iterator it,
+    std::list<node>::const_iterator end) 
 {
     node_map<node> copy (G, node());    
-    list<node>::const_iterator n_it;
-    list<node>::const_iterator n_end;
+    std::list<node>::const_iterator n_it;
+    std::list<node>::const_iterator n_end;
 
     for(n_it = it, n_end = end; n_it != n_end; ++n_it)
     {
@@ -110,10 +110,10 @@ graph::~graph()
 // Output 
 //------------------------------------------------------------------------- 
 
-GTL_EXTERN ostream& operator<< (ostream& os, const graph& G) {
+GTL_EXTERN std::ostream& operator<< (std::ostream& os, const graph& G) {
     node n;
     edge out;
-    string conn;
+	std::string conn;
 
     if (G.is_directed()) 
 	conn = "-->"; 
@@ -127,7 +127,7 @@ GTL_EXTERN ostream& operator<< (ostream& os, const graph& G) {
 	    os << conn << n.opposite (out);
 	}
 	
-	os << endl;
+	os << std::endl;
     }
     
     return  os;
@@ -227,8 +227,8 @@ edge graph::new_edge(node source, node target)
 
     // set adj_pos
     
-    list<edge> &source_adj = source.data->edges[1];
-    list<edge> &target_adj = target.data->edges[0];
+    std::list<edge> &source_adj = source.data->edges[1];
+    std::list<edge> &target_adj = target.data->edges[0];
     
     e.data->adj_pos[0].push_back(source_adj.insert(source_adj.begin(), e));
     e.data->adj_pos[1].push_back(target_adj.insert(target_adj.begin(), e));
@@ -240,7 +240,7 @@ edge graph::new_edge(node source, node target)
     return e;
 }
 
-edge graph::new_edge(const list<node> &/*sources*/, const list<node> &/*targets*/)
+edge graph::new_edge(const std::list<node> &/*sources*/, const std::list<node> &/*targets*/)
 {
     // not implemented
 
@@ -275,8 +275,8 @@ void graph::del_node(node n)
     // over some time or the other.
     // 
 
-    list<edge>::iterator it = hidden_edges.begin();
-    list<edge>::iterator end = hidden_edges.end();
+    std::list<edge>::iterator it = hidden_edges.begin();
+    std::list<edge>::iterator end = hidden_edges.end();
 
     while (it != end)
     { 
@@ -366,8 +366,8 @@ void graph::del_all_edges()
 
     edges_count = 0;
     
-    list<node>::iterator it = nodes.begin();
-    list<node>::iterator end = nodes.end();
+    std::list<node>::iterator it = nodes.begin();
+    std::list<node>::iterator end = nodes.end();
 
     while(it != end)
     {
@@ -493,12 +493,12 @@ graph::edge_iterator graph::edges_end() const
 //   Node/Edge lists
 //--------------------------------------------------------------------------
 
-list<node> graph::all_nodes() const
+std::list<node> graph::all_nodes() const
 {
     return nodes;
 }
 
-list<edge> graph::all_edges() const
+std::list<edge> graph::all_edges() const
 {
     return edges;
 }
@@ -571,11 +571,11 @@ void graph::restore_edge (edge e)
 	// for each source of e insert e in its list of out-edges and store
 	// the position in e's list of positions
 	//
-	list<node>::iterator it;
-	list<node>::iterator end = e.data->nodes[0].end();
+	std::list<node>::iterator it;
+	std::list<node>::iterator end = e.data->nodes[0].end();
 
 	for (it = e.data->nodes[0].begin (); it != end; ++it) {
-	    list<edge> &adj = (*it).data->edges[1];
+	    std::list<edge> &adj = (*it).data->edges[1];
 	    e.data->adj_pos[0].push_back(adj.insert(adj.begin(), e));
 	}
 
@@ -586,7 +586,7 @@ void graph::restore_edge (edge e)
 	end = e.data->nodes[1].end();
     
 	for (it = e.data->nodes[1].begin (); it != end; ++it) {
-	    list<edge> &adj = (*it).data->edges[0];
+	    std::list<edge> &adj = (*it).data->edges[0];
 	    e.data->adj_pos[1].push_back(adj.insert(adj.begin(), e));
 	}
     
@@ -604,19 +604,19 @@ void graph::restore_edge (edge e)
 //   Note: also all adjacent edges will be hidden
 //--------------------------------------------------------------------------
 
-list<edge> graph::hide_node (node n) 
+std::list<edge> graph::hide_node (node n) 
 {
     assert (n.data->owner == this);
 
     pre_hide_node_handler (n);
-    list<edge> implicitly_hidden_edges;
+    std::list<edge> implicitly_hidden_edges;
     
     if (!n.is_hidden()){
 	// hide all connected egdes
 	for (int i = 0; i <= 1; ++i)
 	{
-	    list<edge>::iterator end = n.data->edges[i].end();
-	    list<edge>::iterator edge = n.data->edges[i].begin();
+	    std::list<edge>::iterator end = n.data->edges[i].end();
+	    std::list<edge>::iterator edge = n.data->edges[i].begin();
 	    while (edge != end)
 	    {
 		implicitly_hidden_edges.push_back(*edge);
@@ -664,10 +664,10 @@ void graph::restore_node (node n)
 }
 
 
-void graph::induced_subgraph (list<node>& sub_nodes) 
+void graph::induced_subgraph (std::list<node>& sub_nodes) 
 {
     node_map<int> in_sub (*this, 0);
-    list<node>::iterator it, end, tmp;
+    std::list<node>::iterator it, end, tmp;
 
     for (it = sub_nodes.begin(), end = sub_nodes.end(); it != end; ++it) {
 	in_sub[*it] = 1;
@@ -690,7 +690,7 @@ void graph::induced_subgraph (list<node>& sub_nodes)
 
 void graph::restore_graph () 
 {
-    list<node>::iterator it, end, tmp;
+    std::list<node>::iterator it, end, tmp;
 
     it = hidden_nodes.begin();
     end = hidden_nodes.end();
@@ -702,7 +702,7 @@ void graph::restore_graph ()
 	it = tmp;
     }
 
-    list<edge>::iterator e_it, e_end, e_tmp;
+    std::list<edge>::iterator e_it, e_end, e_tmp;
 
     e_it = hidden_edges.begin();
     e_end = hidden_edges.end();
@@ -759,10 +759,10 @@ int graph::new_edge_id()
 //   Utilities
 //--------------------------------------------------------------------------
 
-void graph::del_list(list<node> &l)
+void graph::del_list(std::list<node> &l)
 {
-    list<node>::const_iterator it = l.begin();
-    list<node>::const_iterator end = l.end();
+    std::list<node>::const_iterator it = l.begin();
+    std::list<node>::const_iterator end = l.end();
 
     while(it != end)
     {
@@ -773,10 +773,10 @@ void graph::del_list(list<node> &l)
     l.clear();
 }
 
-void graph::del_list(list<edge> &l)
+void graph::del_list(std::list<edge> &l)
 {
-    list<edge>::const_iterator it = l.begin();
-    list<edge>::const_iterator end = l.end();
+    std::list<edge>::const_iterator it = l.begin();
+    std::list<edge>::const_iterator end = l.end();
 
     while(it != end)
     {
@@ -791,8 +791,8 @@ void graph::del_list(list<edge> &l)
 //   Others
 //--------------------------------------------------------------------------
 
-list<edge> graph::insert_reverse_edges() {
-    list<edge> rev;
+std::list<edge> graph::insert_reverse_edges() {
+    std::list<edge> rev;
     edge e;
 
     node::out_edges_iterator it, end;
@@ -879,8 +879,8 @@ GML_error graph::load (const char* filename, bool preserve_ids) {
     // GML_pair* node_entries = 0;
     // GML_pair* edge_entries = 0;
     
-    list<pair<int,GML_pair*> > node_entries;
-    list<pair<pair<int,int>,GML_pair*> > edge_entries; 
+    std::list<std::pair<int,GML_pair*> > node_entries;
+	std::list<std::pair<std::pair<int, int>, GML_pair*> > edge_entries;
     
     int num_nodes = 0; 
 
@@ -902,7 +902,7 @@ GML_error graph::load (const char* filename, bool preserve_ids) {
 	    assert (key_list->kind == GML_LIST);
 	    tmp_list = key_list->value.list;
 	    tmp_prev = 0;
-	    pair<int,GML_pair*> n;
+		std::pair<int, GML_pair*> n;
 	    n.second = tmp_list;
 
 	    while (tmp_list) {
@@ -930,7 +930,7 @@ GML_error graph::load (const char* filename, bool preserve_ids) {
 	    tmp_prev = 0;
 	    source_found = false;
 	    target_found = false;
-	    pair<pair<int,int>,GML_pair*> e;
+		std::pair<std::pair<int, int>, GML_pair*> e;
 	    e.second = tmp_list;
 
 	    while (tmp_list) {
@@ -964,12 +964,12 @@ GML_error graph::load (const char* filename, bool preserve_ids) {
     // make this graph the graph decribed in list
     //
 
-    map<int, node> id_2_node;
+	std::map<int, node> id_2_node;
     node source, target;
     node tmp_node;
     edge tmp_edge;
-    list<pair<int,GML_pair*> >::iterator it, end;
-    vector<int> node_ids;
+    std::list<std::pair<int,GML_pair*> >::iterator it, end;
+	std::vector<int> node_ids;
     node_ids.reserve(num_nodes);
 
     for (it = node_entries.begin(), end = node_entries.end();
@@ -983,7 +983,7 @@ GML_error graph::load (const char* filename, bool preserve_ids) {
 	load_node_info_handler (tmp_node, (*it).second);
     }
 
-    list<pair<pair<int,int>,GML_pair*> >::iterator eit, eend;
+	std::list<std::pair<std::pair<int, int>, GML_pair*> >::iterator eit, eend;
     for (eit = edge_entries.begin(), eend = edge_entries.end();
 	 eit != eend; ++eit) {
 	source = id_2_node[(*eit).first.first];
@@ -997,7 +997,7 @@ GML_error graph::load (const char* filename, bool preserve_ids) {
 
     sort(node_ids.begin(),node_ids.end());
 
-    vector<int>::iterator iit, iend;
+	std::vector<int>::iterator iit, iend;
     int prev = 0;
 
     for (iit = node_ids.begin(), iend = node_ids.end();
@@ -1030,10 +1030,10 @@ void graph::top_level_key_handler (GML_pair* /*li*/) {
 }
 
 
-void graph::save (ostream* file) const {    
+void graph::save(std::ostream* file) const {
     pre_graph_save_handler (file);
-    (*file) << "graph [" << endl;
-    (*file) << "directed " << (directed ? "1" : "0") << endl; 
+	(*file) << "graph [" << std::endl;
+	(*file) << "directed " << (directed ? "1" : "0") << std::endl;
 
     node_iterator it = nodes_begin();
     node_iterator end = nodes_end();
@@ -1041,7 +1041,7 @@ void graph::save (ostream* file) const {
     for (;it != end; ++it) {
 	(*file) << "node [\n" << "id " << (*it).id() << "\n";
 	save_node_info_handler (file, *it);
-	(*file) << " ]" << endl;
+	(*file) << " ]" << std::endl;
     }
 
     edge_iterator e_it = edges_begin();
@@ -1051,18 +1051,18 @@ void graph::save (ostream* file) const {
 	(*file) << "edge [\n" << "source " << (*e_it).source().id() << "\n";
 	(*file) << "target " << (*e_it).target().id() << "\n";
 	save_edge_info_handler (file, *e_it);
-	(*file) << " ]" << endl;
+	(*file) << " ]" << std::endl;
     }
 
     save_graph_info_handler (file);
 
-    (*file) << "]" << endl;
+	(*file) << "]" << std::endl;
     after_graph_save_handler (file);
 }
 
 int graph::save (const char* filename) const {
     
-    ofstream file (filename);    
+	std::ofstream file(filename);
     if (!file) return 0;
     
     save (&file);

@@ -51,7 +51,7 @@ public:
 	
 protected:
 	node_map<int> order;
-	map <int, node, less <int> > number;
+	std::map <int, node, std::less <int> > number;
 };
 
 

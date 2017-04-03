@@ -75,7 +75,7 @@ int main(int argc, char** argv)
     CTracker tracker(useLocalTracking,
 		CTracker::RectsDist,
 		CTracker::FilterRect,
-		CTracker::MatchBitpart,
+		CTracker::MatchBipart,
 		0.2f,                // Delta time for Kalman filter
 		0.1f,                // Accel noise magnitude for Kalman filter
 		gray.cols / 100.0f,  // Distance threshold between two frames
@@ -148,7 +148,7 @@ int main(int argc, char** argv)
 		}
 
 		++framesCounter;
-		if (framesCounter > 50)
+		if (framesCounter > 200)
 		{
 			//break;
 		}

@@ -113,7 +113,7 @@ int maxflow_sap::run(graph& G)
 	node_map<edge> last_edge(G);
 	node cur_node;
 	int number_of_nodes = G.number_of_nodes();
-    vector<int> numb(number_of_nodes, 0);
+	std::vector<int> numb(number_of_nodes, 0);
     prepare_run(G);
 
 	comp_dist_labels(G, numb);
@@ -217,9 +217,9 @@ void maxflow_sap::prepare_run(const graph& G)
 }
 
 
-void maxflow_sap::comp_dist_labels(const graph& G, vector<int>& numb)
+void maxflow_sap::comp_dist_labels(const graph& G, std::vector<int>& numb)
 {
-    queue<node> next_nodes;
+	std::queue<node> next_nodes;
     node_map<bool> visited(G, false);
     next_nodes.push(net_target);
     visited[net_target] = true;
@@ -321,7 +321,7 @@ void maxflow_sap::augment(graph& G, const node_map<edge>& last_edge)
 bool maxflow_sap::retreat(const int number_of_nodes,
 						  node& cur_node,
 						  const node_map<edge>& last_edge,
-						  vector<int>& numb)
+						  std::vector<int>& numb)
 {
 	--numb[dist_label[cur_node]];
 	if (numb[dist_label[cur_node]] == 0)
