@@ -56,18 +56,31 @@ int main(int argc, char** argv)
 	cv::Mat frame;
 	cv::Mat gray;
 
+	const int StartFrame = 0;
+	capture.set(cv::CAP_PROP_POS_FRAMES, StartFrame);
+
+	const int fps = std::max(1, static_cast<int>(capture.get(cv::CAP_PROP_FPS) + 0.5));
+
 	capture >> frame;
 	cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
 
     // If true then trajectories will be more smooth and accurate
     // But on high resolution videos with many objects may be to slow
-    bool useLocalTracking = true;
+    bool useLocalTracking = false;
 
     CDetector detector(BackgroundSubtract::ALG_MOG, useLocalTracking, gray);
     detector.SetMinObjectSize(cv::Size(gray.cols / 50, gray.rows / 50));
-    //detector.SetMinObjectSize(cv::Size(2, 2));
 
-    CTracker tracker(useLocalTracking, CTracker::RectsDist, CTracker::FilterRect, 0.2f, 0.1f, gray.cols / 10.0f, 10, 50);
+    CTracker tracker(useLocalTracking,
+		CTracker::RectsDist,
+		CTracker::FilterRect,
+		CTracker::MatchBipart,
+		0.2f,                // Delta time for Kalman filter
+		0.1f,                // Accel noise magnitude for Kalman filter
+		gray.cols / 100.0f,  // Distance threshold between two frames
+		fps,                 // Maximum allowed skipped frames
+		5 * fps              // Maximum trace length
+		);
 
 	int k = 0;
 
@@ -82,8 +95,6 @@ int main(int argc, char** argv)
 		capture >> frame;
 		if (frame.empty())
 		{
-			//capture.set(cv::CAP_PROP_POS_FRAMES, 0);
-			//continue;
 			break;
 		}
 		cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
@@ -103,12 +114,13 @@ int main(int argc, char** argv)
 		int64 t2 = cv::getTickCount();
 
 		allTime += t2 - t1;
+		int currTime = static_cast<int>(1000 * (t2 - t1) / freq + 0.5);
 
-		std::cout << "Frame " << framesCounter << ": tracks = " << tracker.tracks.size() << ", time = " << ((t2 - t1) / freq) << std::endl;
+		std::cout << "Frame " << framesCounter << ": tracks = " << tracker.tracks.size() << ", time = " << currTime << std::endl;
 
         for (size_t i = 0; i < tracker.tracks.size(); i++)
 		{
-            if (tracker.tracks[i]->trace.size() > 10)
+			if (tracker.tracks[i]->trace.size() > static_cast<size_t>(fps))
 			{
                 cv::rectangle(frame, tracker.tracks[i]->GetLastRect(), cv::Scalar(0, 255, 0), 1, CV_AA);
 
@@ -121,7 +133,7 @@ int main(int argc, char** argv)
 
 		cv::imshow("Video", frame);
 
-        int waitTime = manualMode ? 0 : 20;
+		int waitTime = manualMode ? 0 : std::max<int>(1, 1000 / fps - currTime);
         k = cv::waitKey(waitTime);
 
         if (k == 'm' || k == 'M')
@@ -133,10 +145,16 @@ int main(int argc, char** argv)
 		{
 			writer << frame;
 		}
+
+		++framesCounter;
+		if (framesCounter > 200)
+		{
+			//break;
+		}
     }
 
 	std::cout << "work time = " << (allTime / freq) << std::endl;
-    //cv::waitKey(0);
+    cv::waitKey(0);
 
 #else
 

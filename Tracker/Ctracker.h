@@ -6,7 +6,6 @@
 
 #include "defines.h"
 #include "track.h"
-#include "HungarianAlg.h"
 #include "LocalTracker.h"
 
 // --------------------------------------------------------------------------
@@ -23,10 +22,16 @@ public:
         FilterCenter = 0,
         FilterRect = 1
     };
+	enum MatchType
+	{
+		MatchHungrian = 0,
+		MatchBipart = 1
+	};
 
     CTracker(bool useLocalTracking,
              DistType distType,
              KalmanType kalmanType,
+			 MatchType matchType,
              track_t dt_,
              track_t accelNoiseMag_,
              track_t dist_thres_ = 60,
@@ -43,6 +48,7 @@ private:
 
     DistType m_distType;
     KalmanType m_kalmanType;
+	MatchType m_matchType;
 
 	// Шаг времени опроса фильтра
 	track_t dt;
