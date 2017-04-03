@@ -29,14 +29,14 @@ planarity::planarity() :
 #ifdef _DEBUG  
     GTL_debug::init_debug();
 #endif
-};	
+}
 
 planarity::~planarity()
 {
 #ifdef _DEBUG  
     GTL_debug::close_debug();
 #endif
-};	
+}
 
 
 int planarity::check (graph& /*G*/) 
