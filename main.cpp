@@ -70,7 +70,6 @@ int main(int argc, char** argv)
 
     CDetector detector(BackgroundSubtract::ALG_MOG, useLocalTracking, gray);
     detector.SetMinObjectSize(cv::Size(gray.cols / 50, gray.rows / 50));
-    detector.SetMinObjectSize(cv::Size(4, 2));
 
     CTracker tracker(useLocalTracking,
 		CTracker::RectsDist,
