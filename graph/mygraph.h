@@ -108,7 +108,7 @@ public:
      * @param <code>e</code> created edge 
      * @see graph#new_edge
      */
-    virtual void post_new_edge_handler(edge e) {
+    virtual void post_new_edge_handler(edge /*e*/) {
 		//weight[e] = 1;
 		//edge_label[e] = "";
 		//edge_colour[e] = "black";
@@ -158,7 +158,7 @@ public:
      * @param <code>n</code> created node 
      * @see graph#new_node
      */
-	virtual void post_new_node_handler(node n)
+    virtual void post_new_node_handler(node /*n*/)
 	{
 		//label[n] = "";
 		//node_colour[n] = "white";

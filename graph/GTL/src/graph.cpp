@@ -875,7 +875,6 @@ GML_error graph::load (const char* filename, bool preserve_ids) {
     GML_pair* graph_list = key_list;
 
     GML_pair* tmp_list;
-    GML_pair* tmp_prev;
     // GML_pair* node_entries = 0;
     // GML_pair* edge_entries = 0;
     
@@ -901,7 +900,6 @@ GML_error graph::load (const char* filename, bool preserve_ids) {
 
 	    assert (key_list->kind == GML_LIST);
 	    tmp_list = key_list->value.list;
-	    tmp_prev = 0;
 		std::pair<int, GML_pair*> n;
 	    n.second = tmp_list;
 
@@ -927,7 +925,6 @@ GML_error graph::load (const char* filename, bool preserve_ids) {
 
 	    assert (key_list->kind == GML_LIST);
 	    tmp_list = key_list->value.list;
-	    tmp_prev = 0;
 	    source_found = false;
 	    target_found = false;
 		std::pair<std::pair<int, int>, GML_pair*> e;

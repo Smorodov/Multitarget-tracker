@@ -245,7 +245,7 @@ int maxflow_ff::get_sp(const graph& G, node_map<edge>& last_edge)
 }
 
 
-int maxflow_ff::comp_sp(const graph& G, std::queue<node>& next_nodes,
+int maxflow_ff::comp_sp(const graph& /*G*/, std::queue<node>& next_nodes,
     node_map<bool>& visited, node_map<edge>& last_edge)
 {
     node cur_node;

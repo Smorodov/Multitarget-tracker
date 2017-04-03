@@ -1261,7 +1261,6 @@ void ratio_cut_partition::copy_side_node_map(const graph& G,
 void ratio_cut_partition::iterative_shifting(const graph& G)
 {
     bool continue_loop = true;
-    int old_cutsize = cur_cutsize;
     double old_cutratio = cur_cutratio;
 	
     while (continue_loop)
@@ -1281,7 +1280,6 @@ void ratio_cut_partition::iterative_shifting(const graph& G)
 	    {
 		continue_loop = true;
 		direction = RIGHT_SHIFT;
-		old_cutsize = cur_cutsize;
 		old_cutratio = cur_cutratio;
 	    }
 	    else
@@ -1304,7 +1302,6 @@ void ratio_cut_partition::iterative_shifting(const graph& G)
 	    {
 		continue_loop = true;
 		direction = LEFT_SHIFT;
-		old_cutsize = cur_cutsize;
 		old_cutratio = cur_cutratio;
 	    }
 	    else
