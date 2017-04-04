@@ -3,7 +3,10 @@
 
 #include "defines.h"
 #include "vibe.hpp"
+
+#if USE_OCV_BGFG
 #include <opencv2/bgsegm.hpp>
+#endif
 
 class BackgroundSubtract
 {
@@ -25,7 +28,9 @@ public:
 
 private:
 	std::unique_ptr<vibe::VIBE> m_modelVibe;
+#if USE_OCV_BGFG
 	cv::Ptr<cv::BackgroundSubtractor> m_modelOCV;
+#endif
 };
 
 #endif

@@ -135,6 +135,12 @@ set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
   SOURCE_GROUP("Header Files" FILES ${folder_header})
 
   SOURCE_GROUP("graph" FILES ${graph_source} ${graph_source})
+
+option(USE_OCV_BGFG "Should the bgfg algorithms from opencv_contrib?" ON)
+if(USE_OCV_BGFG)
+    add_definitions(-DUSE_OCV_BGFG)
+endif(USE_OCV_BGFG)
+
 # ----------------------------------------------------------------------------  
 # создаем проект
 # ----------------------------------------------------------------------------
