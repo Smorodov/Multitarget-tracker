@@ -75,17 +75,17 @@ TKalmanFilter::TKalmanFilter(
 
     // init...
     lastRectResult = rect;
-    kalman->statePre.at<track_t>(0) = rect.x;      // x
-    kalman->statePre.at<track_t>(1) = rect.y;      // y
-    kalman->statePre.at<track_t>(2) = rect.width;  // width
-    kalman->statePre.at<track_t>(3) = rect.height; // height
-    kalman->statePre.at<track_t>(4) = 0;           // dx
-    kalman->statePre.at<track_t>(5) = 0;           // dy
+	kalman->statePre.at<track_t>(0) = static_cast<track_t>(rect.x);      // x
+	kalman->statePre.at<track_t>(1) = static_cast<track_t>(rect.y);      // y
+	kalman->statePre.at<track_t>(2) = static_cast<track_t>(rect.width);  // width
+	kalman->statePre.at<track_t>(3) = static_cast<track_t>(rect.height); // height
+    kalman->statePre.at<track_t>(4) = 0;                                 // dx
+    kalman->statePre.at<track_t>(5) = 0;                                 // dy
 
-    kalman->statePost.at<track_t>(0) = rect.x;
-    kalman->statePost.at<track_t>(1) = rect.y;
-    kalman->statePost.at<track_t>(2) = rect.width;
-    kalman->statePost.at<track_t>(3) = rect.height;
+	kalman->statePost.at<track_t>(0) = static_cast<track_t>(rect.x);
+	kalman->statePost.at<track_t>(1) = static_cast<track_t>(rect.y);
+	kalman->statePost.at<track_t>(2) = static_cast<track_t>(rect.width);
+	kalman->statePost.at<track_t>(3) = static_cast<track_t>(rect.height);
 
     cv::setIdentity(kalman->measurementMatrix);
 
@@ -146,7 +146,7 @@ cv::Rect TKalmanFilter::GetRectPrediction()
 {
     cv::Mat prediction = kalman->predict();
     lastRectResult = cv::Rect_<track_t>(prediction.at<track_t>(0), prediction.at<track_t>(1), prediction.at<track_t>(2), prediction.at<track_t>(3));
-    return cv::Rect(lastRectResult.x, lastRectResult.y, lastRectResult.width, lastRectResult.height);
+	return cv::Rect(static_cast<int>(lastRectResult.x), static_cast<int>(lastRectResult.y), static_cast<int>(lastRectResult.width), static_cast<int>(lastRectResult.height));
 }
 
 //---------------------------------------------------------------------------
@@ -162,10 +162,10 @@ cv::Rect TKalmanFilter::Update(cv::Rect rect, bool dataCorrect)
     }
     else
     {
-        measurement.at<track_t>(0) = rect.x;  // update using measurements
-        measurement.at<track_t>(1) = rect.y;
-        measurement.at<track_t>(2) = rect.width;
-        measurement.at<track_t>(3) = rect.height;
+		measurement.at<track_t>(0) = static_cast<track_t>(rect.x);  // update using measurements
+		measurement.at<track_t>(1) = static_cast<track_t>(rect.y);
+		measurement.at<track_t>(2) = static_cast<track_t>(rect.width);
+		measurement.at<track_t>(3) = static_cast<track_t>(rect.height);
     }
     // Correction
     cv::Mat estiMated = kalman->correct(measurement);
@@ -174,6 +174,6 @@ cv::Rect TKalmanFilter::Update(cv::Rect rect, bool dataCorrect)
     lastRectResult.width = estiMated.at<track_t>(2);
     lastRectResult.height = estiMated.at<track_t>(3);
 
-    return cv::Rect(lastRectResult.x, lastRectResult.y, lastRectResult.width, lastRectResult.height);
+	return cv::Rect(static_cast<int>(lastRectResult.x), static_cast<int>(lastRectResult.y), static_cast<int>(lastRectResult.width), static_cast<int>(lastRectResult.height));
 }
 //---------------------------------------------------------------------------
