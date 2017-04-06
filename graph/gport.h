@@ -151,7 +151,7 @@ public:
     virtual void GetPrintingRect (GRect &r) = 0;
     virtual void GetPhysicalPageRect (GRect &r) = 0;
     virtual bool StartPage () = 0;
-    virtual bool StartDoc (char *jobname = "GBasePrinter") = 0;
+    virtual bool StartDoc (char *jobname) = 0; // "GBasePrinter"
 };
 
 // Windows  port VPort

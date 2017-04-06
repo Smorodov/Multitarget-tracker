@@ -36,7 +36,7 @@ void GTL_debug::init_debug ()
 #ifdef __GTL_MSVCC
 		GTLerr = new std::ofstream("ERRLOG.txt", std::ios::out | std::ios::app);
 #else
-	GTLerr = &cerr;
+	GTLerr = &std::cerr;
 #endif
     }
 }

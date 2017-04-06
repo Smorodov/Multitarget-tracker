@@ -27,7 +27,7 @@ __GTL_BEGIN_NAMESPACE
  * and <code>@ref edge_map </code> and cannot be used directly.
  */
 
-template <class Key, class Value, class Graph, class Alloc = allocator<Value> > 
+template <class Key, class Value, class Graph, class Alloc = std::allocator<Value> > 
 class ne_map
 {
 protected:
