@@ -70,6 +70,7 @@ int main(int argc, char** argv)
 
     CDetector detector(BackgroundSubtract::ALG_MOG, useLocalTracking, gray);
     detector.SetMinObjectSize(cv::Size(gray.cols / 50, gray.rows / 50));
+    //detector.SetMinObjectSize(cv::Size(4, 2));
 
     CTracker tracker(useLocalTracking,
 		CTracker::RectsDist,
@@ -174,7 +175,7 @@ int main(int argc, char** argv)
 
     bool useLocalTracking = false;
 
-    CTracker tracker(useLocalTracking, 0.3f, 0.5f, 60.0f, 25, 25);
+	CTracker tracker(useLocalTracking, CTracker::CentersDist, CTracker::FilterCenter, CTracker::MatchHungrian, 0.3f, 0.5f, 60.0f, 25, 25);
 	track_t alpha = 0;
 	cv::RNG rng;
 	while (k != 27)
@@ -205,7 +206,7 @@ int main(int argc, char** argv)
 			cv::circle(frame, pts[i], 3, cv::Scalar(0, 255, 0), 1, CV_AA);
 		}
 
-        tracker.Update(pts, regions, CTracker::CentersDist, cv::Mat());
+        tracker.Update(pts, regions, cv::Mat());
 
 		std::cout << tracker.tracks.size() << std::endl;
 
