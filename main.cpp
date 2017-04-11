@@ -132,6 +132,7 @@ int main(int argc, char** argv)
 			}
 		}
 
+		//detector.CalcMotionMap(frame);
 		cv::imshow("Video", frame);
 
 		int waitTime = manualMode ? 0 : std::max<int>(1, 1000 / fps - currTime);
