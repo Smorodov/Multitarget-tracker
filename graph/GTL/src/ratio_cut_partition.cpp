@@ -1009,9 +1009,12 @@ void ratio_cut_partition::update_data_structure_A2B(const node cur_node,
 	while (adj_edge_it != adj_edges_end)
 	{
 		// delete cur_node from side A
-		//unlockedA[*adj_edge_it].remove(cur_node);
+#if 1
+		unlockedA[*adj_edge_it].remove(cur_node);
+#else
 		auto& ua = unlockedA[*adj_edge_it];
 		ua.erase(std::remove(ua.begin(), ua.end(), cur_node), ua.end());
+#endif
 		--aside[*adj_edge_it];
 		if (aside[*adj_edge_it] == 0)
 		{
@@ -1088,8 +1091,12 @@ void ratio_cut_partition::update_data_structure_B2A(const node cur_node,
     while (adj_edge_it != adj_edges_end)
     {
 	// delete cur_node from side B
-	//unlockedB[*adj_edge_it].remove(cur_node);
-		unlockedB[*adj_edge_it].erase(std::remove(unlockedB[*adj_edge_it].begin(), unlockedB[*adj_edge_it].end(), cur_node), unlockedB[*adj_edge_it].end());
+#if 1
+		unlockedB[*adj_edge_it].remove(cur_node);
+#else
+		auto& ub = unlockedB[*adj_edge_it];
+		ub.erase(std::remove(ub.begin(), ub.end(), cur_node), ub.end());
+#endif
 	bside[*adj_edge_it] -= 1;
 	if (bside[*adj_edge_it] == 0)
 	{

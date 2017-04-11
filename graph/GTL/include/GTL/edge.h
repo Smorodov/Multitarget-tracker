@@ -12,8 +12,6 @@
 #include <GTL/GTL.h>
 
 #include <list>
-#include <deque>
-#include <vector>
 #include <ostream>
 
 __GTL_BEGIN_NAMESPACE

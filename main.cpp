@@ -32,6 +32,7 @@ void mv_MouseCallback(int event, int x, int y, int /*flags*/, void* param)
 int main(int argc, char** argv)
 {
     std::string inFile("../data/atrium.avi");
+
     if (argc > 1)
 	{
 		inFile = argv[1];
@@ -78,8 +79,8 @@ int main(int argc, char** argv)
 		CTracker::MatchBipart,
 		0.2f,                // Delta time for Kalman filter
 		0.1f,                // Accel noise magnitude for Kalman filter
-		gray.cols / 100.0f,  // Distance threshold between two frames
-		fps,                 // Maximum allowed skipped frames
+		gray.cols / 10.0f,   // Distance threshold between two frames
+		fps / 2,             // Maximum allowed skipped frames
 		5 * fps              // Maximum trace length
 		);
 
@@ -90,7 +91,7 @@ int main(int argc, char** argv)
 	int64 allTime = 0;
 
     bool manualMode = false;
-	int framesCounter = 1;
+	int framesCounter = StartFrame + 1;
 	while (k != 27)
 	{
 		capture >> frame;
@@ -133,6 +134,7 @@ int main(int argc, char** argv)
 		}
 
 		//detector.CalcMotionMap(frame);
+
 		cv::imshow("Video", frame);
 
 		int waitTime = manualMode ? 0 : std::max<int>(1, 1000 / fps - currTime);
@@ -149,7 +151,7 @@ int main(int argc, char** argv)
 		}
 
 		++framesCounter;
-		if (framesCounter > 200)
+		if (framesCounter > 215)
 		{
 			//break;
 		}

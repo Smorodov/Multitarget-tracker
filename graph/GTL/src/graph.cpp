@@ -658,8 +658,11 @@ void graph::restore_node (node n)
 		nodes.push_back(n);
 		n.data->pos = --nodes.end();
 
-		//hidden_nodes.remove(n);
+#if 1
+		hidden_nodes.remove(n);
+#else
 		hidden_nodes.erase(std::remove(hidden_nodes.begin(), hidden_nodes.end(), n), hidden_nodes.end());
+#endif
 		n.data->hidden = false;
 		--hidden_nodes_count;
 	}
