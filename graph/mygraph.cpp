@@ -340,7 +340,7 @@ double MyGraph::node_cliqueishness (node &n)
 	if (possconnections > 0)
 	{
 		// Build list of all nodes adjacent to n (n's neighbours)
-		std::list<node> neighbours;
+		nodes_t neighbours;
 		
 		node::adj_nodes_iterator nit = n.adj_nodes_begin ();
 		node::adj_nodes_iterator nend = n.adj_nodes_end ();
@@ -352,11 +352,11 @@ double MyGraph::node_cliqueishness (node &n)
 		}
 		
 		// Count number of edges between neighbours
-		std::list<node>::iterator i = neighbours.begin();
-		std::list<node>::iterator iend = neighbours.end();
+		nodes_t::iterator i = neighbours.begin();
+		nodes_t::iterator iend = neighbours.end();
 		while (i != iend)
 		{
-			std::list<node>::iterator j = i;
+			nodes_t::iterator j = i;
 			j++;
 			
 			while (j != iend)

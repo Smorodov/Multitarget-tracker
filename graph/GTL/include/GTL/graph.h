@@ -71,7 +71,7 @@ public:
      * @param <code>nodes</code> nodes of <code>G</code>, which form 
      *        the induced subgraph this graph will be isomorphic to.
      */
-	graph(const graph& G, const std::list<node>& nodes);
+	graph(const graph& G, const nodes_t& nodes);
     
     /**
      * Makes new graph isomorphic to the subgraph induced by the nodes
@@ -84,8 +84,8 @@ public:
      * @param <code>end</code> end of nodes     
      */
     graph (const graph& G, 
-		std::list<node>::const_iterator it,
-		std::list<node>::const_iterator end);
+		nodes_t::const_iterator it,
+		nodes_t::const_iterator end);
     
     /**
      * Destructor. Deletes all nodes and edges.
@@ -197,7 +197,7 @@ public:
     /**
      * @internal
      */
-	virtual edge new_edge(const std::list<node> &sources, const std::list<node> &targets);
+	virtual edge new_edge(const nodes_t &sources, const nodes_t &targets);
 
     //================================================== Deletion
 
@@ -246,11 +246,11 @@ public:
     /**
      * @internal
      */
-	typedef std::list<node>::const_iterator node_iterator;
+	typedef nodes_t::const_iterator node_iterator;
     /**
      * @internal
      */
-	typedef std::list<edge>::const_iterator edge_iterator;
+	typedef edges_t::const_iterator edge_iterator;
     
     /**
      * Iterate through all nodes in the graph.
@@ -286,13 +286,13 @@ public:
      * @deprecated
      * @return a list of all nodes of the graph
      */
-	std::list<node> all_nodes() const;
+	nodes_t all_nodes() const;
 
     /**
      * @deprecated
      * @return a list of all edges of the graph
      */
-	std::list<edge> all_edges() const;
+	edges_t all_edges() const;
  
     /**
      * @deprecated
@@ -332,7 +332,7 @@ public:
      * @param <code>e</code> node to be hidden
      * @return list of implicitly hidden, incident edges
      */
-	std::list<edge> hide_node(node n);
+	edges_t hide_node(node n);
 
     /**
      * Restores a hidden node. This only restores the node itself. It
@@ -357,7 +357,7 @@ public:
      * @param <code>subgraph_nodes</code> nodes of subgraph.
      * @see graph#restore_graph
      */
-	void induced_subgraph(std::list<node>& subgraph_nodes);
+	void induced_subgraph(nodes_t& subgraph_nodes);
 
     /**
      * Restores all hidden nodes and edges
@@ -378,7 +378,7 @@ public:
      * inserts for all edges of the graph a reverse edge
      * NOTE: this functions does NOT care about existing reverse edges
      */
-	std::list<edge> insert_reverse_edges();
+	edges_t insert_reverse_edges();
     
     //================================================== I/O
 
@@ -757,14 +757,14 @@ private:
 
     //================================================== Visible Nodes/Edges
     
-	std::list<node> nodes;
-	std::list<edge> edges;
+	nodes_t nodes;
+	edges_t edges;
     int nodes_count, edges_count;
 
     //================================================== Hidden Nodes/Edges
     
-	std::list<node> hidden_nodes;
-	std::list<edge> hidden_edges;
+	nodes_t hidden_nodes;
+	edges_t hidden_edges;
     int hidden_nodes_count, hidden_edges_count; 
 
     //================================================== Node/edge numbering
@@ -775,8 +775,8 @@ private:
     //================================================== Copy 
     
     void copy (const graph& G, 
-		std::list<node>::const_iterator it,
-		std::list<node>::const_iterator end);
+		nodes_t::const_iterator it,
+		nodes_t::const_iterator end);
 
 public: // needs to be public, because template friends are not possible
     /**
@@ -796,8 +796,8 @@ private:
 
     //================================================== utilities
     
-	void del_list(std::list<node> &);
-	void del_list(std::list<edge> &);
+	void del_list(nodes_t &);
+	void del_list(edges_t &);
 
 	GTL_EXTERN friend std::ostream& operator<< (std::ostream& os, const graph& G);
 };

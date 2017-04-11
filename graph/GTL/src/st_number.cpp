@@ -17,9 +17,9 @@ pathfinder::pathfinder (const graph& G, edge st, node s)
     node t = s.opposite (st);
     dfs_num.init (G, 0);
     low_num.init (G);
-    tree.init (G, std::list<edge>());
-    back.init (G, std::list<edge>());
-    forward.init (G, std::list<edge>());
+	tree.init(G, edges_t());
+	back.init(G, edges_t());
+	forward.init(G, edges_t());
 
     //
     // There is a problem with node/edge maps of iterators with Visual C++
@@ -71,8 +71,7 @@ void pathfinder::dfs_sub (node& curr, node& father)
 		
 	if (dfs_num[opp] == 0) {	    
 			
-	    std::list<edge>::iterator tmp = 
-		tree[curr].insert (tree[curr].end(), adj);
+		edges_t::iterator tmp = tree[curr].insert (tree[curr].end(), adj);
 	    to_father[opp] = tmp;
 			
 	    dfs_sub (opp, curr);
@@ -87,10 +86,8 @@ void pathfinder::dfs_sub (node& curr, node& father)
 	    }
 			
 	} else if (opp != father && dfs_num[opp] < dfs_num[curr]) { 
-	    std::list<edge>::iterator back_pos = 
-		back[curr].insert (back[curr].end(), adj);
-	    std::list<edge>::iterator forward_pos = 
-		forward[opp].insert (forward[opp].end(), adj);
+		edges_t::iterator back_pos = back[curr].insert (back[curr].end(), adj);
+		edges_t::iterator forward_pos = forward[opp].insert (forward[opp].end(), adj);
 	    pos[adj] = pos_pair (forward_pos, back_pos);
 			
 	    if (dfs_num[opp] < low_num[curr]) {
@@ -142,7 +139,7 @@ pathfinder::const_iterator::const_iterator (pathfinder& _pf, node n) :
 
 pathfinder::const_iterator& pathfinder::const_iterator::operator++ () 
 {
-    std::list<edge>::iterator tmp;
+	edges_t::iterator tmp;
     edge adj;
     node opp;
 	
@@ -213,34 +210,39 @@ int st_number::check (graph& G)
 
 int st_number::run (graph& /*G*/) 
 {
-    std::list<node> order;
+	nodes_t order;
     node t = s.opposite (st);
     order.push_back (t);
     node tmp = s;
-    pathfinder::const_iterator end = pf->end ();
+    pathfinder::const_iterator end = pf->end();
     int act_st = 1;
 	
-    while (tmp != t) {
-	pathfinder::const_iterator it = pf->path (tmp);
-	std::list<node>::iterator pos;
-		
-	if (it == end) {
-	    st_num[tmp] = act_st++;
-	    st_ord.push_back(tmp);
-	    tmp = order.back();
-	    order.pop_back();
-			
-	} else {
-	    pos = order.end();
-			
-	    while (it != end) {
-		pos = order.insert (pos, *it);
-		++it;
-	    }
-			
-	    order.erase (pos);
+	while (tmp != t)
+	{
+		pathfinder::const_iterator it = pf->path(tmp);
+		nodes_t::iterator pos;
+
+		if (it == end)
+		{
+			st_num[tmp] = act_st++;
+			st_ord.push_back(tmp);
+			tmp = order.back();
+			order.pop_back();
+
+		}
+		else
+		{
+			pos = order.end();
+
+			while (it != end)
+			{
+				pos = order.insert(pos, *it);
+				++it;
+			}
+
+			order.erase(pos);
+		}
 	}
-    }
 	
     st_num[t] = act_st;
     st_ord.push_back (t);

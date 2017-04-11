@@ -321,7 +321,7 @@ public:
     /**
      * Iterator type for edges which belong to the cut.
      */
-	typedef std::list<edge>::const_iterator cut_edges_iterator;
+	typedef edges_t::const_iterator cut_edges_iterator;
 
     /**
      * Iterate through all edges which belong to the cut, that means
@@ -346,7 +346,7 @@ public:
     /**
      * Iterator type for nodes of a side.
      */
-	typedef std::list<node>::const_iterator nodes_of_one_side_iterator;
+	typedef nodes_t::const_iterator nodes_of_one_side_iterator;
 
     /**
      * Iterate through all nodes which belong to side <code>A</code>,
@@ -410,7 +410,7 @@ protected:
      * @internal
      * List of edges which belong to the cut.
      */
-	std::list<edge> cut_edges;
+	edges_t cut_edges;
 
     /**
      * @internal
@@ -423,13 +423,13 @@ protected:
      * @internal
      * List of nodes which belong to side <code>A</code>.
      */
-	std::list<node> nodesA;
+	nodes_t nodesA;
 
     /**
      * @internal
      * List of nodes which belong to side <code>A</code>.
      */
-	std::list<node> nodesB;
+	nodes_t nodesB;
 
     /**
      * @internal
@@ -543,7 +543,7 @@ protected:
      * @internal
      * Corresponds to CELL array in [FidMat82]
      */
-	node_map<std::list<node>::iterator> position_in_bucket;
+	node_map<nodes_t::iterator> position_in_bucket;
 		
     /**
      * @internal
@@ -568,14 +568,14 @@ protected:
      * Contains the unlocked nodes of an edge on side <code>A</code>.
      * (max. 2)
      */
-	edge_map<std::list<node> > unlockedA;
+	edge_map<nodes_t> unlockedA;
 
     /**
      * @internal
      * Contains the unlocked nodes of an edge on side <code>B</code>.
      * (max. 2)
      */
-	edge_map<std::list<node> > unlockedB;
+	edge_map<nodes_t> unlockedB;
 
     /**
      * @internal
@@ -615,7 +615,7 @@ protected:
      * on side <code>A</code>. (open hashing, collisions in gain buckets
      * are organized through LIFO lists)
      */
-	std::vector<std::list<node> > bucketA;
+	std::vector<nodes_t> bucketA;
 
     /**
      * @internal
@@ -623,7 +623,7 @@ protected:
      * on side <code>B</code>. (open hashing, collisions in gain buckets
      * are organized through LIFO lists)
      */
-	std::vector<std::list<node> > bucketB;
+	std::vector<nodes_t> bucketB;
 
     /**
      * @internal
@@ -651,14 +651,14 @@ protected:
      * This is done by introducing edges with weight 0 since Ratio Cut
      * works well on connected graphs only.
      */
-	void make_connected(graph& G, std::list<edge>& artificial_edges);
+	void make_connected(graph& G, edges_t& artificial_edges);
 		
     /**
      * @internal
      * Deletes the edges introduced in @ref ratio_cut_partition#
      * make_connected.
      */
-	void restore(graph& G, std::list<edge>& artificial_edges);
+	void restore(graph& G, edges_t& artificial_edges);
 		
     /**
      * @internal
@@ -752,7 +752,7 @@ protected:
      * @internal
      * Selects node with highest ratio_gain
      */
-	node compute_highest_ratio_node(std::list<node> node_list);
+	node compute_highest_ratio_node(nodes_t node_list);
 
     /**
      * @internal

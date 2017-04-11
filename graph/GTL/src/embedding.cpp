@@ -203,14 +203,16 @@ planar_embedding::write_st(std::ostream& os, st_number& st)
     }
     
 	os << "SELFLOOPS:" << std::endl;
-    std::list<edge>::iterator e_it, e_end;
-    for (e_it = self.begin(), e_end = self.end(); e_it != e_end; ++e_it) {
-		os << st[(*e_it).source()] << "---" << st[(*e_it).target()] << std::endl;
+	edges_t::iterator e_it, e_end;
+    for (e_it = self.begin(), e_end = self.end(); e_it != e_end; ++e_it)
+	{
+		os << st[e_it->source()] << "---" << st[e_it->target()] << std::endl;
     }
     
 	os << "MULTIPLE EDGES:" << std::endl;
-    for (e_it = multi.begin(), e_end = multi.end(); e_it != e_end; ++e_it) {
-		os << st[(*e_it).source()] << "---" << st[(*e_it).target()] << std::endl;
+    for (e_it = multi.begin(), e_end = multi.end(); e_it != e_end; ++e_it)
+	{
+		os << st[e_it->source()] << "---" << st[e_it->target()] << std::endl;
     }
 }
 
@@ -235,13 +237,15 @@ GTL_EXTERN std::ostream& operator<< (std::ostream& os, planar_embedding& em)
     }
 
 	os << "SELFLOOPS:" << std::endl;
-    std::list<edge>::iterator e_it, e_end;
-    for (e_it = em.self.begin(), e_end = em.self.end(); e_it != e_end; ++e_it) {
+	edges_t::iterator e_it, e_end;
+    for (e_it = em.self.begin(), e_end = em.self.end(); e_it != e_end; ++e_it)
+	{
 		os << *e_it << std::endl;
     }
 
 	os << "MULTIPLE EDGES:" << std::endl;
-    for (e_it = em.multi.begin(), e_end = em.multi.end(); e_it != e_end; ++e_it) {
+    for (e_it = em.multi.begin(), e_end = em.multi.end(); e_it != e_end; ++e_it)
+	{
 		os << *e_it << std::endl;
     }
 

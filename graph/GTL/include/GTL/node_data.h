@@ -27,8 +27,8 @@ class GTL_EXTERN node_data
 public:
     int id;			// internal numbering
     graph *owner;		// graph containing this node
-    std::list<node>::iterator pos;	// position in the list of all nodes
-	std::list<edge> edges[2];	// edges incident to this node
+    nodes_t::iterator pos;	// position in the list of all nodes
+	edges_t edges[2];	// edges incident to this node
 				// edges[0] = in_edges, edges[1] = out_edges
     bool hidden;
 };

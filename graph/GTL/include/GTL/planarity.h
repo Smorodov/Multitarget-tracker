@@ -231,7 +231,7 @@ public:
      * @sa #get_obstruction_nodes
      * @sa #calc_obstruction
      */
-	std::list<edge>& get_obstruction_edges()
+	edges_t& get_obstruction_edges()
     {
 	return ob_edges;
     }
@@ -245,7 +245,7 @@ public:
      * @sa #get_obstruction_edges
      * @sa #calc_obstruction
      */
-	std::list<node>& get_obstruction_nodes()
+	nodes_t& get_obstruction_nodes()
     {
 	return ob_nodes;
     }
@@ -578,12 +578,12 @@ private:
     /**
      * @internal
      */
-	std::list<edge> ob_edges;
+	edges_t ob_edges;
     
     /**
      * @internal
      */
-	std::list<node> ob_nodes;
+	nodes_t ob_nodes;
     
     /**
      * @internal

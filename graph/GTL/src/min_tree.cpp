@@ -81,8 +81,8 @@ int min_tree::run (graph& g) {
 
 
     for (tree_it = tree_nodes.begin(); tree_it != tree_nodes.end(); tree_it++) { 
-	adj_it = (*tree_it).adj_edges_begin();
-	adj_end = (*tree_it).adj_edges_end();
+	adj_it = tree_it->adj_edges_begin();
+	adj_end = tree_it->adj_edges_end();
 
 	for (; adj_it != adj_end; adj_it++) {  
 	    node_distances.push(TSP_A_VALUE(dist[*adj_it], adj_it));

@@ -56,7 +56,20 @@ set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
 #             graph/gml2dot.cpp
 #             graph/components.cpp
              graph/fheap.c
-             
+             )
+
+  set(graph_header
+             graph/tokenise.h
+             graph/mytree.h
+             graph/mygraph.h
+             graph/mwbmatching.h
+             graph/mincut.h
+             graph/gport.h
+             graph/gdefs.h
+             graph/fheap.h
+             )
+
+  set(gtl_source
              graph/GTL/src/bellman_ford.cpp
              graph/GTL/src/bfs.cpp
              graph/GTL/src/biconnectivity.cpp
@@ -84,16 +97,7 @@ set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
              graph/GTL/src/topsort.cpp
              )
 
-  set(graph_header
-             graph/tokenise.h
-             graph/mytree.h
-             graph/mygraph.h
-             graph/mwbmatching.h
-             graph/mincut.h
-             graph/gport.h
-             graph/gdefs.h
-             graph/fheap.h
-             
+  set(gtl_header
              graph/GTL/include/GTL/algorithm.h
              graph/GTL/include/GTL/bellman_ford.h
              graph/GTL/include/GTL/bfs.h
@@ -134,7 +138,8 @@ set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
   SOURCE_GROUP("Source Files" FILES ${folder_source})
   SOURCE_GROUP("Header Files" FILES ${folder_header})
 
-  SOURCE_GROUP("graph" FILES ${graph_source} ${graph_source})
+  SOURCE_GROUP("graph" FILES ${graph_source} ${graph_header})
+  SOURCE_GROUP("GTL" FILES ${gtl_source} ${gtl_header})
 
 option(USE_OCV_BGFG "Should the bgfg algorithms from opencv_contrib?" ON)
 if(USE_OCV_BGFG)
@@ -144,7 +149,7 @@ endif(USE_OCV_BGFG)
 # ----------------------------------------------------------------------------  
 # создаем проект
 # ----------------------------------------------------------------------------
-  ADD_EXECUTABLE(MultitargetTracker ${folder_source} ${folder_header} ${graph_source} ${graph_source})
+  ADD_EXECUTABLE(MultitargetTracker ${folder_source} ${folder_header} ${graph_source} ${graph_header} ${gtl_source} ${gtl_header})
 # ----------------------------------------------------------------------------   
 # добавляем include директории
 # ----------------------------------------------------------------------------

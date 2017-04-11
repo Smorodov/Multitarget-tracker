@@ -24,11 +24,11 @@ class GTL_EXTERN edge_data
 {
 public:
     int id;				// internal numbering
-	std::list<node> nodes[2]; 		// nodes[0] = sources,
+	nodes_t nodes[2]; 		// nodes[0] = sources,
     					// nodes[1] = targets
-	std::list<std::list<edge>::iterator> adj_pos[2];// positions in the adjacency lists
+	std::list<edges_t::iterator> adj_pos[2];// positions in the adjacency lists
 					// of sources and targets
-	std::list<edge>::iterator pos;		// position in the list of all edges
+	edges_t::iterator pos;		// position in the list of all edges
     bool hidden;
     graph* owner;
 };

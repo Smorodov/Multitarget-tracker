@@ -227,7 +227,7 @@ public:
      *
      * @retval list of selfloops
      */
-	std::list<edge>& selfloops()
+	edges_t& selfloops()
     {
 	return self;
     }
@@ -239,7 +239,7 @@ public:
      *
      * @retval list of selfloops
      */
-	const std::list<edge>& selfloops() const
+	const edges_t& selfloops() const
     {
 	return self;
     }
@@ -254,7 +254,7 @@ public:
      *
      * @retval list of multiple edges
      */
-	std::list<edge>& multiple_edges()
+	edges_t& multiple_edges()
     {
 	return multi;
     }
@@ -269,7 +269,7 @@ public:
      *
      * @retval list of multiple edges
      */
-	const std::list<edge>& multiple_edges() const
+	const edges_t& multiple_edges() const
     {
 	return multi;
     }
@@ -329,13 +329,13 @@ private:
      * @internal
      * Selfloops.
      */
-	std::list<edge> self;
+	edges_t self;
 
     /**
      * @internal
      * Multiple edges.
      */
-	std::list<edge> multi;
+	edges_t multi;
 };
 
 
