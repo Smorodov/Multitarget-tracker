@@ -220,7 +220,7 @@ void CTracker::Update(
 
     // Update Kalman Filters state
 
-    for (size_t i = 0; i<assignment.size(); i++)
+    for (size_t i = 0; i < assignment.size(); i++)
     {
         // If track updated less than one time, than filter state is not correct.
 

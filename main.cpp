@@ -27,7 +27,7 @@ void mv_MouseCallback(int event, int x, int y, int /*flags*/, void* param)
 // set to 0 for Bugs tracking example
 // set to 1 for mouse tracking example
 // ----------------------------------------------------------------------
- #define ExampleNum 1
+ #define ExampleNum 0
 
 int main(int argc, char** argv)
 {
@@ -57,7 +57,7 @@ int main(int argc, char** argv)
 	cv::Mat frame;
 	cv::Mat gray;
 
-	const int StartFrame = 0;
+    const int StartFrame = 0;
 	capture.set(cv::CAP_PROP_POS_FRAMES, StartFrame);
 
 	const int fps = std::max(1, static_cast<int>(capture.get(cv::CAP_PROP_FPS) + 0.5));
@@ -67,20 +67,20 @@ int main(int argc, char** argv)
 
     // If true then trajectories will be more smooth and accurate
     // But on high resolution videos with many objects may be to slow
-    bool useLocalTracking = false;
+    bool useLocalTracking = true;
 
     CDetector detector(BackgroundSubtract::ALG_MOG, useLocalTracking, gray);
-    detector.SetMinObjectSize(cv::Size(gray.cols / 50, gray.rows / 50));
-    //detector.SetMinObjectSize(cv::Size(4, 2));
+    //detector.SetMinObjectSize(cv::Size(gray.cols / 50, gray.rows / 50));
+    detector.SetMinObjectSize(cv::Size(4, 2));
 
     CTracker tracker(useLocalTracking,
 		CTracker::RectsDist,
 		CTracker::FilterRect,
-		CTracker::MatchBipart,
+		CTracker::MatchHungrian,
 		0.2f,                // Delta time for Kalman filter
 		0.1f,                // Accel noise magnitude for Kalman filter
-		gray.cols / 10.0f,   // Distance threshold between two frames
-		fps / 2,             // Maximum allowed skipped frames
+        gray.cols / 20.0f,   // Distance threshold between two frames
+        fps,                 // Maximum allowed skipped frames
 		5 * fps              // Maximum trace length
 		);
 
@@ -122,7 +122,7 @@ int main(int argc, char** argv)
 
         for (size_t i = 0; i < tracker.tracks.size(); i++)
 		{
-			if (tracker.tracks[i]->trace.size() > static_cast<size_t>(fps))
+            if (tracker.tracks[i]->IsRobust(fps, 0.75f, cv::Size2f(1.0f, 4.0f)))
 			{
                 cv::rectangle(frame, tracker.tracks[i]->GetLastRect(), cv::Scalar(0, 255, 0), 1, CV_AA);
 
@@ -133,7 +133,7 @@ int main(int argc, char** argv)
 			}
 		}
 
-		//detector.CalcMotionMap(frame);
+        detector.CalcMotionMap(frame);
 
 		cv::imshow("Video", frame);
 
