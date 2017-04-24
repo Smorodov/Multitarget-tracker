@@ -138,19 +138,34 @@ void CTracker::Update(
 			edge_map<int> weights(G, 100);
 			for (size_t i = 0; i < tracks.size(); i++)
 			{
+				bool hasZeroEdge = false;
+
 				for (size_t j = 0; j < detections.size(); j++)
 				{
 					track_t currCost = Cost[i + j * N];
 
 					edge e = G.new_edge(nodes[i], nodes[N + j]);
-					int weight = static_cast<int>((currCost < dist_thres) ? (maxCost - currCost + 1) : 0);
-					G.set_edge_weight(e, weight);
-					weights[e] = weight;
+
+					if (currCost < dist_thres)
+					{
+						int weight = maxCost - currCost + 1;
+						G.set_edge_weight(e, weight);
+						weights[e] = weight;
+					}
+					else
+					{
+						if (!hasZeroEdge)
+						{
+							G.set_edge_weight(e, 0);
+							weights[e] = 0;
+						}
+						hasZeroEdge = true;
+					}
 				}
 			}
 
-			std::list<edge> L = MAX_WEIGHT_BIPARTITE_MATCHING(G, weights);
-			for (std::list<edge>::iterator it = L.begin(); it != L.end(); ++it)
+			edges_t L = MAX_WEIGHT_BIPARTITE_MATCHING(G, weights);
+			for (edges_t::iterator it = L.begin(); it != L.end(); ++it)
 			{
 				node a = it->source();
 				node b = it->target();
@@ -205,7 +220,7 @@ void CTracker::Update(
 
     // Update Kalman Filters state
 
-    for (size_t i = 0; i<assignment.size(); i++)
+    for (size_t i = 0; i < assignment.size(); i++)
     {
         // If track updated less than one time, than filter state is not correct.
 

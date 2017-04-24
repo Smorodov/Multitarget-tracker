@@ -76,11 +76,11 @@ int maxflow_pp::check(graph& G)
 	graph::node_iterator nodes_end = G.nodes_end();
 	while (node_it != nodes_end)
 	{
-	    if ((*node_it).indeg() == 0)
+	    if (node_it->indeg() == 0)
 	    {
 		source_found = true;
 	    }
-	    if ((*node_it).outdeg() == 0)
+	    if (node_it->outdeg() == 0)
 	    {
 		target_found = true;
 	    }
@@ -159,24 +159,24 @@ void maxflow_pp::create_artif_source_target(graph& G)
     graph::node_iterator nodes_end = G.nodes_end();
     while (node_it != nodes_end)
     {
-	if (*node_it != net_source && (*node_it).indeg() == 0)
+	if (*node_it != net_source && node_it->indeg() == 0)
 	{
 	    e = G.new_edge(net_source, *node_it);
 	    edge_capacity[e] = 1.0;	// 1.0 prevents e from hiding
-	    node::out_edges_iterator out_edge_it = (*node_it).out_edges_begin();
-	    node::out_edges_iterator out_edges_end = (*node_it).out_edges_end();
+	    node::out_edges_iterator out_edge_it = node_it->out_edges_begin();
+	    node::out_edges_iterator out_edges_end = node_it->out_edges_end();
 	    while (out_edge_it != out_edges_end)
 	    {
 		edge_capacity[e] += edge_capacity[*out_edge_it];
 		++out_edge_it;
 	    }
 	}
-	if (*node_it != net_target && (*node_it).outdeg() == 0)
+	if (*node_it != net_target && node_it->outdeg() == 0)
 	{
 	    e = G.new_edge(*node_it, net_target);
 	    edge_capacity[e] = 1.0;	// 1.0 prevents e from hiding
-	    node::in_edges_iterator in_edge_it = (*node_it).in_edges_begin();
-	    node::in_edges_iterator in_edges_end = (*node_it).in_edges_end();
+	    node::in_edges_iterator in_edge_it = node_it->in_edges_begin();
+	    node::in_edges_iterator in_edges_end = node_it->in_edges_end();
 	    while (in_edge_it != in_edges_end)
 	    {
 		edge_capacity[e] += edge_capacity[*in_edge_it];
@@ -217,17 +217,17 @@ int maxflow_pp::leveling(graph& G)
 	node::out_edges_iterator out_edges_end = cur_node.out_edges_end();
 	while (out_edge_it != out_edges_end)
 	{
-	    if (level[(*out_edge_it).target()] == -1)
+	    if (level[out_edge_it->target()] == -1)
 	    {
-		if ((*out_edge_it).target() == net_target)
+		if (out_edge_it->target() == net_target)
 		{
 		    source_target_con = true;
 		}
-		level[(*out_edge_it).target()] = level[cur_node] + 1;
-		next_nodes.push((*out_edge_it).target());
+		level[out_edge_it->target()] = level[cur_node] + 1;
+		next_nodes.push(out_edge_it->target());
 		++out_edge_it;
 	    }
-	    else if (level[(*out_edge_it).target()] <= level[cur_node])
+	    else if (level[out_edge_it->target()] <= level[cur_node])
 	    {
 		node::out_edges_iterator temp_it = out_edge_it;
 		++out_edge_it;
@@ -268,7 +268,7 @@ void maxflow_pp::hide_unreachable_nodes(graph& G)
 	node::out_edges_iterator out_edges_end = cur_node.out_edges_end();
 	while (out_edge_it != out_edges_end)
 	{
-	    node next = (*out_edge_it).target();
+	    node next = out_edge_it->target();
 	    if (!reachable_from_net_source[next])
 	    {
 		next_nodes.push(next);
@@ -288,7 +288,7 @@ void maxflow_pp::hide_unreachable_nodes(graph& G)
 	node::in_edges_iterator in_edges_end = cur_node.in_edges_end();
 	while (in_edge_it != in_edges_end)
 	{
-	    node next = (*in_edge_it).source();
+	    node next = in_edge_it->source();
 	    if (!reachable_from_net_target[next])
 	    {
 		next_nodes.push(next);
@@ -408,7 +408,7 @@ void maxflow_pp::get_sp_ahead(const graph& G, const node& start_node,
 	node::out_edges_iterator out_edges_end = cur_node.out_edges_end();
 	while (out_edge_it != out_edges_end)
 	{
-	    node next = (*out_edge_it).target();
+	    node next = out_edge_it->target();
 	    if (!visited[next])
 	    {
 		last_edge[next] = *out_edge_it;
@@ -443,7 +443,7 @@ void maxflow_pp::get_sp_backwards(const graph& G, const node& start_node,
 	node::in_edges_iterator in_edges_end = cur_node.in_edges_end();
 	while (in_edge_it != in_edges_end)
 	{
-	    node next = (*in_edge_it).source();
+	    node next = in_edge_it->source();
 	    if (!visited[next])
 	    {
 		prev_edge[next] = *in_edge_it;
@@ -574,15 +574,15 @@ void maxflow_pp::comp_rem_net(graph& G)
 	single_edge_update(G, *edge_it);
 	++edge_it;
     }
-    std::list<edge>::iterator list_it = full_edges.begin();
-    std::list<edge>::iterator list_end = full_edges.end();
+	edges_t::iterator list_it = full_edges.begin();
+	edges_t::iterator list_end = full_edges.end();
     while (list_it != list_end)
     {
 	G.restore_edge(*list_it);
 	if (flow_update[*list_it] > 0.0)
 	{
 	    single_edge_update(G, *list_it);
-	    std::list<edge>::iterator temp_it = list_it;
+		edges_t::iterator temp_it = list_it;
 	    ++list_it;
 	    full_edges.erase(temp_it);	// now it's visible again
 	}
@@ -600,15 +600,15 @@ void maxflow_pp::comp_rem_net(graph& G)
 
 	
     // make hidden levels visible again
-    std::list<node>::iterator temp_un_node_it = temp_unvisible_nodes.begin();
-    std::list<node>::iterator temp_un_nodes_end = temp_unvisible_nodes.end();
+	nodes_t::iterator temp_un_node_it = temp_unvisible_nodes.begin();
+	nodes_t::iterator temp_un_nodes_end = temp_unvisible_nodes.end();
     while (temp_un_node_it != temp_un_nodes_end)
     {
 	G.restore_node(*temp_un_node_it);
 	++temp_un_node_it;
     }
-    std::list<edge>::iterator temp_un_edge_it = temp_unvisible_edges.begin();
-    std::list<edge>::iterator temp_un_edges_end = temp_unvisible_edges.end();
+	edges_t::iterator temp_un_edge_it = temp_unvisible_edges.begin();
+	edges_t::iterator temp_un_edges_end = temp_unvisible_edges.end();
     while (temp_un_edge_it != temp_un_edges_end)
     {
 	G.restore_edge(*temp_un_edge_it);

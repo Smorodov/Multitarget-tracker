@@ -121,10 +121,10 @@ const node& node::opposite(edge e) const
 	return s;
 }
 
-std::list<node> node::opposites(edge) const
+nodes_t node::opposites(edge) const
 {
     // not implemented yet
-    return std::list<node>(); // to avoid compiler warnings
+	return nodes_t(); // to avoid compiler warnings
 }
 
 bool node::is_hidden () const

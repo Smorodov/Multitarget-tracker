@@ -21,6 +21,8 @@ private:
 
     bool m_collectPoints;
 
+	cv::Mat m_motionMap;
+
 public:
 	CDetector(BackgroundSubtract::BGFG_ALGS algType, bool collectPoints, cv::Mat& gray);
 	const std::vector<Point_t>& Detect(cv::Mat& gray);
@@ -29,4 +31,5 @@ public:
 	void SetMinObjectSize(cv::Size minObjectSize);
 
     const regions_t& GetDetects() const;
+	void CalcMotionMap(cv::Mat frame);
 };

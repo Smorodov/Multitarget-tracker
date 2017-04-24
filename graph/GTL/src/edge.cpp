@@ -40,18 +40,24 @@ node edge::target() const
     return data->nodes[1].front();
 }
 
-void edge::change_source (node new_source) {
+const node& edge::target_() const
+{
+	return data->nodes[1].front();
+}
+
+void edge::change_source (node new_source)
+{
     //
     // First delete this edge from source's adjacency list
     // and clear the list of sources 
     //
     
-    std::list<node>::iterator the_nodes = data->nodes[0].begin();
-    std::list<node>::iterator the_nodes_end = data->nodes[0].end();
+	nodes_t::iterator the_nodes = data->nodes[0].begin();
+	nodes_t::iterator the_nodes_end = data->nodes[0].end();
 
     while(the_nodes != the_nodes_end)
     {
-	(*the_nodes).data->edges[1].erase (data->adj_pos[0].front());
+	the_nodes->data->edges[1].erase (data->adj_pos[0].front());
 	data->adj_pos[0].pop_front();
 	
 	the_nodes = data->nodes[0].erase (the_nodes);
@@ -85,12 +91,12 @@ void edge::change_target (node new_target) {
     // and clear the list of targets
     //
     
-    std::list<node>::iterator the_nodes = data->nodes[1].begin();
-    std::list<node>::iterator the_nodes_end = data->nodes[1].end();
+	nodes_t::iterator the_nodes = data->nodes[1].begin();
+	nodes_t::iterator the_nodes_end = data->nodes[1].end();
 
     while(the_nodes != the_nodes_end)
     {
-	(*the_nodes).data->edges[0].erase (data->adj_pos[1].front());
+	the_nodes->data->edges[0].erase (data->adj_pos[1].front());
 	data->adj_pos[1].pop_front();
 	
 	the_nodes = data->nodes[1].erase (the_nodes);
@@ -124,12 +130,12 @@ void edge::reverse ()
     // First delete this edge from all adjacency lists
     //
     
-    std::list<node>::iterator the_nodes = data->nodes[0].begin();
-    std::list<node>::iterator the_nodes_end = data->nodes[0].end();
+	nodes_t::iterator the_nodes = data->nodes[0].begin();
+	nodes_t::iterator the_nodes_end = data->nodes[0].end();
 
     while(the_nodes != the_nodes_end)
     {
-	(*the_nodes).data->edges[1].erase (data->adj_pos[0].front());
+	the_nodes->data->edges[1].erase (data->adj_pos[0].front());
 	data->adj_pos[0].pop_front();
 
 	++the_nodes;
@@ -140,7 +146,7 @@ void edge::reverse ()
 
     while(the_nodes != the_nodes_end)
     {
-	(*the_nodes).data->edges[0].erase (data->adj_pos[1].front());
+	the_nodes->data->edges[0].erase (data->adj_pos[1].front());
 	data->adj_pos[1].pop_front();
 
 	++the_nodes;
@@ -162,8 +168,8 @@ void edge::reverse ()
 
     while(the_nodes != the_nodes_end)
     {
-	data->adj_pos[0].push_back((*the_nodes).data->edges[1].insert (
-	    (*the_nodes).data->edges[1].end(), *this));
+	data->adj_pos[0].push_back(the_nodes->data->edges[1].insert (
+	    the_nodes->data->edges[1].end(), *this));
 
 	++the_nodes;
     }
@@ -173,8 +179,8 @@ void edge::reverse ()
 
     while(the_nodes != the_nodes_end)
     {
-	data->adj_pos[1].push_back((*the_nodes).data->edges[0].insert (
-	    (*the_nodes).data->edges[0].end(), *this));
+	data->adj_pos[1].push_back(the_nodes->data->edges[0].insert (
+	    the_nodes->data->edges[0].end(), *this));
 
 	++the_nodes;
     }
@@ -183,19 +189,19 @@ void edge::reverse ()
     // swap nodes[0] and nodes[1]
     // 
     
-    std::list<node> tmp = data->nodes[0];
+	nodes_t tmp = data->nodes[0];
     data->nodes[0] = data->nodes[1];
     data->nodes[1] = tmp;
 }
 
     
 
-std::list<node> edge::sources() const
+nodes_t edge::sources() const
 {
     return data->nodes[0];
 }
 
-std::list<node> edge::targets() const
+nodes_t edge::targets() const
 {
     return data->nodes[1];
 }
@@ -212,19 +218,18 @@ bool edge::is_hidden () const
 
 void edge::remove_from(int where) const
 {
-    std::list<node>::iterator the_nodes = data->nodes[where].begin();
-    std::list<node>::iterator the_nodes_end = data->nodes[where].end();
+	nodes_t::iterator the_nodes = data->nodes[where].begin();
+	nodes_t::iterator the_nodes_end = data->nodes[where].end();
 
-    std::list<std::list<edge>::iterator>::iterator the_adj_pos =
-	data->adj_pos[where].begin();
+	std::list<edges_t::iterator>::iterator the_adj_pos = data->adj_pos[where].begin();
 
-    while(the_nodes != the_nodes_end)
-    {
-	the_nodes->data->edges[1-where].erase(*the_adj_pos);
-	
-	++the_nodes;
-	++the_adj_pos;
-    }
+	while (the_nodes != the_nodes_end)
+	{
+		the_nodes->data->edges[1 - where].erase(*the_adj_pos);
+
+		++the_nodes;
+		++the_adj_pos;
+	}
 }
 
 const node& edge::opposite(node n) const

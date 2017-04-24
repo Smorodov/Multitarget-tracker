@@ -93,8 +93,8 @@ int bellman_ford::run(graph& G)
 
     for (it = G.edges_begin(), end = G.edges_end(); it != end; ++it)
     {
-	node u = (*it).source();
-	node v = (*it).target();
+	node u = it->source();
+	node v = it->target();
 
 	if(!inf[u] && !inf[v]) 
 	{

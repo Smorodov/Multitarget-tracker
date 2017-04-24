@@ -76,11 +76,11 @@ int maxflow_sap::check(graph& G)
 		graph::node_iterator nodes_end = G.nodes_end();
 		while (node_it != nodes_end)
 		{
-			if ((*node_it).indeg() == 0)
+			if (node_it->indeg() == 0)
 		    {
 				source_found = true;
 		    }
-		    if ((*node_it).outdeg() == 0)
+		    if (node_it->outdeg() == 0)
 			{
 				target_found = true;
 		    }
@@ -175,28 +175,28 @@ void maxflow_sap::create_artif_source_target(graph& G)
     graph::node_iterator nodes_end = G.nodes_end();
     while (node_it != nodes_end)
     {
-		if (*node_it != net_source && (*node_it).indeg() == 0)
+		if (*node_it != net_source && node_it->indeg() == 0)
 		{
 		    e = G.new_edge(net_source, *node_it);
 			edge_capacity[e] = 1.0;	// 1.0 prevents e from hiding
 		    node::out_edges_iterator out_edge_it =
-				(*node_it).out_edges_begin();
+				node_it->out_edges_begin();
 		    node::out_edges_iterator out_edges_end =
-				(*node_it).out_edges_end();
+				node_it->out_edges_end();
 			while (out_edge_it != out_edges_end)
 		    {
 				edge_capacity[e] += edge_capacity[*out_edge_it];
 				++out_edge_it;
 		    }
 		}
-		if (*node_it != net_target && (*node_it).outdeg() == 0)
+		if (*node_it != net_target && node_it->outdeg() == 0)
 		{
 			e = G.new_edge(*node_it, net_target);
 		    edge_capacity[e] = 1.0;	// 1.0 prevents e from hiding
 		    node::in_edges_iterator in_edge_it =
-				(*node_it).in_edges_begin();
+				node_it->in_edges_begin();
 			node::in_edges_iterator in_edges_end =
-				(*node_it).in_edges_end();
+				node_it->in_edges_end();
 		    while (in_edge_it != in_edges_end)
 		    {
 				edge_capacity[e] += edge_capacity[*in_edge_it];
@@ -235,7 +235,7 @@ void maxflow_sap::comp_dist_labels(const graph& G, std::vector<int>& numb)
 		node::in_edges_iterator in_edges_end = cur_node.in_edges_end();
 		while (in_edge_it != in_edges_end)
 		{
-			node next = (*in_edge_it).source();
+			node next = in_edge_it->source();
 		    if (!visited[next])
 		    {
 			    next_nodes.push(next);
@@ -255,7 +255,7 @@ bool maxflow_sap::has_an_admissible_arc(const node cur_node)
 	node::out_edges_iterator out_edges_end = cur_node.out_edges_end();
 	while (out_edge_it != out_edges_end)
 	{
-		if (dist_label[cur_node] == dist_label[(*out_edge_it).target()] + 1)
+		if (dist_label[cur_node] == dist_label[out_edge_it->target()] + 1)
 		{
 			return true;
 		}
@@ -271,10 +271,10 @@ void maxflow_sap::advance(node& cur_node, node_map<edge>& last_edge)
 	node::out_edges_iterator out_edges_end = cur_node.out_edges_end();
 	while (out_edge_it != out_edges_end)
 	{
-		if (dist_label[cur_node] == dist_label[(*out_edge_it).target()] + 1)
+		if (dist_label[cur_node] == dist_label[out_edge_it->target()] + 1)
 		{
-			last_edge[(*out_edge_it).target()] = *out_edge_it;
-			cur_node = (*out_edge_it).target();
+			last_edge[out_edge_it->target()] = *out_edge_it;
+			cur_node = out_edge_it->target();
 		}
 		++out_edge_it;
 	}
@@ -351,9 +351,9 @@ int maxflow_sap::min_neighbour_label(const int number_of_nodes,
     node::out_edges_iterator out_edges_end = cur_node.out_edges_end();
     while (out_edge_it != out_edges_end)
     {
-		if (min_value > dist_label[(*out_edge_it).target()])
+		if (min_value > dist_label[out_edge_it->target()])
 		{
-			min_value = dist_label[(*out_edge_it).target()];
+			min_value = dist_label[out_edge_it->target()];
 		}
 		++out_edge_it;
     }

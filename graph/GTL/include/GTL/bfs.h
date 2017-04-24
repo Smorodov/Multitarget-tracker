@@ -287,7 +287,7 @@ public:
     /**
      * @brief Iterator for tree-edges. 
      */
-	typedef std::list<edge>::const_iterator tree_edges_iterator;
+	typedef edges_t::const_iterator tree_edges_iterator;
 
     /**
      * @brief Iterate through all tree-edges of last BFS. 
@@ -313,7 +313,7 @@ public:
     /**
      * @brief Iterator for nodes in BFS-order. 
      */
-	typedef std::list<node>::const_iterator bfs_iterator;
+	typedef nodes_t::const_iterator bfs_iterator;
 
     /**
      * @brief Iterate through all (reached) nodes in BFS-Order.
@@ -335,7 +335,7 @@ public:
     /**
      * @brief Iterator for non-tree-edges.
      */
-	typedef std::list<edge>::const_iterator non_tree_edges_iterator;
+	typedef edges_t::const_iterator non_tree_edges_iterator;
 
     /**
      * @brief Iterate through all non-tree-edges (if enabled).
@@ -510,14 +510,14 @@ protected:
      * 
      * @sa bfs::begin, bfs::end
      */
-	std::list<node> bfs_order;
+	nodes_t bfs_order;
 
     /**
      * @brief List of all edges of the BFS-tree
      * 
      * @sa bfs::tree_edges_begin, bfs::tree_edges_end
      */
-	std::list<edge> tree;
+	edges_t tree;
 
     /**
      * @brief Stores BFS-number of nodes. 
@@ -566,7 +566,7 @@ protected:
      * 
      * @sa bfs::store_non_tree_edges
      */
-	std::list<edge>* non_tree;
+	edges_t* non_tree;
 
     /**
      * @brief Stores father of each %node (if enabled)

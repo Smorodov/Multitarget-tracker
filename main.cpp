@@ -32,6 +32,7 @@ void mv_MouseCallback(int event, int x, int y, int /*flags*/, void* param)
 int main(int argc, char** argv)
 {
     std::string inFile("../data/atrium.avi");
+
     if (argc > 1)
 	{
 		inFile = argv[1];
@@ -56,7 +57,7 @@ int main(int argc, char** argv)
 	cv::Mat frame;
 	cv::Mat gray;
 
-	const int StartFrame = 0;
+    const int StartFrame = 0;
 	capture.set(cv::CAP_PROP_POS_FRAMES, StartFrame);
 
 	const int fps = std::max(1, static_cast<int>(capture.get(cv::CAP_PROP_FPS) + 0.5));
@@ -66,7 +67,7 @@ int main(int argc, char** argv)
 
     // If true then trajectories will be more smooth and accurate
     // But on high resolution videos with many objects may be to slow
-    bool useLocalTracking = false;
+    bool useLocalTracking = true;
 
     CDetector detector(BackgroundSubtract::ALG_MOG, useLocalTracking, gray);
     detector.SetMinObjectSize(cv::Size(gray.cols / 50, gray.rows / 50));
@@ -75,10 +76,10 @@ int main(int argc, char** argv)
     CTracker tracker(useLocalTracking,
 		CTracker::RectsDist,
 		CTracker::FilterRect,
-		CTracker::MatchBipart,
+		CTracker::MatchHungrian,
 		0.2f,                // Delta time for Kalman filter
 		0.1f,                // Accel noise magnitude for Kalman filter
-		gray.cols / 100.0f,  // Distance threshold between two frames
+		gray.cols / 20.0f,   // Distance threshold between two frames
 		fps,                 // Maximum allowed skipped frames
 		5 * fps              // Maximum trace length
 		);
@@ -89,8 +90,8 @@ int main(int argc, char** argv)
 
 	int64 allTime = 0;
 
-    bool manualMode = false;
-	int framesCounter = 1;
+	bool manualMode = false;
+	int framesCounter = StartFrame + 1;
 	while (k != 27)
 	{
 		capture >> frame;
@@ -108,9 +109,9 @@ int main(int argc, char** argv)
 		int64 t1 = cv::getTickCount();
 
 		const std::vector<Point_t>& centers = detector.Detect(gray);
-        const regions_t& regions = detector.GetDetects();
+		const regions_t& regions = detector.GetDetects();
 
-        tracker.Update(centers, regions, gray);
+		tracker.Update(centers, regions, gray);
 
 		int64 t2 = cv::getTickCount();
 
@@ -121,7 +122,7 @@ int main(int argc, char** argv)
 
         for (size_t i = 0; i < tracker.tracks.size(); i++)
 		{
-			if (tracker.tracks[i]->trace.size() > static_cast<size_t>(fps))
+            if (tracker.tracks[i]->IsRobust(fps, 0.75f, cv::Size2f(0.2f, 4.0f)))
 			{
                 cv::rectangle(frame, tracker.tracks[i]->GetLastRect(), cv::Scalar(0, 255, 0), 1, CV_AA);
 
@@ -131,6 +132,8 @@ int main(int argc, char** argv)
 				}
 			}
 		}
+
+        detector.CalcMotionMap(frame);
 
 		cv::imshow("Video", frame);
 
@@ -148,7 +151,7 @@ int main(int argc, char** argv)
 		}
 
 		++framesCounter;
-		if (framesCounter > 200)
+		if (framesCounter > 215)
 		{
 			//break;
 		}

@@ -54,7 +54,7 @@ public:
     /**
      * @internal
      */
-	typedef std::list<std::pair<std::list<node>, std::list<edge> > >::iterator component_iterator;
+	typedef std::list<std::pair<nodes_t, edges_t> >::iterator component_iterator;
 
     /**
      * @brief Start iteration over all components (if enabled during
@@ -117,7 +117,7 @@ protected:
     /**
      * @internal
      */
-	std::list<std::pair<std::list<node>, std::list<edge> > > comp;
+	std::list<std::pair<nodes_t, edges_t> > comp;
     /**
      * @internal
      */

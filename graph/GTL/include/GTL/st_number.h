@@ -153,32 +153,32 @@ private:
     /**
      * @internal
      */
-    node_map<std::list<edge> > tree;
+    node_map<edges_t> tree;
 
     /**
      * @internal
      */
-    node_map<std::list<edge> > back;
+    node_map<edges_t> back;
 
     /**
      * @internal
      */
-    node_map<std::list<edge> > forward;
+    node_map<edges_t> forward;
 
     /**
      * @internal
      */
-    node_map<std::list<edge>::iterator> to_low;
+    node_map<edges_t::iterator> to_low;
 
     /**
      * @internal
      */
-    node_map<std::list<edge>::iterator> to_father;
+    node_map<edges_t::iterator> to_father;
 		
     /**
      * @internal
      */
-    typedef std::pair<std::list<edge>::iterator, std::list<edge>::iterator> pos_pair;
+    typedef std::pair<edges_t::iterator, edges_t::iterator> pos_pair;
 
     /**
      * @internal
@@ -310,12 +310,12 @@ public:
     /**
      * @internal
      */
-    typedef std::list<node>::iterator iterator;
+    typedef nodes_t::iterator iterator;
 
     /**
      * @internal
      */
-    typedef std::list<node>::reverse_iterator reverse_iterator;
+    typedef nodes_t::reverse_iterator reverse_iterator;
 	
     /**
      * @brief Iteration through the nodes of graph st-numbered in last
@@ -425,7 +425,7 @@ protected:
     /**
      * @internal
      */
-    std::list<node> st_ord;
+    nodes_t st_ord;
 
     /**
      * @internal

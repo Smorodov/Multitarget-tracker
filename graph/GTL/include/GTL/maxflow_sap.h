@@ -162,7 +162,7 @@ protected:
     /**
      * @internal edges to remove from G after run
      */
-	std::list<edge> edges_not_org;
+	edges_t edges_not_org;
 
 	/**
      * @internal

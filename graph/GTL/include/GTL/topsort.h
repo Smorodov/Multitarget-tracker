@@ -62,7 +62,7 @@ public:
     /**
      * @internal
      */
-	typedef std::list<node>::const_iterator topsort_iterator;
+	typedef nodes_t::const_iterator topsort_iterator;
 
     /**
      * Iterate through nodes in topsort-order. 
@@ -127,7 +127,7 @@ protected:
     /**
      * @internal 
      */
-	std::list<node> top_order;
+	nodes_t top_order;
     /**
      * @internal 
      */

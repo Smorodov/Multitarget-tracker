@@ -37,16 +37,15 @@ int components::check (graph& G)
 
 void components::new_start_handler (graph& /*G*/, node& st) 
 {
-    li = comp.insert (comp.end(), 
-		std::pair<std::list<node>, std::list<edge> >(std::list<node>(), std::list<edge>()));
-    (*li).first.push_back (st);
+	li = comp.insert(comp.end(), std::pair<nodes_t, edges_t>(nodes_t(), edges_t()));
+    li->first.push_back(st);
     ++num_of_components;
 }
 
 void components::before_recursive_call_handler (graph& /*G*/, edge& /*e*/, node& n)
 {
-    (*li).first.push_back (n);
-    // (*li).second.push_back (e);    
+    li->first.push_back(n);
+    // li->second.push_back(e);    
 }
 
 
@@ -59,7 +58,7 @@ void components::old_adj_node_handler (graph& /*G*/, edge& e, node& n)
     //
 
     if (dfs_num (curr) > dfs_num (n)) { 
-	(*li).second.push_back (e);    
+	li->second.push_back (e);    
     }
 }
 

@@ -153,7 +153,7 @@ protected:
     /**
      * @internal edges to remove from G after run
      */
-	std::list<edge> edges_not_org;
+	edges_t edges_not_org;
 
     /**
      * @internal original edge or inserted back edge
@@ -188,17 +188,17 @@ protected:
     /**
      * @internal
      */
-	std::list<edge> full_edges;
+	edges_t full_edges;
 		
     /**
      * @internal
      */
-	std::list<node> temp_unvisible_nodes;
+	nodes_t temp_unvisible_nodes;
 		
     /**
      * @internal
      */
-	std::list<edge> temp_unvisible_edges;
+	edges_t temp_unvisible_edges;
 		
     /**
      * @internal

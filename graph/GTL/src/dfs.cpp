@@ -219,11 +219,14 @@ void dfs::store_preds (bool set)
 
 void dfs::store_non_tree_edges (bool set) 
 {
-    if (set && !back_edges) {
-	back_edges = new std::list<edge>;
-    } else if (!set && back_edges) {
-	delete back_edges;
-	back_edges = 0;
+    if (set && !back_edges)
+	{
+		back_edges = new edges_t;
+    }
+	else if (!set && back_edges)
+	{
+		delete back_edges;
+		back_edges = 0;
     }
 }
     

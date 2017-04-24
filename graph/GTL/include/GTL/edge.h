@@ -22,6 +22,8 @@ __GTL_BEGIN_NAMESPACE
 //--------------------------------------------------------------------------
 
 class node;
+typedef std::list<node> nodes_t;
+
 class edge_data;
 
 //--------------------------------------------------------------------------
@@ -65,6 +67,7 @@ public:
      * @return target
      */
     node target() const;
+	const node& target_() const;
 
     /**
      * Changes the direction of this edge. 
@@ -96,12 +99,12 @@ public:
     /**
      * @internal
      */
-    std::list<node> sources() const;
+    nodes_t sources() const;
 
     /**
      * @internal
      */
-	std::list<node> targets() const;
+	nodes_t targets() const;
 
     /**
      * @internal
@@ -134,6 +137,8 @@ private:
     GTL_EXTERN friend bool operator<(edge, edge);
 	GTL_EXTERN friend std::ostream& operator<< (std::ostream& os, const edge& e);
 };
+
+typedef std::list<edge> edges_t;
 
 __GTL_END_NAMESPACE
 

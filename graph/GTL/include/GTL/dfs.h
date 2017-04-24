@@ -286,7 +286,7 @@ public:
     /**
      * @brief Iterator for the tree edges of the DFS-tree.
      */
-	typedef std::list<edge>::const_iterator tree_edges_iterator;
+	typedef edges_t::const_iterator tree_edges_iterator;
 
     /**
      * @brief Iterate through all edges picked in last DFS. 
@@ -311,7 +311,7 @@ public:
     /**
      * @brief Iterator for the (reached) nodes in DFS-order.
      */
-	typedef std::list<node>::const_iterator dfs_iterator;
+	typedef nodes_t::const_iterator dfs_iterator;
 
     /**
      * @brief Iterate through all (reached) nodes in DFS-order.
@@ -333,7 +333,7 @@ public:
     /**
      * @brief Iterator for the non-tree-edges
      */
-	typedef std::list<edge>::const_iterator non_tree_edges_iterator;
+	typedef edges_t::const_iterator non_tree_edges_iterator;
 
     /**
      * @brief Iterate through all non-tree-edges (if enabled).
@@ -513,11 +513,11 @@ protected:
     /**
      * @internal
      */
-	std::list<edge> tree;
+	edges_t tree;
     /**
      * @internal
      */
-	std::list<node> dfs_order;
+	nodes_t dfs_order;
     /**
      * @internal
      */
@@ -551,7 +551,7 @@ protected:
     /**
      * @internal
      */
-	std::list<edge>* back_edges;
+	edges_t* back_edges;
     /**
      * @internal
      */

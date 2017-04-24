@@ -175,7 +175,7 @@ int dijkstra::run(graph& G)
 	     adj_edge_it != adj_edges_end;
 	     ++adj_edge_it)
 	{
-	    node op_node = (*adj_edge_it).opposite(cur_node);
+	    node op_node = adj_edge_it->opposite(cur_node);
 	    if (mark[op_node] == black)
 	    {
 		mark[op_node] = grey;

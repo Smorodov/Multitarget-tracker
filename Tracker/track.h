@@ -1,11 +1,99 @@
 #pragma once
 #include <iostream>
 #include <vector>
+#include <deque>
 #include <memory>
 #include <array>
 
 #include "defines.h"
 #include "Kalman.h"
+
+// --------------------------------------------------------------------------
+struct TrajectoryPoint
+{
+    TrajectoryPoint()
+        : m_hasRaw(false)
+    {
+    }
+
+    TrajectoryPoint(const Point_t& prediction)
+        : m_hasRaw(false), m_prediction(prediction)
+    {
+    }
+
+    TrajectoryPoint(const Point_t& prediction, const Point_t& raw)
+        : m_hasRaw(true), m_prediction(prediction), m_raw(raw)
+    {
+    }
+
+    bool m_hasRaw;
+    Point_t m_prediction;
+    Point_t m_raw;
+};
+
+// --------------------------------------------------------------------------
+class Trace
+{
+public:
+    const Point_t& operator[](size_t i) const
+    {
+        return m_trace[i].m_prediction;
+    }
+
+    Point_t& operator[](size_t i)
+    {
+        return m_trace[i].m_prediction;
+    }
+
+    size_t size() const
+    {
+        return m_trace.size();
+    }
+
+    void push_back(const Point_t& prediction)
+    {
+        m_trace.push_back(TrajectoryPoint(prediction));
+    }
+    void push_back(const Point_t& prediction, const Point_t& raw)
+    {
+        m_trace.push_back(TrajectoryPoint(prediction, raw));
+    }
+
+    void pop_front(size_t count)
+    {
+        if (count < size())
+        {
+            m_trace.erase(m_trace.begin(), m_trace.begin() + count);
+        }
+        else
+        {
+            m_trace.clear();
+        }
+    }
+
+    size_t GetRawCount(size_t lastPeriod) const
+    {
+        size_t res = 0;
+
+        size_t i = 0;
+        if (lastPeriod < m_trace.size())
+        {
+            i = m_trace.size() - lastPeriod;
+        }
+        for (; i < m_trace.size(); ++i)
+        {
+            if (m_trace[i].m_hasRaw)
+            {
+                ++res;
+            }
+        }
+
+        return res;
+    }
+
+private:
+    std::deque<TrajectoryPoint> m_trace;
+};
 
 // --------------------------------------------------------------------------
 class CTrack
@@ -35,6 +123,7 @@ public:
         {
             m_kalman = new TKalmanFilter(pt, deltaTime, accelNoiseMag);
         }
+        trace.push_back(pt, pt);
 	}
 
     track_t CalcDist(const Point_t& pt)
@@ -112,17 +201,39 @@ public:
         if (dataCorrect)
         {
             lastRegion = region;
+            trace.push_back(m_predictionPoint, pt);
+        }
+        else
+        {
+            trace.push_back(m_predictionPoint);
         }
 
         if (trace.size() > max_trace_length)
         {
-            trace.erase(trace.begin(), trace.end() - max_trace_length);
+            trace.pop_front(trace.size() - max_trace_length);
         }
-
-        trace.push_back(m_predictionPoint);
     }
 
-	std::vector<Point_t> trace;
+    bool IsRobust(int minTraceSize, float minRawRatio, cv::Size2f sizeRatio) const
+    {
+        bool res = trace.size() > static_cast<size_t>(minTraceSize);
+        res &= trace.GetRawCount(minTraceSize) / static_cast<float>(minTraceSize) > minRawRatio;
+        if (sizeRatio.width + sizeRatio.height > 0)
+        {
+            float sr = lastRegion.m_rect.width / static_cast<float>(lastRegion.m_rect.height);
+            if (sizeRatio.width > 0)
+            {
+                res &= (sr > sizeRatio.width);
+            }
+            if (sizeRatio.height > 0)
+            {
+                res &= (sr < sizeRatio.height);
+            }
+        }
+        return res;
+    }
+
+    Trace trace;
 	size_t track_id;
 	size_t skipped_frames; 
     CRegion lastRegion;

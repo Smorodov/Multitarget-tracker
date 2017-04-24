@@ -64,8 +64,8 @@ int mwbmatching::run(graph& G)
 	free.init (G, true);
 	dist.init (G, 0);
 	
-	std::list<node> A;
-	std::list<node> B;
+	nodes_t A;
+	nodes_t B;
 	node n;
 	// Partition graph based on direction of edges
 	forall_nodes (n, G)
@@ -92,8 +92,8 @@ int mwbmatching::run(graph& G)
 			C = edge_weight[e];	
 	}
 
-	std::list<node>::iterator it = A.begin();
-	std::list<node>::iterator end = A.end();
+	nodes_t::iterator it = A.begin();
+	nodes_t::iterator end = A.end();
 	while (it != end)
 	{
 		pot[*it] = C;
@@ -135,8 +135,8 @@ int mwbmatching::run(graph& G)
 int mwbmatching::augment(graph& G, node a)
 {
 	// Initialise
-	pred.init (G, -1);
-	pq = fh_alloc (G.number_of_nodes());
+	pred.init(G, -1);
+	pq = fh_alloc(G.number_of_nodes());
 	
 	dist[a] = 0;
 	node best_node_in_A = a;
@@ -153,7 +153,7 @@ int mwbmatching::augment(graph& G, node a)
 	// Relax
 	forall_adj_edges (e, a1)
 	{
-		node b = e.target();
+		const node& b = e.target_();
 		long db = dist[a1] + (pot[a1] + pot[b] - edge_weight[e]);
 		if (pred[b] == -1)
 		{
@@ -215,7 +215,7 @@ int mwbmatching::augment(graph& G, node a)
 			{
 				// continue shortest path computation
 				edge e = (*b.adj_edges_begin()); 
-				node a1 = e.target();
+				const node& a1 = e.target_();
 				pred[a1] = e.id(); 
 				RA.push(a1);
 				dist[a1] = db; 
@@ -229,7 +229,7 @@ int mwbmatching::augment(graph& G, node a)
 				// Relax
 				forall_adj_edges (e, a1)
 				{
-					node b = e.target();
+					const node& b = e.target_();
 					long db = dist[a1] + (pot[a1] + pot[b] - edge_weight[e]);
 					if (pred[b] == -1)
 					{
@@ -277,9 +277,8 @@ int mwbmatching::augment(graph& G, node a)
 	}
 	
 	// Clean up
-	fh_free (pq);
+	fh_free(pq);
 
-	
 	return 0;
 }
 
@@ -295,9 +294,9 @@ void mwbmatching::augment_path_to (graph &/*G*/, node v)
 
 }
 
-std::list<edge> MAX_WEIGHT_BIPARTITE_MATCHING (graph &G, edge_map<int> weights)
+edges_t MAX_WEIGHT_BIPARTITE_MATCHING(graph &G, edge_map<int> weights)
 {
-	std::list<edge> L;
+	edges_t L;
 
 	mwbmatching mwbm;
 	mwbm.set_vars(weights);
