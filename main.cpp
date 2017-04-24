@@ -70,8 +70,8 @@ int main(int argc, char** argv)
     bool useLocalTracking = true;
 
     CDetector detector(BackgroundSubtract::ALG_MOG, useLocalTracking, gray);
-    //detector.SetMinObjectSize(cv::Size(gray.cols / 50, gray.rows / 50));
-    detector.SetMinObjectSize(cv::Size(4, 2));
+    detector.SetMinObjectSize(cv::Size(gray.cols / 50, gray.rows / 50));
+    //detector.SetMinObjectSize(cv::Size(4, 2));
 
     CTracker tracker(useLocalTracking,
 		CTracker::RectsDist,
@@ -79,8 +79,8 @@ int main(int argc, char** argv)
 		CTracker::MatchHungrian,
 		0.2f,                // Delta time for Kalman filter
 		0.1f,                // Accel noise magnitude for Kalman filter
-        gray.cols / 20.0f,   // Distance threshold between two frames
-        fps,                 // Maximum allowed skipped frames
+		gray.cols / 20.0f,   // Distance threshold between two frames
+		fps,                 // Maximum allowed skipped frames
 		5 * fps              // Maximum trace length
 		);
 
@@ -90,7 +90,7 @@ int main(int argc, char** argv)
 
 	int64 allTime = 0;
 
-    bool manualMode = false;
+	bool manualMode = false;
 	int framesCounter = StartFrame + 1;
 	while (k != 27)
 	{
@@ -109,9 +109,9 @@ int main(int argc, char** argv)
 		int64 t1 = cv::getTickCount();
 
 		const std::vector<Point_t>& centers = detector.Detect(gray);
-        const regions_t& regions = detector.GetDetects();
+		const regions_t& regions = detector.GetDetects();
 
-        tracker.Update(centers, regions, gray);
+		tracker.Update(centers, regions, gray);
 
 		int64 t2 = cv::getTickCount();
 
@@ -122,7 +122,7 @@ int main(int argc, char** argv)
 
         for (size_t i = 0; i < tracker.tracks.size(); i++)
 		{
-            if (tracker.tracks[i]->IsRobust(fps, 0.75f, cv::Size2f(1.0f, 4.0f)))
+            if (tracker.tracks[i]->IsRobust(fps, 0.75f, cv::Size2f(0.2f, 4.0f)))
 			{
                 cv::rectangle(frame, tracker.tracks[i]->GetLastRect(), cv::Scalar(0, 255, 0), 1, CV_AA);
 
