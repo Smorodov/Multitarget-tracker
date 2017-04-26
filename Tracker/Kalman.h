@@ -2,6 +2,9 @@
 #include "defines.h"
 #include <opencv/cv.h>
 
+#include <opencv2/tracking.hpp>
+#include <opencv2/tracking/kalman_filters.hpp>
+
 // http://www.morethantechnical.com/2011/06/17/simple-kalman-filter-for-tracking-using-opencv-2-2-w-code/
 class TKalmanFilter
 {
@@ -15,6 +18,8 @@ public:
 
     cv::Rect GetRectPrediction();
     cv::Rect Update(cv::Rect rect, bool dataCorrect);
+
+    void SomeFunction();
 
 private:
     cv::KalmanFilter* kalman;
