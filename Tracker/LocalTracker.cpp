@@ -47,8 +47,8 @@ void LocalTracker::Update(
     }
 
     cv::TermCriteria termcrit(cv::TermCriteria::COUNT | cv::TermCriteria::EPS, 30, 0.01);
-    cv::Size subPixWinSize(4, 4);
-    cv::Size winSize(31, 31);
+    cv::Size subPixWinSize(3, 3);
+    cv::Size winSize(21, 21);
 
     cv::cornerSubPix(m_prevFrame, points[0], subPixWinSize, cv::Size(-1,-1), termcrit);
 
@@ -57,38 +57,34 @@ void LocalTracker::Update(
 
     cv::calcOpticalFlowPyrLK(m_prevFrame, grayFrame, points[0], points[1], status, err, winSize, 3, termcrit, 0, 0.001);
 
-    size_t k = 0;
     size_t i = 0;
     for (auto& track : tracks)
     {
         track->averagePoint = Point_t(0, 0);
 		track->boundidgRect = cv::Rect(0, 0, 0, 0);
-        track->pointsCount = 0;
-		size_t from = points[1].size();
 
-        for (size_t pi = 0, stop = track->lastRegion.m_points.size(); pi < stop; ++pi)
+        for (auto it = track->lastRegion.m_points.begin(); it != track->lastRegion.m_points.end();)
         {
             if (status[i])
             {
-                ++track->pointsCount;
-                track->averagePoint += points[1][i];
+                *it = points[1][i];
+                track->averagePoint += *it;
 
-				if (k < from)
-				{
-					from = k;
-				}
-
-                points[1][k++] = points[1][i];
+                ++it;
+            }
+            else
+            {
+                it = track->lastRegion.m_points.erase(it);
             }
 
             ++i;
         }
 
-        if (track->pointsCount)
+        if (!track->lastRegion.m_points.empty())
         {
-            track->averagePoint /= track->pointsCount;
+            track->averagePoint /= static_cast<track_t>(track->lastRegion.m_points.size());
 
-			cv::Rect br = cv::boundingRect(std::vector<cv::Point2f>(points[1].begin() + from, points[1].begin() + k));
+            cv::Rect br = cv::boundingRect(track->lastRegion.m_points);
 			br.x -= subPixWinSize.width;
 			br.width += 2 * subPixWinSize.width;
 			if (br.x < 0)
@@ -115,7 +111,6 @@ void LocalTracker::Update(
 
 			track->boundidgRect = br;
         }
-        track->lastRegion.m_points.clear();
     }
 
     m_prevFrame = grayFrame;

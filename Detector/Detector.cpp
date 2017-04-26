@@ -35,11 +35,12 @@ void CDetector::SetMinObjectSize(cv::Size minObjectSize)
 //----------------------------------------------------------------------
 //
 //----------------------------------------------------------------------
+
 void CDetector::DetectContour()
 {
 	m_regions.clear();
 	m_centers.clear();
-	std::vector<std::vector<cv::Point> > contours;
+    std::vector<std::vector<cv::Point>> contours;
 	std::vector<cv::Vec4i> hierarchy;
 	cv::findContours(m_fg, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, cv::Point());
 	if (contours.size() > 0)
@@ -56,8 +57,8 @@ void CDetector::DetectContour()
 
 				if (m_collectPoints)
 				{
-                    const int yStep = 4;
-                    const int xStep = 4;
+                    const int yStep = 5;
+                    const int xStep = 5;
 
 					for (int y = r.y; y < r.y + r.height; y += yStep)
 					{

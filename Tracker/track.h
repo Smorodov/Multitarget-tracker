@@ -168,7 +168,7 @@ public:
 				}
 				else
 				{
-					m_predictionRect = m_kalman->Update(boundidgRect, dataCorrect);
+                    m_predictionRect = m_kalman->Update(boundidgRect, true);
 				}
 			}
 			else
@@ -189,7 +189,7 @@ public:
                 }
                 else
                 {
-                    m_predictionPoint = m_kalman->Update(averagePoint, dataCorrect);
+                    m_predictionPoint = m_kalman->Update(averagePoint, true);
                 }
             }
             else

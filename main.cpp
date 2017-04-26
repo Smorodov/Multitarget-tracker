@@ -120,15 +120,29 @@ int main(int argc, char** argv)
 
 		std::cout << "Frame " << framesCounter << ": tracks = " << tracker.tracks.size() << ", time = " << currTime << std::endl;
 
-        for (size_t i = 0; i < tracker.tracks.size(); i++)
+        for (const auto& track : tracker.tracks)
 		{
-            if (tracker.tracks[i]->IsRobust(fps, 0.75f, cv::Size2f(0.2f, 4.0f)))
+            if (track->IsRobust(fps / 2,                     // Minimal trajectory size
+                                0.5f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
+                                cv::Size2f(0.2f, 4.0f))      // Min and max ratio: width / height
+                    )
 			{
-                cv::rectangle(frame, tracker.tracks[i]->GetLastRect(), cv::Scalar(0, 255, 0), 1, CV_AA);
+                cv::rectangle(frame, track->GetLastRect(), cv::Scalar(0, 255, 0), 1, CV_AA);
 
-				for (size_t j = 0; j < tracker.tracks[i]->trace.size() - 1; j++)
+                cv::Scalar cl = Colors[track->track_id % 9];
+
+                for (auto pt : track->lastRegion.m_points)
+                {
+                    cv::circle(frame, pt, 1, cl, -1, cv::LINE_8, 0);
+                }
+                if (track->boundidgRect.area() > 0)
+                {
+                    cv::rectangle(frame, track->boundidgRect, cl, 1, CV_AA);
+                }
+
+                for (size_t j = 0; j < track->trace.size() - 1; ++j)
 				{
-					cv::line(frame, tracker.tracks[i]->trace[j], tracker.tracks[i]->trace[j + 1], Colors[tracker.tracks[i]->track_id % 9], 2, CV_AA);
+                    cv::line(frame, track->trace[j], track->trace[j + 1], cl, 1, CV_AA);
 				}
 			}
 		}
