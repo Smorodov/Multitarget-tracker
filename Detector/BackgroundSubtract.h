@@ -2,7 +2,7 @@
 #define _BACKGROUND_SUBTRACT_H_
 
 #include "defines.h"
-#include "vibe.hpp"
+#include "vibe_src/vibe.hpp"
 
 #if USE_OCV_BGFG
 #include <opencv2/bgsegm.hpp>
