@@ -74,15 +74,16 @@ int main(int argc, char** argv)
     //detector.SetMinObjectSize(cv::Size(4, 2));
 
     CTracker tracker(useLocalTracking,
-		CTracker::RectsDist,
-		CTracker::FilterRect,
-		CTracker::MatchHungrian,
-		0.2f,                // Delta time for Kalman filter
-		0.1f,                // Accel noise magnitude for Kalman filter
-		gray.cols / 20.0f,   // Distance threshold between two frames
-		fps,                 // Maximum allowed skipped frames
-		5 * fps              // Maximum trace length
-		);
+                     CTracker::RectsDist,
+                     CTracker::FilterRect,
+                     true,                    // Use KCF tracker for collisions resolving
+                     CTracker::MatchHungrian,
+                     0.2f,                    // Delta time for Kalman filter
+                     0.1f,                    // Accel noise magnitude for Kalman filter
+                     gray.cols / 10.0f,       // Distance threshold between two frames
+                     fps,                     // Maximum allowed skipped frames
+                     5 * fps                  // Maximum trace length
+                     );
 
 	int k = 0;
 
@@ -122,27 +123,18 @@ int main(int argc, char** argv)
 
         for (const auto& track : tracker.tracks)
 		{
-            if (track->IsRobust(fps / 2,                     // Minimal trajectory size
+            if (track->IsRobust(fps,                     // Minimal trajectory size
                                 0.5f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
-                                cv::Size2f(0.2f, 4.0f))      // Min and max ratio: width / height
+                                cv::Size2f(0.1f, 8.0f))      // Min and max ratio: width / height
                     )
 			{
                 cv::rectangle(frame, track->GetLastRect(), cv::Scalar(0, 255, 0), 1, CV_AA);
 
-                cv::Scalar cl = Colors[track->track_id % 9];
+                cv::Scalar cl = Colors[track->m_trackID % 9];
 
-                for (auto pt : track->lastRegion.m_points)
-                {
-                    cv::circle(frame, pt, 1, cl, -1, cv::LINE_8, 0);
-                }
-                if (track->boundidgRect.area() > 0)
-                {
-                    cv::rectangle(frame, track->boundidgRect, cl, 1, CV_AA);
-                }
-
-                for (size_t j = 0; j < track->trace.size() - 1; ++j)
+                for (size_t j = 0; j < track->m_trace.size() - 1; ++j)
 				{
-                    cv::line(frame, track->trace[j], track->trace[j + 1], cl, 1, CV_AA);
+                    cv::line(frame, track->m_trace[j], track->m_trace[j + 1], cl, 1, CV_AA);
 				}
 			}
 		}

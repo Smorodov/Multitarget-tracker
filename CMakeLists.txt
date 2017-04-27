@@ -142,10 +142,15 @@ set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
   SOURCE_GROUP("graph" FILES ${graph_source} ${graph_header})
   SOURCE_GROUP("GTL" FILES ${gtl_source} ${gtl_header})
 
-option(USE_OCV_BGFG "Should the bgfg algorithms from opencv_contrib?" ON)
+option(USE_OCV_BGFG "Should use the bgfg algorithms from opencv_contrib?" ON)
 if(USE_OCV_BGFG)
     add_definitions(-DUSE_OCV_BGFG)
 endif(USE_OCV_BGFG)
+
+option(USE_OCV_KCF "Should use the KCF tracker from opencv_contrib for collisions resolving?" ON)
+if(USE_OCV_KCF)
+    add_definitions(-DUSE_OCV_KCF)
+endif(USE_OCV_KCF)
 
 # ----------------------------------------------------------------------------  
 # создаем проект
