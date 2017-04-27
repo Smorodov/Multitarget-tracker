@@ -184,7 +184,7 @@ int main(int argc, char** argv)
 
     bool useLocalTracking = false;
 
-	CTracker tracker(useLocalTracking, CTracker::CentersDist, CTracker::FilterCenter, CTracker::MatchHungrian, 0.3f, 0.5f, 60.0f, 25, 25);
+    CTracker tracker(useLocalTracking, CTracker::CentersDist, CTracker::FilterCenter, false, CTracker::MatchHungrian, 0.3f, 0.5f, 60.0f, 25, 25);
 	track_t alpha = 0;
 	cv::RNG rng;
 	while (k != 27)
@@ -223,11 +223,11 @@ int main(int argc, char** argv)
 		{
 			const auto& tracks = tracker.tracks[i];
 
-			if (tracks->trace.size() > 1)
+            if (tracks->m_trace.size() > 1)
 			{
-				for (size_t j = 0; j < tracks->trace.size() - 1; j++)
+                for (size_t j = 0; j < tracks->m_trace.size() - 1; j++)
 				{
-					cv::line(frame, tracks->trace[j], tracks->trace[j + 1], Colors[i % 6], 2, CV_AA);
+                    cv::line(frame, tracks->m_trace[j], tracks->m_trace[j + 1], Colors[i % 6], 2, CV_AA);
 				}
 			}
 		}
