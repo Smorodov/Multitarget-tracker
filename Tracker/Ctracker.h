@@ -31,6 +31,7 @@ public:
     CTracker(bool useLocalTracking,
              DistType distType,
              KalmanType kalmanType,
+             bool useExternalTrackerForLostObjects,
 			 MatchType matchType,
              track_t dt_,
              track_t accelNoiseMag_,
@@ -40,7 +41,7 @@ public:
 	~CTracker(void);
 
     tracks_t tracks;
-    void Update(const std::vector<Point_t>& detections, const regions_t& regions, cv::Mat gray_frame);
+    void Update(const std::vector<Point_t>& detections, const regions_t& regions, cv::Mat grayFrame);
 
 private:
     // Use local tracking for regions between two frames
@@ -48,6 +49,7 @@ private:
 
     DistType m_distType;
     KalmanType m_kalmanType;
+    bool m_useExternalTrackerForLostObjects;
 	MatchType m_matchType;
 
 	// Шаг времени опроса фильтра
@@ -65,5 +67,7 @@ private:
 
 	size_t NextTrackID;
 
-    LocalTracker localTracker;
+    LocalTracker m_localTracker;
+
+    cv::Mat m_prevFrame;
 };

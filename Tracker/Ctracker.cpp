@@ -13,6 +13,7 @@ CTracker::CTracker(
         bool useLocalTracking,
         DistType distType,
         KalmanType kalmanType,
+        bool useExternalTrackerForLostObjects,
 		MatchType matchType,
         track_t dt_,
         track_t accelNoiseMag_,
@@ -24,6 +25,7 @@ CTracker::CTracker(
       m_useLocalTracking(useLocalTracking),
       m_distType(distType),
       m_kalmanType(kalmanType),
+      m_useExternalTrackerForLostObjects(useExternalTrackerForLostObjects),
 	  m_matchType(matchType),
       dt(dt_),
       accelNoiseMag(accelNoiseMag_),
@@ -47,14 +49,17 @@ CTracker::~CTracker(void)
 void CTracker::Update(
         const std::vector<Point_t>& detections,
         const regions_t& regions,
-        cv::Mat gray_frame
+        cv::Mat grayFrame
         )
 {
     assert(detections.size() == regions.size());
 
-    if (m_useLocalTracking)
+    if (m_prevFrame.size() == grayFrame.size())
     {
-        localTracker.Update(tracks, gray_frame);
+        if (m_useLocalTracking)
+        {
+            m_localTracker.Update(tracks, m_prevFrame, grayFrame);
+        }
     }
 
     // -----------------------------------
@@ -65,7 +70,7 @@ void CTracker::Update(
         // If no tracks yet
         for (size_t i = 0; i < detections.size(); ++i)
         {
-            tracks.push_back(std::make_unique<CTrack>(detections[i], regions[i], dt, accelNoiseMag, NextTrackID++, m_kalmanType == FilterRect));
+            tracks.push_back(std::make_unique<CTrack>(detections[i], regions[i], dt, accelNoiseMag, NextTrackID++, m_kalmanType == FilterRect, m_useExternalTrackerForLostObjects));
         }
     }
 
@@ -183,13 +188,13 @@ void CTracker::Update(
 				if (Cost[i + assignment[i] * N] > dist_thres)
 				{
 					assignment[i] = -1;
-					tracks[i]->skipped_frames++;
+                    tracks[i]->m_skippedFrames++;
 				}
 			}
 			else
 			{
 				// If track have no assigned detect, then increment skipped frames counter.
-				tracks[i]->skipped_frames++;
+                tracks[i]->m_skippedFrames++;
 			}
 		}
 
@@ -198,7 +203,7 @@ void CTracker::Update(
         // -----------------------------------
         for (int i = 0; i < static_cast<int>(tracks.size()); i++)
         {
-            if (tracks[i]->skipped_frames > maximum_allowed_skipped_frames)
+            if (tracks[i]->m_skippedFrames > maximum_allowed_skipped_frames)
             {
                 tracks.erase(tracks.begin() + i);
                 assignment.erase(assignment.begin() + i);
@@ -214,7 +219,7 @@ void CTracker::Update(
     {
         if (find(assignment.begin(), assignment.end(), i) == assignment.end())
         {
-            tracks.push_back(std::make_unique<CTrack>(detections[i], regions[i], dt, accelNoiseMag, NextTrackID++, m_kalmanType == FilterRect));
+            tracks.push_back(std::make_unique<CTrack>(detections[i], regions[i], dt, accelNoiseMag, NextTrackID++, m_kalmanType == FilterRect, m_useExternalTrackerForLostObjects));
         }
     }
 
@@ -226,12 +231,14 @@ void CTracker::Update(
 
         if (assignment[i] != -1) // If we have assigned detect, then update using its coordinates,
         {
-            tracks[i]->skipped_frames = 0;
-            tracks[i]->Update(detections[assignment[i]], regions[assignment[i]], true, max_trace_length);
+            tracks[i]->m_skippedFrames = 0;
+            tracks[i]->Update(detections[assignment[i]], regions[assignment[i]], true, max_trace_length, m_prevFrame, grayFrame);
         }
         else				     // if not continue using predictions
         {
-            tracks[i]->Update(Point_t(), CRegion(), false, max_trace_length);
+            tracks[i]->Update(Point_t(), CRegion(), false, max_trace_length, m_prevFrame, grayFrame);
         }
     }
+
+    grayFrame.copyTo(m_prevFrame);
 }

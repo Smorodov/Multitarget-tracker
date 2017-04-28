@@ -74,15 +74,16 @@ int main(int argc, char** argv)
     //detector.SetMinObjectSize(cv::Size(4, 2));
 
     CTracker tracker(useLocalTracking,
-		CTracker::RectsDist,
-		CTracker::FilterRect,
-		CTracker::MatchHungrian,
-		0.2f,                // Delta time for Kalman filter
-		0.1f,                // Accel noise magnitude for Kalman filter
-		gray.cols / 20.0f,   // Distance threshold between two frames
-		fps,                 // Maximum allowed skipped frames
-		5 * fps              // Maximum trace length
-		);
+                     CTracker::RectsDist,
+                     CTracker::FilterRect,
+                     true,                    // Use KCF tracker for collisions resolving
+                     CTracker::MatchHungrian,
+                     0.2f,                    // Delta time for Kalman filter
+                     0.1f,                    // Accel noise magnitude for Kalman filter
+                     gray.cols / 10.0f,       // Distance threshold between two frames
+                     fps,                     // Maximum allowed skipped frames
+                     5 * fps                  // Maximum trace length
+                     );
 
 	int k = 0;
 
@@ -120,15 +121,20 @@ int main(int argc, char** argv)
 
 		std::cout << "Frame " << framesCounter << ": tracks = " << tracker.tracks.size() << ", time = " << currTime << std::endl;
 
-        for (size_t i = 0; i < tracker.tracks.size(); i++)
+        for (const auto& track : tracker.tracks)
 		{
-            if (tracker.tracks[i]->IsRobust(fps, 0.75f, cv::Size2f(0.2f, 4.0f)))
+            if (track->IsRobust(fps,                     // Minimal trajectory size
+                                0.5f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
+                                cv::Size2f(0.1f, 8.0f))      // Min and max ratio: width / height
+                    )
 			{
-                cv::rectangle(frame, tracker.tracks[i]->GetLastRect(), cv::Scalar(0, 255, 0), 1, CV_AA);
+                cv::rectangle(frame, track->GetLastRect(), cv::Scalar(0, 255, 0), 1, CV_AA);
 
-				for (size_t j = 0; j < tracker.tracks[i]->trace.size() - 1; j++)
+                cv::Scalar cl = Colors[track->m_trackID % 9];
+
+                for (size_t j = 0; j < track->m_trace.size() - 1; ++j)
 				{
-					cv::line(frame, tracker.tracks[i]->trace[j], tracker.tracks[i]->trace[j + 1], Colors[tracker.tracks[i]->track_id % 9], 2, CV_AA);
+                    cv::line(frame, track->m_trace[j], track->m_trace[j + 1], cl, 1, CV_AA);
 				}
 			}
 		}
@@ -178,7 +184,7 @@ int main(int argc, char** argv)
 
     bool useLocalTracking = false;
 
-	CTracker tracker(useLocalTracking, CTracker::CentersDist, CTracker::FilterCenter, CTracker::MatchHungrian, 0.3f, 0.5f, 60.0f, 25, 25);
+    CTracker tracker(useLocalTracking, CTracker::CentersDist, CTracker::FilterCenter, false, CTracker::MatchHungrian, 0.3f, 0.5f, 60.0f, 25, 25);
 	track_t alpha = 0;
 	cv::RNG rng;
 	while (k != 27)
@@ -217,11 +223,11 @@ int main(int argc, char** argv)
 		{
 			const auto& tracks = tracker.tracks[i];
 
-			if (tracks->trace.size() > 1)
+            if (tracks->m_trace.size() > 1)
 			{
-				for (size_t j = 0; j < tracks->trace.size() - 1; j++)
+                for (size_t j = 0; j < tracks->m_trace.size() - 1; j++)
 				{
-					cv::line(frame, tracks->trace[j], tracks->trace[j + 1], Colors[i % 6], 2, CV_AA);
+                    cv::line(frame, tracks->m_trace[j], tracks->m_trace[j + 1], Colors[i % 6], 2, CV_AA);
 				}
 			}
 		}
