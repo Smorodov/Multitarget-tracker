@@ -37,14 +37,14 @@ GPostscriptPort::GPostscriptPort ()
 void GPostscriptPort::DrawArc (const GPoint &pt, const int radius,
 	const double startAngleDegrees, const double endAngleDegrees)
 {
-	PostscriptStream << "newpath" << endl;
+    PostscriptStream << "newpath" << std::endl;
 	PostscriptStream << pt.GetX() << " " << -pt.GetY()
     	<< " " << radius
         << " " << (360.0 -startAngleDegrees)
         << " " << (360.0 - endAngleDegrees)
-        << " arcn" 		<< endl;
-	PostscriptStream << "stroke" 										<< endl;
-	PostscriptStream << endl;
+        << " arcn" 		<< std::endl;
+    PostscriptStream << "stroke" 										<< std::endl;
+    PostscriptStream << std::endl;
 }
 
 
@@ -52,57 +52,57 @@ void GPostscriptPort::DrawLine (const int x1, const int y1, const int x2, const 
 {
 	//PostscriptStream  << x2 << " " << -y2 << " " << x1 << " " << -y1 << " " << PenWidth << " DrawLine" << endl;
 	
-    PostscriptStream << "   gsave" 									<< endl;
-    PostscriptStream << PenWidth << "   setlinewidth" 							<< endl;
+    PostscriptStream << "   gsave" 									<< std::endl;
+    PostscriptStream << PenWidth << "   setlinewidth" 							<< std::endl;
     // We may not always want to set this as it works best with rectangular trees...
 //    PostscriptStream << "   2 setlinecap"							<< endl;
 //    PostscriptStream << "   0 setgray" 								<< endl;
     //PostscriptStream << "   0.7 setgray" 								<< endl;
-	PostscriptStream << fill_r << " " << fill_g << " " <<  fill_b << " setrgbcolor" 										<< endl;
-    PostscriptStream << x2 << " " << -y2 << "   moveto" 								<< endl;
-    PostscriptStream << x1 << " " << -y1 << "   lineto" 								<< endl;
-    PostscriptStream << "   stroke" 								<< endl;
-    PostscriptStream << "   grestore" 								<< endl;
+    PostscriptStream << fill_r << " " << fill_g << " " <<  fill_b << " setrgbcolor" 										<< std::endl;
+    PostscriptStream << x2 << " " << -y2 << "   moveto" 								<< std::endl;
+    PostscriptStream << x1 << " " << -y1 << "   lineto" 								<< std::endl;
+    PostscriptStream << "   stroke" 								<< std::endl;
+    PostscriptStream << "   grestore" 								<< std::endl;
 
 }
 
 void GPostscriptPort::DrawCircle (const GPoint &pt, const int radius)
 {
-	PostscriptStream << "newpath" << endl;
-	PostscriptStream << pt.GetX() << " " << -pt.GetY() << " " << radius << " 0 360 arc" 		<< endl;
-	PostscriptStream << "stroke" 										<< endl;
-	PostscriptStream << endl;
+    PostscriptStream << "newpath" << std::endl;
+    PostscriptStream << pt.GetX() << " " << -pt.GetY() << " " << radius << " 0 360 arc" 		<< std::endl;
+    PostscriptStream << "stroke" 										<< std::endl;
+    PostscriptStream << std::endl;
 }
 
 void GPostscriptPort::FillCircle (const GPoint &pt, const int radius)
 {
-	PostscriptStream << "newpath" << endl;
-	PostscriptStream << pt.GetX() << " " << -pt.GetY() << " " << radius << " 0 360 arc" 		<< endl;
+    PostscriptStream << "newpath" << std::endl;
+    PostscriptStream << pt.GetX() << " " << -pt.GetY() << " " << radius << " 0 360 arc" 		<< std::endl;
 	//PostscriptStream << "gsave" 										<< endl;
 	//PostscriptStream << "0.90 setgray" 										<< endl;
-	PostscriptStream << fill_r << " " << fill_g << " " <<  fill_b << " setrgbcolor" 										<< endl;
+    PostscriptStream << fill_r << " " << fill_g << " " <<  fill_b << " setrgbcolor" 										<< std::endl;
 	
-	PostscriptStream << "fill" 										<< endl;
+    PostscriptStream << "fill" 										<< std::endl;
 	//PostscriptStream << "grestore" 										<< endl;
-	PostscriptStream << endl;
+    PostscriptStream << std::endl;
 }
 
 
 void GPostscriptPort::DrawRect (const GRect &r)
 {
-	PostscriptStream << r.GetLeft() << " " << -r.GetTop() << " moveto" 	<< endl;
-	PostscriptStream << r.GetWidth() << " 0 rlineto" 					<< endl;
-	PostscriptStream << "0 " << -r.GetHeight() << " rlineto" 			<< endl;
-	PostscriptStream << -r.GetWidth() << " 0 rlineto" 					<< endl;
-	PostscriptStream << "0 " << r.GetHeight() << " rlineto"				<< endl;
-	PostscriptStream << "closepath" 									<< endl;
-	PostscriptStream << "stroke" 										<< endl;
-	PostscriptStream << endl;
+    PostscriptStream << r.GetLeft() << " " << -r.GetTop() << " moveto" 	<< std::endl;
+    PostscriptStream << r.GetWidth() << " 0 rlineto" 					<< std::endl;
+    PostscriptStream << "0 " << -r.GetHeight() << " rlineto" 			<< std::endl;
+    PostscriptStream << -r.GetWidth() << " 0 rlineto" 					<< std::endl;
+    PostscriptStream << "0 " << r.GetHeight() << " rlineto"				<< std::endl;
+    PostscriptStream << "closepath" 									<< std::endl;
+    PostscriptStream << "stroke" 										<< std::endl;
+    PostscriptStream << std::endl;
 }
 
 void GPostscriptPort::DrawText (const int x, const int y, const char *text)
 {
-	PostscriptStream  << "(" << text << ") " << x << " " << -y << " DrawText" << endl;
+    PostscriptStream  << "(" << text << ") " << x << " " << -y << " DrawText" << std::endl;
 }
 
 
@@ -136,11 +136,11 @@ void GPostscriptPort::SetCurrentFont (GBaseFont &font)
 		DocumentFonts += face;
     }
 */
-    PostscriptStream << endl;
-    PostscriptStream << "/" << face << " findfont" << endl;
-    PostscriptStream << font.GetSize () << " scalefont" << endl;
-    PostscriptStream << "setfont" << endl;
-    PostscriptStream << endl;
+    PostscriptStream << std::endl;
+    PostscriptStream << "/" << face << " findfont" << std::endl;
+    PostscriptStream << font.GetSize () << " scalefont" << std::endl;
+    PostscriptStream << "setfont" << std::endl;
+    PostscriptStream << std::endl;
 }
 
 
@@ -151,8 +151,8 @@ void GPostscriptPort::SetCurrentFont (GBaseFont &font)
 void GPostscriptPort::SetPenWidth (int w)
 {
     PenWidth = w;
-    PostscriptStream << w << " setlinewidth" 						<< endl;
-    PostscriptStream << endl;
+    PostscriptStream << w << " setlinewidth" 						<< std::endl;
+    PostscriptStream << std::endl;
 }
 
 void GPostscriptPort::StartPicture (char *pictFileName)
@@ -161,55 +161,55 @@ void GPostscriptPort::StartPicture (char *pictFileName)
         
 
     // Postscript header
-    PostscriptStream << "%!PS-Adobe-2.0" 							<< endl;
-    PostscriptStream << "%%Creator: Roderic D. M. Page" 			<< endl;
-    PostscriptStream << "%%DocumentFonts: Times-Roman" 		 		<< endl;
-    PostscriptStream << "%%Title:" <<  pictFileName 				<< endl;
-    PostscriptStream << "%%BoundingBox: 0 0 595 842" 				<< endl; // A4
-    PostscriptStream << "%%Pages: 1" 								<< endl;
-    PostscriptStream << "%%EndComments" 							<< endl;
-    PostscriptStream << endl;
+    PostscriptStream << "%!PS-Adobe-2.0" 							<< std::endl;
+    PostscriptStream << "%%Creator: Roderic D. M. Page" 			<< std::endl;
+    PostscriptStream << "%%DocumentFonts: Times-Roman" 		 		<< std::endl;
+    PostscriptStream << "%%Title:" <<  pictFileName 				<< std::endl;
+    PostscriptStream << "%%BoundingBox: 0 0 595 842" 				<< std::endl; // A4
+    PostscriptStream << "%%Pages: 1" 								<< std::endl;
+    PostscriptStream << "%%EndComments" 							<< std::endl;
+    PostscriptStream << std::endl;
 
     // Move origin to top left corner
-    PostscriptStream << "0 842 translate" << endl;
-    PostscriptStream << "72 -72 translate" << endl; // one inch margin
+    PostscriptStream << "0 842 translate" << std::endl;
+    PostscriptStream << "72 -72 translate" << std::endl; // one inch margin
 
     // Some definitions for drawing lines, etc.
 
     // Drawline draws text with encaps that project...
-    PostscriptStream << "% Encapsulate drawing a line" 				<< endl;
-    PostscriptStream << "%    arguments x1 y1 x2 xy2 width" 		<< endl;
-    PostscriptStream << "/DrawLine {" 								<< endl;
-    PostscriptStream << "   gsave" 									<< endl;
-    PostscriptStream << "   setlinewidth" 							<< endl;
+    PostscriptStream << "% Encapsulate drawing a line" 				<< std::endl;
+    PostscriptStream << "%    arguments x1 y1 x2 xy2 width" 		<< std::endl;
+    PostscriptStream << "/DrawLine {" 								<< std::endl;
+    PostscriptStream << "   gsave" 									<< std::endl;
+    PostscriptStream << "   setlinewidth" 							<< std::endl;
     // We may not always want to set this as it works best with rectangular trees...
 //    PostscriptStream << "   2 setlinecap"							<< endl;
-    PostscriptStream << "   0 setgray" 								<< endl;
+    PostscriptStream << "   0 setgray" 								<< std::endl;
     //PostscriptStream << "   0.7 setgray" 								<< endl;
-    PostscriptStream << "   moveto" 								<< endl;
-    PostscriptStream << "   lineto" 								<< endl;
-    PostscriptStream << "   stroke" 								<< endl;
-    PostscriptStream << "   grestore" 								<< endl;
-    PostscriptStream << "   } bind def" 							<< endl;
-    PostscriptStream << endl;
+    PostscriptStream << "   moveto" 								<< std::endl;
+    PostscriptStream << "   lineto" 								<< std::endl;
+    PostscriptStream << "   stroke" 								<< std::endl;
+    PostscriptStream << "   grestore" 								<< std::endl;
+    PostscriptStream << "   } bind def" 							<< std::endl;
+    PostscriptStream << std::endl;
 
-    PostscriptStream << "% Encapsulate drawing text" 				<< endl;
-    PostscriptStream << "%    arguments x y text" 					<< endl;
-    PostscriptStream << "/DrawText {" 								<< endl;
-    PostscriptStream << "  gsave 1 setlinewidth 0 setgray" 			<< endl;
-    PostscriptStream << "  moveto" 									<< endl;
-    PostscriptStream << "  show grestore" 							<< endl;
-	PostscriptStream << "} bind def" 								<< endl;
-    PostscriptStream << endl;
+    PostscriptStream << "% Encapsulate drawing text" 				<< std::endl;
+    PostscriptStream << "%    arguments x y text" 					<< std::endl;
+    PostscriptStream << "/DrawText {" 								<< std::endl;
+    PostscriptStream << "  gsave 1 setlinewidth 0 setgray" 			<< std::endl;
+    PostscriptStream << "  moveto" 									<< std::endl;
+    PostscriptStream << "  show grestore" 							<< std::endl;
+    PostscriptStream << "} bind def" 								<< std::endl;
+    PostscriptStream << std::endl;
 
 }
 
 void GPostscriptPort::EndPicture ()
 {
-    PostscriptStream << "showpage" 									<< endl;
-    PostscriptStream << "%%Trailer" 								<< endl;
-    PostscriptStream << "%%end" 									<< endl;
-    PostscriptStream << "%%EOF" 									<< endl;
+    PostscriptStream << "showpage" 									<< std::endl;
+    PostscriptStream << "%%Trailer" 								<< std::endl;
+    PostscriptStream << "%%end" 									<< std::endl;
+    PostscriptStream << "%%EOF" 									<< std::endl;
     PostscriptStream.close ();
 }
 
@@ -277,7 +277,7 @@ void SVGPort::DrawRect (const GRect &/*r*/)
 void SVGPort::DrawText (const int x, const int y, const char *text)
 {
     svgStream << "<text x=\"" << x << "\" y=\"" << y << "\" style=\"" << fontString << "\" >"
-            << text << "</text>" << endl;
+            << text << "</text>" << std::endl;
 }
 
 
@@ -285,12 +285,12 @@ void SVGPort::StartPicture (char *pictFileName)
 {
     svgStream.open (pictFileName);
     
-    svgStream << "<?xml version=\"1.0\" standalone=\"no\"?>" << endl;
-    svgStream << "<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 20010904//EN\" " << endl;
-    svgStream << "\"http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd\"> " << endl;
+    svgStream << "<?xml version=\"1.0\" standalone=\"no\"?>" << std::endl;
+    svgStream << "<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 20010904//EN\" " << std::endl;
+    svgStream << "\"http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd\"> " << std::endl;
 
     svgStream << "<svg width=\"" << DisplayRect.GetWidth() << "pt\" "
-        << "height=\"" << DisplayRect.GetHeight() << "pt\" >" << endl;
+        << "height=\"" << DisplayRect.GetHeight() << "pt\" >" << std::endl;
         
 // <title>test</title>
 // <desc>test</desc>
@@ -298,7 +298,7 @@ void SVGPort::StartPicture (char *pictFileName)
 
 void SVGPort::EndPicture ()
 {
-    svgStream << "</svg>" << endl;
+    svgStream << "</svg>" << std::endl;
     svgStream.close ();
 }
 
