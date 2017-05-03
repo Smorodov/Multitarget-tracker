@@ -135,6 +135,10 @@ int main(int argc, char** argv)
                 for (size_t j = 0; j < track->m_trace.size() - 1; ++j)
 				{
                     cv::line(frame, track->m_trace[j], track->m_trace[j + 1], cl, 1, CV_AA);
+                    if (!track->m_trace.HasRaw(j + 1))
+                    {
+                        cv::circle(frame, track->m_trace[j + 1], 4, cl, 1, CV_AA);
+                    }
 				}
 			}
 		}

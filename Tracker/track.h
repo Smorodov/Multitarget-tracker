@@ -76,6 +76,16 @@ public:
     }
 
     ///
+    /// \brief HasRaw
+    /// \param i
+    /// \return
+    ///
+    bool HasRaw(size_t i) const
+    {
+        return m_trace[i].m_hasRaw;
+    }
+
+    ///
     /// \brief size
     /// \return
     ///
