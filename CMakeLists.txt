@@ -154,6 +154,11 @@ if(USE_OCV_KCF)
     add_definitions(-DUSE_OCV_KCF)
 endif(USE_OCV_KCF)
 
+option(USE_OCV_UKF "Should use the Unscented Kalman Filterr from opencv_contrib?" ON)
+if(USE_OCV_UKF)
+    add_definitions(-DUSE_OCV_UKF)
+endif(USE_OCV_UKF)
+
 # ----------------------------------------------------------------------------  
 # создаем проект
 # ----------------------------------------------------------------------------

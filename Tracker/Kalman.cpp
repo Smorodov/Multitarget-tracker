@@ -55,10 +55,10 @@ void TKalmanFilter::CreateLinear(Point_t xy0, Point_t xyv0)
     m_linearKalman = std::make_unique<cv::KalmanFilter>(4, 2, 0);
     // Transition cv::Matrix
     m_linearKalman->transitionMatrix = (cv::Mat_<track_t>(4, 4) <<
-                                  1, 0, m_deltaTime, 0,
-                                  0, 1, 0, m_deltaTime,
-                                  0, 0, 1, 0,
-                                  0, 0, 0, 1);
+                                        1, 0, m_deltaTime, 0,
+                                        0, 1, 0, m_deltaTime,
+                                        0, 0, 1, 0,
+                                        0, 0, 0, 1);
 
     // init...
     m_lastPointResult = xy0;
@@ -74,10 +74,10 @@ void TKalmanFilter::CreateLinear(Point_t xy0, Point_t xyv0)
     cv::setIdentity(m_linearKalman->measurementMatrix);
 
     m_linearKalman->processNoiseCov = (cv::Mat_<track_t>(4, 4) <<
-        pow(m_deltaTime,4.0)/4.0	,0						,pow(m_deltaTime,3.0)/2.0		,0,
-        0						,pow(m_deltaTime,4.0)/4.0	,0							,pow(m_deltaTime,3.0)/2.0,
-        pow(m_deltaTime,3.0)/2.0	,0						,pow(m_deltaTime,2.0)			,0,
-        0						,pow(m_deltaTime,3.0)/2.0	,0							,pow(m_deltaTime,2.0));
+                                       pow(m_deltaTime,4.0)/4.0	,0						,pow(m_deltaTime,3.0)/2.0		,0,
+                                       0						,pow(m_deltaTime,4.0)/4.0	,0							,pow(m_deltaTime,3.0)/2.0,
+                                       pow(m_deltaTime,3.0)/2.0	,0						,pow(m_deltaTime,2.0)			,0,
+                                       0						,pow(m_deltaTime,3.0)/2.0	,0							,pow(m_deltaTime,2.0));
 
 
     m_linearKalman->processNoiseCov *= m_accelNoiseMag;
@@ -101,12 +101,12 @@ void TKalmanFilter::CreateLinear(cv::Rect_<track_t> rect0, Point_t rectv0)
     m_linearKalman = std::make_unique<cv::KalmanFilter>(6, 4, 0);
     // Transition cv::Matrix
     m_linearKalman->transitionMatrix = (cv::Mat_<track_t>(6, 6) <<
-                                1, 0, 0, 0, m_deltaTime, 0,
-                                0, 1, 0, 0, 0,           m_deltaTime,
-                                0, 0, 1, 0, 0,           0,
-                                0, 0, 0, 1, 0,           0,
-                                0, 0, 0, 0, 1,           0,
-                                0, 0, 0, 0, 0,           1);
+                                        1, 0, 0, 0, m_deltaTime, 0,
+                                        0, 1, 0, 0, 0,           m_deltaTime,
+                                        0, 0, 1, 0, 0,           0,
+                                        0, 0, 0, 1, 0,           0,
+                                        0, 0, 0, 0, 1,           0,
+                                        0, 0, 0, 0, 0,           1);
 
     // init...
     m_linearKalman->statePre.at<track_t>(0) = rect0.x;      // x
@@ -124,12 +124,12 @@ void TKalmanFilter::CreateLinear(cv::Rect_<track_t> rect0, Point_t rectv0)
     cv::setIdentity(m_linearKalman->measurementMatrix);
 
     m_linearKalman->processNoiseCov = (cv::Mat_<track_t>(6, 6) <<
-        pow(m_deltaTime,4.)/4., 0,                    0,                    0,                    pow(m_deltaTime,3.)/2., 0,
-        0,                    pow(m_deltaTime,4.)/4., 0,                    0,                    pow(m_deltaTime,3.)/2., 0,
-        0,                    0,                    pow(m_deltaTime,4.)/4., 0,                    0,                    0,
-        0,                    0,                    0,                    pow(m_deltaTime,4.)/4., 0,                    0,
-        pow(m_deltaTime,3.)/2., 0,                    0,                    0,                    pow(m_deltaTime,2.),    0,
-        0,                    pow(m_deltaTime,3.)/2., 0,                    0,                    0,                    pow(m_deltaTime,2.));
+                                       pow(m_deltaTime,4.)/4., 0,                    0,                    0,                    pow(m_deltaTime,3.)/2., 0,
+                                       0,                    pow(m_deltaTime,4.)/4., 0,                    0,                    pow(m_deltaTime,3.)/2., 0,
+                                       0,                    0,                    pow(m_deltaTime,4.)/4., 0,                    0,                    0,
+                                       0,                    0,                    0,                    pow(m_deltaTime,4.)/4., 0,                    0,
+                                       pow(m_deltaTime,3.)/2., 0,                    0,                    0,                    pow(m_deltaTime,2.),    0,
+                                       0,                    pow(m_deltaTime,3.)/2., 0,                    0,                    0,                    pow(m_deltaTime,2.));
 
 
     m_linearKalman->processNoiseCov *= m_accelNoiseMag;
@@ -463,7 +463,12 @@ Point_t TKalmanFilter::GetPointPrediction()
 
         case TypeUnscented:
         case TypeAugmentedUnscented:
+#if USE_OCV_UKF
             prediction = m_uncsentedKalman->predict();
+#else
+            prediction = m_linearKalman->predict();
+            std::cerr << "UnscentedKalmanFilter was disabled in CMAKE! Set KalmanLinear in constructor." << std::endl;
+#endif
             break;
         }
 
@@ -505,7 +510,12 @@ Point_t TKalmanFilter::Update(Point_t pt, bool dataCorrect)
                 break;
 
             case TypeUnscented:
+#if USE_OCV_UKF
                 CreateUnscented(xy0, xyv0);
+#else
+                CreateLinear(xy0, xyv0);
+                std::cerr << "UnscentedKalmanFilter was disabled in CMAKE! Set KalmanLinear in constructor." << std::endl;
+#endif
                 break;
 
             case TypeAugmentedUnscented:
@@ -538,7 +548,12 @@ Point_t TKalmanFilter::Update(Point_t pt, bool dataCorrect)
 
         case TypeUnscented:
         case TypeAugmentedUnscented:
+#if USE_OCV_UKF
             estimated = m_uncsentedKalman->correct(measurement);
+#else
+            estimated = m_linearKalman->correct(measurement);
+            std::cerr << "UnscentedKalmanFilter was disabled in CMAKE! Set KalmanLinear in constructor." << std::endl;
+#endif
             break;
         }
 
@@ -570,7 +585,12 @@ cv::Rect TKalmanFilter::GetRectPrediction()
 
         case TypeUnscented:
         case TypeAugmentedUnscented:
+#if USE_OCV_UKF
             prediction = m_uncsentedKalman->predict();
+#else
+            prediction = m_linearKalman->predict();
+            std::cerr << "UnscentedKalmanFilter was disabled in CMAKE! Set KalmanLinear in constructor." << std::endl;
+#endif
             break;
         }
 
@@ -623,7 +643,12 @@ cv::Rect TKalmanFilter::Update(cv::Rect rect, bool dataCorrect)
                 break;
 
             case TypeUnscented:
+#if USE_OCV_UKF
                 CreateUnscented(rect0, rectv0);
+#else
+                CreateLinear(rect0, rectv0);
+                std::cerr << "UnscentedKalmanFilter was disabled in CMAKE! Set KalmanLinear in constructor." << std::endl;
+#endif
                 break;
 
             case TypeAugmentedUnscented:
@@ -665,12 +690,22 @@ cv::Rect TKalmanFilter::Update(cv::Rect rect, bool dataCorrect)
 
         case TypeUnscented:
         case TypeAugmentedUnscented:
+#if USE_OCV_UKF
             estimated = m_uncsentedKalman->correct(measurement);
 
             m_lastRectResult.x = estimated.at<track_t>(0);   //update using measurements
             m_lastRectResult.y = estimated.at<track_t>(1);
             m_lastRectResult.width = estimated.at<track_t>(6);
             m_lastRectResult.height = estimated.at<track_t>(7);
+#else
+            estimated = m_linearKalman->correct(measurement);
+
+            m_lastRectResult.x = estimated.at<track_t>(0);   //update using measurements
+            m_lastRectResult.y = estimated.at<track_t>(1);
+            m_lastRectResult.width = estimated.at<track_t>(2);
+            m_lastRectResult.height = estimated.at<track_t>(3);
+            std::cerr << "UnscentedKalmanFilter was disabled in CMAKE! Set KalmanLinear in constructor." << std::endl;
+#endif
             break;
         }
     }

@@ -29,7 +29,9 @@ public:
 private:
     KalmanType m_type;
     std::unique_ptr<cv::KalmanFilter> m_linearKalman;
+#if USE_OCV_UKF
     cv::Ptr<cv::tracking::UnscentedKalmanFilter> m_uncsentedKalman;
+#endif
 
     std::deque<Point_t> m_initialPoints;
     std::deque<cv::Rect> m_initialRects;

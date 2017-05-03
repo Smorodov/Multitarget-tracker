@@ -75,7 +75,7 @@ int main(int argc, char** argv)
 
     CTracker tracker(useLocalTracking,
                      CTracker::RectsDist,
-                     CTracker::KalmanLinear,
+                     CTracker::KalmanUnscented,
                      CTracker::FilterRect,
                      true,                    // Use KCF tracker for collisions resolving
                      CTracker::MatchHungrian,
