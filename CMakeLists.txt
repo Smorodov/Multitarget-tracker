@@ -26,113 +26,114 @@ set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
 # ----------------------------------------------------------------------------
   set(folder_source  main.cpp
              Detector/Detector.cpp
-             HungarianAlg/HungarianAlg.cpp
-             vibe_src/BackgroundSubtract.cpp
-             vibe_src/vibe.cpp
+             Detector/BackgroundSubtract.cpp
+             Detector/vibe_src/vibe.cpp
              Tracker/Ctracker.cpp
+             Tracker/HungarianAlg/HungarianAlg.cpp
              Tracker/LocalTracker.cpp
              Tracker/Kalman.cpp)
 
-  set(folder_header  Detector/Detector.h
-             HungarianAlg/HungarianAlg.h
-             vibe_src/BackgroundSubtract.h
-             vibe_src/vibe.hpp
-             Tracker/track.h
+  set(folder_header
+             Detector/Detector.h
+             Detector/BackgroundSubtract.h
+             Detector/vibe_src/vibe.hpp
              Tracker/Ctracker.h
+             Tracker/track.h
+             Tracker/HungarianAlg/HungarianAlg.h
              Tracker/LocalTracker.h
              Tracker/Kalman.h
              Tracker/defines.h)
 
   set(graph_source
-             graph/tokenise.cpp
-#             graph/script.cpp
-#             graph/rings.cpp
-             graph/mytree.cpp
-             graph/mygraph.cpp
-             graph/mwbmatching.cpp
-             graph/mincut.cpp
-             graph/gport.cpp
-#             graph/gml2nestedsql.cpp
-#             graph/gml2dot.cpp
-#             graph/components.cpp
-             graph/fheap.c
+             Tracker/graph/tokenise.cpp
+#             Tracker/graph/script.cpp
+#             Tracker/graph/rings.cpp
+             Tracker/graph/mytree.cpp
+             Tracker/graph/mygraph.cpp
+             Tracker/graph/mwbmatching.cpp
+             Tracker/graph/mincut.cpp
+             Tracker/graph/gport.cpp
+#             Tracker/graph/gml2nestedsql.cpp
+#             Tracker/graph/gml2dot.cpp
+#             Tracker/graph/components.cpp
+             Tracker/graph/fheap.c
              )
 
   set(graph_header
-             graph/tokenise.h
-             graph/mytree.h
-             graph/mygraph.h
-             graph/mwbmatching.h
-             graph/mincut.h
-             graph/gport.h
-             graph/gdefs.h
-             graph/fheap.h
+             Tracker/graph/tokenise.h
+             Tracker/graph/mytree.h
+             Tracker/graph/mygraph.h
+             Tracker/graph/mwbmatching.h
+             Tracker/graph/mincut.h
+             Tracker/graph/gport.h
+             Tracker/graph/gdefs.h
+             Tracker/graph/fheap.h
              )
 
   set(gtl_source
-             graph/GTL/src/bellman_ford.cpp
-             graph/GTL/src/bfs.cpp
-             graph/GTL/src/biconnectivity.cpp
-             graph/GTL/src/bid_dijkstra.cpp
-             graph/GTL/src/components.cpp
-             graph/GTL/src/debug.cpp
-             graph/GTL/src/dfs.cpp
-             graph/GTL/src/dijkstra.cpp
-             graph/GTL/src/edge.cpp
-             graph/GTL/src/embedding.cpp
-             graph/GTL/src/fm_partition.cpp
-             graph/GTL/src/gml_parser.cpp
-             graph/GTL/src/gml_scanner.cpp
-             graph/GTL/src/graph.cpp
-             graph/GTL/src/maxflow_ff.cpp
-             graph/GTL/src/maxflow_pp.cpp
-             graph/GTL/src/maxflow_sap.cpp
-             graph/GTL/src/min_tree.cpp
-             graph/GTL/src/node.cpp
-             graph/GTL/src/planarity.cpp
-             graph/GTL/src/pq_node.cpp
-             graph/GTL/src/pq_tree.cpp
-             graph/GTL/src/ratio_cut_partition.cpp
-             graph/GTL/src/st_number.cpp
-             graph/GTL/src/topsort.cpp
+             Tracker/graph/GTL/src/bellman_ford.cpp
+             Tracker/graph/GTL/src/bfs.cpp
+             Tracker/graph/GTL/src/biconnectivity.cpp
+             Tracker/graph/GTL/src/bid_dijkstra.cpp
+             Tracker/graph/GTL/src/components.cpp
+             Tracker/graph/GTL/src/debug.cpp
+             Tracker/graph/GTL/src/dfs.cpp
+             Tracker/graph/GTL/src/dijkstra.cpp
+             Tracker/graph/GTL/src/edge.cpp
+             Tracker/graph/GTL/src/embedding.cpp
+             Tracker/graph/GTL/src/fm_partition.cpp
+             Tracker/graph/GTL/src/gml_parser.cpp
+             Tracker/graph/GTL/src/gml_scanner.cpp
+             Tracker/graph/GTL/src/graph.cpp
+             Tracker/graph/GTL/src/maxflow_ff.cpp
+             Tracker/graph/GTL/src/maxflow_pp.cpp
+             Tracker/graph/GTL/src/maxflow_sap.cpp
+             Tracker/graph/GTL/src/min_tree.cpp
+             Tracker/graph/GTL/src/node.cpp
+             Tracker/graph/GTL/src/planarity.cpp
+             Tracker/graph/GTL/src/pq_node.cpp
+             Tracker/graph/GTL/src/pq_tree.cpp
+             Tracker/graph/GTL/src/ratio_cut_partition.cpp
+             Tracker/graph/GTL/src/st_number.cpp
+             Tracker/graph/GTL/src/topsort.cpp
              )
 
   set(gtl_header
-             graph/GTL/include/GTL/algorithm.h
-             graph/GTL/include/GTL/bellman_ford.h
-             graph/GTL/include/GTL/bfs.h
-             graph/GTL/include/GTL/biconnectivity.h
-             graph/GTL/include/GTL/bid_dijkstra.h
-             graph/GTL/include/GTL/bin_heap.h
-             graph/GTL/include/GTL/components.h
-             graph/GTL/include/GTL/debug.h
-             graph/GTL/include/GTL/dfs.h
-             graph/GTL/include/GTL/dijkstra.h
-             graph/GTL/include/GTL/edge.h
-             graph/GTL/include/GTL/edge_data.h
-             graph/GTL/include/GTL/edge_map.h
-             graph/GTL/include/GTL/embedding.h
-             graph/GTL/include/GTL/fm_partition.h
-             graph/GTL/include/GTL/gml_parser.h
-             graph/GTL/include/GTL/gml_scanner.h
-             graph/GTL/include/GTL/graph.h
-             graph/GTL/include/GTL/maxflow_ff.h
-             graph/GTL/include/GTL/maxflow_pp.h
-             graph/GTL/include/GTL/maxflow_sap.h
-             graph/GTL/include/GTL/min_tree.h
-             graph/GTL/include/GTL/ne_map.h
-             graph/GTL/include/GTL/node.h
-             graph/GTL/include/GTL/node_data.h
-             graph/GTL/include/GTL/node_map.h
-             graph/GTL/include/GTL/planarity.h
-             graph/GTL/include/GTL/pq_node.h
-             graph/GTL/include/GTL/pq_tree.h
-             graph/GTL/include/GTL/ratio_cut_partition.h
-             graph/GTL/include/GTL/st_number.h
-             graph/GTL/include/GTL/symlist.h
-             graph/GTL/include/GTL/topsort.h
-             graph/GTL/include/GTL/version.h
-             graph/GTL/include/GTL/GTL.h
+             Tracker/graph/GTL/include/GTL/algorithm.h
+             Tracker/graph/GTL/include/GTL/bellman_ford.h
+             Tracker/graph/GTL/include/GTL/bfs.h
+             Tracker/graph/GTL/include/GTL/biconnectivity.h
+             Tracker/graph/GTL/include/GTL/bid_dijkstra.h
+             Tracker/graph/GTL/include/GTL/bin_heap.h
+             Tracker/graph/GTL/include/GTL/components.h
+             Tracker/graph/GTL/include/GTL/debug.h
+             Tracker/graph/GTL/include/GTL/dfs.h
+             Tracker/graph/GTL/include/GTL/dijkstra.h
+             Tracker/graph/GTL/include/GTL/edge.h
+             Tracker/graph/GTL/include/GTL/edge_data.h
+             Tracker/graph/GTL/include/GTL/edge_map.h
+             Tracker/graph/GTL/include/GTL/embedding.h
+             Tracker/graph/GTL/include/GTL/fm_partition.h
+             Tracker/graph/GTL/include/GTL/gml_parser.h
+             Tracker/graph/GTL/include/GTL/gml_scanner.h
+             Tracker/graph/GTL/include/GTL/graph.h
+             Tracker/graph/GTL/include/GTL/maxflow_ff.h
+             Tracker/graph/GTL/include/GTL/maxflow_pp.h
+             Tracker/graph/GTL/include/GTL/maxflow_sap.h
+             Tracker/graph/GTL/include/GTL/min_tree.h
+             Tracker/graph/GTL/include/GTL/ne_map.h
+             Tracker/graph/GTL/include/GTL/node.h
+             Tracker/graph/GTL/include/GTL/node_data.h
+             Tracker/graph/GTL/include/GTL/node_map.h
+             Tracker/graph/GTL/include/GTL/planarity.h
+             Tracker/graph/GTL/include/GTL/pq_node.h
+             Tracker/graph/GTL/include/GTL/pq_tree.h
+             Tracker/graph/GTL/include/GTL/ratio_cut_partition.h
+             Tracker/graph/GTL/include/GTL/st_number.h
+             Tracker/graph/GTL/include/GTL/symlist.h
+             Tracker/graph/GTL/include/GTL/topsort.h
+             Tracker/graph/GTL/include/GTL/version.h
+             Tracker/graph/GTL/include/GTL/GTL.h
              )
 
   SOURCE_GROUP("Source Files" FILES ${folder_source})
@@ -141,10 +142,15 @@ set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
   SOURCE_GROUP("graph" FILES ${graph_source} ${graph_header})
   SOURCE_GROUP("GTL" FILES ${gtl_source} ${gtl_header})
 
-option(USE_OCV_BGFG "Should the bgfg algorithms from opencv_contrib?" ON)
+option(USE_OCV_BGFG "Should use the bgfg algorithms from opencv_contrib?" ON)
 if(USE_OCV_BGFG)
     add_definitions(-DUSE_OCV_BGFG)
 endif(USE_OCV_BGFG)
+
+option(USE_OCV_KCF "Should use the KCF tracker from opencv_contrib for collisions resolving?" ON)
+if(USE_OCV_KCF)
+    add_definitions(-DUSE_OCV_KCF)
+endif(USE_OCV_KCF)
 
 # ----------------------------------------------------------------------------  
 # создаем проект
@@ -155,11 +161,11 @@ endif(USE_OCV_BGFG)
 # ----------------------------------------------------------------------------
   INCLUDE_DIRECTORIES(
 		      ${PROJECT_SOURCE_DIR}/Detector
-		      ${PROJECT_SOURCE_DIR}/HungarianAlg
-              ${PROJECT_SOURCE_DIR}/Tracker
-		      ${PROJECT_SOURCE_DIR}/vibe_src
-		      ${PROJECT_SOURCE_DIR}/graph
-		      ${PROJECT_SOURCE_DIR}/graph/GTL/include)
+                      ${PROJECT_SOURCE_DIR}/vibe_src
+                      ${PROJECT_SOURCE_DIR}/Tracker
+                      ${PROJECT_SOURCE_DIR}/Tracker/HungarianAlg
+                      ${PROJECT_SOURCE_DIR}/Tracker/graph
+                      ${PROJECT_SOURCE_DIR}/Tracker/graph/GTL/include)
 
   INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR})
   INCLUDE_DIRECTORIES(${OpenCV_INCLUDE_DIRS})
