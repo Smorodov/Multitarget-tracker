@@ -13,6 +13,7 @@ CTracker::CTracker(
         bool useLocalTracking,
         DistType distType,
         KalmanType kalmanType,
+        FilterGoal filterGoal,
         bool useExternalTrackerForLostObjects,
 		MatchType matchType,
         track_t dt_,
@@ -25,6 +26,7 @@ CTracker::CTracker(
       m_useLocalTracking(useLocalTracking),
       m_distType(distType),
       m_kalmanType(kalmanType),
+      m_filterGoal(filterGoal),
       m_useExternalTrackerForLostObjects(useExternalTrackerForLostObjects),
 	  m_matchType(matchType),
       dt(dt_),
@@ -52,6 +54,8 @@ void CTracker::Update(
         cv::Mat grayFrame
         )
 {
+    TKalmanFilter::KalmanType kalmanType = (m_kalmanType == KalmanLinear) ? TKalmanFilter::TypeLinear : TKalmanFilter::TypeUnscented;
+
     assert(detections.size() == regions.size());
 
     if (m_prevFrame.size() == grayFrame.size())
@@ -70,7 +74,7 @@ void CTracker::Update(
         // If no tracks yet
         for (size_t i = 0; i < detections.size(); ++i)
         {
-            tracks.push_back(std::make_unique<CTrack>(detections[i], regions[i], dt, accelNoiseMag, NextTrackID++, m_kalmanType == FilterRect, m_useExternalTrackerForLostObjects));
+            tracks.push_back(std::make_unique<CTrack>(detections[i], regions[i], kalmanType, dt, accelNoiseMag, NextTrackID++, m_filterGoal == FilterRect, m_useExternalTrackerForLostObjects));
         }
     }
 
@@ -219,7 +223,7 @@ void CTracker::Update(
     {
         if (find(assignment.begin(), assignment.end(), i) == assignment.end())
         {
-            tracks.push_back(std::make_unique<CTrack>(detections[i], regions[i], dt, accelNoiseMag, NextTrackID++, m_kalmanType == FilterRect, m_useExternalTrackerForLostObjects));
+            tracks.push_back(std::make_unique<CTrack>(detections[i], regions[i], kalmanType, dt, accelNoiseMag, NextTrackID++, m_filterGoal == FilterRect, m_useExternalTrackerForLostObjects));
         }
     }
 

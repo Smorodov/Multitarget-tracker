@@ -172,6 +172,7 @@ public:
     CTrack(
             const Point_t& pt,
             const CRegion& region,
+            TKalmanFilter::KalmanType kalmanType,
             track_t deltaTime,
             track_t accelNoiseMag,
             size_t trackID,
@@ -188,11 +189,11 @@ public:
 	{
         if (filterObjectSize)
         {
-            m_kalman = new TKalmanFilter(region.m_rect, deltaTime, accelNoiseMag);
+            m_kalman = new TKalmanFilter(kalmanType, region.m_rect, deltaTime, accelNoiseMag);
         }
         else
         {
-            m_kalman = new TKalmanFilter(pt, deltaTime, accelNoiseMag);
+            m_kalman = new TKalmanFilter(kalmanType, pt, deltaTime, accelNoiseMag);
         }
         m_trace.push_back(pt, pt);
 	}
@@ -434,7 +435,7 @@ private:
     {
         m_kalman->GetPointPrediction();
 
-        if (!m_lastRegion.m_points.empty())
+        if (m_averagePoint.x + m_averagePoint.y > 0)
         {
             if (dataCorrect)
             {
