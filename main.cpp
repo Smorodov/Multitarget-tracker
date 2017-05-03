@@ -75,10 +75,11 @@ int main(int argc, char** argv)
 
     CTracker tracker(useLocalTracking,
                      CTracker::RectsDist,
+                     CTracker::KalmanUnscented,
                      CTracker::FilterRect,
                      true,                    // Use KCF tracker for collisions resolving
                      CTracker::MatchHungrian,
-                     0.2f,                    // Delta time for Kalman filter
+                     0.3f,                    // Delta time for Kalman filter
                      0.1f,                    // Accel noise magnitude for Kalman filter
                      gray.cols / 10.0f,       // Distance threshold between two frames
                      fps,                     // Maximum allowed skipped frames
@@ -91,7 +92,7 @@ int main(int argc, char** argv)
 
 	int64 allTime = 0;
 
-	bool manualMode = false;
+    bool manualMode = true;
 	int framesCounter = StartFrame + 1;
 	while (k != 27)
 	{
@@ -123,7 +124,7 @@ int main(int argc, char** argv)
 
         for (const auto& track : tracker.tracks)
 		{
-            if (track->IsRobust(fps,                     // Minimal trajectory size
+            if (track->IsRobust(fps / 2,                     // Minimal trajectory size
                                 0.5f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
                                 cv::Size2f(0.1f, 8.0f))      // Min and max ratio: width / height
                     )
@@ -135,6 +136,10 @@ int main(int argc, char** argv)
                 for (size_t j = 0; j < track->m_trace.size() - 1; ++j)
 				{
                     cv::line(frame, track->m_trace[j], track->m_trace[j + 1], cl, 1, CV_AA);
+                    if (!track->m_trace.HasRaw(j + 1))
+                    {
+                        cv::circle(frame, track->m_trace[j + 1], 4, cl, 1, CV_AA);
+                    }
 				}
 			}
 		}
@@ -184,7 +189,7 @@ int main(int argc, char** argv)
 
     bool useLocalTracking = false;
 
-    CTracker tracker(useLocalTracking, CTracker::CentersDist, CTracker::FilterCenter, false, CTracker::MatchHungrian, 0.3f, 0.5f, 60.0f, 25, 25);
+    CTracker tracker(useLocalTracking, CTracker::CentersDist, CTracker::KalmanLinear, CTracker::FilterCenter, false, CTracker::MatchHungrian, 0.2f, 0.5f, 100.0f, 25, 25);
 	track_t alpha = 0;
 	cv::RNG rng;
 	while (k != 27)

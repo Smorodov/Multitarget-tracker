@@ -4,6 +4,8 @@
 cmake_minimum_required(VERSION 2.8)
 project(MultitargetTracker)
 
+unset(CMAKE_CXX_FLAGS CACHE)
+
 if (CMAKE_COMPILER_IS_GNUCXX)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic-errors --std=gnu++14" CACHE STRING COMPILE_FLAGS FORCE)
     set(CMAKE_CXX_FLAGS_RELEASE "-O3 -g -march=native -mtune=native --fast-math -ffast-math -funroll-loops -Wall -DNDEBUG -DBOOST_DISABLE_ASSERTS" CACHE STRING COMPILE_FLAGS FORCE)
@@ -151,6 +153,11 @@ option(USE_OCV_KCF "Should use the KCF tracker from opencv_contrib for collision
 if(USE_OCV_KCF)
     add_definitions(-DUSE_OCV_KCF)
 endif(USE_OCV_KCF)
+
+option(USE_OCV_UKF "Should use the Unscented Kalman Filterr from opencv_contrib?" ON)
+if(USE_OCV_UKF)
+    add_definitions(-DUSE_OCV_UKF)
+endif(USE_OCV_UKF)
 
 # ----------------------------------------------------------------------------  
 # создаем проект
