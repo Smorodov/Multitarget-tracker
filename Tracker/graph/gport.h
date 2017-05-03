@@ -20,9 +20,6 @@
 #endif
 
 
-using namespace std;
-
-
 #include "gdefs.h"
 
 // System specific includes here
@@ -262,7 +259,7 @@ public:
 	};
 
 protected:
-    ofstream 		PostscriptStream;
+    std::ofstream 		PostscriptStream;
     std::string 	DocumentFonts;
 	
 	double fill_r, fill_g, fill_b;
@@ -306,7 +303,7 @@ public:
     // Printing
     virtual void GetPrintingRect (GRect &r);
 protected:
-    ofstream 		svgStream;
+    std::ofstream 		svgStream;
     std::string 	fontString;
 };
 

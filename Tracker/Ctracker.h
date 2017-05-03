@@ -17,10 +17,15 @@ public:
         CentersDist = 0,
         RectsDist = 1
     };
-    enum KalmanType
+    enum FilterGoal
     {
         FilterCenter = 0,
         FilterRect = 1
+    };
+    enum KalmanType
+    {
+        KalmanLinear = 0,
+        KalmanUnscented = 1
     };
 	enum MatchType
 	{
@@ -31,6 +36,7 @@ public:
     CTracker(bool useLocalTracking,
              DistType distType,
              KalmanType kalmanType,
+             FilterGoal filterGoal,
              bool useExternalTrackerForLostObjects,
 			 MatchType matchType,
              track_t dt_,
@@ -49,6 +55,7 @@ private:
 
     DistType m_distType;
     KalmanType m_kalmanType;
+    FilterGoal m_filterGoal;
     bool m_useExternalTrackerForLostObjects;
 	MatchType m_matchType;
 
