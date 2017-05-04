@@ -174,7 +174,7 @@ void MotionDetector(int argc, char** argv)
 
     int64 allTime = 0;
 
-    bool manualMode = true;
+    bool manualMode = false;
     int framesCounter = StartFrame + 1;
     while (k != 27)
     {
@@ -255,11 +255,170 @@ void MotionDetector(int argc, char** argv)
 }
 
 // ----------------------------------------------------------------------
+void FaceDetector(int argc, char** argv)
+{
+    std::string inFile("../data/smuglanka.mp4");
 
+    if (argc > 1)
+    {
+        inFile = argv[1];
+    }
+
+    std::string outFile;
+    if (argc > 2)
+    {
+        outFile = argv[2];
+    }
+
+    cv::VideoWriter writer;
+
+    cv::Scalar Colors[] = { cv::Scalar(255, 0, 0), cv::Scalar(0, 255, 0), cv::Scalar(0, 0, 255), cv::Scalar(255, 255, 0), cv::Scalar(0, 255, 255), cv::Scalar(255, 0, 255), cv::Scalar(255, 127, 255), cv::Scalar(127, 0, 255), cv::Scalar(127, 0, 127) };
+    cv::VideoCapture capture(inFile);
+    if (!capture.isOpened())
+    {
+        return;
+    }
+    cv::namedWindow("Video");
+    cv::Mat frame;
+    cv::Mat gray;
+
+    const int StartFrame = 0;
+    capture.set(cv::CAP_PROP_POS_FRAMES, StartFrame);
+
+    const int fps = std::max(1, static_cast<int>(capture.get(cv::CAP_PROP_FPS) + 0.5));
+
+    capture >> frame;
+    cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
+
+    // If true then trajectories will be more smooth and accurate
+    // But on high resolution videos with many objects may be to slow
+    bool useLocalTracking = false;
+
+    cv::CascadeClassifier cascade;
+    std::string fileName = "../haarcascade_frontalface_alt2.xml";
+    cascade.load(fileName);
+    if (cascade.empty())
+    {
+        std::cerr << "Cascade not opened!" << std::endl;
+        return;
+    }
+
+    CTracker tracker(useLocalTracking,
+                     CTracker::RectsDist,
+                     CTracker::KalmanLinear,
+                     CTracker::FilterRect,
+                     true,                    // Use KCF tracker for collisions resolving
+                     CTracker::MatchHungrian,
+                     0.3f,                    // Delta time for Kalman filter
+                     0.1f,                    // Accel noise magnitude for Kalman filter
+                     gray.cols / 10.0f,       // Distance threshold between two frames
+                     2 * fps,                 // Maximum allowed skipped frames
+                     5 * fps                  // Maximum trace length
+                     );
+
+    int k = 0;
+
+    double freq = cv::getTickFrequency();
+
+    int64 allTime = 0;
+
+    bool manualMode = false;
+    int framesCounter = StartFrame + 1;
+    while (k != 27)
+    {
+        capture >> frame;
+        if (frame.empty())
+        {
+            break;
+        }
+        cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
+
+        if (!writer.isOpened())
+        {
+            writer.open(outFile, cv::VideoWriter::fourcc('M', 'J', 'P', 'G'), capture.get(cv::CAP_PROP_FPS), frame.size(), true);
+        }
+
+        int64 t1 = cv::getTickCount();
+
+
+        bool findLargestObject = false;
+        bool filterRects = true;
+        std::vector<cv::Rect> faceRects;
+        cascade.detectMultiScale(gray,
+                                   faceRects,
+                                   1.1,
+                                   (filterRects || findLargestObject) ? 3 : 0,
+                                   findLargestObject ? cv::CASCADE_FIND_BIGGEST_OBJECT : 0,
+                                   cv::Size(gray.cols / 20, gray.rows / 20),
+                                 cv::Size(gray.cols / 2, gray.rows / 2));
+        std::vector<Point_t> centers;
+        regions_t regions;
+        for (auto rect : faceRects)
+        {
+            centers.push_back((rect.tl() + rect.br()) / 2);
+            regions.push_back(rect);
+        }
+
+        tracker.Update(centers, regions, gray);
+
+        int64 t2 = cv::getTickCount();
+
+        allTime += t2 - t1;
+        int currTime = static_cast<int>(1000 * (t2 - t1) / freq + 0.5);
+
+        std::cout << "Frame " << framesCounter << ": tracks = " << tracker.tracks.size() << ", time = " << currTime << std::endl;
+
+        for (const auto& track : tracker.tracks)
+        {
+            if (track->IsRobust(4,                           // Minimal trajectory size
+                                0.5f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
+                                cv::Size2f(0.1f, 8.0f))      // Min and max ratio: width / height
+                    )
+            {
+                cv::rectangle(frame, track->GetLastRect(), cv::Scalar(0, 255, 0), 1, CV_AA);
+
+                cv::Scalar cl = Colors[track->m_trackID % 9];
+
+                for (size_t j = 0; j < track->m_trace.size() - 1; ++j)
+                {
+                    cv::line(frame, track->m_trace[j], track->m_trace[j + 1], cl, 1, CV_AA);
+                    if (!track->m_trace.HasRaw(j + 1))
+                    {
+                        //cv::circle(frame, track->m_trace[j + 1], 4, cl, 1, CV_AA);
+                    }
+                }
+            }
+        }
+
+        cv::imshow("Video", frame);
+
+        int waitTime = manualMode ? 0 : std::max<int>(1, 1000 / fps - currTime);
+        k = cv::waitKey(waitTime);
+
+        if (k == 'm' || k == 'M')
+        {
+            manualMode = !manualMode;
+        }
+
+        if (writer.isOpened())
+        {
+            writer << frame;
+        }
+
+        ++framesCounter;
+        if (framesCounter > 215)
+        {
+            //break;
+        }
+    }
+
+    std::cout << "work time = " << (allTime / freq) << std::endl;
+    cv::waitKey(0);
+}
 // ----------------------------------------------------------------------
 int main(int argc, char** argv)
 {
-     int ExampleNum = 1;
+     int ExampleNum = 2;
 
      switch (ExampleNum)
      {
@@ -269,6 +428,10 @@ int main(int argc, char** argv)
 
      case 1:
          MotionDetector(argc, argv);
+         break;
+
+     case 2:
+         FaceDetector(argc, argv);
          break;
      }
 
