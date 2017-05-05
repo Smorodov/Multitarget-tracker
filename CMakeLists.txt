@@ -39,6 +39,7 @@ set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
              Detector/Detector.h
              Detector/BackgroundSubtract.h
              Detector/vibe_src/vibe.hpp
+             pedestrians/c4-pedestrian-detector.h
              Tracker/Ctracker.h
              Tracker/track.h
              Tracker/HungarianAlg/HungarianAlg.h

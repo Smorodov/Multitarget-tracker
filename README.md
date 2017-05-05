@@ -26,3 +26,4 @@ In project uses libraries:
 - Vibe: https://github.com/BelBES/VIBE
 - GTL: https://github.com/rdmpage/graph-template-library
 - MWBM: https://github.com/rdmpage/maximum-weighted-bipartite-matching
+- Pedestrians detector: https://github.com/sturkmen72/C4-Real-time-pedestrian-detection

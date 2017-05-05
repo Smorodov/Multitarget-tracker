@@ -7,6 +7,8 @@
 #include <iostream>
 #include <vector>
 
+#include "pedestrians/c4-pedestrian-detector.h"
+
 //------------------------------------------------------------------------
 // Mouse callbacks
 //------------------------------------------------------------------------
@@ -350,7 +352,7 @@ void FaceDetector(int argc, char** argv)
     bool useLocalTracking = false;
 
     cv::CascadeClassifier cascade;
-    std::string fileName = "../haarcascade_frontalface_alt2.xml";
+    std::string fileName = "../data/haarcascade_frontalface_alt2.xml";
     cascade.load(fileName);
     if (cascade.empty())
     {
@@ -511,8 +513,23 @@ void PedestrianDetector(int argc, char** argv)
     // But on high resolution videos with many objects may be to slow
     bool useLocalTracking = false;
 
+#define USE_HOG 0
+
+#if USE_HOG
     cv::HOGDescriptor hog;
     hog.setSVMDetector(cv::HOGDescriptor::getDefaultPeopleDetector());
+#else
+    const int HUMAN_height = 108;
+    const int HUMAN_width = 36;
+    const int HUMAN_xdiv = 9;
+    const int HUMAN_ydiv = 4;
+
+    DetectionScanner scanner(HUMAN_height, HUMAN_width, HUMAN_xdiv, HUMAN_ydiv, 256, 0.8);
+
+    std::string cascade1 = "../data/combined.txt.model";
+    std::string cascade2 = "../data/combined.txt.model_";
+    LoadCascade(cascade1, cascade2, scanner);
+#endif
 
     CTracker tracker(useLocalTracking,
                      CTracker::RectsDist,
@@ -551,14 +568,23 @@ void PedestrianDetector(int argc, char** argv)
 
         int64 t1 = cv::getTickCount();
 
+        std::vector<Point_t> centers;
+        regions_t regions;
+
         std::vector<cv::Rect> foundRects;
         std::vector<cv::Rect> filteredRects;
+
+#if USE_HOG
         hog.detectMultiScale(gray, foundRects, 0, cv::Size(8, 8), cv::Size(32, 32), 1.05, 6, false);
+#else
+        IntImage<double> original;
+        original.Load(gray);
+
+        scanner.FastScan(original, foundRects, 2);
+#endif
 
         nms(foundRects, filteredRects, 0.3f);
 
-        std::vector<Point_t> centers;
-        regions_t regions;
         for (auto rect : filteredRects)
         {
             rect.x += cvRound(rect.width * 0.1f);
@@ -582,7 +608,7 @@ void PedestrianDetector(int argc, char** argv)
         for (const auto& track : tracker.tracks)
         {
             if (track->IsRobust(fps / 2,                         // Minimal trajectory size
-                                0.0f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
+                                0.7f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
                                 cv::Size2f(0.1f, 8.0f))      // Min and max ratio: width / height
                     )
             {
@@ -630,7 +656,7 @@ void PedestrianDetector(int argc, char** argv)
 // ----------------------------------------------------------------------
 int main(int argc, char** argv)
 {
-     int ExampleNum = 1;
+     int ExampleNum = 3;
 
      switch (ExampleNum)
      {
