@@ -254,7 +254,7 @@ public:
         }
         else // Kalman filter only for object center
         {
-            PointUpdate(pt, dataCorrect);
+            PointUpdate(pt, dataCorrect, currFrame.size());
         }
 
         if (dataCorrect)
@@ -420,6 +420,31 @@ private:
                 m_predictionRect = m_kalman->Update(region.m_rect, dataCorrect);
             }
         }
+        if (m_predictionRect.width < 2)
+        {
+            m_predictionRect.width = 2;
+        }
+        if (m_predictionRect.x < 0)
+        {
+            m_predictionRect.x = 0;
+        }
+        else if (m_predictionRect.x + m_predictionRect.width > currFrame.cols - 1)
+        {
+            m_predictionRect.x = currFrame.cols - 1 - m_predictionRect.width;
+        }
+        if (m_predictionRect.height < 2)
+        {
+            m_predictionRect.height = 2;
+        }
+        if (m_predictionRect.y < 0)
+        {
+            m_predictionRect.y = 0;
+        }
+        else if (m_predictionRect.y + m_predictionRect.height > currFrame.rows - 1)
+        {
+            m_predictionRect.y = currFrame.rows - 1 - m_predictionRect.height;
+        }
+
         m_predictionPoint = (m_predictionRect.tl() + m_predictionRect.br()) / 2;
     }
 
@@ -430,7 +455,8 @@ private:
     ///
     void PointUpdate(
             const Point_t& pt,
-            bool dataCorrect
+            bool dataCorrect,
+            const cv::Size& frameSize
             )
     {
         m_kalman->GetPointPrediction();
@@ -449,6 +475,23 @@ private:
         else
         {
             m_predictionPoint = m_kalman->Update(pt, dataCorrect);
+        }
+
+        if (m_predictionPoint.x < 0)
+        {
+            m_predictionPoint.x = 0;
+        }
+        else if (m_predictionPoint.x > frameSize.width - 1)
+        {
+            m_predictionPoint.x = frameSize.width - 1;
+        }
+        if (m_predictionPoint.y < 0)
+        {
+            m_predictionPoint.y = 0;
+        }
+        else if (m_predictionPoint.y > frameSize.height - 1)
+        {
+            m_predictionPoint.y = frameSize.height - 1;
         }
     }
 };
