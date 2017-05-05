@@ -98,7 +98,7 @@ void BackgroundSubtract::subtract(const cv::Mat& image, cv::Mat& foreground)
 
     //cv::imshow("before", foreground);
 
-	cv::medianBlur(foreground, foreground, 3);
+    cv::medianBlur(foreground, foreground, 3);
 
 	cv::Mat dilateElement = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3), cv::Point(-1, -1));
 	cv::dilate(foreground, foreground, dilateElement, cv::Point(-1, -1), 2);

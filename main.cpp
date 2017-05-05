@@ -24,6 +24,61 @@ void mv_MouseCallback(int event, int x, int y, int /*flags*/, void* param)
 }
 
 // ----------------------------------------------------------------------
+void nms(
+    const std::vector<cv::Rect>& srcRects,
+    std::vector<cv::Rect>& resRects,
+    float thresh
+    )
+{
+    resRects.clear();
+
+    const size_t size = srcRects.size();
+    if (!size)
+    {
+        return;
+    }
+
+    // Sort the bounding boxes by the bottom - right y - coordinate of the bounding box
+    std::multimap<int, size_t> idxs;
+    for (size_t i = 0; i < size; ++i)
+    {
+        idxs.insert(std::pair<int, size_t>(srcRects[i].br().y, i));
+    }
+
+    // keep looping while some indexes still remain in the indexes list
+    while (idxs.size() > 0)
+    {
+        // grab the last rectangle
+        auto lastElem = --std::end(idxs);
+        const cv::Rect& rect1 = srcRects[lastElem->second];
+
+        resRects.push_back(rect1);
+
+        idxs.erase(lastElem);
+
+        for (auto pos = std::begin(idxs); pos != std::end(idxs); )
+        {
+            // grab the current rectangle
+            const cv::Rect& rect2 = srcRects[pos->second];
+
+            float intArea = (rect1 & rect2).area();
+            float unionArea = rect1.area() + rect2.area() - intArea;
+            float overlap = intArea / unionArea;
+
+            // if there is sufficient overlap, suppress the current bounding box
+            if (overlap > thresh)
+            {
+                pos = idxs.erase(pos);
+            }
+            else
+            {
+                ++pos;
+            }
+        }
+    }
+}
+
+// ----------------------------------------------------------------------
 void MouseTracking(int argc, char** argv)
 {
     // First argument ingnored
@@ -153,17 +208,17 @@ void MotionDetector(int argc, char** argv)
 
     CDetector detector(BackgroundSubtract::ALG_MOG, useLocalTracking, gray);
     detector.SetMinObjectSize(cv::Size(gray.cols / 50, gray.rows / 50));
-    //detector.SetMinObjectSize(cv::Size(4, 2));
+    //detector.SetMinObjectSize(cv::Size(2, 2));
 
     CTracker tracker(useLocalTracking,
                      CTracker::RectsDist,
                      CTracker::KalmanUnscented,
                      CTracker::FilterRect,
                      true,                    // Use KCF tracker for collisions resolving
-                     CTracker::MatchHungrian,
+                     CTracker::MatchBipart,
                      0.3f,                    // Delta time for Kalman filter
                      0.1f,                    // Accel noise magnitude for Kalman filter
-                     gray.cols / 10.0f,       // Distance threshold between two frames
+                     gray.cols / 20.0f,       // Distance threshold between two frames
                      fps,                     // Maximum allowed skipped frames
                      5 * fps                  // Maximum trace length
                      );
@@ -206,9 +261,9 @@ void MotionDetector(int argc, char** argv)
 
         for (const auto& track : tracker.tracks)
         {
-            if (track->IsRobust(fps / 2,                     // Minimal trajectory size
-                                0.5f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
-                                cv::Size2f(0.1f, 8.0f))      // Min and max ratio: width / height
+            if (track->IsRobust(fps,                     // Minimal trajectory size
+                                0.7f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
+                                cv::Size2f(0.5f, 4.0f))      // Min and max ratio: width / height
                     )
             {
                 cv::rectangle(frame, track->GetLastRect(), cv::Scalar(0, 255, 0), 1, CV_AA);
@@ -305,7 +360,7 @@ void FaceDetector(int argc, char** argv)
 
     CTracker tracker(useLocalTracking,
                      CTracker::RectsDist,
-                     CTracker::KalmanLinear,
+                     CTracker::KalmanUnscented,
                      CTracker::FilterRect,
                      true,                    // Use KCF tracker for collisions resolving
                      CTracker::MatchHungrian,
@@ -370,7 +425,7 @@ void FaceDetector(int argc, char** argv)
 
         for (const auto& track : tracker.tracks)
         {
-            if (track->IsRobust(4,                           // Minimal trajectory size
+            if (track->IsRobust(8,                           // Minimal trajectory size
                                 0.5f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
                                 cv::Size2f(0.1f, 8.0f))      // Min and max ratio: width / height
                     )
@@ -384,7 +439,7 @@ void FaceDetector(int argc, char** argv)
                     cv::line(frame, track->m_trace[j], track->m_trace[j + 1], cl, 1, CV_AA);
                     if (!track->m_trace.HasRaw(j + 1))
                     {
-                        //cv::circle(frame, track->m_trace[j + 1], 4, cl, 1, CV_AA);
+                        cv::circle(frame, track->m_trace[j + 1], 4, cl, 1, CV_AA);
                     }
                 }
             }
@@ -415,10 +470,167 @@ void FaceDetector(int argc, char** argv)
     std::cout << "work time = " << (allTime / freq) << std::endl;
     cv::waitKey(0);
 }
+
+// ----------------------------------------------------------------------
+void PedestrianDetector(int argc, char** argv)
+{
+    std::string inFile("TownCentreXVID.avi");
+
+    if (argc > 1)
+    {
+        inFile = argv[1];
+    }
+
+    std::string outFile;
+    if (argc > 2)
+    {
+        outFile = argv[2];
+    }
+
+    cv::VideoWriter writer;
+
+    cv::Scalar Colors[] = { cv::Scalar(255, 0, 0), cv::Scalar(0, 255, 0), cv::Scalar(0, 0, 255), cv::Scalar(255, 255, 0), cv::Scalar(0, 255, 255), cv::Scalar(255, 0, 255), cv::Scalar(255, 127, 255), cv::Scalar(127, 0, 255), cv::Scalar(127, 0, 127) };
+    cv::VideoCapture capture(inFile);
+    if (!capture.isOpened())
+    {
+        return;
+    }
+    cv::namedWindow("Video");
+    cv::Mat frame;
+    cv::Mat gray;
+
+    const int StartFrame = 0;
+    capture.set(cv::CAP_PROP_POS_FRAMES, StartFrame);
+
+    const int fps = std::max(1, static_cast<int>(capture.get(cv::CAP_PROP_FPS) + 0.5));
+
+    capture >> frame;
+    cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
+
+    // If true then trajectories will be more smooth and accurate
+    // But on high resolution videos with many objects may be to slow
+    bool useLocalTracking = false;
+
+    cv::HOGDescriptor hog;
+    hog.setSVMDetector(cv::HOGDescriptor::getDefaultPeopleDetector());
+
+    CTracker tracker(useLocalTracking,
+                     CTracker::RectsDist,
+                     CTracker::KalmanUnscented,
+                     CTracker::FilterRect,
+                     true,                    // Use KCF tracker for collisions resolving
+                     CTracker::MatchHungrian,
+                     0.3f,                    // Delta time for Kalman filter
+                     0.1f,                    // Accel noise magnitude for Kalman filter
+                     gray.cols / 10.0f,       // Distance threshold between two frames
+                     2 * fps,                 // Maximum allowed skipped frames
+                     5 * fps                  // Maximum trace length
+                     );
+
+    int k = 0;
+
+    double freq = cv::getTickFrequency();
+
+    int64 allTime = 0;
+
+    bool manualMode = false;
+    int framesCounter = StartFrame + 1;
+    while (k != 27)
+    {
+        capture >> frame;
+        if (frame.empty())
+        {
+            break;
+        }
+        cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
+
+        if (!writer.isOpened())
+        {
+            writer.open(outFile, cv::VideoWriter::fourcc('M', 'J', 'P', 'G'), capture.get(cv::CAP_PROP_FPS), frame.size(), true);
+        }
+
+        int64 t1 = cv::getTickCount();
+
+        std::vector<cv::Rect> foundRects;
+        std::vector<cv::Rect> filteredRects;
+        hog.detectMultiScale(gray, foundRects, 0, cv::Size(8, 8), cv::Size(32, 32), 1.05, 6, false);
+
+        nms(foundRects, filteredRects, 0.3f);
+
+        std::vector<Point_t> centers;
+        regions_t regions;
+        for (auto rect : filteredRects)
+        {
+            rect.x += cvRound(rect.width * 0.1f);
+            rect.width = cvRound(rect.width * 0.8f);
+            rect.y += cvRound(rect.height * 0.07f);
+            rect.height = cvRound(rect.height * 0.8f);
+
+            centers.push_back((rect.tl() + rect.br()) / 2);
+            regions.push_back(rect);
+        }
+
+        tracker.Update(centers, regions, gray);
+
+        int64 t2 = cv::getTickCount();
+
+        allTime += t2 - t1;
+        int currTime = static_cast<int>(1000 * (t2 - t1) / freq + 0.5);
+
+        std::cout << "Frame " << framesCounter << ": tracks = " << tracker.tracks.size() << ", time = " << currTime << std::endl;
+
+        for (const auto& track : tracker.tracks)
+        {
+            if (track->IsRobust(fps / 2,                         // Minimal trajectory size
+                                0.0f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
+                                cv::Size2f(0.1f, 8.0f))      // Min and max ratio: width / height
+                    )
+            {
+                cv::rectangle(frame, track->GetLastRect(), cv::Scalar(0, 255, 0), 1, CV_AA);
+
+                cv::Scalar cl = Colors[track->m_trackID % 9];
+
+                for (size_t j = 0; j < track->m_trace.size() - 1; ++j)
+                {
+                    cv::line(frame, track->m_trace[j], track->m_trace[j + 1], cl, 1, CV_AA);
+                    if (!track->m_trace.HasRaw(j + 1))
+                    {
+                        cv::circle(frame, track->m_trace[j + 1], 4, cl, 1, CV_AA);
+                    }
+                }
+            }
+        }
+
+        cv::imshow("Video", frame);
+
+        int waitTime = manualMode ? 0 : std::max<int>(1, 1000 / fps - currTime);
+        k = cv::waitKey(waitTime);
+
+        if (k == 'm' || k == 'M')
+        {
+            manualMode = !manualMode;
+        }
+
+        if (writer.isOpened())
+        {
+            writer << frame;
+        }
+
+        ++framesCounter;
+        if (framesCounter > 215)
+        {
+            //break;
+        }
+    }
+
+    std::cout << "work time = " << (allTime / freq) << std::endl;
+    cv::waitKey(0);
+}
+
 // ----------------------------------------------------------------------
 int main(int argc, char** argv)
 {
-     int ExampleNum = 2;
+     int ExampleNum = 1;
 
      switch (ExampleNum)
      {
@@ -432,6 +644,10 @@ int main(int argc, char** argv)
 
      case 2:
          FaceDetector(argc, argv);
+         break;
+
+     case 3:
+         PedestrianDetector(argc, argv);
          break;
      }
 
