@@ -27,3 +27,4 @@ In project uses libraries:
 - GTL: https://github.com/rdmpage/graph-template-library
 - MWBM: https://github.com/rdmpage/maximum-weighted-bipartite-matching
 - Pedestrians detector: https://github.com/sturkmen72/C4-Real-time-pedestrian-detection
+- Non Maximum Suppression: https://github.com/Nuzhny007/Non-Maximum-Suppression

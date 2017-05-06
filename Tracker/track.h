@@ -5,7 +5,9 @@
 #include <memory>
 #include <array>
 
+#if USE_OCV_KCF
 #include <opencv2/tracking.hpp>
+#endif
 
 #include "defines.h"
 #include "Kalman.h"
