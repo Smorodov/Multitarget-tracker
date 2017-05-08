@@ -180,4 +180,16 @@ endif(USE_OCV_UKF)
 # ----------------------------------------------------------------------------
 # и Lib-ы opencv 
 # ----------------------------------------------------------------------------
-  TARGET_LINK_LIBRARIES(MultitargetTracker ${OpenCV_LIBS})
+
+
+if (CMAKE_COMPILER_IS_GNUCXX)
+set(LIBS
+    ${OpenCV_LIBS}
+    iconv
+)
+else(CMAKE_COMPILER_IS_GNUCXX)
+set(LIBS
+    ${OpenCV_LIBS}
+)
+endif()
+TARGET_LINK_LIBRARIES(MultitargetTracker ${LIBS})
