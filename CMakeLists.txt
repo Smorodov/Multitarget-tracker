@@ -185,7 +185,7 @@ endif(USE_OCV_UKF)
 if (CMAKE_COMPILER_IS_GNUCXX)
 set(LIBS
     ${OpenCV_LIBS}
-    iconv
+#    iconv
 )
 else(CMAKE_COMPILER_IS_GNUCXX)
 set(LIBS

@@ -1,9 +1,13 @@
 #pragma once
 #include "defines.h"
+#include <memory>
+
 #include <opencv/cv.h>
 
+#if USE_OCV_UKF
 #include <opencv2/tracking.hpp>
 #include <opencv2/tracking/kalman_filters.hpp>
+#endif
 
 // http://www.morethantechnical.com/2011/06/17/simple-kalman-filter-for-tracking-using-opencv-2-2-w-code/
 class TKalmanFilter
