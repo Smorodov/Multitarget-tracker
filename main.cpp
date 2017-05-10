@@ -212,7 +212,7 @@ void MotionDetector(int argc, char** argv)
 
     // If true then trajectories will be more smooth and accurate
     // But on high resolution videos with many objects may be to slow
-    bool useLocalTracking = false;
+    bool useLocalTracking = true;
 
     CDetector detector(BackgroundSubtract::ALG_CNT, useLocalTracking, gray);
     detector.SetMinObjectSize(cv::Size(gray.cols / 50, gray.rows / 50));
@@ -222,7 +222,7 @@ void MotionDetector(int argc, char** argv)
                      CTracker::RectsDist,
                      CTracker::KalmanUnscented,
                      CTracker::FilterRect,
-                     false,                    // Use KCF tracker for collisions resolving
+                     true,                    // Use KCF tracker for collisions resolving
                      CTracker::MatchBipart,
                      0.3f,                    // Delta time for Kalman filter
                      0.1f,                    // Accel noise magnitude for Kalman filter
