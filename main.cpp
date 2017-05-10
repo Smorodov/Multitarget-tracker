@@ -206,9 +206,9 @@ void MotionDetector(int argc, char** argv)
 
     // If true then trajectories will be more smooth and accurate
     // But on high resolution videos with many objects may be to slow
-    bool useLocalTracking = true;
+    bool useLocalTracking = false;
 
-    CDetector detector(BackgroundSubtract::ALG_MOG, useLocalTracking, gray);
+    CDetector detector(BackgroundSubtract::ALG_CNT, useLocalTracking, gray);
     detector.SetMinObjectSize(cv::Size(gray.cols / 50, gray.rows / 50));
     //detector.SetMinObjectSize(cv::Size(2, 2));
 
@@ -216,7 +216,7 @@ void MotionDetector(int argc, char** argv)
                      CTracker::RectsDist,
                      CTracker::KalmanUnscented,
                      CTracker::FilterRect,
-                     true,                    // Use KCF tracker for collisions resolving
+                     false,                    // Use KCF tracker for collisions resolving
                      CTracker::MatchBipart,
                      0.3f,                    // Delta time for Kalman filter
                      0.1f,                    // Accel noise magnitude for Kalman filter
@@ -263,7 +263,7 @@ void MotionDetector(int argc, char** argv)
 
         for (const auto& track : tracker.tracks)
         {
-            if (track->IsRobust(fps,                     // Minimal trajectory size
+            if (track->IsRobust(fps / 2,                     // Minimal trajectory size
                                 0.7f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
                                 cv::Size2f(0.5f, 4.0f))      // Min and max ratio: width / height
                     )
@@ -656,7 +656,7 @@ void PedestrianDetector(int argc, char** argv)
 // ----------------------------------------------------------------------
 int main(int argc, char** argv)
 {
-     int ExampleNum = 3;
+     int ExampleNum = 1;
 
      switch (ExampleNum)
      {

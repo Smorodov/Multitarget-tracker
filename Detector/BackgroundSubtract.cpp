@@ -30,9 +30,14 @@ BackgroundSubtract::BackgroundSubtract(
     case ALG_GMG:
 		m_modelOCV = cv::bgsegm::createBackgroundSubtractorGMG(50, 0.7);
 		break;
+
+    case ALG_CNT:
+        m_modelOCV = cv::bgsegm::createBackgroundSubtractorCNT(15, true, 15 * 60, true);
+        break;
 #else
     case ALG_MOG:
     case ALG_GMG:
+    case ALG_CNT:
         std::cerr << "OpenCV bgfg algorithms are not implemented! Used Vibe by default." << std::endl;
 #endif
 
@@ -83,6 +88,7 @@ void BackgroundSubtract::subtract(const cv::Mat& image, cv::Mat& foreground)
 
 	case ALG_MOG:
 	case ALG_GMG:
+    case ALG_CNT:
 #if USE_OCV_BGFG
 		m_modelOCV->apply(GetImg(), foreground);
 		break;

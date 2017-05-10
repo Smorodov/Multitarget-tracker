@@ -15,7 +15,8 @@ public:
 	{
         ALG_VIBE,
         ALG_MOG,
-        ALG_GMG
+        ALG_GMG,
+        ALG_CNT
 	};
 
 	BackgroundSubtract(BGFG_ALGS algType, int channels = 1, int samples = 20, int pixel_neighbor = 1, int distance_threshold = 20, int matching_threshold = 3, int update_factor = 16);
