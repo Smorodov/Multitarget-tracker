@@ -27,10 +27,11 @@ void mv_MouseCallback(int event, int x, int y, int /*flags*/, void* param)
 
 // ----------------------------------------------------------------------
 void nms(
-    const std::vector<cv::Rect>& srcRects,
-    std::vector<cv::Rect>& resRects,
-    float thresh
-    )
+        const std::vector<cv::Rect>& srcRects,
+        std::vector<cv::Rect>& resRects,
+        float thresh,
+        int neighbors = 0
+        )
 {
     resRects.clear();
 
@@ -54,7 +55,7 @@ void nms(
         auto lastElem = --std::end(idxs);
         const cv::Rect& rect1 = srcRects[lastElem->second];
 
-        resRects.push_back(rect1);
+        int neigborsCount = 0;
 
         idxs.erase(lastElem);
 
@@ -71,11 +72,16 @@ void nms(
             if (overlap > thresh)
             {
                 pos = idxs.erase(pos);
+                ++neigborsCount;
             }
             else
             {
                 ++pos;
             }
+        }
+        if (neigborsCount >= neighbors)
+        {
+            resRects.push_back(rect1);
         }
     }
 }
@@ -583,7 +589,7 @@ void PedestrianDetector(int argc, char** argv)
         scanner.FastScan(original, foundRects, 2);
 #endif
 
-        nms(foundRects, filteredRects, 0.3f);
+        nms(foundRects, filteredRects, 0.3f, 1);
 
         for (auto rect : filteredRects)
         {
