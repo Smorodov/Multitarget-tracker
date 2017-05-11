@@ -218,6 +218,8 @@ void MotionDetector(int argc, char** argv)
     detector.SetMinObjectSize(cv::Size(gray.cols / 50, gray.rows / 50));
     //detector.SetMinObjectSize(cv::Size(2, 2));
 
+    std::string trajectoryFileName = inFile + ".txt";
+
     CTracker tracker(useLocalTracking,
                      CTracker::RectsDist,
                      CTracker::KalmanUnscented,
@@ -228,7 +230,8 @@ void MotionDetector(int argc, char** argv)
                      0.1f,                    // Accel noise magnitude for Kalman filter
                      gray.cols / 20.0f,       // Distance threshold between two frames
                      fps,                     // Maximum allowed skipped frames
-                     5 * fps                  // Maximum trace length
+                     5 * fps,                 // Maximum trace length
+                     trajectoryFileName
                      );
 
     int k = 0;
@@ -258,7 +261,7 @@ void MotionDetector(int argc, char** argv)
         const std::vector<Point_t>& centers = detector.Detect(gray);
         const regions_t& regions = detector.GetDetects();
 
-        tracker.Update(centers, regions, gray);
+        tracker.Update(centers, regions, gray, framesCounter);
 
         int64 t2 = cv::getTickCount();
 
@@ -312,6 +315,10 @@ void MotionDetector(int argc, char** argv)
             //break;
         }
     }
+
+#if SAVE_TRAJECTORIES
+    tracker.WriteAllTracks();
+#endif
 
     std::cout << "work time = " << (allTime / freq) << std::endl;
     cv::waitKey(0);

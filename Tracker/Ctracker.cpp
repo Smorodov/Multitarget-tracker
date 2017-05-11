@@ -20,7 +20,8 @@ CTracker::CTracker(
         track_t accelNoiseMag_,
         track_t dist_thres_,
         size_t maximum_allowed_skipped_frames_,
-        size_t max_trace_length_
+        size_t max_trace_length_,
+        std::string trajectoryFileName
         )
     :
       m_useLocalTracking(useLocalTracking),
@@ -36,6 +37,7 @@ CTracker::CTracker(
       max_trace_length(max_trace_length_),
       NextTrackID(0)
 {
+    m_saveTraj.Open(trajectoryFileName);
 }
 
 // ---------------------------------------------------------------------------
@@ -51,9 +53,12 @@ CTracker::~CTracker(void)
 void CTracker::Update(
         const std::vector<Point_t>& detections,
         const regions_t& regions,
-        cv::Mat grayFrame
+        cv::Mat grayFrame,
+        int frameInd
         )
 {
+    int64 currTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+
     TKalmanFilter::KalmanType kalmanType = (m_kalmanType == KalmanLinear) ? TKalmanFilter::TypeLinear : TKalmanFilter::TypeUnscented;
 
     assert(detections.size() == regions.size());
@@ -74,7 +79,15 @@ void CTracker::Update(
         // If no tracks yet
         for (size_t i = 0; i < detections.size(); ++i)
         {
-            tracks.push_back(std::make_unique<CTrack>(detections[i], regions[i], kalmanType, dt, accelNoiseMag, NextTrackID++, m_filterGoal == FilterRect, m_useExternalTrackerForLostObjects == TrackKCF));
+            tracks.push_back(std::make_unique<CTrack>(detections[i],
+                                                      regions[i],
+                                                      kalmanType,
+                                                      dt,
+                                                      accelNoiseMag,
+                                                      NextTrackID++,
+                                                      m_filterGoal == FilterRect,
+                                                      m_useExternalTrackerForLostObjects == TrackKCF,
+                                                      currTime, frameInd));
         }
     }
 
@@ -209,6 +222,11 @@ void CTracker::Update(
         {
             if (tracks[i]->m_skippedFrames > maximum_allowed_skipped_frames)
             {
+#if SAVE_TRAJECTORIES
+                auto track = tracks.begin() + i;
+                m_saveTraj.NewTrack(*(*track));
+#endif
+
                 tracks.erase(tracks.begin() + i);
                 assignment.erase(assignment.begin() + i);
                 i--;
@@ -223,7 +241,15 @@ void CTracker::Update(
     {
         if (find(assignment.begin(), assignment.end(), i) == assignment.end())
         {
-            tracks.push_back(std::make_unique<CTrack>(detections[i], regions[i], kalmanType, dt, accelNoiseMag, NextTrackID++, m_filterGoal == FilterRect, m_useExternalTrackerForLostObjects == TrackKCF));
+            tracks.push_back(std::make_unique<CTrack>(detections[i],
+                                                      regions[i],
+                                                      kalmanType,
+                                                      dt,
+                                                      accelNoiseMag,
+                                                      NextTrackID++,
+                                                      m_filterGoal == FilterRect,
+                                                      m_useExternalTrackerForLostObjects == TrackKCF,
+                                                      currTime, frameInd));
         }
     }
 
@@ -236,13 +262,26 @@ void CTracker::Update(
         if (assignment[i] != -1) // If we have assigned detect, then update using its coordinates,
         {
             tracks[i]->m_skippedFrames = 0;
-            tracks[i]->Update(detections[assignment[i]], regions[assignment[i]], true, max_trace_length, m_prevFrame, grayFrame);
+            tracks[i]->Update(detections[assignment[i]], regions[assignment[i]], true, max_trace_length, m_prevFrame, grayFrame, currTime, frameInd);
         }
         else				     // if not continue using predictions
         {
-            tracks[i]->Update(Point_t(), CRegion(), false, max_trace_length, m_prevFrame, grayFrame);
+            tracks[i]->Update(Point_t(), CRegion(), false, max_trace_length, m_prevFrame, grayFrame, currTime, frameInd);
         }
     }
 
     grayFrame.copyTo(m_prevFrame);
 }
+
+// ---------------------------------------------------------------------------
+//
+// ---------------------------------------------------------------------------
+#if SAVE_TRAJECTORIES
+void CTracker::WriteAllTracks()
+{
+    for (size_t i = 0; i < tracks.size(); ++i)
+    {
+        m_saveTraj.NewTrack(*tracks[i]);
+    }
+}
+#endif

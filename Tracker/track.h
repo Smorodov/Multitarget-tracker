@@ -22,7 +22,7 @@ struct TrajectoryPoint
     /// \brief TrajectoryPoint
     ///
     TrajectoryPoint()
-        : m_hasRaw(false)
+        : m_hasRaw(false), m_time(0), m_frameInd(0)
     {
     }
 
@@ -30,8 +30,8 @@ struct TrajectoryPoint
     /// \brief TrajectoryPoint
     /// \param prediction
     ///
-    TrajectoryPoint(const Point_t& prediction)
-        : m_hasRaw(false), m_prediction(prediction)
+    TrajectoryPoint(const Point_t& prediction, int64 currTime, int frameInd)
+        : m_hasRaw(false), m_prediction(prediction), m_time(currTime), m_frameInd(frameInd)
     {
     }
 
@@ -40,14 +40,16 @@ struct TrajectoryPoint
     /// \param prediction
     /// \param raw
     ///
-    TrajectoryPoint(const Point_t& prediction, const Point_t& raw)
-        : m_hasRaw(true), m_prediction(prediction), m_raw(raw)
+    TrajectoryPoint(const Point_t& prediction, const Point_t& raw, int64 currTime, int frameInd)
+        : m_hasRaw(true), m_prediction(prediction), m_raw(raw), m_time(currTime), m_frameInd(frameInd)
     {
     }
 
     bool m_hasRaw;
     Point_t m_prediction;
     Point_t m_raw;
+    int64 m_time;
+    int m_frameInd;
 };
 
 // --------------------------------------------------------------------------
@@ -88,6 +90,26 @@ public:
     }
 
     ///
+    /// \brief Time
+    /// \param i
+    /// \return
+    ///
+    int64 Time(size_t i) const
+    {
+        return m_trace[i].m_time;
+    }
+
+    ///
+    /// \brief FrameInd
+    /// \param i
+    /// \return
+    ///
+    int FrameInd(size_t i) const
+    {
+        return m_trace[i].m_frameInd;
+    }
+
+    ///
     /// \brief size
     /// \return
     ///
@@ -100,13 +122,13 @@ public:
     /// \brief push_back
     /// \param prediction
     ///
-    void push_back(const Point_t& prediction)
+    void push_back(const Point_t& prediction, int64 currTime, int frameInd)
     {
-        m_trace.push_back(TrajectoryPoint(prediction));
+        m_trace.push_back(TrajectoryPoint(prediction, currTime, frameInd));
     }
-    void push_back(const Point_t& prediction, const Point_t& raw)
+    void push_back(const Point_t& prediction, const Point_t& raw, int64 currTime, int frameInd)
     {
-        m_trace.push_back(TrajectoryPoint(prediction, raw));
+        m_trace.push_back(TrajectoryPoint(prediction, raw, currTime, frameInd));
     }
 
     ///
@@ -179,7 +201,9 @@ public:
             track_t accelNoiseMag,
             size_t trackID,
             bool filterObjectSize,
-            bool externalTrackerForLost
+            bool externalTrackerForLost,
+            int64 currTime,
+            int frameInd
             )
 		:
         m_trackID(trackID),
@@ -197,7 +221,7 @@ public:
         {
             m_kalman = new TKalmanFilter(kalmanType, pt, deltaTime, accelNoiseMag);
         }
-        m_trace.push_back(pt, pt);
+        m_trace.push_back(pt, pt, currTime, frameInd);
 	}
 
     ///
@@ -247,7 +271,9 @@ public:
             bool dataCorrect,
             size_t max_trace_length,
             cv::Mat prevFrame,
-            cv::Mat currFrame
+            cv::Mat currFrame,
+            int64 currTime,
+            int frameInd
             )
 	{
         if (m_filterObjectSize) // Kalman filter for object coordinates and size
@@ -262,11 +288,11 @@ public:
         if (dataCorrect)
         {
             m_lastRegion = region;
-            m_trace.push_back(m_predictionPoint, pt);
+            m_trace.push_back(m_predictionPoint, pt, currTime, frameInd);
         }
         else
         {
-            m_trace.push_back(m_predictionPoint);
+            m_trace.push_back(m_predictionPoint, currTime, frameInd);
         }
 
         if (m_trace.size() > max_trace_length)
