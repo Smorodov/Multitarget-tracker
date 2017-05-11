@@ -14,7 +14,7 @@ CTracker::CTracker(
         DistType distType,
         KalmanType kalmanType,
         FilterGoal filterGoal,
-        bool useExternalTrackerForLostObjects,
+        LostTrackType useExternalTrackerForLostObjects,
 		MatchType matchType,
         track_t dt_,
         track_t accelNoiseMag_,
@@ -74,7 +74,7 @@ void CTracker::Update(
         // If no tracks yet
         for (size_t i = 0; i < detections.size(); ++i)
         {
-            tracks.push_back(std::make_unique<CTrack>(detections[i], regions[i], kalmanType, dt, accelNoiseMag, NextTrackID++, m_filterGoal == FilterRect, m_useExternalTrackerForLostObjects));
+            tracks.push_back(std::make_unique<CTrack>(detections[i], regions[i], kalmanType, dt, accelNoiseMag, NextTrackID++, m_filterGoal == FilterRect, m_useExternalTrackerForLostObjects == TrackKCF));
         }
     }
 
@@ -223,7 +223,7 @@ void CTracker::Update(
     {
         if (find(assignment.begin(), assignment.end(), i) == assignment.end())
         {
-            tracks.push_back(std::make_unique<CTrack>(detections[i], regions[i], kalmanType, dt, accelNoiseMag, NextTrackID++, m_filterGoal == FilterRect, m_useExternalTrackerForLostObjects));
+            tracks.push_back(std::make_unique<CTrack>(detections[i], regions[i], kalmanType, dt, accelNoiseMag, NextTrackID++, m_filterGoal == FilterRect, m_useExternalTrackerForLostObjects == TrackKCF));
         }
     }
 

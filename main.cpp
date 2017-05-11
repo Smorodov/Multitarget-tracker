@@ -115,7 +115,7 @@ void MouseTracking(int argc, char** argv)
 
     bool useLocalTracking = false;
 
-    CTracker tracker(useLocalTracking, CTracker::CentersDist, CTracker::KalmanLinear, CTracker::FilterCenter, false, CTracker::MatchHungrian, 0.2f, 0.5f, 100.0f, 25, 25);
+    CTracker tracker(useLocalTracking, CTracker::CentersDist, CTracker::KalmanLinear, CTracker::FilterCenter, CTracker::TrackNone, CTracker::MatchHungrian, 0.2f, 0.5f, 100.0f, 25, 25);
     track_t alpha = 0;
     cv::RNG rng;
     while (k != 27)
@@ -222,7 +222,7 @@ void MotionDetector(int argc, char** argv)
                      CTracker::RectsDist,
                      CTracker::KalmanUnscented,
                      CTracker::FilterRect,
-                     true,                    // Use KCF tracker for collisions resolving
+                     CTracker::TrackKCF,      // Use KCF tracker for collisions resolving
                      CTracker::MatchBipart,
                      0.3f,                    // Delta time for Kalman filter
                      0.1f,                    // Accel noise magnitude for Kalman filter
@@ -370,7 +370,7 @@ void FaceDetector(int argc, char** argv)
                      CTracker::RectsDist,
                      CTracker::KalmanUnscented,
                      CTracker::FilterRect,
-                     true,                    // Use KCF tracker for collisions resolving
+                     CTracker::TrackKCF,      // Use KCF tracker for collisions resolving
                      CTracker::MatchHungrian,
                      0.3f,                    // Delta time for Kalman filter
                      0.1f,                    // Accel noise magnitude for Kalman filter
@@ -541,7 +541,7 @@ void PedestrianDetector(int argc, char** argv)
                      CTracker::RectsDist,
                      CTracker::KalmanUnscented,
                      CTracker::FilterRect,
-                     true,                    // Use KCF tracker for collisions resolving
+                     CTracker::TrackKCF,      // Use KCF tracker for collisions resolving
                      CTracker::MatchHungrian,
                      0.3f,                    // Delta time for Kalman filter
                      0.1f,                    // Accel noise magnitude for Kalman filter

@@ -32,12 +32,17 @@ public:
 		MatchHungrian = 0,
 		MatchBipart = 1
 	};
+    enum LostTrackType
+    {
+        TrackNone = 0,
+        TrackKCF = 1
+    };
 
     CTracker(bool useLocalTracking,
              DistType distType,
              KalmanType kalmanType,
              FilterGoal filterGoal,
-             bool useExternalTrackerForLostObjects,
+             LostTrackType useExternalTrackerForLostObjects,
 			 MatchType matchType,
              track_t dt_,
              track_t accelNoiseMag_,
@@ -56,7 +61,7 @@ private:
     DistType m_distType;
     KalmanType m_kalmanType;
     FilterGoal m_filterGoal;
-    bool m_useExternalTrackerForLostObjects;
+    LostTrackType m_useExternalTrackerForLostObjects;
 	MatchType m_matchType;
 
 	// Шаг времени опроса фильтра
