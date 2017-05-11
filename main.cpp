@@ -263,7 +263,7 @@ void MotionDetector(int argc, char** argv)
         int64 t2 = cv::getTickCount();
 
         allTime += t2 - t1;
-        int currTime = static_cast<int>(1000 * (t2 - t1) / freq + 0.5);
+        int currTime = cvRound(1000 * (t2 - t1) / freq);
 
         std::cout << "Frame " << framesCounter << ": tracks = " << tracker.tracks.size() << ", time = " << currTime << std::endl;
 
@@ -427,7 +427,7 @@ void FaceDetector(int argc, char** argv)
         int64 t2 = cv::getTickCount();
 
         allTime += t2 - t1;
-        int currTime = static_cast<int>(1000 * (t2 - t1) / freq + 0.5);
+        int currTime = cvRound(1000 * (t2 - t1) / freq);
 
         std::cout << "Frame " << framesCounter << ": tracks = " << tracker.tracks.size() << ", time = " << currTime << std::endl;
 
@@ -607,7 +607,7 @@ void PedestrianDetector(int argc, char** argv)
         int64 t2 = cv::getTickCount();
 
         allTime += t2 - t1;
-        int currTime = static_cast<int>(1000 * (t2 - t1) / freq + 0.5);
+        int currTime = cvRound(1000 * (t2 - t1) / freq);
 
         std::cout << "Frame " << framesCounter << ": tracks = " << tracker.tracks.size() << ", time = " << currTime << std::endl;
 
