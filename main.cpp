@@ -205,7 +205,7 @@ void MotionDetector(int argc, char** argv)
     const int StartFrame = 0;
     capture.set(cv::CAP_PROP_POS_FRAMES, StartFrame);
 
-    const int fps = std::max(1, static_cast<int>(capture.get(cv::CAP_PROP_FPS) + 0.5));
+    const int fps = std::max(1, cvRound(capture.get(cv::CAP_PROP_FPS)));
 
     capture >> frame;
     cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
@@ -348,7 +348,7 @@ void FaceDetector(int argc, char** argv)
     const int StartFrame = 0;
     capture.set(cv::CAP_PROP_POS_FRAMES, StartFrame);
 
-    const int fps = std::max(1, static_cast<int>(capture.get(cv::CAP_PROP_FPS) + 0.5));
+    const int fps = std::max(1, cvRound(capture.get(cv::CAP_PROP_FPS)));
 
     capture >> frame;
     cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
@@ -510,7 +510,7 @@ void PedestrianDetector(int argc, char** argv)
     const int StartFrame = 0;
     capture.set(cv::CAP_PROP_POS_FRAMES, StartFrame);
 
-    const int fps = std::max(1, static_cast<int>(capture.get(cv::CAP_PROP_FPS) + 0.5));
+    const int fps = std::max(1, cvRound(capture.get(cv::CAP_PROP_FPS)));
 
     capture >> frame;
     cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
