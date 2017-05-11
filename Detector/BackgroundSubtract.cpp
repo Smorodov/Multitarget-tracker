@@ -32,8 +32,13 @@ BackgroundSubtract::BackgroundSubtract(
 		break;
 
     case ALG_CNT:
+#if (((CV_VERSION_MAJOR == 3) && (CV_VERSION_MINOR >= 2)) || (CV_VERSION_MAJOR > 3))
         m_modelOCV = cv::bgsegm::createBackgroundSubtractorCNT(15, true, 15 * 60, true);
         break;
+#else
+        std::cerr << "OpenCV CNT algorithm is not implemented! Used Vibe by default." << std::endl;
+#endif
+
 #else
     case ALG_MOG:
     case ALG_GMG:
