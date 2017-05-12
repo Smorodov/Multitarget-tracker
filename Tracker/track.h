@@ -394,7 +394,7 @@ private:
                 }
             }
 #else
-            std::cerr << "KCF tracker was disabled in CMAKE! Set useExternalTrackerForLostObjects = false in constructor." << std::endl;
+            std::cerr << "KCF tracker was disabled in CMAKE! Set useExternalTrackerForLostObjects = TrackNone in constructor." << std::endl;
 #endif
         }
 

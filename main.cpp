@@ -115,7 +115,7 @@ void MouseTracking(int argc, char** argv)
 
     bool useLocalTracking = false;
 
-    CTracker tracker(useLocalTracking, CTracker::CentersDist, CTracker::KalmanLinear, CTracker::FilterCenter, false, CTracker::MatchHungrian, 0.2f, 0.5f, 100.0f, 25, 25);
+    CTracker tracker(useLocalTracking, CTracker::CentersDist, CTracker::KalmanLinear, CTracker::FilterCenter, CTracker::TrackNone, CTracker::MatchHungrian, 0.2f, 0.5f, 100.0f, 25, 25);
     track_t alpha = 0;
     cv::RNG rng;
     while (k != 27)
@@ -205,7 +205,7 @@ void MotionDetector(int argc, char** argv)
     const int StartFrame = 0;
     capture.set(cv::CAP_PROP_POS_FRAMES, StartFrame);
 
-    const int fps = std::max(1, static_cast<int>(capture.get(cv::CAP_PROP_FPS) + 0.5));
+    const int fps = std::max(1, cvRound(capture.get(cv::CAP_PROP_FPS)));
 
     capture >> frame;
     cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
@@ -214,7 +214,7 @@ void MotionDetector(int argc, char** argv)
     // But on high resolution videos with many objects may be to slow
     bool useLocalTracking = true;
 
-    CDetector detector(BackgroundSubtract::ALG_MOG, useLocalTracking, gray);
+    CDetector detector(BackgroundSubtract::ALG_CNT, useLocalTracking, gray);
     detector.SetMinObjectSize(cv::Size(gray.cols / 50, gray.rows / 50));
     //detector.SetMinObjectSize(cv::Size(2, 2));
 
@@ -222,7 +222,7 @@ void MotionDetector(int argc, char** argv)
                      CTracker::RectsDist,
                      CTracker::KalmanUnscented,
                      CTracker::FilterRect,
-                     true,                    // Use KCF tracker for collisions resolving
+                     CTracker::TrackKCF,      // Use KCF tracker for collisions resolving
                      CTracker::MatchBipart,
                      0.3f,                    // Delta time for Kalman filter
                      0.1f,                    // Accel noise magnitude for Kalman filter
@@ -263,13 +263,13 @@ void MotionDetector(int argc, char** argv)
         int64 t2 = cv::getTickCount();
 
         allTime += t2 - t1;
-        int currTime = static_cast<int>(1000 * (t2 - t1) / freq + 0.5);
+        int currTime = cvRound(1000 * (t2 - t1) / freq);
 
         std::cout << "Frame " << framesCounter << ": tracks = " << tracker.tracks.size() << ", time = " << currTime << std::endl;
 
         for (const auto& track : tracker.tracks)
         {
-            if (track->IsRobust(fps,                     // Minimal trajectory size
+            if (track->IsRobust(fps / 2,                     // Minimal trajectory size
                                 0.7f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
                                 cv::Size2f(0.5f, 4.0f))      // Min and max ratio: width / height
                     )
@@ -348,7 +348,7 @@ void FaceDetector(int argc, char** argv)
     const int StartFrame = 0;
     capture.set(cv::CAP_PROP_POS_FRAMES, StartFrame);
 
-    const int fps = std::max(1, static_cast<int>(capture.get(cv::CAP_PROP_FPS) + 0.5));
+    const int fps = std::max(1, cvRound(capture.get(cv::CAP_PROP_FPS)));
 
     capture >> frame;
     cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
@@ -370,7 +370,7 @@ void FaceDetector(int argc, char** argv)
                      CTracker::RectsDist,
                      CTracker::KalmanUnscented,
                      CTracker::FilterRect,
-                     true,                    // Use KCF tracker for collisions resolving
+                     CTracker::TrackKCF,      // Use KCF tracker for collisions resolving
                      CTracker::MatchHungrian,
                      0.3f,                    // Delta time for Kalman filter
                      0.1f,                    // Accel noise magnitude for Kalman filter
@@ -427,7 +427,7 @@ void FaceDetector(int argc, char** argv)
         int64 t2 = cv::getTickCount();
 
         allTime += t2 - t1;
-        int currTime = static_cast<int>(1000 * (t2 - t1) / freq + 0.5);
+        int currTime = cvRound(1000 * (t2 - t1) / freq);
 
         std::cout << "Frame " << framesCounter << ": tracks = " << tracker.tracks.size() << ", time = " << currTime << std::endl;
 
@@ -510,7 +510,7 @@ void PedestrianDetector(int argc, char** argv)
     const int StartFrame = 0;
     capture.set(cv::CAP_PROP_POS_FRAMES, StartFrame);
 
-    const int fps = std::max(1, static_cast<int>(capture.get(cv::CAP_PROP_FPS) + 0.5));
+    const int fps = std::max(1, cvRound(capture.get(cv::CAP_PROP_FPS)));
 
     capture >> frame;
     cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
@@ -541,7 +541,7 @@ void PedestrianDetector(int argc, char** argv)
                      CTracker::RectsDist,
                      CTracker::KalmanUnscented,
                      CTracker::FilterRect,
-                     true,                    // Use KCF tracker for collisions resolving
+                     CTracker::TrackKCF,      // Use KCF tracker for collisions resolving
                      CTracker::MatchHungrian,
                      0.3f,                    // Delta time for Kalman filter
                      0.1f,                    // Accel noise magnitude for Kalman filter
@@ -607,7 +607,7 @@ void PedestrianDetector(int argc, char** argv)
         int64 t2 = cv::getTickCount();
 
         allTime += t2 - t1;
-        int currTime = static_cast<int>(1000 * (t2 - t1) / freq + 0.5);
+        int currTime = cvRound(1000 * (t2 - t1) / freq);
 
         std::cout << "Frame " << framesCounter << ": tracks = " << tracker.tracks.size() << ", time = " << currTime << std::endl;
 
@@ -662,7 +662,7 @@ void PedestrianDetector(int argc, char** argv)
 // ----------------------------------------------------------------------
 int main(int argc, char** argv)
 {
-     int ExampleNum = 3;
+     int ExampleNum = 1;
 
      switch (ExampleNum)
      {
