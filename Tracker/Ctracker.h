@@ -40,15 +40,21 @@ public:
         {
             std::string delim = ",";
             int type = 2;
-            track_t z = 0;
 
             if (track.m_trace.size() > 25)
             {
                 for (size_t j = 0; j < track.m_trace.size(); ++j)
                 {
-                    Point_t pt = track.m_trace[j];
+                    const TrajectoryPoint& pt = track.m_trace.at(j);
 
-                    m_file << track.m_trace.FrameInd(j) << delim << track.m_trackID << delim << type << delim << pt.x << delim << pt.y << delim << z << delim << track.m_trace.Time(j) << delim << j << std::endl;
+                    m_file << pt.m_frameInd << delim
+                           << track.m_trackID << delim
+                           << type << delim
+                           << pt.m_prediction.x << delim
+                           << pt.m_prediction.y << delim
+                           << (static_cast<track_t>(pt.m_size.width) / static_cast<track_t>(pt.m_size.width))<< delim
+                           << pt.m_time << delim
+                           << j << std::endl;
                 }
             }
             return true;
