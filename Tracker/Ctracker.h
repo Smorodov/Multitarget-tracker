@@ -52,7 +52,7 @@ public:
                            << type << delim
                            << pt.m_prediction.x << delim
                            << pt.m_prediction.y << delim
-                           << (static_cast<track_t>(pt.m_size.width) / static_cast<track_t>(pt.m_size.width))<< delim
+                           << (static_cast<track_t>(pt.m_size.width) / static_cast<track_t>(pt.m_size.height))<< delim
                            << pt.m_time << delim
                            << j << std::endl;
                 }
