@@ -42,7 +42,7 @@ public:
             std::string delim = ",";
             int type = 2;
 
-            if (track.m_trace.size() > 25)
+            if (track.IsRobust(25, 0.7, cv::Size2f(0.9f, 4.0f)))
             {
                 for (size_t j = 0; j < track.m_trace.size(); ++j)
                 {
@@ -55,7 +55,7 @@ public:
                            << pt.m_prediction.y << delim
                            << (static_cast<track_t>(pt.m_size.width) / static_cast<track_t>(pt.m_size.height))<< delim
                            << pt.m_time << delim
-                           << j << std::endl;
+                           << (j + 1) << std::endl;
                 }
             }
             return true;
