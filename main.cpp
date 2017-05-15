@@ -14,15 +14,15 @@
 //------------------------------------------------------------------------
 void mv_MouseCallback(int event, int x, int y, int /*flags*/, void* param)
 {
-	if (event == cv::EVENT_MOUSEMOVE)
-	{
-		cv::Point2f* p = (cv::Point2f*)param;
-		if (p)
-		{
-			p->x = static_cast<float>(x);
-			p->y = static_cast<float>(y);
-		}
-	}
+    if (event == cv::EVENT_MOUSEMOVE)
+    {
+        cv::Point2f* p = (cv::Point2f*)param;
+        if (p)
+        {
+            p->x = static_cast<float>(x);
+            p->y = static_cast<float>(y);
+        }
+    }
 }
 
 // ----------------------------------------------------------------------
@@ -87,15 +87,9 @@ void nms(
 }
 
 // ----------------------------------------------------------------------
-void MouseTracking(int argc, char** argv)
+void MouseTracking(cv::CommandLineParser parser)
 {
-    // First argument ingnored
-
-    std::string outFile;
-    if (argc > 2)
-    {
-        outFile = argv[2];
-    }
+    std::string outFile = parser.get<std::string>("out");
 
     cv::VideoWriter writer;
 
@@ -198,20 +192,10 @@ void DrawTrack(cv::Mat frame,
 }
 
 // ----------------------------------------------------------------------
-void MotionDetector(int argc, char** argv)
+void MotionDetector(cv::CommandLineParser parser)
 {
-    std::string inFile("../data/atrium.avi");
-
-    if (argc > 1)
-    {
-        inFile = argv[1];
-    }
-
-    std::string outFile;
-    if (argc > 2)
-    {
-        outFile = argv[2];
-    }
+    std::string inFile = parser.get<std::string>(0);
+    std::string outFile = parser.get<std::string>("out");
 
     cv::VideoWriter writer;
 
@@ -225,7 +209,10 @@ void MotionDetector(int argc, char** argv)
     cv::Mat frame;
     cv::Mat gray;
 
-    const int StartFrame = 0;
+    bool showLogs = parser.get<int>("show_logs") != 0;
+
+    const int StartFrame = parser.get<int>("start_frame");
+    const int EndFrame = parser.get<int>("end_frame");
     capture.set(cv::CAP_PROP_POS_FRAMES, StartFrame);
 
     const int fps = std::max(1, cvRound(capture.get(cv::CAP_PROP_FPS)));
@@ -235,25 +222,25 @@ void MotionDetector(int argc, char** argv)
 
     // If true then trajectories will be more smooth and accurate
     // But on high resolution videos with many objects may be to slow
-    bool useLocalTracking = true;
+    bool useLocalTracking = false;
 
     CDetector detector(BackgroundSubtract::ALG_MOG, useLocalTracking, gray);
-    detector.SetMinObjectSize(cv::Size(gray.cols / 50, gray.rows / 50));
-    //detector.SetMinObjectSize(cv::Size(2, 2));
+    //detector.SetMinObjectSize(cv::Size(gray.cols / 50, gray.rows / 50));
+    detector.SetMinObjectSize(cv::Size(2, 2));
 
     std::string trajectoryFileName = inFile + ".txt";
 
     CTracker tracker(useLocalTracking,
                      CTracker::RectsDist,
                      CTracker::KalmanUnscented,
-                     CTracker::FilterRect,
+                     CTracker::FilterCenter,
                      CTracker::TrackKCF,      // Use KCF tracker for collisions resolving
                      CTracker::MatchBipart,
                      0.3f,                    // Delta time for Kalman filter
                      0.1f,                    // Accel noise magnitude for Kalman filter
-                     gray.cols / 20.0f,       // Distance threshold between two frames
+                     gray.cols / 50.0f,       // Distance threshold between two frames
                      fps,                     // Maximum allowed skipped frames
-                     5 * fps,                 // Maximum trace length
+                     25 * fps,                 // Maximum trace length
                      trajectoryFileName
                      );
 
@@ -291,13 +278,16 @@ void MotionDetector(int argc, char** argv)
         allTime += t2 - t1;
         int currTime = cvRound(1000 * (t2 - t1) / freq);
 
-        std::cout << "Frame " << framesCounter << ": tracks = " << tracker.tracks.size() << ", time = " << currTime << std::endl;
+        if (showLogs)
+        {
+            std::cout << "Frame " << framesCounter << ": tracks = " << tracker.tracks.size() << ", time = " << currTime << std::endl;
+        }
 
         for (const auto& track : tracker.tracks)
         {
-            if (track->IsRobust(fps / 2,                     // Minimal trajectory size
+            if (track->IsRobust(25,                         // Minimal trajectory size
                                 0.7f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
-                                cv::Size2f(0.5f, 4.0f))      // Min and max ratio: width / height
+                                cv::Size2f(0.9f, 4.0f))      // Min and max ratio: width / height
                     )
             {
                 DrawTrack(frame, *track, colors);
@@ -322,9 +312,9 @@ void MotionDetector(int argc, char** argv)
         }
 
         ++framesCounter;
-        if (framesCounter > 215)
+        if (EndFrame && framesCounter > EndFrame)
         {
-            //break;
+            break;
         }
     }
 
@@ -333,24 +323,14 @@ void MotionDetector(int argc, char** argv)
 #endif
 
     std::cout << "work time = " << (allTime / freq) << std::endl;
-    cv::waitKey(0);
+    cv::waitKey(parser.get<int>("end_delay"));
 }
 
 // ----------------------------------------------------------------------
-void FaceDetector(int argc, char** argv)
+void FaceDetector(cv::CommandLineParser parser)
 {
-    std::string inFile("../data/smuglanka.mp4");
-
-    if (argc > 1)
-    {
-        inFile = argv[1];
-    }
-
-    std::string outFile;
-    if (argc > 2)
-    {
-        outFile = argv[2];
-    }
+    std::string inFile = parser.get<std::string>("0");
+    std::string outFile = parser.get<std::string>("out");
 
     cv::VideoWriter writer;
 
@@ -364,7 +344,10 @@ void FaceDetector(int argc, char** argv)
     cv::Mat frame;
     cv::Mat gray;
 
-    const int StartFrame = 0;
+    bool showLogs = parser.get<int>("show_logs") != 0;
+
+    const int StartFrame = parser.get<int>("start_frame");
+    const int EndFrame = parser.get<int>("end_frame");
     capture.set(cv::CAP_PROP_POS_FRAMES, StartFrame);
 
     const int fps = std::max(1, cvRound(capture.get(cv::CAP_PROP_FPS)));
@@ -427,11 +410,11 @@ void FaceDetector(int argc, char** argv)
         bool filterRects = true;
         std::vector<cv::Rect> faceRects;
         cascade.detectMultiScale(gray,
-                                   faceRects,
-                                   1.1,
-                                   (filterRects || findLargestObject) ? 3 : 0,
-                                   findLargestObject ? cv::CASCADE_FIND_BIGGEST_OBJECT : 0,
-                                   cv::Size(gray.cols / 20, gray.rows / 20),
+                                 faceRects,
+                                 1.1,
+                                 (filterRects || findLargestObject) ? 3 : 0,
+                                 findLargestObject ? cv::CASCADE_FIND_BIGGEST_OBJECT : 0,
+                                 cv::Size(gray.cols / 20, gray.rows / 20),
                                  cv::Size(gray.cols / 2, gray.rows / 2));
         std::vector<Point_t> centers;
         regions_t regions;
@@ -448,7 +431,10 @@ void FaceDetector(int argc, char** argv)
         allTime += t2 - t1;
         int currTime = cvRound(1000 * (t2 - t1) / freq);
 
-        std::cout << "Frame " << framesCounter << ": tracks = " << tracker.tracks.size() << ", time = " << currTime << std::endl;
+        if (showLogs)
+        {
+            std::cout << "Frame " << framesCounter << ": tracks = " << tracker.tracks.size() << ", time = " << currTime << std::endl;
+        }
 
         for (const auto& track : tracker.tracks)
         {
@@ -477,31 +463,21 @@ void FaceDetector(int argc, char** argv)
         }
 
         ++framesCounter;
-        if (framesCounter > 215)
+        if (EndFrame && framesCounter > EndFrame)
         {
-            //break;
+            break;
         }
     }
 
     std::cout << "work time = " << (allTime / freq) << std::endl;
-    cv::waitKey(0);
+    cv::waitKey(parser.get<int>("end_delay"));
 }
 
 // ----------------------------------------------------------------------
-void PedestrianDetector(int argc, char** argv)
+void PedestrianDetector(cv::CommandLineParser parser)
 {
-    std::string inFile("TownCentreXVID.avi");
-
-    if (argc > 1)
-    {
-        inFile = argv[1];
-    }
-
-    std::string outFile;
-    if (argc > 2)
-    {
-        outFile = argv[2];
-    }
+    std::string inFile = parser.get<std::string>(0);
+    std::string outFile = parser.get<std::string>("out");
 
     cv::VideoWriter writer;
 
@@ -515,7 +491,10 @@ void PedestrianDetector(int argc, char** argv)
     cv::Mat frame;
     cv::Mat gray;
 
-    const int StartFrame = 0;
+    bool showLogs = parser.get<int>("show_logs") != 0;
+
+    const int StartFrame = parser.get<int>("start_frame");
+    const int EndFrame = parser.get<int>("end_frame");
     capture.set(cv::CAP_PROP_POS_FRAMES, StartFrame);
 
     const int fps = std::max(1, cvRound(capture.get(cv::CAP_PROP_FPS)));
@@ -617,7 +596,10 @@ void PedestrianDetector(int argc, char** argv)
         allTime += t2 - t1;
         int currTime = cvRound(1000 * (t2 - t1) / freq);
 
-        std::cout << "Frame " << framesCounter << ": tracks = " << tracker.tracks.size() << ", time = " << currTime << std::endl;
+        if (showLogs)
+        {
+            std::cout << "Frame " << framesCounter << ": tracks = " << tracker.tracks.size() << ", time = " << currTime << std::endl;
+        }
 
         for (const auto& track : tracker.tracks)
         {
@@ -646,41 +628,68 @@ void PedestrianDetector(int argc, char** argv)
         }
 
         ++framesCounter;
-        if (framesCounter > 215)
+        if (EndFrame && framesCounter > EndFrame)
         {
-            //break;
+            break;
         }
     }
 
     std::cout << "work time = " << (allTime / freq) << std::endl;
-    cv::waitKey(0);
+    cv::waitKey(parser.get<int>("end_delay"));
 }
+
+// ----------------------------------------------------------------------
+static void Help()
+{
+    printf("\nExamples of the Multitarget tracking algorithm\n"
+           "Usage: \n"
+           "          ./MultitargetTracker <path to movie file> [--example]=<number of example 0..3> [--start_frame]=<start a video from this position> [--end_frame]=<play a video to this position> [--end_delay]=<delay in milliseconds after video ending> [--out]=<name of result video file> [--show_logs]=<show logs> \n\n"
+           "Press:\n"
+           "\'m\' key for change mode: play|pause. When video is paused you can press any key for get next frame. \n\n"
+           "Press Esc to exit from video \n\n"
+           );
+}
+
+const char* keys =
+{
+    "{ @1             |../data/atrium.avi  | movie file | }"
+    "{ e  example     |1                   | number of example 0 - MouseTracking, 1 - MotionDetector, 2 - FaceDetector, 3 - PedestrianDetector | }"
+    "{ sf start_frame |0                   | Start a video from this position | }"
+    "{ ef end_frame   |0                   | Play a video to this position (if 0 then played to the end of file) | }"
+    "{ ed end_delay   |0                   | Delay in milliseconds after video ending | }"
+    "{ o  out         |                    | Name of result video file | }"
+    "{ sl show_logs   |1                   | Show Trackers logs | }"
+};
 
 // ----------------------------------------------------------------------
 int main(int argc, char** argv)
 {
-     int ExampleNum = 1;
+    Help();
 
-     switch (ExampleNum)
-     {
-     case 0:
-         MouseTracking(argc, argv);
-         break;
+    cv::CommandLineParser parser(argc, argv, keys);
 
-     case 1:
-         MotionDetector(argc, argv);
-         break;
+    int exampleNum = parser.get<int>("example");;
 
-     case 2:
-         FaceDetector(argc, argv);
-         break;
+    switch (exampleNum)
+    {
+    case 0:
+        MouseTracking(parser);
+        break;
 
-     case 3:
-         PedestrianDetector(argc, argv);
-         break;
-     }
+    case 1:
+        MotionDetector(parser);
+        break;
+
+    case 2:
+        FaceDetector(parser);
+        break;
+
+    case 3:
+        PedestrianDetector(parser);
+        break;
+    }
 
 
-	cv::destroyAllWindows();
-	return 0;
+    cv::destroyAllWindows();
+    return 0;
 }
