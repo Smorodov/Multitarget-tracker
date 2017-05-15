@@ -100,7 +100,7 @@ void MouseTracking(int argc, char** argv)
     cv::VideoWriter writer;
 
     int k = 0;
-    cv::Scalar Colors[] = { cv::Scalar(255, 0, 0), cv::Scalar(0, 255, 0), cv::Scalar(0, 0, 255), cv::Scalar(255, 255, 0), cv::Scalar(0, 255, 255), cv::Scalar(255, 255, 255) };
+    std::vector<cv::Scalar> colors = { cv::Scalar(255, 0, 0), cv::Scalar(0, 255, 0), cv::Scalar(0, 0, 255), cv::Scalar(255, 255, 0), cv::Scalar(0, 255, 255), cv::Scalar(255, 0, 255), cv::Scalar(255, 127, 255), cv::Scalar(127, 0, 255), cv::Scalar(127, 0, 127) };
     cv::namedWindow("Video");
     cv::Mat frame = cv::Mat(800, 800, CV_8UC3);
 
@@ -158,7 +158,7 @@ void MouseTracking(int argc, char** argv)
             {
                 for (size_t j = 0; j < tracks->m_trace.size() - 1; j++)
                 {
-                    cv::line(frame, tracks->m_trace[j], tracks->m_trace[j + 1], Colors[i % 6], 2, CV_AA);
+                    cv::line(frame, tracks->m_trace[j], tracks->m_trace[j + 1], colors[i % colors.size()], 2, CV_AA);
                 }
             }
         }
@@ -171,6 +171,29 @@ void MouseTracking(int argc, char** argv)
         }
 
         k = cv::waitKey(10);
+    }
+}
+
+// ----------------------------------------------------------------------
+void DrawTrack(cv::Mat frame,
+               const CTrack& track,
+               const std::vector<cv::Scalar>& colors
+               )
+{
+    cv::rectangle(frame, track.GetLastRect(), cv::Scalar(0, 255, 0), 1, CV_AA);
+
+    cv::Scalar cl = colors[track.m_trackID % colors.size()];
+
+    for (size_t j = 0; j < track.m_trace.size() - 1; ++j)
+    {
+        const TrajectoryPoint& pt1 = track.m_trace.at(j);
+        const TrajectoryPoint& pt2 = track.m_trace.at(j + 1);
+
+        cv::line(frame, pt1.m_prediction, pt2.m_prediction, cl, 1, CV_AA);
+        if (!pt2.m_hasRaw)
+        {
+            cv::circle(frame, pt2.m_prediction, 4, cl, 1, CV_AA);
+        }
     }
 }
 
@@ -192,7 +215,7 @@ void MotionDetector(int argc, char** argv)
 
     cv::VideoWriter writer;
 
-    cv::Scalar Colors[] = { cv::Scalar(255, 0, 0), cv::Scalar(0, 255, 0), cv::Scalar(0, 0, 255), cv::Scalar(255, 255, 0), cv::Scalar(0, 255, 255), cv::Scalar(255, 0, 255), cv::Scalar(255, 127, 255), cv::Scalar(127, 0, 255), cv::Scalar(127, 0, 127) };
+    std::vector<cv::Scalar> colors = { cv::Scalar(255, 0, 0), cv::Scalar(0, 255, 0), cv::Scalar(0, 0, 255), cv::Scalar(255, 255, 0), cv::Scalar(0, 255, 255), cv::Scalar(255, 0, 255), cv::Scalar(255, 127, 255), cv::Scalar(127, 0, 255), cv::Scalar(127, 0, 127) };
     cv::VideoCapture capture(inFile);
     if (!capture.isOpened())
     {
@@ -214,7 +237,7 @@ void MotionDetector(int argc, char** argv)
     // But on high resolution videos with many objects may be to slow
     bool useLocalTracking = true;
 
-    CDetector detector(BackgroundSubtract::ALG_CNT, useLocalTracking, gray);
+    CDetector detector(BackgroundSubtract::ALG_MOG, useLocalTracking, gray);
     detector.SetMinObjectSize(cv::Size(gray.cols / 50, gray.rows / 50));
     //detector.SetMinObjectSize(cv::Size(2, 2));
 
@@ -277,18 +300,7 @@ void MotionDetector(int argc, char** argv)
                                 cv::Size2f(0.5f, 4.0f))      // Min and max ratio: width / height
                     )
             {
-                cv::rectangle(frame, track->GetLastRect(), cv::Scalar(0, 255, 0), 1, CV_AA);
-
-                cv::Scalar cl = Colors[track->m_trackID % 9];
-
-                for (size_t j = 0; j < track->m_trace.size() - 1; ++j)
-                {
-                    cv::line(frame, track->m_trace[j], track->m_trace[j + 1], cl, 1, CV_AA);
-                    if (!track->m_trace.HasRaw(j + 1))
-                    {
-                        cv::circle(frame, track->m_trace[j + 1], 4, cl, 1, CV_AA);
-                    }
-                }
+                DrawTrack(frame, *track, colors);
             }
         }
 
@@ -342,7 +354,7 @@ void FaceDetector(int argc, char** argv)
 
     cv::VideoWriter writer;
 
-    cv::Scalar Colors[] = { cv::Scalar(255, 0, 0), cv::Scalar(0, 255, 0), cv::Scalar(0, 0, 255), cv::Scalar(255, 255, 0), cv::Scalar(0, 255, 255), cv::Scalar(255, 0, 255), cv::Scalar(255, 127, 255), cv::Scalar(127, 0, 255), cv::Scalar(127, 0, 127) };
+    std::vector<cv::Scalar> colors = { cv::Scalar(255, 0, 0), cv::Scalar(0, 255, 0), cv::Scalar(0, 0, 255), cv::Scalar(255, 255, 0), cv::Scalar(0, 255, 255), cv::Scalar(255, 0, 255), cv::Scalar(255, 127, 255), cv::Scalar(127, 0, 255), cv::Scalar(127, 0, 127) };
     cv::VideoCapture capture(inFile);
     if (!capture.isOpened())
     {
@@ -445,18 +457,7 @@ void FaceDetector(int argc, char** argv)
                                 cv::Size2f(0.1f, 8.0f))      // Min and max ratio: width / height
                     )
             {
-                cv::rectangle(frame, track->GetLastRect(), cv::Scalar(0, 255, 0), 1, CV_AA);
-
-                cv::Scalar cl = Colors[track->m_trackID % 9];
-
-                for (size_t j = 0; j < track->m_trace.size() - 1; ++j)
-                {
-                    cv::line(frame, track->m_trace[j], track->m_trace[j + 1], cl, 1, CV_AA);
-                    if (!track->m_trace.HasRaw(j + 1))
-                    {
-                        cv::circle(frame, track->m_trace[j + 1], 4, cl, 1, CV_AA);
-                    }
-                }
+                DrawTrack(frame, *track, colors);
             }
         }
 
@@ -504,7 +505,7 @@ void PedestrianDetector(int argc, char** argv)
 
     cv::VideoWriter writer;
 
-    cv::Scalar Colors[] = { cv::Scalar(255, 0, 0), cv::Scalar(0, 255, 0), cv::Scalar(0, 0, 255), cv::Scalar(255, 255, 0), cv::Scalar(0, 255, 255), cv::Scalar(255, 0, 255), cv::Scalar(255, 127, 255), cv::Scalar(127, 0, 255), cv::Scalar(127, 0, 127) };
+    std::vector<cv::Scalar> colors = { cv::Scalar(255, 0, 0), cv::Scalar(0, 255, 0), cv::Scalar(0, 0, 255), cv::Scalar(255, 255, 0), cv::Scalar(0, 255, 255), cv::Scalar(255, 0, 255), cv::Scalar(255, 127, 255), cv::Scalar(127, 0, 255), cv::Scalar(127, 0, 127) };
     cv::VideoCapture capture(inFile);
     if (!capture.isOpened())
     {
@@ -625,18 +626,7 @@ void PedestrianDetector(int argc, char** argv)
                                 cv::Size2f(0.1f, 8.0f))      // Min and max ratio: width / height
                     )
             {
-                cv::rectangle(frame, track->GetLastRect(), cv::Scalar(0, 255, 0), 1, CV_AA);
-
-                cv::Scalar cl = Colors[track->m_trackID % 9];
-
-                for (size_t j = 0; j < track->m_trace.size() - 1; ++j)
-                {
-                    cv::line(frame, track->m_trace[j], track->m_trace[j + 1], cl, 1, CV_AA);
-                    if (!track->m_trace.HasRaw(j + 1))
-                    {
-                        cv::circle(frame, track->m_trace[j + 1], 4, cl, 1, CV_AA);
-                    }
-                }
+                DrawTrack(frame, *track, colors);
             }
         }
 
