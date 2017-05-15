@@ -3,6 +3,7 @@
 #include <vector>
 #include <memory>
 #include <array>
+#include <chrono>
 
 #include "defines.h"
 #include "track.h"
@@ -13,7 +14,7 @@
 
 #if SAVE_TRAJECTORIES
 #include <fstream>
-#include <chrono>
+
 class SaveTrajectories
 {
 public:

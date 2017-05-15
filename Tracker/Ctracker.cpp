@@ -37,7 +37,9 @@ CTracker::CTracker(
       max_trace_length(max_trace_length_),
       NextTrackID(0)
 {
+#if SAVE_TRAJECTORIES
     m_saveTraj.Open(trajectoryFileName);
+#endif
 }
 
 // ---------------------------------------------------------------------------
