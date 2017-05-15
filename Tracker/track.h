@@ -303,7 +303,7 @@ public:
     bool IsRobust(int minTraceSize, float minRawRatio, cv::Size2f sizeRatio) const
     {
         bool res = m_trace.size() > static_cast<size_t>(minTraceSize);
-        res &= m_trace.GetRawCount(minTraceSize) / static_cast<float>(minTraceSize) > minRawRatio;
+        res &= m_trace.GetRawCount(m_trace.size() - 1) / static_cast<float>(m_trace.size()) > minRawRatio;
         if (sizeRatio.width + sizeRatio.height > 0)
         {
             float sr = m_lastRegion.m_rect.width / static_cast<float>(m_lastRegion.m_rect.height);
