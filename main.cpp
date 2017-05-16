@@ -14,15 +14,15 @@
 //------------------------------------------------------------------------
 void mv_MouseCallback(int event, int x, int y, int /*flags*/, void* param)
 {
-	if (event == cv::EVENT_MOUSEMOVE)
-	{
-		cv::Point2f* p = (cv::Point2f*)param;
-		if (p)
-		{
-			p->x = static_cast<float>(x);
-			p->y = static_cast<float>(y);
-		}
-	}
+    if (event == cv::EVENT_MOUSEMOVE)
+    {
+        cv::Point2f* p = (cv::Point2f*)param;
+        if (p)
+        {
+            p->x = static_cast<float>(x);
+            p->y = static_cast<float>(y);
+        }
+    }
 }
 
 // ----------------------------------------------------------------------
@@ -87,20 +87,14 @@ void nms(
 }
 
 // ----------------------------------------------------------------------
-void MouseTracking(int argc, char** argv)
+void MouseTracking(cv::CommandLineParser parser)
 {
-    // First argument ingnored
-
-    std::string outFile;
-    if (argc > 2)
-    {
-        outFile = argv[2];
-    }
+    std::string outFile = parser.get<std::string>("out");
 
     cv::VideoWriter writer;
 
     int k = 0;
-    cv::Scalar Colors[] = { cv::Scalar(255, 0, 0), cv::Scalar(0, 255, 0), cv::Scalar(0, 0, 255), cv::Scalar(255, 255, 0), cv::Scalar(0, 255, 255), cv::Scalar(255, 255, 255) };
+    std::vector<cv::Scalar> colors = { cv::Scalar(255, 0, 0), cv::Scalar(0, 255, 0), cv::Scalar(0, 0, 255), cv::Scalar(255, 255, 0), cv::Scalar(0, 255, 255), cv::Scalar(255, 0, 255), cv::Scalar(255, 127, 255), cv::Scalar(127, 0, 255), cv::Scalar(127, 0, 127) };
     cv::namedWindow("Video");
     cv::Mat frame = cv::Mat(800, 800, CV_8UC3);
 
@@ -115,7 +109,17 @@ void MouseTracking(int argc, char** argv)
 
     bool useLocalTracking = false;
 
-    CTracker tracker(useLocalTracking, CTracker::CentersDist, CTracker::KalmanLinear, CTracker::FilterCenter, CTracker::TrackNone, CTracker::MatchHungrian, 0.2f, 0.5f, 100.0f, 25, 25);
+    CTracker tracker(useLocalTracking,
+                     CTracker::CentersDist,
+                     CTracker::KalmanLinear,
+                     CTracker::FilterCenter,
+                     CTracker::TrackNone,
+                     CTracker::MatchHungrian,
+                     0.2f,
+                     0.5f,
+                     100.0f,
+                     25,
+                     25);
     track_t alpha = 0;
     cv::RNG rng;
     while (k != 27)
@@ -152,13 +156,13 @@ void MouseTracking(int argc, char** argv)
 
         for (size_t i = 0; i < tracker.tracks.size(); i++)
         {
-            const auto& tracks = tracker.tracks[i];
+            const auto& track = tracker.tracks[i];
 
-            if (tracks->m_trace.size() > 1)
+            if (track->m_trace.size() > 1)
             {
-                for (size_t j = 0; j < tracks->m_trace.size() - 1; j++)
+                for (size_t j = 0; j < track->m_trace.size() - 1; j++)
                 {
-                    cv::line(frame, tracks->m_trace[j], tracks->m_trace[j + 1], Colors[i % 6], 2, CV_AA);
+                    cv::line(frame, track->m_trace[j], track->m_trace[j + 1], colors[i % colors.size()], 2, CV_AA);
                 }
             }
         }
@@ -175,24 +179,37 @@ void MouseTracking(int argc, char** argv)
 }
 
 // ----------------------------------------------------------------------
-void MotionDetector(int argc, char** argv)
+void DrawTrack(cv::Mat frame,
+               const CTrack& track,
+               const std::vector<cv::Scalar>& colors
+               )
 {
-    std::string inFile("../data/atrium.avi");
+    cv::rectangle(frame, track.GetLastRect(), cv::Scalar(0, 255, 0), 1, CV_AA);
 
-    if (argc > 1)
-    {
-        inFile = argv[1];
-    }
+    cv::Scalar cl = colors[track.m_trackID % colors.size()];
 
-    std::string outFile;
-    if (argc > 2)
+    for (size_t j = 0; j < track.m_trace.size() - 1; ++j)
     {
-        outFile = argv[2];
+        const TrajectoryPoint& pt1 = track.m_trace.at(j);
+        const TrajectoryPoint& pt2 = track.m_trace.at(j + 1);
+
+        cv::line(frame, pt1.m_prediction, pt2.m_prediction, cl, 1, CV_AA);
+        if (!pt2.m_hasRaw)
+        {
+            cv::circle(frame, pt2.m_prediction, 4, cl, 1, CV_AA);
+        }
     }
+}
+
+// ----------------------------------------------------------------------
+void MotionDetector(cv::CommandLineParser parser)
+{
+    std::string inFile = parser.get<std::string>(0);
+    std::string outFile = parser.get<std::string>("out");
 
     cv::VideoWriter writer;
 
-    cv::Scalar Colors[] = { cv::Scalar(255, 0, 0), cv::Scalar(0, 255, 0), cv::Scalar(0, 0, 255), cv::Scalar(255, 255, 0), cv::Scalar(0, 255, 255), cv::Scalar(255, 0, 255), cv::Scalar(255, 127, 255), cv::Scalar(127, 0, 255), cv::Scalar(127, 0, 127) };
+    std::vector<cv::Scalar> colors = { cv::Scalar(255, 0, 0), cv::Scalar(0, 255, 0), cv::Scalar(0, 0, 255), cv::Scalar(255, 255, 0), cv::Scalar(0, 255, 255), cv::Scalar(255, 0, 255), cv::Scalar(255, 127, 255), cv::Scalar(127, 0, 255), cv::Scalar(127, 0, 127) };
     cv::VideoCapture capture(inFile);
     if (!capture.isOpened())
     {
@@ -202,7 +219,10 @@ void MotionDetector(int argc, char** argv)
     cv::Mat frame;
     cv::Mat gray;
 
-    const int StartFrame = 0;
+    bool showLogs = parser.get<int>("show_logs") != 0;
+
+    const int StartFrame = parser.get<int>("start_frame");
+    const int EndFrame = parser.get<int>("end_frame");
     capture.set(cv::CAP_PROP_POS_FRAMES, StartFrame);
 
     const int fps = std::max(1, cvRound(capture.get(cv::CAP_PROP_FPS)));
@@ -212,15 +232,15 @@ void MotionDetector(int argc, char** argv)
 
     // If true then trajectories will be more smooth and accurate
     // But on high resolution videos with many objects may be to slow
-    bool useLocalTracking = true;
+    bool useLocalTracking = false;
 
-    CDetector detector(BackgroundSubtract::ALG_CNT, useLocalTracking, gray);
-    detector.SetMinObjectSize(cv::Size(gray.cols / 50, gray.rows / 50));
-    //detector.SetMinObjectSize(cv::Size(2, 2));
+    CDetector detector(BackgroundSubtract::ALG_MOG, useLocalTracking, gray);
+    //detector.SetMinObjectSize(cv::Size(gray.cols / 50, gray.rows / 50));
+    detector.SetMinObjectSize(cv::Size(2, 2));
 
     CTracker tracker(useLocalTracking,
                      CTracker::RectsDist,
-                     CTracker::KalmanUnscented,
+                     CTracker::KalmanLinear,
                      CTracker::FilterRect,
                      CTracker::TrackKCF,      // Use KCF tracker for collisions resolving
                      CTracker::MatchBipart,
@@ -228,7 +248,7 @@ void MotionDetector(int argc, char** argv)
                      0.1f,                    // Accel noise magnitude for Kalman filter
                      gray.cols / 20.0f,       // Distance threshold between two frames
                      fps,                     // Maximum allowed skipped frames
-                     5 * fps                  // Maximum trace length
+                     5 * fps                 // Maximum trace length
                      );
 
     int k = 0;
@@ -265,27 +285,19 @@ void MotionDetector(int argc, char** argv)
         allTime += t2 - t1;
         int currTime = cvRound(1000 * (t2 - t1) / freq);
 
-        std::cout << "Frame " << framesCounter << ": tracks = " << tracker.tracks.size() << ", time = " << currTime << std::endl;
+        if (showLogs)
+        {
+            std::cout << "Frame " << framesCounter << ": tracks = " << tracker.tracks.size() << ", time = " << currTime << std::endl;
+        }
 
         for (const auto& track : tracker.tracks)
         {
-            if (track->IsRobust(fps / 2,                     // Minimal trajectory size
-                                0.7f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
-                                cv::Size2f(0.5f, 4.0f))      // Min and max ratio: width / height
+            if (track->IsRobust(fps / 2,                         // Minimal trajectory size
+                                0.5f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
+                                cv::Size2f(0.1f, 8.0f))      // Min and max ratio: width / height
                     )
             {
-                cv::rectangle(frame, track->GetLastRect(), cv::Scalar(0, 255, 0), 1, CV_AA);
-
-                cv::Scalar cl = Colors[track->m_trackID % 9];
-
-                for (size_t j = 0; j < track->m_trace.size() - 1; ++j)
-                {
-                    cv::line(frame, track->m_trace[j], track->m_trace[j + 1], cl, 1, CV_AA);
-                    if (!track->m_trace.HasRaw(j + 1))
-                    {
-                        cv::circle(frame, track->m_trace[j + 1], 4, cl, 1, CV_AA);
-                    }
-                }
+                DrawTrack(frame, *track, colors);
             }
         }
 
@@ -307,35 +319,25 @@ void MotionDetector(int argc, char** argv)
         }
 
         ++framesCounter;
-        if (framesCounter > 215)
+        if (EndFrame && framesCounter > EndFrame)
         {
-            //break;
+            break;
         }
     }
 
     std::cout << "work time = " << (allTime / freq) << std::endl;
-    cv::waitKey(0);
+    cv::waitKey(parser.get<int>("end_delay"));
 }
 
 // ----------------------------------------------------------------------
-void FaceDetector(int argc, char** argv)
+void FaceDetector(cv::CommandLineParser parser)
 {
-    std::string inFile("../data/smuglanka.mp4");
-
-    if (argc > 1)
-    {
-        inFile = argv[1];
-    }
-
-    std::string outFile;
-    if (argc > 2)
-    {
-        outFile = argv[2];
-    }
+    std::string inFile = parser.get<std::string>("0");
+    std::string outFile = parser.get<std::string>("out");
 
     cv::VideoWriter writer;
 
-    cv::Scalar Colors[] = { cv::Scalar(255, 0, 0), cv::Scalar(0, 255, 0), cv::Scalar(0, 0, 255), cv::Scalar(255, 255, 0), cv::Scalar(0, 255, 255), cv::Scalar(255, 0, 255), cv::Scalar(255, 127, 255), cv::Scalar(127, 0, 255), cv::Scalar(127, 0, 127) };
+    std::vector<cv::Scalar> colors = { cv::Scalar(255, 0, 0), cv::Scalar(0, 255, 0), cv::Scalar(0, 0, 255), cv::Scalar(255, 255, 0), cv::Scalar(0, 255, 255), cv::Scalar(255, 0, 255), cv::Scalar(255, 127, 255), cv::Scalar(127, 0, 255), cv::Scalar(127, 0, 127) };
     cv::VideoCapture capture(inFile);
     if (!capture.isOpened())
     {
@@ -345,7 +347,10 @@ void FaceDetector(int argc, char** argv)
     cv::Mat frame;
     cv::Mat gray;
 
-    const int StartFrame = 0;
+    bool showLogs = parser.get<int>("show_logs") != 0;
+
+    const int StartFrame = parser.get<int>("start_frame");
+    const int EndFrame = parser.get<int>("end_frame");
     capture.set(cv::CAP_PROP_POS_FRAMES, StartFrame);
 
     const int fps = std::max(1, cvRound(capture.get(cv::CAP_PROP_FPS)));
@@ -408,11 +413,11 @@ void FaceDetector(int argc, char** argv)
         bool filterRects = true;
         std::vector<cv::Rect> faceRects;
         cascade.detectMultiScale(gray,
-                                   faceRects,
-                                   1.1,
-                                   (filterRects || findLargestObject) ? 3 : 0,
-                                   findLargestObject ? cv::CASCADE_FIND_BIGGEST_OBJECT : 0,
-                                   cv::Size(gray.cols / 20, gray.rows / 20),
+                                 faceRects,
+                                 1.1,
+                                 (filterRects || findLargestObject) ? 3 : 0,
+                                 findLargestObject ? cv::CASCADE_FIND_BIGGEST_OBJECT : 0,
+                                 cv::Size(gray.cols / 20, gray.rows / 20),
                                  cv::Size(gray.cols / 2, gray.rows / 2));
         std::vector<Point_t> centers;
         regions_t regions;
@@ -429,7 +434,10 @@ void FaceDetector(int argc, char** argv)
         allTime += t2 - t1;
         int currTime = cvRound(1000 * (t2 - t1) / freq);
 
-        std::cout << "Frame " << framesCounter << ": tracks = " << tracker.tracks.size() << ", time = " << currTime << std::endl;
+        if (showLogs)
+        {
+            std::cout << "Frame " << framesCounter << ": tracks = " << tracker.tracks.size() << ", time = " << currTime << std::endl;
+        }
 
         for (const auto& track : tracker.tracks)
         {
@@ -438,18 +446,7 @@ void FaceDetector(int argc, char** argv)
                                 cv::Size2f(0.1f, 8.0f))      // Min and max ratio: width / height
                     )
             {
-                cv::rectangle(frame, track->GetLastRect(), cv::Scalar(0, 255, 0), 1, CV_AA);
-
-                cv::Scalar cl = Colors[track->m_trackID % 9];
-
-                for (size_t j = 0; j < track->m_trace.size() - 1; ++j)
-                {
-                    cv::line(frame, track->m_trace[j], track->m_trace[j + 1], cl, 1, CV_AA);
-                    if (!track->m_trace.HasRaw(j + 1))
-                    {
-                        cv::circle(frame, track->m_trace[j + 1], 4, cl, 1, CV_AA);
-                    }
-                }
+                DrawTrack(frame, *track, colors);
             }
         }
 
@@ -469,35 +466,25 @@ void FaceDetector(int argc, char** argv)
         }
 
         ++framesCounter;
-        if (framesCounter > 215)
+        if (EndFrame && framesCounter > EndFrame)
         {
-            //break;
+            break;
         }
     }
 
     std::cout << "work time = " << (allTime / freq) << std::endl;
-    cv::waitKey(0);
+    cv::waitKey(parser.get<int>("end_delay"));
 }
 
 // ----------------------------------------------------------------------
-void PedestrianDetector(int argc, char** argv)
+void PedestrianDetector(cv::CommandLineParser parser)
 {
-    std::string inFile("TownCentreXVID.avi");
-
-    if (argc > 1)
-    {
-        inFile = argv[1];
-    }
-
-    std::string outFile;
-    if (argc > 2)
-    {
-        outFile = argv[2];
-    }
+    std::string inFile = parser.get<std::string>(0);
+    std::string outFile = parser.get<std::string>("out");
 
     cv::VideoWriter writer;
 
-    cv::Scalar Colors[] = { cv::Scalar(255, 0, 0), cv::Scalar(0, 255, 0), cv::Scalar(0, 0, 255), cv::Scalar(255, 255, 0), cv::Scalar(0, 255, 255), cv::Scalar(255, 0, 255), cv::Scalar(255, 127, 255), cv::Scalar(127, 0, 255), cv::Scalar(127, 0, 127) };
+    std::vector<cv::Scalar> colors = { cv::Scalar(255, 0, 0), cv::Scalar(0, 255, 0), cv::Scalar(0, 0, 255), cv::Scalar(255, 255, 0), cv::Scalar(0, 255, 255), cv::Scalar(255, 0, 255), cv::Scalar(255, 127, 255), cv::Scalar(127, 0, 255), cv::Scalar(127, 0, 127) };
     cv::VideoCapture capture(inFile);
     if (!capture.isOpened())
     {
@@ -507,7 +494,10 @@ void PedestrianDetector(int argc, char** argv)
     cv::Mat frame;
     cv::Mat gray;
 
-    const int StartFrame = 0;
+    bool showLogs = parser.get<int>("show_logs") != 0;
+
+    const int StartFrame = parser.get<int>("start_frame");
+    const int EndFrame = parser.get<int>("end_frame");
     capture.set(cv::CAP_PROP_POS_FRAMES, StartFrame);
 
     const int fps = std::max(1, cvRound(capture.get(cv::CAP_PROP_FPS)));
@@ -609,7 +599,10 @@ void PedestrianDetector(int argc, char** argv)
         allTime += t2 - t1;
         int currTime = cvRound(1000 * (t2 - t1) / freq);
 
-        std::cout << "Frame " << framesCounter << ": tracks = " << tracker.tracks.size() << ", time = " << currTime << std::endl;
+        if (showLogs)
+        {
+            std::cout << "Frame " << framesCounter << ": tracks = " << tracker.tracks.size() << ", time = " << currTime << std::endl;
+        }
 
         for (const auto& track : tracker.tracks)
         {
@@ -618,18 +611,7 @@ void PedestrianDetector(int argc, char** argv)
                                 cv::Size2f(0.1f, 8.0f))      // Min and max ratio: width / height
                     )
             {
-                cv::rectangle(frame, track->GetLastRect(), cv::Scalar(0, 255, 0), 1, CV_AA);
-
-                cv::Scalar cl = Colors[track->m_trackID % 9];
-
-                for (size_t j = 0; j < track->m_trace.size() - 1; ++j)
-                {
-                    cv::line(frame, track->m_trace[j], track->m_trace[j + 1], cl, 1, CV_AA);
-                    if (!track->m_trace.HasRaw(j + 1))
-                    {
-                        cv::circle(frame, track->m_trace[j + 1], 4, cl, 1, CV_AA);
-                    }
-                }
+                DrawTrack(frame, *track, colors);
             }
         }
 
@@ -649,41 +631,68 @@ void PedestrianDetector(int argc, char** argv)
         }
 
         ++framesCounter;
-        if (framesCounter > 215)
+        if (EndFrame && framesCounter > EndFrame)
         {
-            //break;
+            break;
         }
     }
 
     std::cout << "work time = " << (allTime / freq) << std::endl;
-    cv::waitKey(0);
+    cv::waitKey(parser.get<int>("end_delay"));
 }
+
+// ----------------------------------------------------------------------
+static void Help()
+{
+    printf("\nExamples of the Multitarget tracking algorithm\n"
+           "Usage: \n"
+           "          ./MultitargetTracker <path to movie file> [--example]=<number of example 0..3> [--start_frame]=<start a video from this position> [--end_frame]=<play a video to this position> [--end_delay]=<delay in milliseconds after video ending> [--out]=<name of result video file> [--show_logs]=<show logs> \n\n"
+           "Press:\n"
+           "\'m\' key for change mode: play|pause. When video is paused you can press any key for get next frame. \n\n"
+           "Press Esc to exit from video \n\n"
+           );
+}
+
+const char* keys =
+{
+    "{ @1             |../data/atrium.avi  | movie file | }"
+    "{ e  example     |1                   | number of example 0 - MouseTracking, 1 - MotionDetector, 2 - FaceDetector, 3 - PedestrianDetector | }"
+    "{ sf start_frame |0                   | Start a video from this position | }"
+    "{ ef end_frame   |0                   | Play a video to this position (if 0 then played to the end of file) | }"
+    "{ ed end_delay   |0                   | Delay in milliseconds after video ending | }"
+    "{ o  out         |                    | Name of result video file | }"
+    "{ sl show_logs   |1                   | Show Trackers logs | }"
+};
 
 // ----------------------------------------------------------------------
 int main(int argc, char** argv)
 {
-     int ExampleNum = 1;
+    Help();
 
-     switch (ExampleNum)
-     {
-     case 0:
-         MouseTracking(argc, argv);
-         break;
+    cv::CommandLineParser parser(argc, argv, keys);
 
-     case 1:
-         MotionDetector(argc, argv);
-         break;
+    int exampleNum = parser.get<int>("example");;
 
-     case 2:
-         FaceDetector(argc, argv);
-         break;
+    switch (exampleNum)
+    {
+    case 0:
+        MouseTracking(parser);
+        break;
 
-     case 3:
-         PedestrianDetector(argc, argv);
-         break;
-     }
+    case 1:
+        MotionDetector(parser);
+        break;
+
+    case 2:
+        FaceDetector(parser);
+        break;
+
+    case 3:
+        PedestrianDetector(parser);
+        break;
+    }
 
 
-	cv::destroyAllWindows();
-	return 0;
+    cv::destroyAllWindows();
+    return 0;
 }

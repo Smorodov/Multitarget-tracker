@@ -31,7 +31,9 @@ struct TrajectoryPoint
     /// \param prediction
     ///
     TrajectoryPoint(const Point_t& prediction)
-        : m_hasRaw(false), m_prediction(prediction)
+        :
+          m_hasRaw(false),
+          m_prediction(prediction)
     {
     }
 
@@ -41,7 +43,10 @@ struct TrajectoryPoint
     /// \param raw
     ///
     TrajectoryPoint(const Point_t& prediction, const Point_t& raw)
-        : m_hasRaw(true), m_prediction(prediction), m_raw(raw)
+        :
+          m_hasRaw(true),
+          m_prediction(prediction),
+          m_raw(raw)
     {
     }
 
@@ -78,13 +83,13 @@ public:
     }
 
     ///
-    /// \brief HasRaw
+    /// \brief at
     /// \param i
     /// \return
     ///
-    bool HasRaw(size_t i) const
+    const TrajectoryPoint& at(size_t i) const
     {
-        return m_trace[i].m_hasRaw;
+        return m_trace[i];
     }
 
     ///
@@ -285,7 +290,7 @@ public:
     bool IsRobust(int minTraceSize, float minRawRatio, cv::Size2f sizeRatio) const
     {
         bool res = m_trace.size() > static_cast<size_t>(minTraceSize);
-        res &= m_trace.GetRawCount(minTraceSize) / static_cast<float>(minTraceSize) > minRawRatio;
+        res &= m_trace.GetRawCount(m_trace.size() - 1) / static_cast<float>(m_trace.size()) > minRawRatio;
         if (sizeRatio.width + sizeRatio.height > 0)
         {
             float sr = m_lastRegion.m_rect.width / static_cast<float>(m_lastRegion.m_rect.height);
@@ -483,7 +488,7 @@ private:
         {
             m_predictionPoint.x = 0;
         }
-        else if (m_predictionPoint.x > frameSize.width - 1)
+        else if (frameSize.width && m_predictionPoint.x > frameSize.width - 1)
         {
             m_predictionPoint.x = frameSize.width - 1;
         }
@@ -491,7 +496,7 @@ private:
         {
             m_predictionPoint.y = 0;
         }
-        else if (m_predictionPoint.y > frameSize.height - 1)
+        else if (frameSize.width && m_predictionPoint.y > frameSize.height - 1)
         {
             m_predictionPoint.y = frameSize.height - 1;
         }
