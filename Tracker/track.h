@@ -501,7 +501,7 @@ private:
         {
             m_predictionPoint.x = 0;
         }
-        else if (m_predictionPoint.x > frameSize.width - 1)
+        else if (frameSize.width && m_predictionPoint.x > frameSize.width - 1)
         {
             m_predictionPoint.x = frameSize.width - 1;
         }
@@ -509,7 +509,7 @@ private:
         {
             m_predictionPoint.y = 0;
         }
-        else if (m_predictionPoint.y > frameSize.height - 1)
+        else if (frameSize.width && m_predictionPoint.y > frameSize.height - 1)
         {
             m_predictionPoint.y = frameSize.height - 1;
         }
