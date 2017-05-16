@@ -109,7 +109,17 @@ void MouseTracking(cv::CommandLineParser parser)
 
     bool useLocalTracking = false;
 
-    CTracker tracker(useLocalTracking, CTracker::CentersDist, CTracker::KalmanLinear, CTracker::FilterCenter, CTracker::TrackNone, CTracker::MatchHungrian, 0.2f, 0.5f, 100.0f, 25, 25);
+    CTracker tracker(useLocalTracking,
+                     CTracker::CentersDist,
+                     CTracker::KalmanLinear,
+                     CTracker::FilterCenter,
+                     CTracker::TrackNone,
+                     CTracker::MatchHungrian,
+                     0.2f,
+                     0.5f,
+                     100.0f,
+                     25,
+                     25);
     track_t alpha = 0;
     cv::RNG rng;
     while (k != 27)
@@ -146,13 +156,13 @@ void MouseTracking(cv::CommandLineParser parser)
 
         for (size_t i = 0; i < tracker.tracks.size(); i++)
         {
-            const auto& tracks = tracker.tracks[i];
+            const auto& track = tracker.tracks[i];
 
-            if (tracks->m_trace.size() > 1)
+            if (track->m_trace.size() > 1)
             {
-                for (size_t j = 0; j < tracks->m_trace.size() - 1; j++)
+                for (size_t j = 0; j < track->m_trace.size() - 1; j++)
                 {
-                    cv::line(frame, tracks->m_trace[j], tracks->m_trace[j + 1], colors[i % colors.size()], 2, CV_AA);
+                    cv::line(frame, track->m_trace[j], track->m_trace[j + 1], colors[i % colors.size()], 2, CV_AA);
                 }
             }
         }
@@ -228,20 +238,17 @@ void MotionDetector(cv::CommandLineParser parser)
     //detector.SetMinObjectSize(cv::Size(gray.cols / 50, gray.rows / 50));
     detector.SetMinObjectSize(cv::Size(2, 2));
 
-    std::string trajectoryFileName = inFile + ".txt";
-
     CTracker tracker(useLocalTracking,
                      CTracker::RectsDist,
-                     CTracker::KalmanUnscented,
-                     CTracker::FilterCenter,
+                     CTracker::KalmanLinear,
+                     CTracker::FilterRect,
                      CTracker::TrackKCF,      // Use KCF tracker for collisions resolving
                      CTracker::MatchBipart,
                      0.3f,                    // Delta time for Kalman filter
                      0.1f,                    // Accel noise magnitude for Kalman filter
-                     gray.cols / 50.0f,       // Distance threshold between two frames
+                     gray.cols / 20.0f,       // Distance threshold between two frames
                      fps,                     // Maximum allowed skipped frames
-                     25 * fps,                 // Maximum trace length
-                     trajectoryFileName
+                     5 * fps                 // Maximum trace length
                      );
 
     int k = 0;
@@ -271,7 +278,7 @@ void MotionDetector(cv::CommandLineParser parser)
         const std::vector<Point_t>& centers = detector.Detect(gray);
         const regions_t& regions = detector.GetDetects();
 
-        tracker.Update(centers, regions, gray, framesCounter);
+        tracker.Update(centers, regions, gray);
 
         int64 t2 = cv::getTickCount();
 
@@ -285,9 +292,9 @@ void MotionDetector(cv::CommandLineParser parser)
 
         for (const auto& track : tracker.tracks)
         {
-            if (track->IsRobust(25,                         // Minimal trajectory size
-                                0.7f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
-                                cv::Size2f(0.9f, 4.0f))      // Min and max ratio: width / height
+            if (track->IsRobust(fps / 2,                         // Minimal trajectory size
+                                0.5f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
+                                cv::Size2f(0.1f, 8.0f))      // Min and max ratio: width / height
                     )
             {
                 DrawTrack(frame, *track, colors);
@@ -317,10 +324,6 @@ void MotionDetector(cv::CommandLineParser parser)
             break;
         }
     }
-
-#if SAVE_TRAJECTORIES
-    tracker.WriteAllTracks();
-#endif
 
     std::cout << "work time = " << (allTime / freq) << std::endl;
     cv::waitKey(parser.get<int>("end_delay"));
