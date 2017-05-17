@@ -238,6 +238,21 @@ public:
 	}
 
     ///
+    /// \brief CalcOverlap
+    /// \param r
+    /// \return
+    ///
+    track_t CalcOverlap(const cv::Rect& r)
+    {
+        cv::Rect rr(GetLastRect());
+
+        track_t intArea = (r & rr).area();
+        track_t unionArea = r.area() + rr.area() - intArea;
+
+        return intArea / unionArea;
+    }
+
+    ///
     /// \brief Update
     /// \param pt
     /// \param region

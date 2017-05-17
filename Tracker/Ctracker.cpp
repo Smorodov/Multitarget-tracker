@@ -101,7 +101,7 @@ void CTracker::Update(
 		track_t maxCost = 0;
 		switch (m_distType)
         {
-        case CentersDist:
+        case DistCenters:
             for (size_t i = 0; i < tracks.size(); i++)
             {
                 for (size_t j = 0; j < detections.size(); j++)
@@ -116,7 +116,7 @@ void CTracker::Update(
             }
             break;
 
-        case RectsDist:
+        case DistRects:
             for (size_t i = 0; i < tracks.size(); i++)
             {
                 for (size_t j = 0; j < detections.size(); j++)
@@ -127,6 +127,21 @@ void CTracker::Update(
 					{
 						maxCost = dist;
 					}
+                }
+            }
+            break;
+
+        case DistOverlap:
+            for (size_t i = 0; i < tracks.size(); i++)
+            {
+                for (size_t j = 0; j < detections.size(); j++)
+                {
+                    auto dist = 1 - tracks[i]->CalcOverlap(regions[j].m_rect);
+                    Cost[i + j * N] = dist;
+                    if (dist > maxCost)
+                    {
+                        maxCost = dist;
+                    }
                 }
             }
             break;

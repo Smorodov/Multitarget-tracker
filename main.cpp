@@ -110,7 +110,7 @@ void MouseTracking(cv::CommandLineParser parser)
     bool useLocalTracking = false;
 
     CTracker tracker(useLocalTracking,
-                     CTracker::CentersDist,
+                     CTracker::DistCenters,
                      CTracker::KalmanLinear,
                      CTracker::FilterCenter,
                      CTracker::TrackNone,
@@ -239,7 +239,7 @@ void MotionDetector(cv::CommandLineParser parser)
     detector.SetMinObjectSize(cv::Size(2, 2));
 
     CTracker tracker(useLocalTracking,
-                     CTracker::RectsDist,
+                     CTracker::DistRects,
                      CTracker::KalmanLinear,
                      CTracker::FilterRect,
                      CTracker::TrackKCF,      // Use KCF tracker for collisions resolving
@@ -332,7 +332,7 @@ void MotionDetector(cv::CommandLineParser parser)
 // ----------------------------------------------------------------------
 void FaceDetector(cv::CommandLineParser parser)
 {
-    std::string inFile = parser.get<std::string>("0");
+    std::string inFile = parser.get<std::string>(0);
     std::string outFile = parser.get<std::string>("out");
 
     cv::VideoWriter writer;
@@ -372,14 +372,14 @@ void FaceDetector(cv::CommandLineParser parser)
     }
 
     CTracker tracker(useLocalTracking,
-                     CTracker::RectsDist,
+                     CTracker::DistOverlap,
                      CTracker::KalmanUnscented,
                      CTracker::FilterRect,
                      CTracker::TrackKCF,      // Use KCF tracker for collisions resolving
                      CTracker::MatchHungrian,
                      0.3f,                    // Delta time for Kalman filter
                      0.1f,                    // Accel noise magnitude for Kalman filter
-                     gray.cols / 10.0f,       // Distance threshold between two frames
+                     0.8f,       // Distance threshold between two frames
                      2 * fps,                 // Maximum allowed skipped frames
                      5 * fps                  // Maximum trace length
                      );
@@ -441,8 +441,8 @@ void FaceDetector(cv::CommandLineParser parser)
 
         for (const auto& track : tracker.tracks)
         {
-            if (track->IsRobust(8,                           // Minimal trajectory size
-                                0.5f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
+            if (track->IsRobust(2,                           // Minimal trajectory size
+                                0.1f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
                                 cv::Size2f(0.1f, 8.0f))      // Min and max ratio: width / height
                     )
             {
@@ -528,7 +528,7 @@ void PedestrianDetector(cv::CommandLineParser parser)
 #endif
 
     CTracker tracker(useLocalTracking,
-                     CTracker::RectsDist,
+                     CTracker::DistRects,
                      CTracker::KalmanUnscented,
                      CTracker::FilterRect,
                      CTracker::TrackKCF,      // Use KCF tracker for collisions resolving
