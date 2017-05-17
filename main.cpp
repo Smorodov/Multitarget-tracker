@@ -232,19 +232,19 @@ void MotionDetector(cv::CommandLineParser parser)
 
     // If true then trajectories will be more smooth and accurate
     // But on high resolution videos with many objects may be to slow
-    bool useLocalTracking = false;
+    bool useLocalTracking = true;
 
     CDetector detector(BackgroundSubtract::ALG_MOG, useLocalTracking, gray);
-    //detector.SetMinObjectSize(cv::Size(gray.cols / 50, gray.rows / 50));
-    detector.SetMinObjectSize(cv::Size(2, 2));
+    detector.SetMinObjectSize(cv::Size(gray.cols / 50, gray.rows / 50));
+    //detector.SetMinObjectSize(cv::Size(2, 2));
 
     CTracker tracker(useLocalTracking,
                      CTracker::RectsDist,
-                     CTracker::KalmanLinear,
+                     CTracker::KalmanUnscented,
                      CTracker::FilterRect,
                      CTracker::TrackKCF,      // Use KCF tracker for collisions resolving
                      CTracker::MatchBipart,
-                     0.3f,                    // Delta time for Kalman filter
+                     0.2f,                    // Delta time for Kalman filter
                      0.1f,                    // Accel noise magnitude for Kalman filter
                      gray.cols / 20.0f,       // Distance threshold between two frames
                      fps,                     // Maximum allowed skipped frames
