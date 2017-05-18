@@ -131,12 +131,12 @@ void CTracker::Update(
             }
             break;
 
-        case DistOverlap:
+        case DistJaccard:
             for (size_t i = 0; i < tracks.size(); i++)
             {
                 for (size_t j = 0; j < detections.size(); j++)
                 {
-                    auto dist = 1 - tracks[i]->CalcOverlap(regions[j].m_rect);
+                    auto dist = tracks[i]->CalcDistJaccard(regions[j].m_rect);
                     Cost[i + j * N] = dist;
                     if (dist > maxCost)
                     {

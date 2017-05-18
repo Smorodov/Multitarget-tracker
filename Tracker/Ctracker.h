@@ -16,7 +16,7 @@ public:
     {
         DistCenters = 0,
         DistRects = 1,
-        DistOverlap = 2
+        DistJaccard = 2
     };
     enum FilterGoal
     {

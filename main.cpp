@@ -312,7 +312,7 @@ void FaceDetector(cv::CommandLineParser parser)
     }
 
     CTracker tracker(useLocalTracking,
-                     CTracker::DistOverlap,   // For this distance type threshold must be from 0 to 1
+                     CTracker::DistJaccard,   // For this distance type threshold must be from 0 to 1
                      CTracker::KalmanUnscented,
                      CTracker::FilterRect,
                      CTracker::TrackKCF,      // Use KCF tracker for collisions resolving
@@ -625,7 +625,6 @@ void HybridFaceDetector(cv::CommandLineParser parser)
 
     CDetector detector(BackgroundSubtract::ALG_MOG, useLocalTracking, gray);
     detector.SetMinObjectSize(cv::Size(gray.cols / 50, gray.rows / 50));
-    //detector.SetMinObjectSize(cv::Size(2, 2));
 
     CTracker tracker(useLocalTracking,
                      CTracker::DistCenters,   // For this distance type threshold must be from 0 to 1

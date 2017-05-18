@@ -242,14 +242,14 @@ public:
     /// \param r
     /// \return
     ///
-    track_t CalcOverlap(const cv::Rect& r)
+    track_t CalcDistJaccard(const cv::Rect& r)
     {
         cv::Rect rr(GetLastRect());
 
         track_t intArea = (r & rr).area();
         track_t unionArea = r.area() + rr.area() - intArea;
 
-        return intArea / unionArea;
+        return 1 - intArea / unionArea;
     }
 
     ///
