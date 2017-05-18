@@ -14,8 +14,9 @@ class CTracker
 public:
     enum DistType
     {
-        CentersDist = 0,
-        RectsDist = 1
+        DistCenters = 0,
+        DistRects = 1,
+        DistJaccard = 2
     };
     enum FilterGoal
     {
