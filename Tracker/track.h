@@ -356,7 +356,7 @@ private:
 
     bool m_externalTrackerForLost;
 #if USE_OCV_KCF
-    cv::Ptr<cv::TrackerKCF> m_tracker;
+    cv::Ptr<cv::Tracker> m_tracker;
 #endif
 
     ///
@@ -390,6 +390,7 @@ private:
                     params.resize = false;
 
                     m_tracker = cv::TrackerKCF::createTracker(params);
+                    //m_tracker = cv::Tracker::create("TLD");
                     cv::Rect2d lastRect(m_predictionRect.x, m_predictionRect.y, m_predictionRect.width, m_predictionRect.height);
                     m_tracker->init(prevFrame, lastRect);
                 }

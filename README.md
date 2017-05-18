@@ -4,7 +4,7 @@ Demo Videos:
 
 Tracking: https://www.youtube.com/watch?v=2fW5TmAtAXM
 
-Detection and tracking: https://www.youtube.com/watch?v=GjN8jOy4kVw
+Motion Detection and tracking: https://www.youtube.com/watch?v=GjN8jOy4kVw
 
 Multiple Faces tracking: https://www.youtube.com/watch?v=j67CFwFtciU
 

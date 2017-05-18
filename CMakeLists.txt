@@ -35,7 +35,7 @@ set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
              Tracker/LocalTracker.cpp
              Tracker/Kalman.cpp)
 
-  set(folder_header
+  set(folder_header nms.h
              Detector/Detector.h
              Detector/BackgroundSubtract.h
              Detector/vibe_src/vibe.hpp
