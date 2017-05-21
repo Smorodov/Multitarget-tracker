@@ -468,15 +468,15 @@ void PedestrianDetector(cv::CommandLineParser parser)
 #endif
 
     CTracker tracker(useLocalTracking,
-                     CTracker::DistRects,
+                     CTracker::DistJaccard,
                      CTracker::KalmanUnscented,
                      CTracker::FilterRect,
                      CTracker::TrackKCF,      // Use KCF tracker for collisions resolving
                      CTracker::MatchHungrian,
                      0.3f,                    // Delta time for Kalman filter
                      0.1f,                    // Accel noise magnitude for Kalman filter
-                     gray.cols / 10.0f,       // Distance threshold between two frames
-                     2 * fps,                 // Maximum allowed skipped frames
+                     0.8f,       // Distance threshold between two frames
+                     1 * fps,                 // Maximum allowed skipped frames
                      5 * fps                  // Maximum trace length
                      );
 
@@ -510,16 +510,18 @@ void PedestrianDetector(cv::CommandLineParser parser)
         std::vector<cv::Rect> foundRects;
         std::vector<cv::Rect> filteredRects;
 
+        int neighbors = 0;
 #if USE_HOG
-        hog.detectMultiScale(gray, foundRects, 0, cv::Size(8, 8), cv::Size(32, 32), 1.05, 6, false);
+        hog.detectMultiScale(gray, foundRects, 0, cv::Size(8, 8), cv::Size(32, 32), 1.05, 4, false);
 #else
         IntImage<double> original;
         original.Load(gray);
 
         scanner.FastScan(original, foundRects, 2);
+        neighbors = 1;
 #endif
 
-        nms(foundRects, filteredRects, 0.3f, 1);
+        nms(foundRects, filteredRects, 0.3f, neighbors);
 
         for (auto rect : filteredRects)
         {
