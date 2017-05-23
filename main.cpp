@@ -6,6 +6,7 @@
 #include "Ctracker.h"
 #include <iostream>
 #include <vector>
+#include <map>
 
 #include "pedestrians/c4-pedestrian-detector.h"
 #include "nms.h"
@@ -120,11 +121,21 @@ void MouseTracking(cv::CommandLineParser parser)
 
 // ----------------------------------------------------------------------
 void DrawTrack(cv::Mat frame,
+               int resizeCoeff,
                const CTrack& track,
                const std::vector<cv::Scalar>& colors
                )
 {
-    cv::rectangle(frame, track.GetLastRect(), cv::Scalar(0, 255, 0), 1, CV_AA);
+    auto ResizeRect = [&](const cv::Rect& r) -> cv::Rect
+    {
+        return cv::Rect(resizeCoeff * r.x, resizeCoeff * r.y, resizeCoeff * r.width, resizeCoeff * r.height);
+    };
+    auto ResizePoint = [&](const cv::Point& pt) -> cv::Point
+    {
+        return cv::Point(resizeCoeff * pt.x, resizeCoeff * pt.y);
+    };
+
+    cv::rectangle(frame, ResizeRect(track.GetLastRect()), cv::Scalar(0, 255, 0), 1, CV_AA);
 
     cv::Scalar cl = colors[track.m_trackID % colors.size()];
 
@@ -133,10 +144,10 @@ void DrawTrack(cv::Mat frame,
         const TrajectoryPoint& pt1 = track.m_trace.at(j);
         const TrajectoryPoint& pt2 = track.m_trace.at(j + 1);
 
-        cv::line(frame, pt1.m_prediction, pt2.m_prediction, cl, 1, CV_AA);
+        cv::line(frame, ResizePoint(pt1.m_prediction), ResizePoint(pt2.m_prediction), cl, 1, CV_AA);
         if (!pt2.m_hasRaw)
         {
-            cv::circle(frame, pt2.m_prediction, 4, cl, 1, CV_AA);
+            cv::circle(frame, ResizePoint(pt2.m_prediction), 4, cl, 1, CV_AA);
         }
     }
 }
@@ -157,6 +168,7 @@ void MotionDetector(cv::CommandLineParser parser)
     }
     cv::namedWindow("Video");
     cv::Mat frame;
+    cv::Mat origGray;
     cv::Mat gray;
 
     bool showLogs = parser.get<int>("show_logs") != 0;
@@ -168,27 +180,44 @@ void MotionDetector(cv::CommandLineParser parser)
     const int fps = std::max(1, cvRound(capture.get(cv::CAP_PROP_FPS)));
 
     capture >> frame;
-    cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
+    cv::cvtColor(frame, origGray, cv::COLOR_BGR2GRAY);
+
+    bool resizeFrame = true;
+
+    int resizeCoeff = 1;
+    cv::Size newSize(origGray.cols, origGray.rows);
+    const int minObjWidth = 10;
+    if (resizeFrame)
+    {
+        int minPedestrianWidth = 40;
+        int resizeCoeff = (origGray.cols * minObjWidth) / minPedestrianWidth;
+        cv::Size newSize(origGray.cols / resizeCoeff, origGray.rows / resizeCoeff);
+        cv::resize(origGray, gray, newSize, 0, 0, cv::INTER_LINEAR);
+    }
+    else
+    {
+        gray = origGray;
+    }
 
     // If true then trajectories will be more smooth and accurate
     // But on high resolution videos with many objects may be to slow
-    bool useLocalTracking = true;
+    bool useLocalTracking = false;
 
     CDetector detector(BackgroundSubtract::ALG_MOG, useLocalTracking, gray);
-    detector.SetMinObjectSize(cv::Size(gray.cols / 50, gray.rows / 50));
+    detector.SetMinObjectSize(cv::Size(minObjWidth, 2 * minObjWidth));
     //detector.SetMinObjectSize(cv::Size(2, 2));
 
     CTracker tracker(useLocalTracking,
-                     CTracker::DistRects,
+                     CTracker::DistJaccard,
                      CTracker::KalmanLinear,
                      CTracker::FilterRect,
-                     CTracker::TrackKCF,      // Use KCF tracker for collisions resolving
-                     CTracker::MatchBipart,
+                     CTracker::TrackNone,      // Use KCF tracker for collisions resolving
+                     CTracker::MatchHungrian,
                      0.2f,                    // Delta time for Kalman filter
                      0.1f,                    // Accel noise magnitude for Kalman filter
-                     gray.cols / 20.0f,       // Distance threshold between two frames
+                     0.8f,       // Distance threshold between two frames
                      fps,                     // Maximum allowed skipped frames
-                     5 * fps                 // Maximum trace length
+                     3 * fps                 // Maximum trace length
                      );
 
     int k = 0;
@@ -206,7 +235,16 @@ void MotionDetector(cv::CommandLineParser parser)
         {
             break;
         }
-        cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
+        cv::cvtColor(frame, origGray, cv::COLOR_BGR2GRAY);
+
+        if (resizeCoeff != 1)
+        {
+            cv::resize(origGray, gray, newSize, 0, 0, cv::INTER_LINEAR);
+        }
+        else
+        {
+            gray = origGray;
+        }
 
         if (!writer.isOpened())
         {
@@ -233,15 +271,15 @@ void MotionDetector(cv::CommandLineParser parser)
         for (const auto& track : tracker.tracks)
         {
             if (track->IsRobust(fps / 2,                         // Minimal trajectory size
-                                0.5f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
+                                0.8f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
                                 cv::Size2f(0.1f, 8.0f))      // Min and max ratio: width / height
                     )
             {
-                DrawTrack(frame, *track, colors);
+                DrawTrack(frame, resizeCoeff, *track, colors);
             }
         }
 
-        detector.CalcMotionMap(frame);
+        //detector.CalcMotionMap(frame);
 
         cv::imshow("Video", frame);
 
@@ -386,7 +424,7 @@ void FaceDetector(cv::CommandLineParser parser)
                                 cv::Size2f(0.1f, 8.0f))      // Min and max ratio: width / height
                     )
             {
-                DrawTrack(frame, *track, colors);
+                DrawTrack(frame, 1, *track, colors);
             }
         }
 
@@ -553,7 +591,7 @@ void PedestrianDetector(cv::CommandLineParser parser)
                                 cv::Size2f(0.1f, 8.0f))      // Min and max ratio: width / height
                     )
             {
-                DrawTrack(frame, *track, colors);
+                DrawTrack(frame, 1, *track, colors);
             }
         }
 
@@ -721,7 +759,7 @@ void HybridFaceDetector(cv::CommandLineParser parser)
                                 cv::Size2f(0.4f, 3.0f))      // Min and max ratio: width / height
                     )
             {
-                DrawTrack(frame, *track, colors);
+                DrawTrack(frame, 1, *track, colors);
                 prevRects.push_back(track->GetLastRect());
             }
         }
