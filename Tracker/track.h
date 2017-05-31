@@ -435,7 +435,13 @@ private:
                 }
                 else
                 {
-                    m_predictionRect = m_kalman->Update(m_boundidgRect, true);
+                    cv::Rect prect(
+                                (m_boundidgRect.x + m_predictionRect.x) / 2,
+                                (m_boundidgRect.y + m_predictionRect.y) / 2,
+                                (m_boundidgRect.width + m_predictionRect.width) / 2,
+                                (m_boundidgRect.height + m_predictionRect.height) / 2);
+
+                    m_predictionRect = m_kalman->Update(prect, true);
                 }
             }
             else
@@ -492,7 +498,7 @@ private:
             }
             else
             {
-                m_predictionPoint = m_kalman->Update(m_averagePoint, true);
+                m_predictionPoint = m_kalman->Update((m_predictionPoint + m_averagePoint) / 2, true);
             }
         }
         else
