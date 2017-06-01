@@ -1,0 +1,306 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Detector\Detector.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Detector\BackgroundSubtract.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Detector\vibe_src\vibe.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\Ctracker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\HungarianAlg\HungarianAlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\LocalTracker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\Kalman.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\tokenise.cpp">
+      <Filter>graph</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\mytree.cpp">
+      <Filter>graph</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\mygraph.cpp">
+      <Filter>graph</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\mwbmatching.cpp">
+      <Filter>graph</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\mincut.cpp">
+      <Filter>graph</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\gport.cpp">
+      <Filter>graph</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\fheap.c">
+      <Filter>graph</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\GTL\src\bellman_ford.cpp">
+      <Filter>GTL</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\GTL\src\bfs.cpp">
+      <Filter>GTL</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\GTL\src\biconnectivity.cpp">
+      <Filter>GTL</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\GTL\src\bid_dijkstra.cpp">
+      <Filter>GTL</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\GTL\src\components.cpp">
+      <Filter>GTL</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\GTL\src\debug.cpp">
+      <Filter>GTL</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\GTL\src\dfs.cpp">
+      <Filter>GTL</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\GTL\src\dijkstra.cpp">
+      <Filter>GTL</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\GTL\src\edge.cpp">
+      <Filter>GTL</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\GTL\src\embedding.cpp">
+      <Filter>GTL</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\GTL\src\fm_partition.cpp">
+      <Filter>GTL</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\GTL\src\gml_parser.cpp">
+      <Filter>GTL</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\GTL\src\gml_scanner.cpp">
+      <Filter>GTL</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\GTL\src\graph.cpp">
+      <Filter>GTL</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\GTL\src\maxflow_ff.cpp">
+      <Filter>GTL</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\GTL\src\maxflow_pp.cpp">
+      <Filter>GTL</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\GTL\src\maxflow_sap.cpp">
+      <Filter>GTL</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\GTL\src\min_tree.cpp">
+      <Filter>GTL</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\GTL\src\node.cpp">
+      <Filter>GTL</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\GTL\src\planarity.cpp">
+      <Filter>GTL</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\GTL\src\pq_node.cpp">
+      <Filter>GTL</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\GTL\src\pq_tree.cpp">
+      <Filter>GTL</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\GTL\src\ratio_cut_partition.cpp">
+      <Filter>GTL</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\GTL\src\st_number.cpp">
+      <Filter>GTL</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\GTL\src\topsort.cpp">
+      <Filter>GTL</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\nms.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Detector\Detector.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Detector\BackgroundSubtract.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Detector\vibe_src\vibe.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\pedestrians\c4-pedestrian-detector.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\Ctracker.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\track.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\HungarianAlg\HungarianAlg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\LocalTracker.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\Kalman.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\defines.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\tokenise.h">
+      <Filter>graph</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\mytree.h">
+      <Filter>graph</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\mygraph.h">
+      <Filter>graph</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\mwbmatching.h">
+      <Filter>graph</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\mincut.h">
+      <Filter>graph</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\gport.h">
+      <Filter>graph</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\gdefs.h">
+      <Filter>graph</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\fheap.h">
+      <Filter>graph</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\GTL\include\GTL\algorithm.h">
+      <Filter>GTL</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\GTL\include\GTL\bellman_ford.h">
+      <Filter>GTL</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\GTL\include\GTL\bfs.h">
+      <Filter>GTL</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\GTL\include\GTL\biconnectivity.h">
+      <Filter>GTL</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\GTL\include\GTL\bid_dijkstra.h">
+      <Filter>GTL</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\GTL\include\GTL\bin_heap.h">
+      <Filter>GTL</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\GTL\include\GTL\components.h">
+      <Filter>GTL</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\GTL\include\GTL\debug.h">
+      <Filter>GTL</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\GTL\include\GTL\dfs.h">
+      <Filter>GTL</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\GTL\include\GTL\dijkstra.h">
+      <Filter>GTL</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\GTL\include\GTL\edge.h">
+      <Filter>GTL</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\GTL\include\GTL\edge_data.h">
+      <Filter>GTL</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\GTL\include\GTL\edge_map.h">
+      <Filter>GTL</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\GTL\include\GTL\embedding.h">
+      <Filter>GTL</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\GTL\include\GTL\fm_partition.h">
+      <Filter>GTL</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\GTL\include\GTL\gml_parser.h">
+      <Filter>GTL</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\GTL\include\GTL\gml_scanner.h">
+      <Filter>GTL</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\GTL\include\GTL\graph.h">
+      <Filter>GTL</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\GTL\include\GTL\maxflow_ff.h">
+      <Filter>GTL</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\GTL\include\GTL\maxflow_pp.h">
+      <Filter>GTL</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\GTL\include\GTL\maxflow_sap.h">
+      <Filter>GTL</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\GTL\include\GTL\min_tree.h">
+      <Filter>GTL</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\GTL\include\GTL\ne_map.h">
+      <Filter>GTL</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\GTL\include\GTL\node.h">
+      <Filter>GTL</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\GTL\include\GTL\node_data.h">
+      <Filter>GTL</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\GTL\include\GTL\node_map.h">
+      <Filter>GTL</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\GTL\include\GTL\planarity.h">
+      <Filter>GTL</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\GTL\include\GTL\pq_node.h">
+      <Filter>GTL</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\GTL\include\GTL\pq_tree.h">
+      <Filter>GTL</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\GTL\include\GTL\ratio_cut_partition.h">
+      <Filter>GTL</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\GTL\include\GTL\st_number.h">
+      <Filter>GTL</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\GTL\include\GTL\symlist.h">
+      <Filter>GTL</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\GTL\include\GTL\topsort.h">
+      <Filter>GTL</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\GTL\include\GTL\version.h">
+      <Filter>GTL</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\Tracker\graph\GTL\include\GTL\GTL.h">
+      <Filter>GTL</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{3BAC5F16-BC55-3BA8-8ACB-1F50BC810FC3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{CF274E2C-77A5-339C-B67E-F2558812A541}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="graph">
+      <UniqueIdentifier>{D2F64671-0082-3226-AC37-9BE5BF898387}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GTL">
+      <UniqueIdentifier>{43E7EC97-E7A4-3069-92CD-99FEE17960E7}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

@@ -182,7 +182,7 @@ void get_lin_regress_params(
     ky = det_1 * (m1 * m3_y + el_count * m4_y);
     by = det_1 * (m2 * m3_y + m1 * m4_y);
 }
-
+#if USE_OCV_UKF
 //---------------------------------------------------------------------------
 class AcceleratedModel: public cv::tracking::UkfSystemModel
 {
@@ -447,6 +447,7 @@ void TKalmanFilter::CreateAugmentedUnscented(cv::Rect_<track_t> rect0, Point_t r
 
     m_initialized = true;
 }
+#endif
 
 //---------------------------------------------------------------------------
 Point_t TKalmanFilter::GetPointPrediction()
@@ -519,7 +520,9 @@ Point_t TKalmanFilter::Update(Point_t pt, bool dataCorrect)
                 break;
 
             case TypeAugmentedUnscented:
+#if USE_OCV_UKF
                 CreateAugmentedUnscented(xy0, xyv0);
+#endif
                 break;
             }
         }
@@ -570,6 +573,7 @@ Point_t TKalmanFilter::Update(Point_t pt, bool dataCorrect)
     return m_lastPointResult;
 }
 //---------------------------------------------------------------------------
+
 
 cv::Rect TKalmanFilter::GetRectPrediction()
 {
@@ -652,7 +656,9 @@ cv::Rect TKalmanFilter::Update(cv::Rect rect, bool dataCorrect)
                 break;
 
             case TypeAugmentedUnscented:
+#if USE_OCV_UKF
                 CreateAugmentedUnscented(rect0, rectv0);
+#endif
                 break;
             }
         }

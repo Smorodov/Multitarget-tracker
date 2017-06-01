@@ -1,0 +1,337 @@
+The system is: Windows - 10.0.15063 - AMD64
+Compiling the C compiler identification source file "CMakeCCompilerId.c" succeeded.
+Compiler:  
+Build flags: 
+Id flags: 
+
+The output was:
+0
+Microsoft (R) Build Engine версии 14.0.25420.1
+(C) Корпорация Майкрософт (Microsoft Corporation). Все права защищены.
+
+Сборка начата 01.06.2017 15:21:54.
+Проект "F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\vs2015\CMakeFiles\3.6.2\CompilerIdC\CompilerIdC.vcxproj" в узле 1 (целевые объекты по умолчанию).
+PrepareForBuild:
+  Создание каталога "Debug\".
+  Создание каталога "Debug\CompilerIdC.tlog\".
+InitializeBuildStatus:
+  Создание "Debug\CompilerIdC.tlog\unsuccessfulbuild", так как было задано "AlwaysCreate".
+ClCompile:
+  C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\CL.exe /c /nologo /W0 /WX- /Od /D _MBCS /Gm- /EHsc /RTC1 /MDd /GS /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"Debug\\" /Fd"Debug\vc140.pdb" /Gd /TC /errorReport:queue CMakeCCompilerId.c
+  CMakeCCompilerId.c
+Link:
+  C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\link.exe /ERRORREPORT:QUEUE /OUT:".\CompilerIdC.exe" /INCREMENTAL:NO /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /PDB:".\CompilerIdC.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:".\CompilerIdC.lib" /MACHINE:X64 Debug\CMakeCCompilerId.obj
+  CompilerIdC.vcxproj -> F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\vs2015\CMakeFiles\3.6.2\CompilerIdC\.\CompilerIdC.exe
+PostBuildEvent:
+  for %%i in (cl.exe) do @echo CMAKE_C_COMPILER=%%~$PATH:i
+  :VCEnd
+  CMAKE_C_COMPILER=C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\cl.exe
+FinalizeBuildStatus:
+  Файл "Debug\CompilerIdC.tlog\unsuccessfulbuild" удаляется.
+  Обращение к "Debug\CompilerIdC.tlog\CompilerIdC.lastbuildstate".
+Сборка проекта "F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\vs2015\CMakeFiles\3.6.2\CompilerIdC\CompilerIdC.vcxproj" завершена (целевые объекты по умолчанию).
+
+Сборка успешно завершена.
+    Предупреждений: 0
+    Ошибок: 0
+
+Затраченное время: 00:00:00.80
+
+
+Compilation of the C compiler identification source "CMakeCCompilerId.c" produced "CompilerIdC.exe"
+
+Compilation of the C compiler identification source "CMakeCCompilerId.c" produced "CompilerIdC.vcxproj"
+
+The C compiler identification is MSVC, found in "F:/Documents/Visual Studio 2015/Projects/Multitarget-tracker/vs2015/CMakeFiles/3.6.2/CompilerIdC/CompilerIdC.exe"
+
+Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" succeeded.
+Compiler:  
+Build flags: 
+Id flags: 
+
+The output was:
+0
+Microsoft (R) Build Engine версии 14.0.25420.1
+(C) Корпорация Майкрософт (Microsoft Corporation). Все права защищены.
+
+Сборка начата 01.06.2017 15:21:55.
+Проект "F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\vs2015\CMakeFiles\3.6.2\CompilerIdCXX\CompilerIdCXX.vcxproj" в узле 1 (целевые объекты по умолчанию).
+PrepareForBuild:
+  Создание каталога "Debug\".
+  Создание каталога "Debug\CompilerIdCXX.tlog\".
+InitializeBuildStatus:
+  Создание "Debug\CompilerIdCXX.tlog\unsuccessfulbuild", так как было задано "AlwaysCreate".
+ClCompile:
+  C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\CL.exe /c /nologo /W0 /WX- /Od /D _MBCS /Gm- /EHsc /RTC1 /MDd /GS /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"Debug\\" /Fd"Debug\vc140.pdb" /Gd /TP /errorReport:queue CMakeCXXCompilerId.cpp
+  CMakeCXXCompilerId.cpp
+Link:
+  C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\link.exe /ERRORREPORT:QUEUE /OUT:".\CompilerIdCXX.exe" /INCREMENTAL:NO /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /PDB:".\CompilerIdCXX.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:".\CompilerIdCXX.lib" /MACHINE:X64 Debug\CMakeCXXCompilerId.obj
+  CompilerIdCXX.vcxproj -> F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\vs2015\CMakeFiles\3.6.2\CompilerIdCXX\.\CompilerIdCXX.exe
+PostBuildEvent:
+  for %%i in (cl.exe) do @echo CMAKE_CXX_COMPILER=%%~$PATH:i
+  :VCEnd
+  CMAKE_CXX_COMPILER=C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\cl.exe
+FinalizeBuildStatus:
+  Файл "Debug\CompilerIdCXX.tlog\unsuccessfulbuild" удаляется.
+  Обращение к "Debug\CompilerIdCXX.tlog\CompilerIdCXX.lastbuildstate".
+Сборка проекта "F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\vs2015\CMakeFiles\3.6.2\CompilerIdCXX\CompilerIdCXX.vcxproj" завершена (целевые объекты по умолчанию).
+
+Сборка успешно завершена.
+    Предупреждений: 0
+    Ошибок: 0
+
+Затраченное время: 00:00:00.64
+
+
+Compilation of the CXX compiler identification source "CMakeCXXCompilerId.cpp" produced "CompilerIdCXX.exe"
+
+Compilation of the CXX compiler identification source "CMakeCXXCompilerId.cpp" produced "CompilerIdCXX.vcxproj"
+
+The CXX compiler identification is MSVC, found in "F:/Documents/Visual Studio 2015/Projects/Multitarget-tracker/vs2015/CMakeFiles/3.6.2/CompilerIdCXX/CompilerIdCXX.exe"
+
+Determining if the C compiler works passed with the following output:
+Change Dir: F:/Documents/Visual Studio 2015/Projects/Multitarget-tracker/vs2015/CMakeFiles/CMakeTmp
+
+Run Build Command:"C:/Program Files (x86)/MSBuild/14.0/bin/MSBuild.exe" "cmTC_7cf9f.vcxproj" "/p:Configuration=Debug" "/p:VisualStudioVersion=14.0"
+Microsoft (R) Build Engine версии 14.0.25420.1
+(C) Корпорация Майкрософт (Microsoft Corporation). Все права защищены.
+
+Сборка начата 01.06.2017 15:21:56.
+Проект "F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\vs2015\CMakeFiles\CMakeTmp\cmTC_7cf9f.vcxproj" в узле 1 (целевые объекты по умолчанию).
+PrepareForBuild:
+  Создание каталога "cmTC_7cf9f.dir\Debug\".
+  Создание каталога "F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\vs2015\CMakeFiles\CMakeTmp\Debug\".
+  Создание каталога "cmTC_7cf9f.dir\Debug\cmTC_7cf9f.tlog\".
+InitializeBuildStatus:
+  Создание "cmTC_7cf9f.dir\Debug\cmTC_7cf9f.tlog\unsuccessfulbuild", так как было задано "AlwaysCreate".
+ClCompile:
+  C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\CL.exe /c /I"C:\Program Files (x86)\Visual Leak Detector\include" /Zi /W3 /WX- /Od /Ob0 /D WIN32 /D _WINDOWS /D _DEBUG /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_7cf9f.dir\Debug\\" /Fd"cmTC_7cf9f.dir\Debug\vc140.pdb" /Gd /TC /errorReport:queue "F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\vs2015\CMakeFiles\CMakeTmp\testCCompiler.c"
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.00.24215.1 for x64
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  
+  cl /c /I"C:\Program Files (x86)\Visual Leak Detector\include" /Zi /W3 /WX- /Od /Ob0 /D WIN32 /D _WINDOWS /D _DEBUG /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_7cf9f.dir\Debug\\" /Fd"cmTC_7cf9f.dir\Debug\vc140.pdb" /Gd /TC /errorReport:queue "F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\vs2015\CMakeFiles\CMakeTmp\testCCompiler.c"
+  
+  testCCompiler.c
+Link:
+  C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\link.exe /ERRORREPORT:QUEUE /OUT:"F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\vs2015\CMakeFiles\CMakeTmp\Debug\cmTC_7cf9f.exe" /INCREMENTAL /NOLOGO /LIBPATH:"C:\Program Files (x86)\Visual Leak Detector\lib\Win64" kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"F:/Documents/Visual Studio 2015/Projects/Multitarget-tracker/vs2015/CMakeFiles/CMakeTmp/Debug/cmTC_7cf9f.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"F:/Documents/Visual Studio 2015/Projects/Multitarget-tracker/vs2015/CMakeFiles/CMakeTmp/Debug/cmTC_7cf9f.lib" /MACHINE:X64  /machine:x64 cmTC_7cf9f.dir\Debug\testCCompiler.obj
+  cmTC_7cf9f.vcxproj -> F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\vs2015\CMakeFiles\CMakeTmp\Debug\cmTC_7cf9f.exe
+FinalizeBuildStatus:
+  Файл "cmTC_7cf9f.dir\Debug\cmTC_7cf9f.tlog\unsuccessfulbuild" удаляется.
+  Обращение к "cmTC_7cf9f.dir\Debug\cmTC_7cf9f.tlog\cmTC_7cf9f.lastbuildstate".
+Сборка проекта "F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\vs2015\CMakeFiles\CMakeTmp\cmTC_7cf9f.vcxproj" завершена (целевые объекты по умолчанию).
+
+Сборка успешно завершена.
+    Предупреждений: 0
+    Ошибок: 0
+
+Затраченное время: 00:00:00.88
+
+
+Detecting C compiler ABI info compiled with the following output:
+Change Dir: F:/Documents/Visual Studio 2015/Projects/Multitarget-tracker/vs2015/CMakeFiles/CMakeTmp
+
+Run Build Command:"C:/Program Files (x86)/MSBuild/14.0/bin/MSBuild.exe" "cmTC_b8515.vcxproj" "/p:Configuration=Debug" "/p:VisualStudioVersion=14.0"
+Microsoft (R) Build Engine версии 14.0.25420.1
+(C) Корпорация Майкрософт (Microsoft Corporation). Все права защищены.
+
+Сборка начата 01.06.2017 15:21:57.
+Проект "F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\vs2015\CMakeFiles\CMakeTmp\cmTC_b8515.vcxproj" в узле 1 (целевые объекты по умолчанию).
+PrepareForBuild:
+  Создание каталога "cmTC_b8515.dir\Debug\".
+  Создание каталога "F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\vs2015\CMakeFiles\CMakeTmp\Debug\".
+  Создание каталога "cmTC_b8515.dir\Debug\cmTC_b8515.tlog\".
+InitializeBuildStatus:
+  Создание "cmTC_b8515.dir\Debug\cmTC_b8515.tlog\unsuccessfulbuild", так как было задано "AlwaysCreate".
+ClCompile:
+  C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\CL.exe /c /I"C:\Program Files (x86)\Visual Leak Detector\include" /Zi /W3 /WX- /Od /Ob0 /D WIN32 /D _WINDOWS /D _DEBUG /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_b8515.dir\Debug\\" /Fd"cmTC_b8515.dir\Debug\vc140.pdb" /Gd /TC /errorReport:queue "C:\Program Files\CMake\share\cmake-3.6\Modules\CMakeCCompilerABI.c"
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.00.24215.1 for x64
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  
+  cl /c /I"C:\Program Files (x86)\Visual Leak Detector\include" /Zi /W3 /WX- /Od /Ob0 /D WIN32 /D _WINDOWS /D _DEBUG /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_b8515.dir\Debug\\" /Fd"cmTC_b8515.dir\Debug\vc140.pdb" /Gd /TC /errorReport:queue "C:\Program Files\CMake\share\cmake-3.6\Modules\CMakeCCompilerABI.c"
+  
+  CMakeCCompilerABI.c
+Link:
+  C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\link.exe /ERRORREPORT:QUEUE /OUT:"F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\vs2015\CMakeFiles\CMakeTmp\Debug\cmTC_b8515.exe" /INCREMENTAL /NOLOGO /LIBPATH:"C:\Program Files (x86)\Visual Leak Detector\lib\Win64" kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"F:/Documents/Visual Studio 2015/Projects/Multitarget-tracker/vs2015/CMakeFiles/CMakeTmp/Debug/cmTC_b8515.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"F:/Documents/Visual Studio 2015/Projects/Multitarget-tracker/vs2015/CMakeFiles/CMakeTmp/Debug/cmTC_b8515.lib" /MACHINE:X64  /machine:x64 cmTC_b8515.dir\Debug\CMakeCCompilerABI.obj
+  cmTC_b8515.vcxproj -> F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\vs2015\CMakeFiles\CMakeTmp\Debug\cmTC_b8515.exe
+FinalizeBuildStatus:
+  Файл "cmTC_b8515.dir\Debug\cmTC_b8515.tlog\unsuccessfulbuild" удаляется.
+  Обращение к "cmTC_b8515.dir\Debug\cmTC_b8515.tlog\cmTC_b8515.lastbuildstate".
+Сборка проекта "F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\vs2015\CMakeFiles\CMakeTmp\cmTC_b8515.vcxproj" завершена (целевые объекты по умолчанию).
+
+Сборка успешно завершена.
+    Предупреждений: 0
+    Ошибок: 0
+
+Затраченное время: 00:00:00.65
+
+
+Determining if the CXX compiler works passed with the following output:
+Change Dir: F:/Documents/Visual Studio 2015/Projects/Multitarget-tracker/vs2015/CMakeFiles/CMakeTmp
+
+Run Build Command:"C:/Program Files (x86)/MSBuild/14.0/bin/MSBuild.exe" "cmTC_94ad9.vcxproj" "/p:Configuration=Debug" "/p:VisualStudioVersion=14.0"
+Microsoft (R) Build Engine версии 14.0.25420.1
+(C) Корпорация Майкрософт (Microsoft Corporation). Все права защищены.
+
+Сборка начата 01.06.2017 15:21:58.
+Проект "F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\vs2015\CMakeFiles\CMakeTmp\cmTC_94ad9.vcxproj" в узле 1 (целевые объекты по умолчанию).
+PrepareForBuild:
+  Создание каталога "cmTC_94ad9.dir\Debug\".
+  Создание каталога "F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\vs2015\CMakeFiles\CMakeTmp\Debug\".
+  Создание каталога "cmTC_94ad9.dir\Debug\cmTC_94ad9.tlog\".
+InitializeBuildStatus:
+  Создание "cmTC_94ad9.dir\Debug\cmTC_94ad9.tlog\unsuccessfulbuild", так как было задано "AlwaysCreate".
+ClCompile:
+  C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\CL.exe /c /I"C:\Program Files (x86)\Visual Leak Detector\include" /Zi /W3 /WX- /Od /Ob0 /D WIN32 /D _WINDOWS /D _DEBUG /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /EHsc /RTC1 /MDd /GS /Zc:wchar_t /Zc:forScope /Zc:inline /GR /Fo"cmTC_94ad9.dir\Debug\\" /Fd"cmTC_94ad9.dir\Debug\vc140.pdb" /Gd /TP /errorReport:queue "F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\vs2015\CMakeFiles\CMakeTmp\testCXXCompiler.cxx"
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.00.24215.1 for x64
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  
+  cl /c /I"C:\Program Files (x86)\Visual Leak Detector\include" /Zi /W3 /WX- /Od /Ob0 /D WIN32 /D _WINDOWS /D _DEBUG /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /EHsc /RTC1 /MDd /GS /Zc:wchar_t /Zc:forScope /Zc:inline /GR /Fo"cmTC_94ad9.dir\Debug\\" /Fd"cmTC_94ad9.dir\Debug\vc140.pdb" /Gd /TP /errorReport:queue "F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\vs2015\CMakeFiles\CMakeTmp\testCXXCompiler.cxx"
+  
+  testCXXCompiler.cxx
+Link:
+  C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\link.exe /ERRORREPORT:QUEUE /OUT:"F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\vs2015\CMakeFiles\CMakeTmp\Debug\cmTC_94ad9.exe" /INCREMENTAL /NOLOGO /LIBPATH:"C:\Program Files (x86)\Visual Leak Detector\lib\Win64" kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"F:/Documents/Visual Studio 2015/Projects/Multitarget-tracker/vs2015/CMakeFiles/CMakeTmp/Debug/cmTC_94ad9.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"F:/Documents/Visual Studio 2015/Projects/Multitarget-tracker/vs2015/CMakeFiles/CMakeTmp/Debug/cmTC_94ad9.lib" /MACHINE:X64  /machine:x64 cmTC_94ad9.dir\Debug\testCXXCompiler.obj
+  cmTC_94ad9.vcxproj -> F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\vs2015\CMakeFiles\CMakeTmp\Debug\cmTC_94ad9.exe
+FinalizeBuildStatus:
+  Файл "cmTC_94ad9.dir\Debug\cmTC_94ad9.tlog\unsuccessfulbuild" удаляется.
+  Обращение к "cmTC_94ad9.dir\Debug\cmTC_94ad9.tlog\cmTC_94ad9.lastbuildstate".
+Сборка проекта "F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\vs2015\CMakeFiles\CMakeTmp\cmTC_94ad9.vcxproj" завершена (целевые объекты по умолчанию).
+
+Сборка успешно завершена.
+    Предупреждений: 0
+    Ошибок: 0
+
+Затраченное время: 00:00:00.68
+
+
+Detecting CXX compiler ABI info compiled with the following output:
+Change Dir: F:/Documents/Visual Studio 2015/Projects/Multitarget-tracker/vs2015/CMakeFiles/CMakeTmp
+
+Run Build Command:"C:/Program Files (x86)/MSBuild/14.0/bin/MSBuild.exe" "cmTC_b27b1.vcxproj" "/p:Configuration=Debug" "/p:VisualStudioVersion=14.0"
+Microsoft (R) Build Engine версии 14.0.25420.1
+(C) Корпорация Майкрософт (Microsoft Corporation). Все права защищены.
+
+Сборка начата 01.06.2017 15:21:58.
+Проект "F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\vs2015\CMakeFiles\CMakeTmp\cmTC_b27b1.vcxproj" в узле 1 (целевые объекты по умолчанию).
+PrepareForBuild:
+  Создание каталога "cmTC_b27b1.dir\Debug\".
+  Создание каталога "F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\vs2015\CMakeFiles\CMakeTmp\Debug\".
+  Создание каталога "cmTC_b27b1.dir\Debug\cmTC_b27b1.tlog\".
+InitializeBuildStatus:
+  Создание "cmTC_b27b1.dir\Debug\cmTC_b27b1.tlog\unsuccessfulbuild", так как было задано "AlwaysCreate".
+ClCompile:
+  C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\CL.exe /c /I"C:\Program Files (x86)\Visual Leak Detector\include" /Zi /W3 /WX- /Od /Ob0 /D WIN32 /D _WINDOWS /D _DEBUG /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /EHsc /RTC1 /MDd /GS /Zc:wchar_t /Zc:forScope /Zc:inline /GR /Fo"cmTC_b27b1.dir\Debug\\" /Fd"cmTC_b27b1.dir\Debug\vc140.pdb" /Gd /TP /errorReport:queue "C:\Program Files\CMake\share\cmake-3.6\Modules\CMakeCXXCompilerABI.cpp"
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.00.24215.1 for x64
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  
+  cl /c /I"C:\Program Files (x86)\Visual Leak Detector\include" /Zi /W3 /WX- /Od /Ob0 /D WIN32 /D _WINDOWS /D _DEBUG /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /EHsc /RTC1 /MDd /GS /Zc:wchar_t /Zc:forScope /Zc:inline /GR /Fo"cmTC_b27b1.dir\Debug\\" /Fd"cmTC_b27b1.dir\Debug\vc140.pdb" /Gd /TP /errorReport:queue "C:\Program Files\CMake\share\cmake-3.6\Modules\CMakeCXXCompilerABI.cpp"
+  
+  CMakeCXXCompilerABI.cpp
+Link:
+  C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\link.exe /ERRORREPORT:QUEUE /OUT:"F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\vs2015\CMakeFiles\CMakeTmp\Debug\cmTC_b27b1.exe" /INCREMENTAL /NOLOGO /LIBPATH:"C:\Program Files (x86)\Visual Leak Detector\lib\Win64" kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"F:/Documents/Visual Studio 2015/Projects/Multitarget-tracker/vs2015/CMakeFiles/CMakeTmp/Debug/cmTC_b27b1.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"F:/Documents/Visual Studio 2015/Projects/Multitarget-tracker/vs2015/CMakeFiles/CMakeTmp/Debug/cmTC_b27b1.lib" /MACHINE:X64  /machine:x64 cmTC_b27b1.dir\Debug\CMakeCXXCompilerABI.obj
+  cmTC_b27b1.vcxproj -> F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\vs2015\CMakeFiles\CMakeTmp\Debug\cmTC_b27b1.exe
+FinalizeBuildStatus:
+  Файл "cmTC_b27b1.dir\Debug\cmTC_b27b1.tlog\unsuccessfulbuild" удаляется.
+  Обращение к "cmTC_b27b1.dir\Debug\cmTC_b27b1.tlog\cmTC_b27b1.lastbuildstate".
+Сборка проекта "F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\vs2015\CMakeFiles\CMakeTmp\cmTC_b27b1.vcxproj" завершена (целевые объекты по умолчанию).
+
+Сборка успешно завершена.
+    Предупреждений: 0
+    Ошибок: 0
+
+Затраченное время: 00:00:00.63
+
+
+
+
+Detecting CXX [] compiler features compiled with the following output:
+Change Dir: F:/Documents/Visual Studio 2015/Projects/Multitarget-tracker/vs2015/CMakeFiles/CMakeTmp
+
+Run Build Command:"C:/Program Files (x86)/MSBuild/14.0/bin/MSBuild.exe" "cmTC_c0487.vcxproj" "/p:Configuration=Debug" "/p:VisualStudioVersion=14.0"
+Microsoft (R) Build Engine версии 14.0.25420.1
+(C) Корпорация Майкрософт (Microsoft Corporation). Все права защищены.
+
+Сборка начата 01.06.2017 15:21:59.
+Проект "F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\vs2015\CMakeFiles\CMakeTmp\cmTC_c0487.vcxproj" в узле 1 (целевые объекты по умолчанию).
+PrepareForBuild:
+  Создание каталога "cmTC_c0487.dir\Debug\".
+  Создание каталога "F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\vs2015\CMakeFiles\CMakeTmp\Debug\".
+  Создание каталога "cmTC_c0487.dir\Debug\cmTC_c0487.tlog\".
+InitializeBuildStatus:
+  Создание "cmTC_c0487.dir\Debug\cmTC_c0487.tlog\unsuccessfulbuild", так как было задано "AlwaysCreate".
+ClCompile:
+  C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\CL.exe /c /I"C:\Program Files (x86)\Visual Leak Detector\include" /Zi /W3 /WX- /Od /Ob0 /D WIN32 /D _WINDOWS /D _DEBUG /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /EHsc /RTC1 /MDd /GS /Zc:wchar_t /Zc:forScope /Zc:inline /GR /Fo"cmTC_c0487.dir\Debug\\" /Fd"cmTC_c0487.dir\Debug\vc140.pdb" /Gd /TP /errorReport:queue "F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\vs2015\CMakeFiles\feature_tests.cxx"
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.00.24215.1 for x64
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  
+  cl /c /I"C:\Program Files (x86)\Visual Leak Detector\include" /Zi /W3 /WX- /Od /Ob0 /D WIN32 /D _WINDOWS /D _DEBUG /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /EHsc /RTC1 /MDd /GS /Zc:wchar_t /Zc:forScope /Zc:inline /GR /Fo"cmTC_c0487.dir\Debug\\" /Fd"cmTC_c0487.dir\Debug\vc140.pdb" /Gd /TP /errorReport:queue "F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\vs2015\CMakeFiles\feature_tests.cxx"
+  
+  feature_tests.cxx
+Link:
+  C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\link.exe /ERRORREPORT:QUEUE /OUT:"F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\vs2015\CMakeFiles\CMakeTmp\Debug\cmTC_c0487.exe" /INCREMENTAL /NOLOGO /LIBPATH:"C:\Program Files (x86)\Visual Leak Detector\lib\Win64" kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"F:/Documents/Visual Studio 2015/Projects/Multitarget-tracker/vs2015/CMakeFiles/CMakeTmp/Debug/cmTC_c0487.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"F:/Documents/Visual Studio 2015/Projects/Multitarget-tracker/vs2015/CMakeFiles/CMakeTmp/Debug/cmTC_c0487.lib" /MACHINE:X64  /machine:x64 cmTC_c0487.dir\Debug\feature_tests.obj
+  cmTC_c0487.vcxproj -> F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\vs2015\CMakeFiles\CMakeTmp\Debug\cmTC_c0487.exe
+FinalizeBuildStatus:
+  Файл "cmTC_c0487.dir\Debug\cmTC_c0487.tlog\unsuccessfulbuild" удаляется.
+  Обращение к "cmTC_c0487.dir\Debug\cmTC_c0487.tlog\cmTC_c0487.lastbuildstate".
+Сборка проекта "F:\Documents\Visual Studio 2015\Projects\Multitarget-tracker\vs2015\CMakeFiles\CMakeTmp\cmTC_c0487.vcxproj" завершена (целевые объекты по умолчанию).
+
+Сборка успешно завершена.
+    Предупреждений: 0
+    Ошибок: 0
+
+Затраченное время: 00:00:00.62
+
+
+    Feature record: CXX_FEATURE:1cxx_alias_templates
+    Feature record: CXX_FEATURE:1cxx_alignas
+    Feature record: CXX_FEATURE:1cxx_alignof
+    Feature record: CXX_FEATURE:1cxx_attributes
+    Feature record: CXX_FEATURE:1cxx_attribute_deprecated
+    Feature record: CXX_FEATURE:1cxx_auto_type
+    Feature record: CXX_FEATURE:1cxx_binary_literals
+    Feature record: CXX_FEATURE:1cxx_constexpr
+    Feature record: CXX_FEATURE:1cxx_contextual_conversions
+    Feature record: CXX_FEATURE:1cxx_decltype
+    Feature record: CXX_FEATURE:1cxx_decltype_auto
+    Feature record: CXX_FEATURE:1cxx_default_function_template_args
+    Feature record: CXX_FEATURE:1cxx_defaulted_functions
+    Feature record: CXX_FEATURE:1cxx_defaulted_move_initializers
+    Feature record: CXX_FEATURE:1cxx_delegating_constructors
+    Feature record: CXX_FEATURE:1cxx_deleted_functions
+    Feature record: CXX_FEATURE:1cxx_digit_separators
+    Feature record: CXX_FEATURE:1cxx_enum_forward_declarations
+    Feature record: CXX_FEATURE:1cxx_explicit_conversions
+    Feature record: CXX_FEATURE:1cxx_extended_friend_declarations
+    Feature record: CXX_FEATURE:1cxx_extern_templates
+    Feature record: CXX_FEATURE:1cxx_final
+    Feature record: CXX_FEATURE:1cxx_func_identifier
+    Feature record: CXX_FEATURE:1cxx_generalized_initializers
+    Feature record: CXX_FEATURE:1cxx_generic_lambdas
+    Feature record: CXX_FEATURE:1cxx_inheriting_constructors
+    Feature record: CXX_FEATURE:1cxx_inline_namespaces
+    Feature record: CXX_FEATURE:1cxx_lambdas
+    Feature record: CXX_FEATURE:1cxx_lambda_init_captures
+    Feature record: CXX_FEATURE:1cxx_local_type_template_args
+    Feature record: CXX_FEATURE:1cxx_long_long_type
+    Feature record: CXX_FEATURE:1cxx_noexcept
+    Feature record: CXX_FEATURE:1cxx_nonstatic_member_init
+    Feature record: CXX_FEATURE:1cxx_nullptr
+    Feature record: CXX_FEATURE:1cxx_override
+    Feature record: CXX_FEATURE:1cxx_range_for
+    Feature record: CXX_FEATURE:1cxx_raw_string_literals
+    Feature record: CXX_FEATURE:1cxx_reference_qualified_functions
+    Feature record: CXX_FEATURE:1cxx_return_type_deduction
+    Feature record: CXX_FEATURE:1cxx_right_angle_brackets
+    Feature record: CXX_FEATURE:1cxx_rvalue_references
+    Feature record: CXX_FEATURE:1cxx_sizeof_member
+    Feature record: CXX_FEATURE:1cxx_static_assert
+    Feature record: CXX_FEATURE:1cxx_strong_enums
+    Feature record: CXX_FEATURE:1cxx_template_template_parameters
+    Feature record: CXX_FEATURE:1cxx_thread_local
+    Feature record: CXX_FEATURE:1cxx_trailing_return_types
+    Feature record: CXX_FEATURE:1cxx_unicode_literals
+    Feature record: CXX_FEATURE:1cxx_uniform_initialization
+    Feature record: CXX_FEATURE:1cxx_unrestricted_unions
+    Feature record: CXX_FEATURE:1cxx_user_literals
+    Feature record: CXX_FEATURE:1cxx_variable_templates
+    Feature record: CXX_FEATURE:1cxx_variadic_macros
+    Feature record: CXX_FEATURE:1cxx_variadic_templates
