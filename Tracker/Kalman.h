@@ -51,8 +51,10 @@ private:
 
     void CreateLinear(Point_t xy0, Point_t xyv0);
     void CreateLinear(cv::Rect_<track_t> rect0, Point_t rectv0);
+#if USE_OCV_UKF
     void CreateUnscented(Point_t xy0, Point_t xyv0);
     void CreateUnscented(cv::Rect_<track_t> rect0, Point_t rectv0);
     void CreateAugmentedUnscented(Point_t xy0, Point_t xyv0);
     void CreateAugmentedUnscented(cv::Rect_<track_t> rect0, Point_t rectv0);
+#endif
 };

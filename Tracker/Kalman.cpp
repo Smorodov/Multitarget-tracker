@@ -183,6 +183,7 @@ void get_lin_regress_params(
     by = det_1 * (m2 * m3_y + m1 * m4_y);
 }
 
+#if USE_OCV_UKF
 //---------------------------------------------------------------------------
 class AcceleratedModel: public cv::tracking::UkfSystemModel
 {
@@ -447,6 +448,7 @@ void TKalmanFilter::CreateAugmentedUnscented(cv::Rect_<track_t> rect0, Point_t r
 
     m_initialized = true;
 }
+#endif
 
 //---------------------------------------------------------------------------
 Point_t TKalmanFilter::GetPointPrediction()
@@ -519,7 +521,12 @@ Point_t TKalmanFilter::Update(Point_t pt, bool dataCorrect)
                 break;
 
             case TypeAugmentedUnscented:
+#if USE_OCV_UKF
                 CreateAugmentedUnscented(xy0, xyv0);
+#else
+                CreateLinear(xy0, xyv0);
+                std::cerr << "AugmentedUnscentedKalmanFilter was disabled in CMAKE! Set KalmanLinear in constructor." << std::endl;
+#endif
                 break;
             }
         }
@@ -569,8 +576,8 @@ Point_t TKalmanFilter::Update(Point_t pt, bool dataCorrect)
     }
     return m_lastPointResult;
 }
-//---------------------------------------------------------------------------
 
+//---------------------------------------------------------------------------
 cv::Rect TKalmanFilter::GetRectPrediction()
 {
     if (m_initialized)
@@ -652,7 +659,12 @@ cv::Rect TKalmanFilter::Update(cv::Rect rect, bool dataCorrect)
                 break;
 
             case TypeAugmentedUnscented:
+#if USE_OCV_UKF
                 CreateAugmentedUnscented(rect0, rectv0);
+#else
+                CreateLinear(rect0, rectv0);
+                std::cerr << "AugmentedUnscentedKalmanFilter was disabled in CMAKE! Set KalmanLinear in constructor." << std::endl;
+#endif
                 break;
             }
         }
