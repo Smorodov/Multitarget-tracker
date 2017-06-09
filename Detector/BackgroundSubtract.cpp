@@ -14,42 +14,64 @@ BackgroundSubtract::BackgroundSubtract(
 	)
 	:
 	m_channels(channels),
-	m_algType(algType)
+    m_algType(algType)
 {
-	switch (m_algType)
-	{
-	case ALG_VIBE:
-		m_modelVibe = std::make_unique<vibe::VIBE>(m_channels, samples, pixel_neighbor, distance_threshold, matching_threshold, update_factor);
-		break;
+    for (bool failed = true; failed;)
+    {
+        failed = false;
+
+        switch (m_algType)
+        {
+        case ALG_VIBE:
+            m_modelVibe = std::make_unique<vibe::VIBE>(m_channels, samples, pixel_neighbor, distance_threshold, matching_threshold, update_factor);
+            break;
 
 #if USE_OCV_BGFG
-	case ALG_MOG:
-		m_modelOCV = cv::bgsegm::createBackgroundSubtractorMOG(100, 3, 0.7, 0);
-		break;
+        case ALG_MOG:
+            m_modelOCV = cv::bgsegm::createBackgroundSubtractorMOG(100, 3, 0.7, 0);
+            break;
 
-    case ALG_GMG:
-		m_modelOCV = cv::bgsegm::createBackgroundSubtractorGMG(50, 0.7);
-		break;
+        case ALG_GMG:
+            m_modelOCV = cv::bgsegm::createBackgroundSubtractorGMG(50, 0.7);
+            break;
 
-    case ALG_CNT:
+        case ALG_CNT:
 #if (((CV_VERSION_MAJOR == 3) && (CV_VERSION_MINOR >= 2)) || (CV_VERSION_MAJOR > 3))
-        m_modelOCV = cv::bgsegm::createBackgroundSubtractorCNT(15, true, 15 * 60, true);
-        break;
+            m_modelOCV = cv::bgsegm::createBackgroundSubtractorCNT(15, true, 15 * 60, true);
+            break;
 #else
-        std::cerr << "OpenCV CNT algorithm is not implemented! Used Vibe by default." << std::endl;
+            std::cerr << "OpenCV CNT algorithm is not implemented! Used Vibe by default." << std::endl;
+            failed = true;
+            break;
 #endif
 
 #else
-    case ALG_MOG:
-    case ALG_GMG:
-    case ALG_CNT:
-        std::cerr << "OpenCV bgfg algorithms are not implemented! Used Vibe by default." << std::endl;
+        case ALG_MOG:
+        case ALG_GMG:
+        case ALG_CNT:
+            std::cerr << "OpenCV bgfg algorithms are not implemented! Used Vibe by default." << std::endl;
+            failed = true;
+            break;
 #endif
 
-    default:
-        m_modelVibe = std::make_unique<vibe::VIBE>(m_channels, samples, pixel_neighbor, distance_threshold, matching_threshold, update_factor);
-        break;
-	}
+        case ALG_SuBSENSE:
+            m_modelSuBSENSE = std::make_unique<BackgroundSubtractorSuBSENSE>(); // default params
+            break;
+
+        case ALG_LOBSTER:
+            m_modelSuBSENSE = std::make_unique<BackgroundSubtractorLOBSTER>();  // default params
+            break;
+
+        default:
+            m_modelVibe = std::make_unique<vibe::VIBE>(m_channels, samples, pixel_neighbor, distance_threshold, matching_threshold, update_factor);
+            break;
+        }
+        if (failed)
+        {
+            m_algType = ALG_VIBE;
+            failed = false;
+        }
+    }
 }
 
 //----------------------------------------------------------------------
@@ -99,7 +121,21 @@ void BackgroundSubtract::subtract(const cv::Mat& image, cv::Mat& foreground)
 		break;
 #else
         std::cerr << "OpenCV bgfg algorithms are not implemented!" << std::endl;
+        break;
 #endif
+
+    case ALG_SuBSENSE:
+    case ALG_LOBSTER:
+        if (foreground.size() != image.size())
+        {
+            m_modelSuBSENSE->initialize(GetImg(), cv::Mat());
+            foreground.create(image.size(), CV_8UC1);
+        }
+        else
+        {
+            m_modelSuBSENSE->apply(GetImg(), foreground);
+        }
+        break;
 
     default:
         m_modelVibe->update(GetImg());

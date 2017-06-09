@@ -30,6 +30,11 @@ set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
              Detector/Detector.cpp
              Detector/BackgroundSubtract.cpp
              Detector/vibe_src/vibe.cpp
+             Detector/Subsense/BackgroundSubtractorLBSP.cpp
+             Detector/Subsense/BackgroundSubtractorLOBSTER.cpp
+             Detector/Subsense/BackgroundSubtractorSuBSENSE.cpp
+             Detector/Subsense/LBSP.cpp
+
              Tracker/Ctracker.cpp
              Tracker/HungarianAlg/HungarianAlg.cpp
              Tracker/LocalTracker.cpp
@@ -39,6 +44,13 @@ set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
              Detector/Detector.h
              Detector/BackgroundSubtract.h
              Detector/vibe_src/vibe.hpp
+             Detector/Subsense/BackgroundSubtractorLBSP.h
+             Detector/Subsense/BackgroundSubtractorLOBSTER.h
+             Detector/Subsense/BackgroundSubtractorSuBSENSE.h
+             Detector/Subsense/DistanceUtils.h
+             Detector/Subsense/LBSP.h
+             Detector/Subsense/RandUtils.h
+
              pedestrians/c4-pedestrian-detector.h
              Tracker/Ctracker.h
              Tracker/track.h
@@ -169,7 +181,8 @@ endif(USE_OCV_UKF)
 # ----------------------------------------------------------------------------
   INCLUDE_DIRECTORIES(
 		      ${PROJECT_SOURCE_DIR}/Detector
-                      ${PROJECT_SOURCE_DIR}/vibe_src
+                      ${PROJECT_SOURCE_DIR}/Detector/vibe_src
+                      ${PROJECT_SOURCE_DIR}/Detector/Subsense
                       ${PROJECT_SOURCE_DIR}/Tracker
                       ${PROJECT_SOURCE_DIR}/Tracker/HungarianAlg
                       ${PROJECT_SOURCE_DIR}/Tracker/graph
