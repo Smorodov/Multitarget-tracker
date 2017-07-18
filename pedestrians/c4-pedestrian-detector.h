@@ -591,7 +591,7 @@ void ComputeCT(IntImage<double>& original,IntImage<int>& ct)
 }
 
 // Load SVM models -- linear SVM trained using LIBLINEAR
-double UseSVM_CD_FastEvaluationStructure(const char* modelfile,const int m,Array2dC<double>& result)
+double UseSVM_CD_FastEvaluationStructure(const char* modelfile, const int m, Array2dC<double>& result)
 {
     std::ifstream in(modelfile);
     if(in.good()==false)
@@ -605,7 +605,7 @@ double UseSVM_CD_FastEvaluationStructure(const char* modelfile,const int m,Array
     std::getline(in,buffer); // third line
     in>>buffer;
     assert(buffer=="nr_feature");
-    int num_dim;
+    int num_dim = m;
     in>>num_dim;
     assert(num_dim>0 && num_dim==m);
     std::getline(in,buffer); // end of line 4
