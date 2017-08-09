@@ -5,12 +5,15 @@ Hungarian algorithm + Kalman filter multitarget tracker implementation.
 #### Demo Videos
 
 * Mouse tracking:
+
 [![Tracking:](https://img.youtube.com/vi/2fW5TmAtAXM/0.jpg)](https://www.youtube.com/watch?v=2fW5TmAtAXM)
 
 * Motion Detection and tracking:
+
 [![Motion Detection and tracking:](https://img.youtube.com/vi/GjN8jOy4kVw/0.jpg)](https://www.youtube.com/watch?v=GjN8jOy4kVw)
 
 * Multiple Faces tracking:
+
 [![Multiple Faces tracking:](https://img.youtube.com/vi/j67CFwFtciU/0.jpg)](https://www.youtube.com/watch?v=j67CFwFtciU)
 
 #### Parameters
@@ -32,7 +35,7 @@ Hungarian algorithm + Kalman filter multitarget tracker implementation.
 **Usage:**
 
            Usage:
-             ./MultitargetTracker <path to movie file> [--example]=<number of example 0..3> [--start_frame]=<start a video from this $
+             ./MultitargetTracker <path to movie file> [--example]=<number of example 0..3> [--start_frame]=<start a video from this position> [--end_frame]=<play a video to this position> [--end_delay]=<delay in milliseconds after video ending> [--out]=<name of result video file> [--show_logs]=<show logs>
              ./MultitargetTracker ../data/atrium.avi -e=1 -o=../data/atrium_motion.avi
            Press:
            * 'm' key for change mode: play|pause. When video is paused you can press any key for get next frame.
