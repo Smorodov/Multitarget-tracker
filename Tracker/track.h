@@ -387,10 +387,12 @@ private:
                     params.compressed_size = 1;
                     params.desc_pca = cv::TrackerKCF::GRAY;
                     params.desc_npca = cv::TrackerKCF::GRAY;
-                    params.resize = false;
-
+                    params.resize = true;
+#if (((CV_VERSION_MAJOR == 3) && (CV_VERSION_MINOR >= 3)) || (CV_VERSION_MAJOR > 3))
+                    m_tracker = cv::TrackerKCF::create(params);
+#else
                     m_tracker = cv::TrackerKCF::createTracker(params);
-                    //m_tracker = cv::Tracker::create("TLD");
+#endif
                     cv::Rect2d lastRect(m_predictionRect.x, m_predictionRect.y, m_predictionRect.width, m_predictionRect.height);
                     m_tracker->init(prevFrame, lastRect);
                 }
