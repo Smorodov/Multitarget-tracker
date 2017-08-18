@@ -62,6 +62,10 @@ BackgroundSubtract::BackgroundSubtract(
             m_modelSuBSENSE = std::make_unique<BackgroundSubtractorLOBSTER>();  // default params
             break;
 
+        case ALG_MOG2:
+            m_modelOCV = cv::createBackgroundSubtractorMOG2(500, 16, true).dynamicCast<cv::BackgroundSubtractor>();
+            break;
+
         default:
             m_modelVibe = std::make_unique<vibe::VIBE>(m_channels, samples, pixel_neighbor, distance_threshold, matching_threshold, update_factor);
             break;
@@ -135,6 +139,10 @@ void BackgroundSubtract::subtract(const cv::Mat& image, cv::Mat& foreground)
         {
             m_modelSuBSENSE->apply(GetImg(), foreground);
         }
+        break;
+
+    case ALG_MOG2:
+        m_modelOCV->apply(GetImg(), foreground);
         break;
 
     default:

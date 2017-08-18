@@ -212,7 +212,9 @@ protected:
     ///
     bool InitTracker(cv::Mat grayFrame)
     {
-        m_detector = std::make_unique<CDetector>(BackgroundSubtract::ALG_MOG, m_useLocalTracking, grayFrame);
+        m_minObjWidth = grayFrame.cols / 50;
+
+        m_detector = std::make_unique<CDetector>(BackgroundSubtract::ALG_MOG2, m_useLocalTracking, grayFrame);
         m_detector->SetMinObjectSize(cv::Size(m_minObjWidth, m_minObjWidth));
 
         m_tracker = std::make_unique<CTracker>(m_useLocalTracking,
@@ -257,7 +259,7 @@ protected:
         for (const auto& track : m_tracker->tracks)
         {
             if (track->IsRobust(m_fps / 2,                         // Minimal trajectory size
-                                0.8f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
+                                0.6f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
                                 cv::Size2f(0.1f, 8.0f))      // Min and max ratio: width / height
                     )
             {
