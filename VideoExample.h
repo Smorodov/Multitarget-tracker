@@ -218,11 +218,11 @@ protected:
         m_detector->SetMinObjectSize(cv::Size(m_minObjWidth, m_minObjWidth));
 
         m_tracker = std::make_unique<CTracker>(m_useLocalTracking,
-                                               CTracker::DistCenters,
-                                               CTracker::KalmanLinear,
-                                               CTracker::FilterRect,
-                                               CTracker::TrackNone,      // Use KCF tracker for collisions resolving
-                                               CTracker::MatchHungrian,
+                                               tracking::DistCenters,
+                                               tracking::KalmanLinear,
+                                               tracking::FilterRect,
+                                               tracking::TrackKCF,      // Use KCF tracker for collisions resolving
+                                               tracking::MatchHungrian,
                                                0.2f,                     // Delta time for Kalman filter
                                                0.1f,                     // Accel noise magnitude for Kalman filter
                                                grayFrame.rows / 10,      // Distance threshold between region and object on two frames
@@ -307,11 +307,11 @@ protected:
         }
 
         m_tracker = std::make_unique<CTracker>(m_useLocalTracking,
-                                               CTracker::DistJaccard,
-                                               CTracker::KalmanUnscented,
-                                               CTracker::FilterRect,
-                                               CTracker::TrackKCF,      // Use KCF tracker for collisions resolving
-                                               CTracker::MatchHungrian,
+                                               tracking::DistJaccard,
+                                               tracking::KalmanUnscented,
+                                               tracking::FilterRect,
+                                               tracking::TrackKCF,      // Use KCF tracker for collisions resolving
+                                               tracking::MatchHungrian,
                                                0.3f,                     // Delta time for Kalman filter
                                                0.1f,                     // Accel noise magnitude for Kalman filter
                                                0.8f,                     // Distance threshold between region and object on two frames
@@ -412,11 +412,11 @@ protected:
 #endif
 
         m_tracker = std::make_unique<CTracker>(m_useLocalTracking,
-                                               CTracker::DistJaccard,
-                                               CTracker::KalmanUnscented,
-                                               CTracker::FilterRect,
-                                               CTracker::TrackKCF,      // Use KCF tracker for collisions resolving
-                                               CTracker::MatchHungrian,
+                                               tracking::DistJaccard,
+                                               tracking::KalmanUnscented,
+                                               tracking::FilterRect,
+                                               tracking::TrackKCF,      // Use KCF tracker for collisions resolving
+                                               tracking::MatchHungrian,
                                                0.3f,                     // Delta time for Kalman filter
                                                0.1f,                     // Accel noise magnitude for Kalman filter
                                                0.8f,                     // Distance threshold between region and object on two frames
@@ -534,11 +534,11 @@ protected:
         }
 
         m_tracker = std::make_unique<CTracker>(m_useLocalTracking,
-                                               CTracker::DistCenters,
-                                               CTracker::KalmanUnscented,
-                                               CTracker::FilterRect,
-                                               CTracker::TrackKCF,      // Use KCF tracker for collisions resolving
-                                               CTracker::MatchHungrian,
+                                               tracking::DistCenters,
+                                               tracking::KalmanUnscented,
+                                               tracking::FilterRect,
+                                               tracking::TrackKCF,      // Use KCF tracker for collisions resolving
+                                               tracking::MatchHungrian,
                                                0.3f,                     // Delta time for Kalman filter
                                                0.1f,                     // Accel noise magnitude for Kalman filter
                                                grayFrame.cols / 10,      // Distance threshold between region and object on two frames

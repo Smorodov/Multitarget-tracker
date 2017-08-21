@@ -179,12 +179,12 @@ public:
     CTrack(
             const Point_t& pt,
             const CRegion& region,
-            TKalmanFilter::KalmanType kalmanType,
+            tracking::KalmanType kalmanType,
             track_t deltaTime,
             track_t accelNoiseMag,
             size_t trackID,
             bool filterObjectSize,
-            bool externalTrackerForLost
+            tracking::LostTrackType externalTrackerForLost
             )
 		:
         m_trackID(trackID),
@@ -354,7 +354,7 @@ private:
     TKalmanFilter* m_kalman;
     bool m_filterObjectSize;
 
-    bool m_externalTrackerForLost;
+    tracking::LostTrackType m_externalTrackerForLost;
 #if USE_OCV_KCF
     cv::Ptr<cv::Tracker> m_tracker;
 #endif
@@ -376,28 +376,37 @@ private:
         m_kalman->GetRectPrediction();
 
         bool recalcPrediction = true;
-        if (m_externalTrackerForLost)
+
+        switch (m_externalTrackerForLost)
         {
+        case tracking::TrackNone:
+            break;
+
+        case tracking::TrackKCF:
+        case tracking::TrackMIL:
 #if USE_OCV_KCF
             if (!dataCorrect)
             {
                 if (!m_tracker || m_tracker.empty())
                 {
-                    cv::TrackerKCF::Params params;
-                    params.compressed_size = 1;
-                    params.desc_pca = cv::TrackerKCF::GRAY;
-                    params.desc_npca = cv::TrackerKCF::GRAY;
-                    params.resize = true;
-#if (((CV_VERSION_MAJOR == 3) && (CV_VERSION_MINOR >= 3)) || (CV_VERSION_MAJOR > 3))
-                    m_tracker = cv::TrackerKCF::create(params);
-#else
-                    m_tracker = cv::TrackerKCF::createTracker(params);
-#endif
+                    CreateExternalTracker();
+
                     cv::Rect2d lastRect(m_predictionRect.x, m_predictionRect.y, m_predictionRect.width, m_predictionRect.height);
-                    m_tracker->init(prevFrame, lastRect);
+                    if (lastRect.x >= 0 &&
+                            lastRect.y >= 0 &&
+                            lastRect.x + lastRect.width < prevFrame.cols &&
+                            lastRect.y + lastRect.height < prevFrame.rows &&
+                            lastRect.area() > 0)
+                    {
+                        m_tracker->init(prevFrame, lastRect);
+                    }
+                    else
+                    {
+                        m_tracker.release();
+                    }
                 }
                 cv::Rect2d newRect;
-                if (m_tracker->update(currFrame, newRect))
+                if (!m_tracker.empty() && m_tracker->update(currFrame, newRect))
                 {
                     cv::Rect prect(cvRound(newRect.x), cvRound(newRect.y), cvRound(newRect.width), cvRound(newRect.height));
 
@@ -419,6 +428,7 @@ private:
 #else
             std::cerr << "KCF tracker was disabled in CMAKE! Set useExternalTrackerForLostObjects = TrackNone in constructor." << std::endl;
 #endif
+            break;
         }
 
         if (recalcPrediction)
@@ -477,6 +487,51 @@ private:
         }
 
         m_predictionPoint = (m_predictionRect.tl() + m_predictionRect.br()) / 2;
+    }
+
+    ///
+    /// \brief CreateExternalTracker
+    ///
+    void CreateExternalTracker()
+    {
+        switch (m_externalTrackerForLost)
+        {
+        case tracking::TrackNone:
+            break;
+
+        case tracking::TrackKCF:
+#if USE_OCV_KCF
+            if (!m_tracker || m_tracker.empty())
+            {
+                cv::TrackerKCF::Params params;
+                params.compressed_size = 1;
+                params.desc_pca = cv::TrackerKCF::GRAY;
+                params.desc_npca = cv::TrackerKCF::GRAY;
+                params.resize = true;
+#if (((CV_VERSION_MAJOR == 3) && (CV_VERSION_MINOR >= 3)) || (CV_VERSION_MAJOR > 3))
+                m_tracker = cv::TrackerKCF::create(params);
+#else
+                m_tracker = cv::TrackerKCF::createTracker(params);
+#endif
+            }
+#endif
+            break;
+
+        case tracking::TrackMIL:
+#if USE_OCV_KCF
+            if (!m_tracker || m_tracker.empty())
+            {
+                cv::TrackerMIL::Params params;
+
+#if (((CV_VERSION_MAJOR == 3) && (CV_VERSION_MINOR >= 3)) || (CV_VERSION_MAJOR > 3))
+                m_tracker = cv::TrackerMIL::create(params);
+#else
+                m_tracker = cv::TrackerMIL::createTracker(params);
+#endif
+            }
+#endif
+            break;
+        }
     }
 
     ///
