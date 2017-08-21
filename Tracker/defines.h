@@ -61,6 +61,7 @@ enum MatchType
 enum LostTrackType
 {
     TrackNone = 0,
-    TrackKCF = 1
+    TrackKCF = 1,
+    TrackMIL
 };
 }

@@ -221,7 +221,7 @@ protected:
                                                tracking::DistCenters,
                                                tracking::KalmanLinear,
                                                tracking::FilterRect,
-                                               tracking::TrackNone,      // Use KCF tracker for collisions resolving
+                                               tracking::TrackKCF,      // Use KCF tracker for collisions resolving
                                                tracking::MatchHungrian,
                                                0.2f,                     // Delta time for Kalman filter
                                                0.1f,                     // Accel noise magnitude for Kalman filter
