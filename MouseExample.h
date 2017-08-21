@@ -48,11 +48,11 @@ void MouseTracking(cv::CommandLineParser parser)
     bool useLocalTracking = false;
 
     CTracker tracker(useLocalTracking,
-                     CTracker::DistCenters,
-                     CTracker::KalmanLinear,
-                     CTracker::FilterCenter,
-                     CTracker::TrackNone,
-                     CTracker::MatchHungrian,
+                     tracking::DistCenters,
+                     tracking::KalmanLinear,
+                     tracking::FilterCenter,
+                     tracking::TrackNone,
+                     tracking::MatchHungrian,
                      0.2f,
                      0.5f,
                      100.0f,

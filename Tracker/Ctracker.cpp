@@ -11,11 +11,11 @@
 // ---------------------------------------------------------------------------
 CTracker::CTracker(
         bool useLocalTracking,
-        DistType distType,
-        KalmanType kalmanType,
-        FilterGoal filterGoal,
-        LostTrackType useExternalTrackerForLostObjects,
-		MatchType matchType,
+        tracking::DistType distType,
+        tracking::KalmanType kalmanType,
+        tracking::FilterGoal filterGoal,
+        tracking::LostTrackType useExternalTrackerForLostObjects,
+        tracking::MatchType matchType,
         track_t dt_,
         track_t accelNoiseMag_,
         track_t dist_thres_,
@@ -54,8 +54,6 @@ void CTracker::Update(
         cv::Mat grayFrame
         )
 {
-    TKalmanFilter::KalmanType kalmanType = (m_kalmanType == KalmanLinear) ? TKalmanFilter::TypeLinear : TKalmanFilter::TypeUnscented;
-
     assert(detections.size() == regions.size());
 
     if (m_prevFrame.size() == grayFrame.size())
@@ -76,12 +74,12 @@ void CTracker::Update(
         {
             tracks.push_back(std::make_unique<CTrack>(detections[i],
                                                       regions[i],
-                                                      kalmanType,
+                                                      m_kalmanType,
                                                       dt,
                                                       accelNoiseMag,
                                                       NextTrackID++,
-                                                      m_filterGoal == FilterRect,
-                                                      m_useExternalTrackerForLostObjects == TrackKCF));
+                                                      m_filterGoal == tracking::FilterRect,
+                                                      m_useExternalTrackerForLostObjects));
         }
     }
 
@@ -101,7 +99,7 @@ void CTracker::Update(
 		track_t maxCost = 0;
 		switch (m_distType)
         {
-        case DistCenters:
+        case tracking::DistCenters:
             for (size_t i = 0; i < tracks.size(); i++)
             {
                 for (size_t j = 0; j < detections.size(); j++)
@@ -116,7 +114,7 @@ void CTracker::Update(
             }
             break;
 
-        case DistRects:
+        case tracking::DistRects:
             for (size_t i = 0; i < tracks.size(); i++)
             {
                 for (size_t j = 0; j < detections.size(); j++)
@@ -131,7 +129,7 @@ void CTracker::Update(
             }
             break;
 
-        case DistJaccard:
+        case tracking::DistJaccard:
             for (size_t i = 0; i < tracks.size(); i++)
             {
                 for (size_t j = 0; j < detections.size(); j++)
@@ -149,7 +147,7 @@ void CTracker::Update(
         // -----------------------------------
         // Solving assignment problem (tracks and predictions of Kalman filter)
         // -----------------------------------
-		if (m_matchType == MatchHungrian)
+        if (m_matchType == tracking::MatchHungrian)
 		{
 			AssignmentProblemSolver APS;
 			APS.Solve(Cost, N, M, assignment, AssignmentProblemSolver::optimal);
@@ -247,12 +245,12 @@ void CTracker::Update(
         {
             tracks.push_back(std::make_unique<CTrack>(detections[i],
                                                       regions[i],
-                                                      kalmanType,
+                                                      m_kalmanType,
                                                       dt,
                                                       accelNoiseMag,
                                                       NextTrackID++,
-                                                      m_filterGoal == FilterRect,
-                                                      m_useExternalTrackerForLostObjects == TrackKCF));
+                                                      m_filterGoal == tracking::FilterRect,
+                                                      m_useExternalTrackerForLostObjects));
         }
     }
 

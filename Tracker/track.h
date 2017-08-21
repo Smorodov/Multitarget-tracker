@@ -179,12 +179,12 @@ public:
     CTrack(
             const Point_t& pt,
             const CRegion& region,
-            TKalmanFilter::KalmanType kalmanType,
+            tracking::KalmanType kalmanType,
             track_t deltaTime,
             track_t accelNoiseMag,
             size_t trackID,
             bool filterObjectSize,
-            bool externalTrackerForLost
+            tracking::LostTrackType externalTrackerForLost
             )
 		:
         m_trackID(trackID),
@@ -354,7 +354,7 @@ private:
     TKalmanFilter* m_kalman;
     bool m_filterObjectSize;
 
-    bool m_externalTrackerForLost;
+    tracking::LostTrackType m_externalTrackerForLost;
 #if USE_OCV_KCF
     cv::Ptr<cv::Tracker> m_tracker;
 #endif
@@ -376,8 +376,12 @@ private:
         m_kalman->GetRectPrediction();
 
         bool recalcPrediction = true;
-        if (m_externalTrackerForLost)
+        switch (m_externalTrackerForLost)
         {
+        case tracking::TrackNone:
+            break;
+
+        case tracking::TrackKCF:
 #if USE_OCV_KCF
             if (!dataCorrect)
             {
@@ -419,6 +423,7 @@ private:
 #else
             std::cerr << "KCF tracker was disabled in CMAKE! Set useExternalTrackerForLostObjects = TrackNone in constructor." << std::endl;
 #endif
+            break;
         }
 
         if (recalcPrediction)
