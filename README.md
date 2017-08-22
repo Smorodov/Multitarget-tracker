@@ -17,12 +17,12 @@ Hungarian algorithm + Kalman filter multitarget tracker implementation.
 [![Multiple Faces tracking:](https://img.youtube.com/vi/j67CFwFtciU/0.jpg)](https://www.youtube.com/watch?v=j67CFwFtciU)
 
 #### Parameters
-1. Background substraction: built-in Vibe, SuBSENSE and LOBSTER or MOG, GMG and CNT from opencv_contrib
-2. Segmentation: contours.
-3. Matching: Hungrian algorithm or algorithm based on weighted bipartite graphs.
-4. Tracking: Linear or Unscented Kalman filter for objects center or for object coordinates and size.
-5. Use or not local tracker (LK optical flow) for smooth trajectories.
-6. KCF tracking for lost objects and collision resolving
+1. Background substraction: built-in Vibe, SuBSENSE and LOBSTER; MOG2 from opencv; MOG, GMG and CNT from opencv_contrib
+2. Foreground segmentation: contours
+3. Matching: Hungrian algorithm or algorithm based on weighted bipartite graphs
+4. Tracking: Linear or Unscented Kalman filter for objects center or for object coordinates and size
+5. Use or not local tracker (LK optical flow) for smooth trajectories
+6. KCF or MIL tracking for lost objects and collision resolving
 
 #### Build
 1. Download project sources
