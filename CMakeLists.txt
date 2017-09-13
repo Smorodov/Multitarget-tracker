@@ -36,6 +36,7 @@ set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
              Detector/Subsense/LBSP.cpp
 
              Tracker/Ctracker.cpp
+             Tracker/track.cpp
              Tracker/HungarianAlg/HungarianAlg.cpp
              Tracker/LocalTracker.cpp
              Tracker/Kalman.cpp)
