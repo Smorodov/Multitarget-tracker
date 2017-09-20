@@ -384,6 +384,7 @@ private:
 
         case tracking::TrackKCF:
         case tracking::TrackMIL:
+        case tracking::TrackMedianFlow:
 #if USE_OCV_KCF
             if (!dataCorrect)
             {
@@ -527,6 +528,21 @@ private:
                 m_tracker = cv::TrackerMIL::create(params);
 #else
                 m_tracker = cv::TrackerMIL::createTracker(params);
+#endif
+            }
+#endif
+            break;
+
+        case tracking::TrackMedianFlow:
+#if USE_OCV_KCF
+            if (!m_tracker || m_tracker.empty())
+            {
+                cv::TrackerMedianFlow::Params params;
+
+#if (((CV_VERSION_MAJOR == 3) && (CV_VERSION_MINOR >= 3)) || (CV_VERSION_MAJOR > 3))
+                m_tracker = cv::TrackerMedianFlow::create(params);
+#else
+                m_tracker = cv::TrackerMedianFlow::createTracker(params);
 #endif
             }
 #endif
