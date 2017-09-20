@@ -62,6 +62,7 @@ enum LostTrackType
 {
     TrackNone = 0,
     TrackKCF = 1,
-    TrackMIL
+    TrackMIL,
+    TrackMedianFlow
 };
 }
