@@ -193,6 +193,22 @@ void CTrack::RectUpdate(
 
     bool recalcPrediction = true;
 
+    auto Clamp = [](int& v, int& size, int hi)
+    {
+        if (size < 2)
+        {
+            size = 2;
+        }
+        if (v < 0)
+        {
+            v = 0;
+        }
+        else if (v + size > hi - 1)
+        {
+            v = hi - 1 - size;
+        }
+    };
+
     switch (m_externalTrackerForLost)
     {
     case tracking::TrackNone:
@@ -204,18 +220,24 @@ void CTrack::RectUpdate(
 #if USE_OCV_KCF
         if (!dataCorrect)
         {
+            cv::Size roiSize(currFrame.cols / 2, currFrame.rows / 2);
+            cv::Point roiTL(m_predictionRect.x + m_predictionRect.width / 2 - roiSize.width / 2, m_predictionRect.y + m_predictionRect.height / 2 - roiSize.height / 2);
+            cv::Rect roiRect(roiTL, roiSize);
+            Clamp(roiRect.x, roiRect.width, currFrame.cols);
+            Clamp(roiRect.y, roiRect.height, currFrame.rows);
+
             if (!m_tracker || m_tracker.empty())
             {
                 CreateExternalTracker();
 
-                cv::Rect2d lastRect(m_predictionRect.x, m_predictionRect.y, m_predictionRect.width, m_predictionRect.height);
+                cv::Rect2d lastRect(m_predictionRect.x - roiRect.x, m_predictionRect.y - roiRect.y, m_predictionRect.width, m_predictionRect.height);
                 if (lastRect.x >= 0 &&
                         lastRect.y >= 0 &&
-                        lastRect.x + lastRect.width < prevFrame.cols &&
-                        lastRect.y + lastRect.height < prevFrame.rows &&
+                        lastRect.x + lastRect.width < roiRect.width &&
+                        lastRect.y + lastRect.height < roiRect.height &&
                         lastRect.area() > 0)
                 {
-                    m_tracker->init(prevFrame, lastRect);
+                    m_tracker->init(cv::Mat(prevFrame, roiRect), lastRect);
                 }
                 else
                 {
@@ -223,9 +245,9 @@ void CTrack::RectUpdate(
                 }
             }
             cv::Rect2d newRect;
-            if (!m_tracker.empty() && m_tracker->update(currFrame, newRect))
+            if (!m_tracker.empty() && m_tracker->update(cv::Mat(currFrame, roiRect), newRect))
             {
-                cv::Rect prect(cvRound(newRect.x), cvRound(newRect.y), cvRound(newRect.width), cvRound(newRect.height));
+                cv::Rect prect(cvRound(newRect.x) + roiRect.x, cvRound(newRect.y) + roiRect.y, cvRound(newRect.width), cvRound(newRect.height));
 
                 m_predictionRect = m_kalman->Update(prect, true);
 
@@ -279,21 +301,6 @@ void CTrack::RectUpdate(
         }
     }
 
-    auto Clamp = [](int& v, int& size, int hi)
-    {
-        if (size < 2)
-        {
-            size = 2;
-        }
-        if (v < 0)
-        {
-            v = 0;
-        }
-        else if (v + size > hi - 1)
-        {
-            v = hi - 1 - size;
-        }
-    };
     Clamp(m_predictionRect.x, m_predictionRect.width, currFrame.cols);
     Clamp(m_predictionRect.y, m_predictionRect.height, currFrame.rows);
 
