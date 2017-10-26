@@ -5,7 +5,7 @@
 #include <memory>
 #include <array>
 
-#if USE_OCV_KCF
+#ifdef USE_OCV_KCF
 #include <opencv2/tracking.hpp>
 #endif
 
@@ -199,7 +199,7 @@ private:
     bool m_filterObjectSize;
 
     tracking::LostTrackType m_externalTrackerForLost;
-#if USE_OCV_KCF
+#ifdef USE_OCV_KCF
     cv::Ptr<cv::Tracker> m_tracker;
 #endif
 

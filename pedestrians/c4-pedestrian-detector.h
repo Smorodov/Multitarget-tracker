@@ -397,7 +397,7 @@ void IntImage<T>::Sobel(IntImage<REAL>& result,const bool useSqrt,const bool nor
     result.Create(nrow,ncol);
     for(int i=0; i<nrow; i++) result.p[i][0] = result.p[i][ncol-1] = 0;
     std::fill(result.p[0],result.p[0]+ncol,0.0);
-    std::fill(result.p[nrow-1],result.p[nrow-1],0.0);
+    std::fill(result.p[nrow-1],result.p[nrow-1]+ncol,0.0);
     for(int i=1; i<nrow-1; i++)
     {
         T* p1 = p[i-1];

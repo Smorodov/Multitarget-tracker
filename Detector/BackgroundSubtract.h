@@ -6,7 +6,7 @@
 #include "Subsense/BackgroundSubtractorSuBSENSE.h"
 #include "Subsense/BackgroundSubtractorLOBSTER.h"
 
-#if USE_OCV_BGFG
+#ifdef USE_OCV_BGFG
 #include <opencv2/bgsegm.hpp>
 #endif
 
