@@ -4,7 +4,7 @@
 
 #include <opencv/cv.h>
 
-#if USE_OCV_UKF
+#ifdef USE_OCV_UKF
 #include <opencv2/tracking.hpp>
 #include <opencv2/tracking/kalman_filters.hpp>
 #endif
@@ -26,7 +26,7 @@ public:
 private:
     tracking::KalmanType m_type;
     std::unique_ptr<cv::KalmanFilter> m_linearKalman;
-#if USE_OCV_UKF
+#ifdef USE_OCV_UKF
     cv::Ptr<cv::tracking::UnscentedKalmanFilter> m_uncsentedKalman;
 #endif
 
@@ -44,7 +44,7 @@ private:
 
     void CreateLinear(Point_t xy0, Point_t xyv0);
     void CreateLinear(cv::Rect_<track_t> rect0, Point_t rectv0);
-#if USE_OCV_UKF
+#ifdef USE_OCV_UKF
     void CreateUnscented(Point_t xy0, Point_t xyv0);
     void CreateUnscented(cv::Rect_<track_t> rect0, Point_t rectv0);
     void CreateAugmentedUnscented(Point_t xy0, Point_t xyv0);

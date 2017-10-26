@@ -217,7 +217,7 @@ void CTrack::RectUpdate(
     case tracking::TrackKCF:
     case tracking::TrackMIL:
     case tracking::TrackMedianFlow:
-#if USE_OCV_KCF
+#ifdef USE_OCV_KCF
         if (!dataCorrect)
         {
             cv::Size roiSize(currFrame.cols / 2, currFrame.rows / 2);
@@ -318,7 +318,7 @@ void CTrack::CreateExternalTracker()
         break;
 
     case tracking::TrackKCF:
-#if USE_OCV_KCF
+#ifdef USE_OCV_KCF
         if (!m_tracker || m_tracker.empty())
         {
             cv::TrackerKCF::Params params;
@@ -336,7 +336,7 @@ void CTrack::CreateExternalTracker()
         break;
 
     case tracking::TrackMIL:
-#if USE_OCV_KCF
+#ifdef USE_OCV_KCF
         if (!m_tracker || m_tracker.empty())
         {
             cv::TrackerMIL::Params params;
@@ -351,7 +351,7 @@ void CTrack::CreateExternalTracker()
         break;
 
     case tracking::TrackMedianFlow:
-#if USE_OCV_KCF
+#ifdef USE_OCV_KCF
         if (!m_tracker || m_tracker.empty())
         {
             cv::TrackerMedianFlow::Params params;

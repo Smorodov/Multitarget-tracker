@@ -28,10 +28,6 @@ public:
     tracks_t tracks;
     void Update(const std::vector<Point_t>& detections, const regions_t& regions, cv::Mat grayFrame);
 
-#if SAVE_TRAJECTORIES
-    void WriteAllTracks();
-#endif
-
 private:
     // Use local tracking for regions between two frames
     bool m_useLocalTracking;

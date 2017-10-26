@@ -183,7 +183,7 @@ void get_lin_regress_params(
     by = det_1 * (m2 * m3_y + m1 * m4_y);
 }
 
-#if USE_OCV_UKF
+#ifdef USE_OCV_UKF
 //---------------------------------------------------------------------------
 class AcceleratedModel: public cv::tracking::UkfSystemModel
 {
@@ -465,7 +465,7 @@ Point_t TKalmanFilter::GetPointPrediction()
 
         case tracking::KalmanUnscented:
         case tracking::KalmanAugmentedUnscented:
-#if USE_OCV_UKF
+#ifdef USE_OCV_UKF
             prediction = m_uncsentedKalman->predict();
 #else
             prediction = m_linearKalman->predict();
@@ -512,7 +512,7 @@ Point_t TKalmanFilter::Update(Point_t pt, bool dataCorrect)
                 break;
 
             case tracking::KalmanUnscented:
-#if USE_OCV_UKF
+#ifdef USE_OCV_UKF
                 CreateUnscented(xy0, xyv0);
 #else
                 CreateLinear(xy0, xyv0);
@@ -521,7 +521,7 @@ Point_t TKalmanFilter::Update(Point_t pt, bool dataCorrect)
                 break;
 
             case tracking::KalmanAugmentedUnscented:
-#if USE_OCV_UKF
+#ifdef USE_OCV_UKF
                 CreateAugmentedUnscented(xy0, xyv0);
 #else
                 CreateLinear(xy0, xyv0);
@@ -555,7 +555,7 @@ Point_t TKalmanFilter::Update(Point_t pt, bool dataCorrect)
 
         case tracking::KalmanUnscented:
         case tracking::KalmanAugmentedUnscented:
-#if USE_OCV_UKF
+#ifdef USE_OCV_UKF
             estimated = m_uncsentedKalman->correct(measurement);
 #else
             estimated = m_linearKalman->correct(measurement);
@@ -592,7 +592,7 @@ cv::Rect TKalmanFilter::GetRectPrediction()
 
         case tracking::KalmanUnscented:
         case tracking::KalmanAugmentedUnscented:
-#if USE_OCV_UKF
+#ifdef USE_OCV_UKF
             prediction = m_uncsentedKalman->predict();
 #else
             prediction = m_linearKalman->predict();
@@ -650,7 +650,7 @@ cv::Rect TKalmanFilter::Update(cv::Rect rect, bool dataCorrect)
                 break;
 
             case tracking::KalmanUnscented:
-#if USE_OCV_UKF
+#ifdef USE_OCV_UKF
                 CreateUnscented(rect0, rectv0);
 #else
                 CreateLinear(rect0, rectv0);
@@ -659,7 +659,7 @@ cv::Rect TKalmanFilter::Update(cv::Rect rect, bool dataCorrect)
                 break;
 
             case tracking::KalmanAugmentedUnscented:
-#if USE_OCV_UKF
+#ifdef USE_OCV_UKF
                 CreateAugmentedUnscented(rect0, rectv0);
 #else
                 CreateLinear(rect0, rectv0);
@@ -702,7 +702,7 @@ cv::Rect TKalmanFilter::Update(cv::Rect rect, bool dataCorrect)
 
         case tracking::KalmanUnscented:
         case tracking::KalmanAugmentedUnscented:
-#if USE_OCV_UKF
+#ifdef USE_OCV_UKF
             estimated = m_uncsentedKalman->correct(measurement);
 
             m_lastRectResult.x = estimated.at<track_t>(0);   //update using measurements
