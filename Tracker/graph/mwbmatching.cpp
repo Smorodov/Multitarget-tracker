@@ -25,10 +25,13 @@
 #endif
 
 
-mwbmatching::mwbmatching () : algorithm () 
+mwbmatching::mwbmatching ()
+    :
+      algorithm(),
+      mwbm(0),
+      set_vars_executed(false),
+      pq(NULL)
 {
-	set_vars_executed = false;
-	pq = NULL;
 }
 
 
