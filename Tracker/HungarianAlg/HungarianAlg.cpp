@@ -59,6 +59,12 @@ void AssignmentProblemSolver::assignmentoptimal(assignments_t& assignment, track
 	size_t nOfElements = nOfRows * nOfColumns;
 	// Memory allocation
 	track_t* distMatrix = (track_t *)malloc(nOfElements * sizeof(track_t));
+
+    if (distMatrix == nullptr)
+    {
+        return;
+    }
+
 	// Pointer to last element
 	track_t* distMatrixEnd = distMatrix + nOfElements;
 
