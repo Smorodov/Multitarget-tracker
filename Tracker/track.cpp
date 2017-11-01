@@ -58,8 +58,8 @@ track_t CTrack::CalcDist(const Point_t& pt) const
 track_t CTrack::CalcDist(const cv::Rect& r) const
 {
     std::array<track_t, 4> diff;
-    diff[0] = m_predictionPoint.x - m_lastRegion.m_rect.width / 2 - r.x;
-    diff[1] = m_predictionPoint.y - m_lastRegion.m_rect.height / 2 - r.y;
+    diff[0] = m_predictionPoint.x - m_lastRegion.m_rect.width / 2.f - r.x;
+    diff[1] = m_predictionPoint.y - m_lastRegion.m_rect.height / 2.f - r.y;
     diff[2] = static_cast<track_t>(m_lastRegion.m_rect.width - r.width);
     diff[3] = static_cast<track_t>(m_lastRegion.m_rect.height - r.height);
 
