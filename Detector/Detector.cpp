@@ -6,7 +6,7 @@
 CDetector::CDetector(
 	BackgroundSubtract::BGFG_ALGS algType,
 	bool collectPoints,
-	cv::Mat& gray
+    cv::UMat& gray
 	)
 	: m_collectPoints(collectPoints)
 {
@@ -89,7 +89,7 @@ void CDetector::DetectContour()
 // ---------------------------------------------------------------------------
 //
 // ---------------------------------------------------------------------------
-const std::vector<Point_t>& CDetector::Detect(cv::Mat& gray)
+const std::vector<Point_t>& CDetector::Detect(cv::UMat& gray)
 {
 	m_backgroundSubst->subtract(gray, m_fg);
 

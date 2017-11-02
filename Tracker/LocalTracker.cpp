@@ -19,8 +19,8 @@ LocalTracker::~LocalTracker(void)
 // ---------------------------------------------------------------------------
 void LocalTracker::Update(
         tracks_t& tracks,
-        cv::Mat prevFrame,
-        cv::Mat currFrame
+        cv::UMat prevFrame,
+        cv::UMat currFrame
         )
 {
     std::vector<cv::Point2f> points[2];

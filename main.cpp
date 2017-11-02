@@ -1,6 +1,9 @@
 #include "MouseExample.h"
 #include "VideoExample.h"
 
+#include <opencv2/opencv.hpp>
+#include <opencv2/core/ocl.hpp>
+
 // ----------------------------------------------------------------------
 
 static void Help()
@@ -23,6 +26,7 @@ const char* keys =
     "{ ed end_delay   |0                   | Delay in milliseconds after video ending | }"
     "{ o  out         |                    | Name of result video file | }"
     "{ sl show_logs   |1                   | Show Trackers logs | }"
+    "{ g gpu          |0                   | Use OpenCL acceleration | }"
 };
 
 // ----------------------------------------------------------------------
@@ -33,7 +37,11 @@ int main(int argc, char** argv)
 
     cv::CommandLineParser parser(argc, argv, keys);
 
-    int exampleNum = parser.get<int>("example");;
+    bool useOCL = parser.get<int>("gpu") ? 1 : 0;
+    cv::ocl::setUseOpenCL(useOCL);
+    std::cout << (cv::ocl::useOpenCL() ? "OpenCL is enabled" : "OpenCL not used") << std::endl;
+
+    int exampleNum = parser.get<int>("example");
 
     switch (exampleNum)
     {

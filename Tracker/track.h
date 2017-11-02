@@ -179,7 +179,7 @@ public:
     track_t CalcDist(const cv::Rect& r) const;
     track_t CalcDistJaccard(const cv::Rect& r) const;
 
-    void Update(const Point_t& pt, const CRegion& region, bool dataCorrect, size_t max_trace_length, cv::Mat prevFrame, cv::Mat currFrame);
+    void Update(const Point_t& pt, const CRegion& region, bool dataCorrect, size_t max_trace_length, cv::UMat prevFrame, cv::UMat currFrame);
 
     bool IsRobust(int minTraceSize, float minRawRatio, cv::Size2f sizeRatio) const;
 
@@ -203,7 +203,7 @@ private:
     cv::Ptr<cv::Tracker> m_tracker;
 #endif
 
-    void RectUpdate(const CRegion& region, bool dataCorrect, cv::Mat prevFrame, cv::Mat currFrame);
+    void RectUpdate(const CRegion& region, bool dataCorrect, cv::UMat prevFrame, cv::UMat currFrame);
 
     void CreateExternalTracker();
 

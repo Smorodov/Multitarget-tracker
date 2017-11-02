@@ -34,7 +34,7 @@ Hungarian algorithm + Kalman filter multitarget tracker implementation.
 **Usage:**
 
            Usage:
-             ./MultitargetTracker <path to movie file> [--example]=<number of example 0..3> [--start_frame]=<start a video from this position> [--end_frame]=<play a video to this position> [--end_delay]=<delay in milliseconds after video ending> [--out]=<name of result video file> [--show_logs]=<show logs>
+             ./MultitargetTracker <path to movie file> [--example]=<number of example 0..3> [--start_frame]=<start a video from this position> [--end_frame]=<play a video to this position> [--end_delay]=<delay in milliseconds after video ending> [--out]=<name of result video file> [--show_logs]=<show logs> [--gpu]=<use OpenCL>
              ./MultitargetTracker ../data/atrium.avi -e=1 -o=../data/atrium_motion.avi
            Press:
            * 'm' key for change mode: play|pause. When video is paused you can press any key for get next frame.
@@ -54,6 +54,8 @@ Hungarian algorithm + Kalman filter multitarget tracker implementation.
               -o=out.avi or --out=result.mp4
            7. [Optional] Show Trackers logs in terminal
               -sl=1 or --show_logs=0
+           8. [Optional] Use built-in OpenCL
+              -g=1 or --gpu=0
 
 #### Thirdparty libraries
 * OpenCV (and contrib): https://github.com/opencv/opencv and https://github.com/opencv/opencv_contrib

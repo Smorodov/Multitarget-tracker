@@ -51,7 +51,7 @@ CTracker::~CTracker(void)
 void CTracker::Update(
         const std::vector<Point_t>& detections,
         const regions_t& regions,
-        cv::Mat grayFrame
+        cv::UMat grayFrame
         )
 {
     assert(detections.size() == regions.size());
