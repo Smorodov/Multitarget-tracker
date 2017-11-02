@@ -88,21 +88,21 @@ BackgroundSubtract::~BackgroundSubtract()
 //----------------------------------------------------------------------
 //
 //----------------------------------------------------------------------
-void BackgroundSubtract::subtract(const cv::Mat& image, cv::Mat& foreground)
+void BackgroundSubtract::subtract(const cv::UMat& image, cv::UMat& foreground)
 {
-	auto GetImg = [&]() -> cv::Mat
+    auto GetImg = [&]() -> cv::UMat
 	{
 		if (image.channels() != m_channels)
 		{
 			if (image.channels() == 1)
 			{
-				cv::Mat newImg;
+                cv::UMat newImg;
 				cv::cvtColor(image, newImg, CV_GRAY2BGR);
 				return newImg;
 			}
 			else if (image.channels() == 3)
 			{
-				cv::Mat newImg;
+                cv::UMat newImg;
 				cv::cvtColor(image, newImg, CV_BGR2GRAY);
 				return newImg;
 			}
@@ -113,8 +113,8 @@ void BackgroundSubtract::subtract(const cv::Mat& image, cv::Mat& foreground)
 	switch (m_algType)
 	{
 	case ALG_VIBE:
-		m_modelVibe->update(GetImg());
-		foreground = m_modelVibe->getMask();
+        m_modelVibe->update(GetImg().getMat(cv::ACCESS_READ));
+        foreground = m_modelVibe->getMask().getUMat(cv::ACCESS_READ);
 		break;
 
 	case ALG_MOG:
@@ -132,7 +132,7 @@ void BackgroundSubtract::subtract(const cv::Mat& image, cv::Mat& foreground)
     case ALG_LOBSTER:
         if (foreground.size() != image.size())
         {
-            m_modelSuBSENSE->initialize(GetImg(), cv::Mat());
+            m_modelSuBSENSE->initialize(GetImg().getMat(cv::ACCESS_READ), cv::Mat());
             foreground.create(image.size(), CV_8UC1);
         }
         else
@@ -146,8 +146,8 @@ void BackgroundSubtract::subtract(const cv::Mat& image, cv::Mat& foreground)
         break;
 
     default:
-        m_modelVibe->update(GetImg());
-        foreground = m_modelVibe->getMask();
+        m_modelVibe->update(GetImg().getMat(cv::ACCESS_READ));
+        foreground = m_modelVibe->getMask().getUMat(cv::ACCESS_READ);
         break;
 	}
 

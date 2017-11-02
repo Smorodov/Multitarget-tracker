@@ -11,5 +11,5 @@ public:
     LocalTracker();
     ~LocalTracker(void);
 
-    void Update(tracks_t& tracks, cv::Mat prevFrame, cv::Mat currFrame);
+    void Update(tracks_t& tracks, cv::UMat prevFrame, cv::UMat currFrame);
 };

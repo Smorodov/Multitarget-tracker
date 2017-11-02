@@ -1,7 +1,6 @@
 #pragma once
 
-#include "opencv2/opencv.hpp"
-#include <opencv2/highgui/highgui_c.h>
+//#include <opencv2/highgui/highgui_c.h>
 
 #include "Ctracker.h"
 
@@ -88,7 +87,7 @@ void MouseTracking(cv::CommandLineParser parser)
             cv::circle(frame, pts[i], 3, cv::Scalar(0, 255, 0), 1, CV_AA);
         }
 
-        tracker.Update(pts, regions, cv::Mat());
+        tracker.Update(pts, regions, cv::UMat());
 
         std::cout << tracker.tracks.size() << std::endl;
 

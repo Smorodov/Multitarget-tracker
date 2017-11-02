@@ -100,8 +100,8 @@ void CTrack::Update(
         const CRegion& region,
         bool dataCorrect,
         size_t max_trace_length,
-        cv::Mat prevFrame,
-        cv::Mat currFrame
+        cv::UMat prevFrame,
+        cv::UMat currFrame
         )
 {
     if (m_filterObjectSize) // Kalman filter for object coordinates and size
@@ -185,8 +185,8 @@ cv::Rect CTrack::GetLastRect() const
 void CTrack::RectUpdate(
         const CRegion& region,
         bool dataCorrect,
-        cv::Mat prevFrame,
-        cv::Mat currFrame
+        cv::UMat prevFrame,
+        cv::UMat currFrame
         )
 {
     m_kalman->GetRectPrediction();
@@ -237,7 +237,7 @@ void CTrack::RectUpdate(
                         lastRect.y + lastRect.height < roiRect.height &&
                         lastRect.area() > 0)
                 {
-                    m_tracker->init(cv::Mat(prevFrame, roiRect), lastRect);
+                    m_tracker->init(cv::UMat(prevFrame, roiRect), lastRect);
                 }
                 else
                 {
@@ -245,7 +245,7 @@ void CTrack::RectUpdate(
                 }
             }
             cv::Rect2d newRect;
-            if (!m_tracker.empty() && m_tracker->update(cv::Mat(currFrame, roiRect), newRect))
+            if (!m_tracker.empty() && m_tracker->update(cv::UMat(currFrame, roiRect), newRect))
             {
                 cv::Rect prect(cvRound(newRect.x) + roiRect.x, cvRound(newRect.y) + roiRect.y, cvRound(newRect.width), cvRound(newRect.height));
 

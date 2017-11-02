@@ -15,7 +15,7 @@ private:
 	std::unique_ptr<BackgroundSubtract> m_backgroundSubst;
     regions_t m_regions;
 	std::vector<Point_t> m_centers;
-	cv::Mat m_fg;
+    cv::UMat m_fg;
 
 	cv::Size m_minObjectSize;
 
@@ -24,8 +24,8 @@ private:
 	cv::Mat m_motionMap;
 
 public:
-	CDetector(BackgroundSubtract::BGFG_ALGS algType, bool collectPoints, cv::Mat& gray);
-	const std::vector<Point_t>& Detect(cv::Mat& gray);
+    CDetector(BackgroundSubtract::BGFG_ALGS algType, bool collectPoints, cv::UMat& gray);
+    const std::vector<Point_t>& Detect(cv::UMat& gray);
 	~CDetector(void);
 
 	void SetMinObjectSize(cv::Size minObjectSize);

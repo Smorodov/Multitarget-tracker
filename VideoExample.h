@@ -1,6 +1,5 @@
 #pragma once
 
-#include "opencv2/opencv.hpp"
 #include "BackgroundSubtract.h"
 #include "Detector.h"
 
@@ -62,7 +61,7 @@ public:
         }
         cv::namedWindow("Video");
         cv::Mat frame;
-        cv::Mat gray;
+        cv::UMat gray;
 
         capture.set(cv::CAP_PROP_POS_FRAMES, m_startFrame);
 
@@ -136,8 +135,8 @@ public:
     }
 
 protected:
-    virtual bool InitTracker(cv::Mat grayFrame) = 0;
-    virtual void ProcessFrame(cv::Mat grayFrame) = 0;
+    virtual bool InitTracker(cv::UMat grayFrame) = 0;
+    virtual void ProcessFrame(cv::UMat grayFrame) = 0;
     virtual void DrawData(cv::Mat frame, int framesCounter, int currTime) = 0;
 
     bool m_showLogs;
@@ -210,7 +209,7 @@ protected:
     /// \brief InitTracker
     /// \param grayFrame
     ///
-    bool InitTracker(cv::Mat grayFrame)
+    bool InitTracker(cv::UMat grayFrame)
     {
         m_minObjWidth = grayFrame.cols / 50;
 
@@ -237,7 +236,7 @@ protected:
     /// \brief ProcessFrame
     /// \param grayFrame
     ///
-    void ProcessFrame(cv::Mat grayFrame)
+    void ProcessFrame(cv::UMat grayFrame)
     {
         const std::vector<Point_t>& centers = m_detector->Detect(grayFrame);
         const regions_t& regions = m_detector->GetDetects();
@@ -296,7 +295,7 @@ protected:
     /// \brief InitTracker
     /// \param grayFrame
     ///
-    bool InitTracker(cv::Mat /*grayFrame*/)
+    bool InitTracker(cv::UMat /*grayFrame*/)
     {
         std::string fileName = "../data/haarcascade_frontalface_alt2.xml";
         m_cascade.load(fileName);
@@ -326,7 +325,7 @@ protected:
     /// \brief ProcessFrame
     /// \param grayFrame
     ///
-    void ProcessFrame(cv::Mat grayFrame)
+    void ProcessFrame(cv::UMat grayFrame)
     {
         bool findLargestObject = false;
         bool filterRects = true;
@@ -401,7 +400,7 @@ protected:
     /// \brief InitTracker
     /// \param grayFrame
     ///
-    bool InitTracker(cv::Mat /*grayFrame*/)
+    bool InitTracker(cv::UMat /*grayFrame*/)
     {
 #if USE_HOG
         m_hog.setSVMDetector(cv::HOGDescriptor::getDefaultPeopleDetector());
@@ -431,7 +430,7 @@ protected:
     /// \brief ProcessFrame
     /// \param grayFrame
     ///
-    void ProcessFrame(cv::Mat grayFrame)
+    void ProcessFrame(cv::UMat grayFrame)
     {
         std::vector<Point_t> centers;
         regions_t regions;
@@ -523,7 +522,7 @@ protected:
     /// \brief InitTracker
     /// \param grayFrame
     ///
-    bool InitTracker(cv::Mat grayFrame)
+    bool InitTracker(cv::UMat grayFrame)
     {
         std::string fileName = "../data/haarcascade_frontalface_alt2.xml";
         m_cascade.load(fileName);
@@ -556,7 +555,7 @@ protected:
     /// \brief ProcessFrame
     /// \param grayFrame
     ///
-    void ProcessFrame(cv::Mat grayFrame)
+    void ProcessFrame(cv::UMat grayFrame)
     {
         bool findLargestObject = false;
         bool filterRects = true;
