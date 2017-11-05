@@ -2,12 +2,12 @@ language:
   - cpp
 
 compiler:
-  - gcc
-  
+  - g++
+
 before_install:
   - sudo apt-get update
 
-install:
+install: export CXX="g++-5"
 
 # OpenCV v3.0.0 (beta) install code (modified from orignal source: https://github.com/jayrambhia/Install-OpenCV)
 
@@ -42,6 +42,12 @@ install:
   
   # We need to return to the repo "root" folder, so we can then 'cd' into the C++ project folder.
   - cd ../../
+addons:
+  apt:
+    sources:
+    - ubuntu-toolchain-r-test
+    packages:
+    - g++-5
 
 script:
   - cmake .
