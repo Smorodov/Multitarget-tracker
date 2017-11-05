@@ -1,11 +1,12 @@
 language:
   - cpp
-
+dist: trusty
 compiler:
   - g++
 
 before_install:
   - sudo apt-get update
+  - sudo apt-get update -qq
 
 install: export CXX="g++-5"
 
