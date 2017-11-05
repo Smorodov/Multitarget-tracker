@@ -47,7 +47,7 @@ install:
   # Download v3.0.0 .zip file and extract.
   - curl -sL https://github.com/Itseez/opencv/archive/3.3.1.zip > opencv.zip
   - unzip opencv.zip
-  - cd opencv-3.0.0-beta
+  - cd opencv-3.3.1
   
   # Create a new 'build' folder.
   - mkdir build
