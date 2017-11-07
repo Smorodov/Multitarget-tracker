@@ -1,3 +1,5 @@
+![travis ci:](https://travis-ci.org/Smorodov/Multitarget-tracker.svg?branch=master)
+
 # Multitarget-tracker
 
 Hungarian algorithm + Kalman filter multitarget tracker implementation.
