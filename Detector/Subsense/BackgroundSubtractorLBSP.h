@@ -26,7 +26,7 @@ public:
 	//! primary model update function; the learning param is used to override the internal learning speed (ignored when <= 0)
 	virtual void operator()(cv::InputArray image, cv::OutputArray fgmask, double learningRate=0)=0;
 	//! unused, always returns nullptr
-    virtual cv::Algorithm* info() const;
+    //virtual cv::Algorithm* info() const;
 	//! returns a copy of the ROI used for descriptor extraction
 	virtual cv::Mat getROICopy() const;
 	//! sets the ROI to be used for descriptor extraction (note: this function will reinit the model and return the usable ROI)
