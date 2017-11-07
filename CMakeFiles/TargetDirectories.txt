@@ -1,3 +1,0 @@
-/home/andrey/CMakeProjects/Multitarget-tracker/CMakeFiles/edit_cache.dir
-/home/andrey/CMakeProjects/Multitarget-tracker/CMakeFiles/rebuild_cache.dir
-/home/andrey/CMakeProjects/Multitarget-tracker/CMakeFiles/MultitargetTracker.dir
