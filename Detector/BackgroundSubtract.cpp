@@ -143,6 +143,7 @@ void BackgroundSubtract::subtract(const cv::UMat& image, cv::UMat& foreground)
 
     case ALG_MOG2:
         m_modelOCV->apply(GetImg(), foreground);
+	cv::threshold(foreground, foreground, 200, 255, cv::THRESH_BINARY);
         break;
 
     default:
