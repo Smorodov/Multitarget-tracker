@@ -220,7 +220,15 @@ void CTrack::RectUpdate(
 #ifdef USE_OCV_KCF
         if (!dataCorrect)
         {
-            cv::Size roiSize(currFrame.cols / 2, currFrame.rows / 2);
+            cv::Size roiSize(std::max(2 * m_predictionRect.width, currFrame.cols / 2), std::min(2 * m_predictionRect.height, currFrame.rows / 2));
+            if (roiSize.width > currFrame.cols)
+            {
+                roiSize.width = currFrame.cols;
+            }
+            if (roiSize.height > currFrame.rows)
+            {
+                roiSize.height = currFrame.rows;
+            }
             cv::Point roiTL(m_predictionRect.x + m_predictionRect.width / 2 - roiSize.width / 2, m_predictionRect.y + m_predictionRect.height / 2 - roiSize.height / 2);
             cv::Rect roiRect(roiTL, roiSize);
             Clamp(roiRect.x, roiRect.width, currFrame.cols);
