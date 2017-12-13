@@ -122,14 +122,16 @@ void TKalmanFilter::CreateLinear(cv::Rect_<track_t> rect0, Point_t rectv0)
 
     cv::setIdentity(m_linearKalman->measurementMatrix);
 
+    track_t n1 = pow(m_deltaTime, 4.) / 4.;
+    track_t n2 = pow(m_deltaTime, 3.) / 2.;
+    track_t n3 = pow(m_deltaTime, 2.);
     m_linearKalman->processNoiseCov = (cv::Mat_<track_t>(6, 6) <<
-                                       pow(m_deltaTime,4.)/4., 0,                    0,                    0,                    pow(m_deltaTime,3.)/2., 0,
-                                       0,                    pow(m_deltaTime,4.)/4., 0,                    0,                    pow(m_deltaTime,3.)/2., 0,
-                                       0,                    0,                    pow(m_deltaTime,4.)/4., 0,                    0,                    0,
-                                       0,                    0,                    0,                    pow(m_deltaTime,4.)/4., 0,                    0,
-                                       pow(m_deltaTime,3.)/2., 0,                    0,                    0,                    pow(m_deltaTime,2.),    0,
-                                       0,                    pow(m_deltaTime,3.)/2., 0,                    0,                    0,                    pow(m_deltaTime,2.));
-
+                                       n1, 0,  0,  0,  n2, 0,
+                                       0,  n1, 0,  0,  0,  n2,
+                                       0,  0,  n1, 0,  0,  0,
+                                       0,  0,  0,  n1, 0,  0,
+                                       n2, 0,  0,  0,  n3, 0,
+                                       0,  n2, 0,  0,  0,  n3);
 
     m_linearKalman->processNoiseCov *= m_accelNoiseMag;
 
