@@ -220,7 +220,7 @@ void CTrack::RectUpdate(
 #ifdef USE_OCV_KCF
         if (!dataCorrect)
         {
-            cv::Size roiSize(std::max(2 * m_predictionRect.width, currFrame.cols / 2), std::min(2 * m_predictionRect.height, currFrame.rows / 2));
+            cv::Size roiSize(std::max(2 * m_predictionRect.width, currFrame.cols / 4), std::min(2 * m_predictionRect.height, currFrame.rows / 4));
             if (roiSize.width > currFrame.cols)
             {
                 roiSize.width = currFrame.cols;
@@ -334,6 +334,7 @@ void CTrack::CreateExternalTracker()
             params.desc_pca = cv::TrackerKCF::GRAY;
             params.desc_npca = cv::TrackerKCF::GRAY;
             params.resize = true;
+            params.detect_thresh = 0.3;
 #if (((CV_VERSION_MAJOR == 3) && (CV_VERSION_MINOR >= 3)) || (CV_VERSION_MAJOR > 3))
             m_tracker = cv::TrackerKCF::create(params);
 #else
