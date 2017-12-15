@@ -49,13 +49,10 @@ CTracker::~CTracker(void)
 //
 // ---------------------------------------------------------------------------
 void CTracker::Update(
-        const std::vector<Point_t>& detections,
         const regions_t& regions,
         cv::UMat grayFrame
         )
 {
-    assert(detections.size() == regions.size());
-
     if (m_prevFrame.size() == grayFrame.size())
     {
         if (m_useLocalTracking)
@@ -70,10 +67,9 @@ void CTracker::Update(
     if (tracks.size() == 0)
     {
         // If no tracks yet
-        for (size_t i = 0; i < detections.size(); ++i)
+        for (size_t i = 0; i < regions.size(); ++i)
         {
-            tracks.push_back(std::make_unique<CTrack>(detections[i],
-                                                      regions[i],
+            tracks.push_back(std::make_unique<CTrack>(regions[i],
                                                       m_kalmanType,
                                                       dt,
                                                       accelNoiseMag,
@@ -84,7 +80,7 @@ void CTracker::Update(
     }
 
     size_t N = tracks.size();		// треки
-    size_t M = detections.size();	// детекты
+    size_t M = regions.size();	// детекты
 
     assignments_t assignment(N, -1); // назначения
 
@@ -102,9 +98,9 @@ void CTracker::Update(
         case tracking::DistCenters:
             for (size_t i = 0; i < tracks.size(); i++)
             {
-                for (size_t j = 0; j < detections.size(); j++)
+                for (size_t j = 0; j < regions.size(); j++)
                 {
-					auto dist = tracks[i]->CalcDist(detections[j]);
+                    auto dist = tracks[i]->CalcDist((regions[j].m_rect.tl() + regions[j].m_rect.br()) / 2);
 					Cost[i + j * N] = dist;
 					if (dist > maxCost)
 					{
@@ -117,7 +113,7 @@ void CTracker::Update(
         case tracking::DistRects:
             for (size_t i = 0; i < tracks.size(); i++)
             {
-                for (size_t j = 0; j < detections.size(); j++)
+                for (size_t j = 0; j < regions.size(); j++)
                 {
 					auto dist = tracks[i]->CalcDist(regions[j].m_rect);
 					Cost[i + j * N] = dist;
@@ -132,7 +128,7 @@ void CTracker::Update(
         case tracking::DistJaccard:
             for (size_t i = 0; i < tracks.size(); i++)
             {
-                for (size_t j = 0; j < detections.size(); j++)
+                for (size_t j = 0; j < regions.size(); j++)
                 {
                     auto dist = tracks[i]->CalcDistJaccard(regions[j].m_rect);
                     Cost[i + j * N] = dist;
@@ -169,7 +165,7 @@ void CTracker::Update(
 			{
 				bool hasZeroEdge = false;
 
-				for (size_t j = 0; j < detections.size(); j++)
+                for (size_t j = 0; j < regions.size(); j++)
 				{
 					track_t currCost = Cost[i + j * N];
 
@@ -239,12 +235,11 @@ void CTracker::Update(
     // -----------------------------------
     // Search for unassigned detects and start new tracks for them.
     // -----------------------------------
-    for (size_t i = 0; i < detections.size(); ++i)
+    for (size_t i = 0; i < regions.size(); ++i)
     {
         if (find(assignment.begin(), assignment.end(), i) == assignment.end())
         {
-            tracks.push_back(std::make_unique<CTrack>(detections[i],
-                                                      regions[i],
+            tracks.push_back(std::make_unique<CTrack>(regions[i],
                                                       m_kalmanType,
                                                       dt,
                                                       accelNoiseMag,
@@ -263,11 +258,11 @@ void CTracker::Update(
         if (assignment[i] != -1) // If we have assigned detect, then update using its coordinates,
         {
             tracks[i]->m_skippedFrames = 0;
-            tracks[i]->Update(detections[assignment[i]], regions[assignment[i]], true, max_trace_length, m_prevFrame, grayFrame);
+            tracks[i]->Update(regions[assignment[i]], true, max_trace_length, m_prevFrame, grayFrame);
         }
         else				     // if not continue using predictions
         {
-            tracks[i]->Update(Point_t(), CRegion(), false, max_trace_length, m_prevFrame, grayFrame);
+            tracks[i]->Update(CRegion(), false, max_trace_length, m_prevFrame, grayFrame);
         }
     }
 

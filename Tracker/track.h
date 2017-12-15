@@ -166,8 +166,7 @@ private:
 class CTrack
 {
 public:
-    CTrack(const Point_t& pt,
-            const CRegion& region,
+    CTrack(const CRegion& region,
             tracking::KalmanType kalmanType,
             track_t deltaTime,
             track_t accelNoiseMag,
@@ -179,7 +178,7 @@ public:
     track_t CalcDist(const cv::Rect& r) const;
     track_t CalcDistJaccard(const cv::Rect& r) const;
 
-    void Update(const Point_t& pt, const CRegion& region, bool dataCorrect, size_t max_trace_length, cv::UMat prevFrame, cv::UMat currFrame);
+    void Update(const CRegion& region, bool dataCorrect, size_t max_trace_length, cv::UMat prevFrame, cv::UMat currFrame);
 
     bool IsRobust(int minTraceSize, float minRawRatio, cv::Size2f sizeRatio) const;
 

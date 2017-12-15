@@ -11,7 +11,6 @@
 /// \param externalTrackerForLost
 ///
 CTrack::CTrack(
-        const Point_t& pt,
         const CRegion& region,
         tracking::KalmanType kalmanType,
         track_t deltaTime,
@@ -24,7 +23,7 @@ CTrack::CTrack(
       m_trackID(trackID),
       m_skippedFrames(0),
       m_lastRegion(region),
-      m_predictionPoint(pt),
+      m_predictionPoint((region.m_rect.tl() + region.m_rect.br()) / 2),
       m_filterObjectSize(filterObjectSize),
       m_externalTrackerForLost(externalTrackerForLost)
 {
@@ -34,9 +33,9 @@ CTrack::CTrack(
     }
     else
     {
-        m_kalman = new TKalmanFilter(kalmanType, pt, deltaTime, accelNoiseMag);
+        m_kalman = new TKalmanFilter(kalmanType, m_predictionPoint, deltaTime, accelNoiseMag);
     }
-    m_trace.push_back(pt, pt);
+    m_trace.push_back(m_predictionPoint, m_predictionPoint);
 }
 
 ///
@@ -96,7 +95,6 @@ track_t CTrack::CalcDistJaccard(const cv::Rect& r) const
 /// \param currFrame
 ///
 void CTrack::Update(
-        const Point_t& pt,
         const CRegion& region,
         bool dataCorrect,
         size_t max_trace_length,
@@ -104,6 +102,8 @@ void CTrack::Update(
         cv::UMat currFrame
         )
 {
+    cv::Point pt((region.m_rect.tl() + region.m_rect.br()) / 2);
+
     if (m_filterObjectSize) // Kalman filter for object coordinates and size
     {
         RectUpdate(region, dataCorrect, prevFrame, currFrame);

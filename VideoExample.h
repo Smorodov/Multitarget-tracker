@@ -238,10 +238,10 @@ protected:
     ///
     void ProcessFrame(cv::UMat grayFrame)
     {
-        const std::vector<Point_t>& centers = m_detector->Detect(grayFrame);
+        m_detector->Detect(grayFrame);
         const regions_t& regions = m_detector->GetDetects();
 
-        m_tracker->Update(centers, regions, grayFrame);
+        m_tracker->Update(regions, grayFrame);
     }
 
     ///
@@ -337,15 +337,13 @@ protected:
                                  findLargestObject ? cv::CASCADE_FIND_BIGGEST_OBJECT : 0,
                                  cv::Size(grayFrame.cols / 20, grayFrame.rows / 20),
                                  cv::Size(grayFrame.cols / 2, grayFrame.rows / 2));
-        std::vector<Point_t> centers;
         regions_t regions;
         for (auto rect : faceRects)
         {
-            centers.push_back((rect.tl() + rect.br()) / 2);
             regions.push_back(rect);
         }
 
-        m_tracker->Update(centers, regions, grayFrame);
+        m_tracker->Update(regions, grayFrame);
     }
 
     ///
@@ -432,7 +430,6 @@ protected:
     ///
     void ProcessFrame(cv::UMat grayFrame)
     {
-        std::vector<Point_t> centers;
         regions_t regions;
 
         std::vector<cv::Rect> foundRects;
@@ -458,11 +455,10 @@ protected:
             rect.y += cvRound(rect.height * 0.07f);
             rect.height = cvRound(rect.height * 0.8f);
 
-            centers.push_back((rect.tl() + rect.br()) / 2);
             regions.push_back(rect);
         }
 
-        m_tracker->Update(centers, regions, grayFrame);
+        m_tracker->Update(regions, grayFrame);
     }
 
     ///
@@ -582,15 +578,13 @@ protected:
         std::vector<cv::Rect> allRects;
         nms2(faceRects, scores, allRects, 0.3f, 1, 0.7);
 
-        std::vector<Point_t> centers;
         regions_t regions;
         for (auto rect : allRects)
         {
-            centers.push_back((rect.tl() + rect.br()) / 2);
             regions.push_back(rect);
         }
 
-        m_tracker->Update(centers, regions, grayFrame);
+        m_tracker->Update(regions, grayFrame);
     }
 
     ///

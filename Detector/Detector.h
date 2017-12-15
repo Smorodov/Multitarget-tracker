@@ -14,7 +14,6 @@ private:
 
 	std::unique_ptr<BackgroundSubtract> m_backgroundSubst;
     regions_t m_regions;
-	std::vector<Point_t> m_centers;
     cv::UMat m_fg;
 
 	cv::Size m_minObjectSize;
@@ -25,7 +24,7 @@ private:
 
 public:
     CDetector(BackgroundSubtract::BGFG_ALGS algType, bool collectPoints, cv::UMat& gray);
-    const std::vector<Point_t>& Detect(cv::UMat& gray);
+    void Detect(cv::UMat& gray);
 	~CDetector(void);
 
 	void SetMinObjectSize(cv::Size minObjectSize);

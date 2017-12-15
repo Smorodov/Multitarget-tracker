@@ -39,7 +39,6 @@ void CDetector::SetMinObjectSize(cv::Size minObjectSize)
 void CDetector::DetectContour()
 {
 	m_regions.clear();
-	m_centers.clear();
     std::vector<std::vector<cv::Point>> contours;
 	std::vector<cv::Vec4i> hierarchy;
 	cv::findContours(m_fg, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, cv::Point());
@@ -80,7 +79,6 @@ void CDetector::DetectContour()
 				}
 
 				m_regions.push_back(region);
-				m_centers.push_back(Point_t(center.x, center.y));
 			}
 		}
 	}
@@ -89,12 +87,11 @@ void CDetector::DetectContour()
 // ---------------------------------------------------------------------------
 //
 // ---------------------------------------------------------------------------
-const std::vector<Point_t>& CDetector::Detect(cv::UMat& gray)
+void CDetector::Detect(cv::UMat& gray)
 {
 	m_backgroundSubst->subtract(gray, m_fg);
 
 	DetectContour();
-	return m_centers;
 }
 
 // ---------------------------------------------------------------------------

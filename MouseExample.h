@@ -78,7 +78,7 @@ void MouseTracking(cv::CommandLineParser parser)
         regions_t regions;
         for (auto p : pts)
         {
-            regions.push_back(CRegion(cv::Rect(static_cast<int>(p.x - 1), static_cast<int>(p.y - 1), 3, 3)));
+            regions.push_back(CRegion(cv::Rect(cvRound(p.x), cvRound(p.y), 1, 1)));
         }
 
 
@@ -87,7 +87,7 @@ void MouseTracking(cv::CommandLineParser parser)
             cv::circle(frame, pts[i], 3, cv::Scalar(0, 255, 0), 1, CV_AA);
         }
 
-        tracker.Update(pts, regions, cv::UMat());
+        tracker.Update(regions, cv::UMat());
 
         std::cout << tracker.tracks.size() << std::endl;
 
