@@ -26,8 +26,11 @@ set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
 # ----------------------------------------------------------------------------
 # ищем все .cpp и .h файлы и добавляем их в наш проект
 # ----------------------------------------------------------------------------
-  set(folder_source  main.cpp
-             Detector/Detector.cpp
+  set(folder_source
+             main.cpp
+
+             Detector/BaseDetector.cpp
+             Detector/MotionDetector.cpp
              Detector/BackgroundSubtract.cpp
              Detector/vibe_src/vibe.cpp
              Detector/Subsense/BackgroundSubtractorLBSP.cpp
@@ -41,10 +44,14 @@ set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
              Tracker/LocalTracker.cpp
              Tracker/Kalman.cpp)
 
-  set(folder_header MouseExample.h
+  set(folder_header
+             MouseExample.h
              VideoExample.h
              nms.h
-             Detector/Detector.h
+             defines.h
+
+             Detector/BaseDetector.h
+             Detector/MotionDetector.h
              Detector/BackgroundSubtract.h
              Detector/vibe_src/vibe.hpp
              Detector/Subsense/BackgroundSubtractorLBSP.h
@@ -53,14 +60,13 @@ set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
              Detector/Subsense/DistanceUtils.h
              Detector/Subsense/LBSP.h
              Detector/Subsense/RandUtils.h
+             Detector/pedestrians/c4-pedestrian-detector.h
 
-             pedestrians/c4-pedestrian-detector.h
              Tracker/Ctracker.h
              Tracker/track.h
              Tracker/HungarianAlg/HungarianAlg.h
              Tracker/LocalTracker.h
-             Tracker/Kalman.h
-             Tracker/defines.h)
+             Tracker/Kalman.h)
 
   set(graph_source
              Tracker/graph/tokenise.cpp

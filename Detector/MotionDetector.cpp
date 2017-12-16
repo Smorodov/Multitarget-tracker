@@ -1,42 +1,33 @@
-#include "Detector.h"
+#include "MotionDetector.h"
 
-// ---------------------------------------------------------------------------
-//
-// ---------------------------------------------------------------------------
-CDetector::CDetector(
+///
+/// \brief MotionDetector::MotionDetector
+/// \param algType
+/// \param collectPoints
+/// \param gray
+///
+MotionDetector::MotionDetector(
 	BackgroundSubtract::BGFG_ALGS algType,
 	bool collectPoints,
     cv::UMat& gray
 	)
-	: m_collectPoints(collectPoints)
+    : BaseDetector(collectPoints, gray)
 {
 	m_fg = gray.clone();
 	m_backgroundSubst = std::make_unique<BackgroundSubtract>(algType, gray.channels());
-
-	m_minObjectSize.width = std::max(5, gray.cols / 100);
-	m_minObjectSize.height = m_minObjectSize.width;
 }
 
-// ---------------------------------------------------------------------------
-//
-// ---------------------------------------------------------------------------
-CDetector::~CDetector(void)
+///
+/// \brief MotionDetector::~MotionDetector
+///
+MotionDetector::~MotionDetector(void)
 {
 }
 
-// ---------------------------------------------------------------------------
-//
-// ---------------------------------------------------------------------------
-void CDetector::SetMinObjectSize(cv::Size minObjectSize)
-{
-	m_minObjectSize = minObjectSize;
-}
-
-//----------------------------------------------------------------------
-//
-//----------------------------------------------------------------------
-
-void CDetector::DetectContour()
+///
+/// \brief MotionDetector::DetectContour
+///
+void MotionDetector::DetectContour()
 {
 	m_regions.clear();
     std::vector<std::vector<cv::Point>> contours;
@@ -84,28 +75,22 @@ void CDetector::DetectContour()
 	}
 }
 
-// ---------------------------------------------------------------------------
-//
-// ---------------------------------------------------------------------------
-void CDetector::Detect(cv::UMat& gray)
+///
+/// \brief MotionDetector::Detect
+/// \param gray
+///
+void MotionDetector::Detect(cv::UMat& gray)
 {
 	m_backgroundSubst->subtract(gray, m_fg);
 
 	DetectContour();
 }
 
-// ---------------------------------------------------------------------------
-//
-// ---------------------------------------------------------------------------
-const regions_t& CDetector::GetDetects() const
-{
-	return m_regions;
-}
-
-// ---------------------------------------------------------------------------
-//
-// ---------------------------------------------------------------------------
-void CDetector::CalcMotionMap(cv::Mat frame)
+///
+/// \brief MotionDetector::CalcMotionMap
+/// \param frame
+///
+void MotionDetector::CalcMotionMap(cv::Mat frame)
 {
 	if (m_motionMap.size() != frame.size())
 	{

@@ -51,7 +51,7 @@ int main(int argc, char** argv)
 
     case 1:
     {
-        MotionDetector mdetector(parser);
+        MotionDetectorExample mdetector(parser);
         mdetector.Process();
         break;
     }

@@ -1,14 +1,13 @@
 #pragma once
 
-#include "BackgroundSubtract.h"
-#include "Detector.h"
+#include "BaseDetector.h"
 
 #include "Ctracker.h"
 #include <iostream>
 #include <vector>
 #include <map>
 
-#include "pedestrians/c4-pedestrian-detector.h"
+#include "Detector/pedestrians/c4-pedestrian-detector.h"
 #include "nms.h"
 
 // ----------------------------------------------------------------------
@@ -192,12 +191,12 @@ private:
 // ----------------------------------------------------------------------
 
 ///
-/// \brief The MotionDetector class
+/// \brief The MotionDetectorExample class
 ///
-class MotionDetector : public VideoExample
+class MotionDetectorExample : public VideoExample
 {
 public:
-    MotionDetector(const cv::CommandLineParser& parser)
+    MotionDetectorExample(const cv::CommandLineParser& parser)
         :
           VideoExample(parser),
           m_minObjWidth(10)
@@ -213,7 +212,7 @@ protected:
     {
         m_minObjWidth = grayFrame.cols / 50;
 
-        m_detector = std::make_unique<CDetector>(BackgroundSubtract::ALG_MOG2, m_useLocalTracking, grayFrame);
+        m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Motion_MOG2, m_useLocalTracking, grayFrame));
         m_detector->SetMinObjectSize(cv::Size(m_minObjWidth, m_minObjWidth));
 
         m_tracker = std::make_unique<CTracker>(m_useLocalTracking,
@@ -272,7 +271,7 @@ protected:
 private:
 
     int m_minObjWidth;
-    std::unique_ptr<CDetector> m_detector;
+    std::unique_ptr<BaseDetector> m_detector;
     std::unique_ptr<CTracker> m_tracker;
 };
 
@@ -377,7 +376,7 @@ private:
 
 // ----------------------------------------------------------------------
 
-#define USE_HOG 1
+#define USE_HOG 0
 ///
 /// \brief The PedestrianDetector class
 ///
@@ -440,7 +439,7 @@ protected:
         m_hog.detectMultiScale(grayFrame, foundRects, 0, cv::Size(8, 8), cv::Size(32, 32), 1.05, 4, false);
 #else
         IntImage<double> original;
-        original.Load(grayFrame);
+        original.Load(grayFrame.getMat(cv::ACCESS_READ));
 
         m_scanner.FastScan(original, foundRects, 2);
         neighbors = 1;
@@ -541,7 +540,7 @@ protected:
                                                5 * m_fps                 // Maximum trace length
                                                );
 
-        m_detector = std::make_unique<CDetector>(BackgroundSubtract::ALG_MOG, m_useLocalTracking, grayFrame);
+        m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Motion_MOG2, m_useLocalTracking, grayFrame));
         m_detector->SetMinObjectSize(cv::Size(grayFrame.cols / 50, grayFrame.rows / 50));
 
         return true;
@@ -617,7 +616,7 @@ protected:
 
 private:
     cv::CascadeClassifier m_cascade;
-    std::unique_ptr<CDetector> m_detector;
+    std::unique_ptr<BaseDetector> m_detector;
     std::unique_ptr<CTracker> m_tracker;
 
     std::vector<cv::Rect> m_prevRects;
