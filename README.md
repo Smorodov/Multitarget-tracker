@@ -25,6 +25,9 @@ Hungarian algorithm + Kalman filter multitarget tracker implementation.
 4. Tracking: Linear or Unscented Kalman filter for objects center or for object coordinates and size
 5. Use or not local tracker (LK optical flow) for smooth trajectories
 6. KCF, MIL or MedianFlow tracking for lost objects and collision resolving
+7. Haar face detector from OpenCV
+8. HOG and C4 pedestrian detectors
+9. SSD detector from OpenCV and models from chuanqi305/MobileNet-SSD
 
 #### Build
 1. Download project sources
@@ -44,7 +47,7 @@ Hungarian algorithm + Kalman filter multitarget tracker implementation.
 
            Params: 
            1. Movie file, for example ../data/atrium.avi
-           2. [Optional] Number of example: 0 - MouseTracking, 1 - MotionDetector, 2 - FaceDetector, 3 - PedestrianDetector
+           2. [Optional] Number of example: 0 - MouseTracking, 1 - MotionDetector, 2 - FaceDetector, 3 - PedestrianDetector, 4 - Hybrid face and motion detectors, 5 - MobileNet SSD detector
               -e=0 or --example=1
            3. [Optional] Frame number to start a video from this position
               -sf=0 or --start_frame==1500
@@ -67,6 +70,7 @@ Hungarian algorithm + Kalman filter multitarget tracker implementation.
 * MWBM: https://github.com/rdmpage/maximum-weighted-bipartite-matching
 * Pedestrians detector: https://github.com/sturkmen72/C4-Real-time-pedestrian-detection
 * Non Maximum Suppression: https://github.com/Nuzhny007/Non-Maximum-Suppression
+* MobileNet SSD: https://github.com/chuanqi305/MobileNet-SSD
 
 #### License
 GNU GPLv3: http://www.gnu.org/licenses/gpl-3.0.txt 

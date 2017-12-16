@@ -26,14 +26,21 @@ set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
 # ----------------------------------------------------------------------------
 # ищем все .cpp и .h файлы и добавляем их в наш проект
 # ----------------------------------------------------------------------------
-  set(folder_source  main.cpp
-             Detector/Detector.cpp
+  set(folder_source
+             main.cpp
+
+             Detector/BaseDetector.cpp
+             Detector/MotionDetector.cpp
              Detector/BackgroundSubtract.cpp
              Detector/vibe_src/vibe.cpp
              Detector/Subsense/BackgroundSubtractorLBSP.cpp
              Detector/Subsense/BackgroundSubtractorLOBSTER.cpp
              Detector/Subsense/BackgroundSubtractorSuBSENSE.cpp
              Detector/Subsense/LBSP.cpp
+             Detector/FaceDetector.cpp
+             Detector/PedestrianDetector.cpp
+             Detector/pedestrians/c4-pedestrian-detector.cpp
+             Detector/DNNDetector.cpp
 
              Tracker/Ctracker.cpp
              Tracker/track.cpp
@@ -41,10 +48,14 @@ set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
              Tracker/LocalTracker.cpp
              Tracker/Kalman.cpp)
 
-  set(folder_header MouseExample.h
+  set(folder_header
+             MouseExample.h
              VideoExample.h
              nms.h
-             Detector/Detector.h
+             defines.h
+
+             Detector/BaseDetector.h
+             Detector/MotionDetector.h
              Detector/BackgroundSubtract.h
              Detector/vibe_src/vibe.hpp
              Detector/Subsense/BackgroundSubtractorLBSP.h
@@ -53,14 +64,16 @@ set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
              Detector/Subsense/DistanceUtils.h
              Detector/Subsense/LBSP.h
              Detector/Subsense/RandUtils.h
+             Detector/FaceDetector.h
+             Detector/PedestrianDetector.h
+             Detector/pedestrians/c4-pedestrian-detector.h
+             Detector/DNNDetector.h
 
-             pedestrians/c4-pedestrian-detector.h
              Tracker/Ctracker.h
              Tracker/track.h
              Tracker/HungarianAlg/HungarianAlg.h
              Tracker/LocalTracker.h
-             Tracker/Kalman.h
-             Tracker/defines.h)
+             Tracker/Kalman.h)
 
   set(graph_source
              Tracker/graph/tokenise.cpp

@@ -1,14 +1,12 @@
 #pragma once
 
-#include "BackgroundSubtract.h"
-#include "Detector.h"
+#include "BaseDetector.h"
 
 #include "Ctracker.h"
 #include <iostream>
 #include <vector>
 #include <map>
 
-#include "pedestrians/c4-pedestrian-detector.h"
 #include "nms.h"
 
 // ----------------------------------------------------------------------
@@ -99,7 +97,7 @@ public:
 
             int64 t1 = cv::getTickCount();
 
-            ProcessFrame(gray);
+            ProcessFrame(frame, gray);
 
             int64 t2 = cv::getTickCount();
 
@@ -135,8 +133,37 @@ public:
     }
 
 protected:
-    virtual bool InitTracker(cv::UMat grayFrame) = 0;
-    virtual void ProcessFrame(cv::UMat grayFrame) = 0;
+    std::unique_ptr<BaseDetector> m_detector;
+    std::unique_ptr<CTracker> m_tracker;
+
+    virtual bool GrayProcessing() const
+    {
+        return true;
+    }
+
+    virtual bool InitTracker(cv::UMat frame) = 0;
+
+    ///
+    /// \brief ProcessFrame
+    /// \param grayFrame
+    ///
+    virtual void ProcessFrame(cv::Mat frame, cv::UMat grayFrame)
+    {
+        if (GrayProcessing())
+        {
+            m_detector->Detect(grayFrame);
+        }
+        else
+        {
+            cv::UMat clFrame = frame.getUMat(cv::ACCESS_READ);
+            m_detector->Detect(clFrame);
+        }
+
+        const regions_t& regions = m_detector->GetDetects();
+
+        m_tracker->Update(regions, grayFrame);
+    }
+
     virtual void DrawData(cv::Mat frame, int framesCounter, int currTime) = 0;
 
     bool m_showLogs;
@@ -192,12 +219,12 @@ private:
 // ----------------------------------------------------------------------
 
 ///
-/// \brief The MotionDetector class
+/// \brief The MotionDetectorExample class
 ///
-class MotionDetector : public VideoExample
+class MotionDetectorExample : public VideoExample
 {
 public:
-    MotionDetector(const cv::CommandLineParser& parser)
+    MotionDetectorExample(const cv::CommandLineParser& parser)
         :
           VideoExample(parser),
           m_minObjWidth(10)
@@ -209,39 +236,27 @@ protected:
     /// \brief InitTracker
     /// \param grayFrame
     ///
-    bool InitTracker(cv::UMat grayFrame)
+    bool InitTracker(cv::UMat frame)
     {
-        m_minObjWidth = grayFrame.cols / 50;
+        m_minObjWidth = frame.cols / 50;
 
-        m_detector = std::make_unique<CDetector>(BackgroundSubtract::ALG_MOG2, m_useLocalTracking, grayFrame);
+        m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Motion_MOG2, m_useLocalTracking, frame));
         m_detector->SetMinObjectSize(cv::Size(m_minObjWidth, m_minObjWidth));
 
         m_tracker = std::make_unique<CTracker>(m_useLocalTracking,
                                                tracking::DistCenters,
                                                tracking::KalmanLinear,
                                                tracking::FilterRect,
-                                               tracking::TrackKCF,      // Use KCF tracker for collisions resolving
+                                               tracking::TrackKCF,       // Use KCF tracker for collisions resolving
                                                tracking::MatchHungrian,
                                                0.2f,                     // Delta time for Kalman filter
                                                0.1f,                     // Accel noise magnitude for Kalman filter
-                                               grayFrame.rows / 10,      // Distance threshold between region and object on two frames
+                                               frame.rows / 10,          // Distance threshold between region and object on two frames
                                                m_fps,                    // Maximum allowed skipped frames
                                                3 * m_fps                 // Maximum trace length
                                                );
 
         return true;
-    }
-
-    ///
-    /// \brief ProcessFrame
-    /// \param grayFrame
-    ///
-    void ProcessFrame(cv::UMat grayFrame)
-    {
-        const std::vector<Point_t>& centers = m_detector->Detect(grayFrame);
-        const regions_t& regions = m_detector->GetDetects();
-
-        m_tracker->Update(centers, regions, grayFrame);
     }
 
     ///
@@ -266,25 +281,22 @@ protected:
             }
         }
 
-        //detector.CalcMotionMap(frame);
+        m_detector->CalcMotionMap(frame);
     }
 
 private:
-
     int m_minObjWidth;
-    std::unique_ptr<CDetector> m_detector;
-    std::unique_ptr<CTracker> m_tracker;
 };
 
 // ----------------------------------------------------------------------
 
 ///
-/// \brief The FaceDetector class
+/// \brief The FaceDetectorExample class
 ///
-class FaceDetector : public VideoExample
+class FaceDetectorExample : public VideoExample
 {
 public:
-    FaceDetector(const cv::CommandLineParser& parser)
+    FaceDetectorExample(const cv::CommandLineParser& parser)
         :
           VideoExample(parser)
     {
@@ -295,15 +307,14 @@ protected:
     /// \brief InitTracker
     /// \param grayFrame
     ///
-    bool InitTracker(cv::UMat /*grayFrame*/)
+    bool InitTracker(cv::UMat frame)
     {
-        std::string fileName = "../data/haarcascade_frontalface_alt2.xml";
-        m_cascade.load(fileName);
-        if (m_cascade.empty())
+        m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Face_HAAR, m_useLocalTracking, frame));
+        if (!m_detector.get())
         {
-            std::cerr << "Cascade not opened!" << std::endl;
             return false;
         }
+        m_detector->SetMinObjectSize(cv::Size(frame.cols / 20, frame.rows / 20));
 
         m_tracker = std::make_unique<CTracker>(m_useLocalTracking,
                                                tracking::DistJaccard,
@@ -314,38 +325,11 @@ protected:
                                                0.3f,                     // Delta time for Kalman filter
                                                0.1f,                     // Accel noise magnitude for Kalman filter
                                                0.8f,                     // Distance threshold between region and object on two frames
-                                               2 * m_fps,                // Maximum allowed skipped frames
+                                               m_fps / 2,                // Maximum allowed skipped frames
                                                5 * m_fps                 // Maximum trace length
                                                );
 
         return true;
-    }
-
-    ///
-    /// \brief ProcessFrame
-    /// \param grayFrame
-    ///
-    void ProcessFrame(cv::UMat grayFrame)
-    {
-        bool findLargestObject = false;
-        bool filterRects = true;
-        std::vector<cv::Rect> faceRects;
-        m_cascade.detectMultiScale(grayFrame,
-                                 faceRects,
-                                 1.1,
-                                 (filterRects || findLargestObject) ? 3 : 0,
-                                 findLargestObject ? cv::CASCADE_FIND_BIGGEST_OBJECT : 0,
-                                 cv::Size(grayFrame.cols / 20, grayFrame.rows / 20),
-                                 cv::Size(grayFrame.cols / 2, grayFrame.rows / 2));
-        std::vector<Point_t> centers;
-        regions_t regions;
-        for (auto rect : faceRects)
-        {
-            centers.push_back((rect.tl() + rect.br()) / 2);
-            regions.push_back(rect);
-        }
-
-        m_tracker->Update(centers, regions, grayFrame);
     }
 
     ///
@@ -369,29 +353,22 @@ protected:
                 DrawTrack(frame, 1, *track);
             }
         }
+
+        m_detector->CalcMotionMap(frame);
     }
-
-private:
-
-    cv::CascadeClassifier m_cascade;
-    std::unique_ptr<CTracker> m_tracker;
 };
 
 // ----------------------------------------------------------------------
 
-#define USE_HOG 1
 ///
-/// \brief The PedestrianDetector class
+/// \brief The PedestrianDetectorExample class
 ///
-class PedestrianDetector : public VideoExample
+class PedestrianDetectorExample : public VideoExample
 {
 public:
-    PedestrianDetector(const cv::CommandLineParser& parser)
+    PedestrianDetectorExample(const cv::CommandLineParser& parser)
         :
           VideoExample(parser)
-    #if !USE_HOG
-          , m_scanner(HUMAN_height, HUMAN_width, HUMAN_xdiv, HUMAN_ydiv, 256, 0.8)
-    #endif
     {
     }
 
@@ -400,19 +377,18 @@ protected:
     /// \brief InitTracker
     /// \param grayFrame
     ///
-    bool InitTracker(cv::UMat /*grayFrame*/)
+    bool InitTracker(cv::UMat frame)
     {
-#if USE_HOG
-        m_hog.setSVMDetector(cv::HOGDescriptor::getDefaultPeopleDetector());
-#else
-        std::string cascade1 = "../data/combined.txt.model";
-        std::string cascade2 = "../data/combined.txt.model_";
-        LoadCascade(cascade1, cascade2, m_scanner);
-#endif
+        m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Pedestrian_C4, m_useLocalTracking, frame));
+        if (!m_detector.get())
+        {
+            return false;
+        }
+        m_detector->SetMinObjectSize(cv::Size(frame.cols / 20, frame.rows / 20));
 
         m_tracker = std::make_unique<CTracker>(m_useLocalTracking,
                                                tracking::DistJaccard,
-                                               tracking::KalmanUnscented,
+                                               tracking::KalmanLinear,
                                                tracking::FilterRect,
                                                tracking::TrackKCF,      // Use KCF tracker for collisions resolving
                                                tracking::MatchHungrian,
@@ -424,45 +400,6 @@ protected:
                                                );
 
         return true;
-    }
-
-    ///
-    /// \brief ProcessFrame
-    /// \param grayFrame
-    ///
-    void ProcessFrame(cv::UMat grayFrame)
-    {
-        std::vector<Point_t> centers;
-        regions_t regions;
-
-        std::vector<cv::Rect> foundRects;
-        std::vector<cv::Rect> filteredRects;
-
-        int neighbors = 0;
-#if USE_HOG
-        m_hog.detectMultiScale(grayFrame, foundRects, 0, cv::Size(8, 8), cv::Size(32, 32), 1.05, 4, false);
-#else
-        IntImage<double> original;
-        original.Load(grayFrame);
-
-        m_scanner.FastScan(original, foundRects, 2);
-        neighbors = 1;
-#endif
-
-        nms(foundRects, filteredRects, 0.3f, neighbors);
-
-        for (auto rect : filteredRects)
-        {
-            rect.x += cvRound(rect.width * 0.1f);
-            rect.width = cvRound(rect.width * 0.8f);
-            rect.y += cvRound(rect.height * 0.07f);
-            rect.height = cvRound(rect.height * 0.8f);
-
-            centers.push_back((rect.tl() + rect.br()) / 2);
-            regions.push_back(rect);
-        }
-
-        m_tracker->Update(centers, regions, grayFrame);
     }
 
     ///
@@ -486,32 +423,20 @@ protected:
                 DrawTrack(frame, 1, *track);
             }
         }
+
+        m_detector->CalcMotionMap(frame);
     }
-
-private:
-
-#if USE_HOG
-    cv::HOGDescriptor m_hog;
-#else
-    static const int HUMAN_height = 108;
-    static const int HUMAN_width = 36;
-    static const int HUMAN_xdiv = 9;
-    static const int HUMAN_ydiv = 4;
-
-    DetectionScanner m_scanner;
-#endif
-    std::unique_ptr<CTracker> m_tracker;
 };
 
 // ----------------------------------------------------------------------
 
 ///
-/// \brief The HybridFaceDetector class
+/// \brief The HybridFaceDetectorExample class
 ///
-class HybridFaceDetector : public VideoExample
+class HybridFaceDetectorExample : public VideoExample
 {
 public:
-    HybridFaceDetector(const cv::CommandLineParser& parser)
+    HybridFaceDetectorExample(const cv::CommandLineParser& parser)
         :
           VideoExample(parser)
     {
@@ -522,7 +447,7 @@ protected:
     /// \brief InitTracker
     /// \param grayFrame
     ///
-    bool InitTracker(cv::UMat grayFrame)
+    bool InitTracker(cv::UMat frame)
     {
         std::string fileName = "../data/haarcascade_frontalface_alt2.xml";
         m_cascade.load(fileName);
@@ -540,13 +465,13 @@ protected:
                                                tracking::MatchHungrian,
                                                0.3f,                     // Delta time for Kalman filter
                                                0.1f,                     // Accel noise magnitude for Kalman filter
-                                               grayFrame.cols / 10,      // Distance threshold between region and object on two frames
+                                               frame.cols / 10,      // Distance threshold between region and object on two frames
                                                2 * m_fps,                // Maximum allowed skipped frames
                                                5 * m_fps                 // Maximum trace length
                                                );
 
-        m_detector = std::make_unique<CDetector>(BackgroundSubtract::ALG_MOG, m_useLocalTracking, grayFrame);
-        m_detector->SetMinObjectSize(cv::Size(grayFrame.cols / 50, grayFrame.rows / 50));
+        m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Motion_MOG2, m_useLocalTracking, frame));
+        m_detector->SetMinObjectSize(cv::Size(frame.cols / 50, frame.rows / 50));
 
         return true;
     }
@@ -555,7 +480,7 @@ protected:
     /// \brief ProcessFrame
     /// \param grayFrame
     ///
-    void ProcessFrame(cv::UMat grayFrame)
+    void ProcessFrame(cv::Mat /*frame*/, cv::UMat grayFrame)
     {
         bool findLargestObject = false;
         bool filterRects = true;
@@ -582,15 +507,13 @@ protected:
         std::vector<cv::Rect> allRects;
         nms2(faceRects, scores, allRects, 0.3f, 1, 0.7);
 
-        std::vector<Point_t> centers;
         regions_t regions;
         for (auto rect : allRects)
         {
-            centers.push_back((rect.tl() + rect.br()) / 2);
             regions.push_back(rect);
         }
 
-        m_tracker->Update(centers, regions, grayFrame);
+        m_tracker->Update(regions, grayFrame);
     }
 
     ///
@@ -618,13 +541,96 @@ protected:
             }
         }
 
-        //detector.CalcMotionMap(frame);
+        m_detector->CalcMotionMap(frame);
     }
 
 private:
-    cv::CascadeClassifier m_cascade;
-    std::unique_ptr<CDetector> m_detector;
-    std::unique_ptr<CTracker> m_tracker;
-
     std::vector<cv::Rect> m_prevRects;
+    cv::CascadeClassifier m_cascade;
+};
+
+// ----------------------------------------------------------------------
+
+///
+/// \brief The DNNDetectorExample class
+///
+class DNNDetectorExample : public VideoExample
+{
+public:
+    DNNDetectorExample(const cv::CommandLineParser& parser)
+        :
+          VideoExample(parser)
+    {
+    }
+
+protected:
+    ///
+    /// \brief InitTracker
+    /// \param grayFrame
+    ///
+    bool InitTracker(cv::UMat frame)
+    {
+        m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::DNN, m_useLocalTracking, frame));
+        if (!m_detector.get())
+        {
+            return false;
+        }
+        m_detector->SetMinObjectSize(cv::Size(frame.cols / 20, frame.rows / 20));
+
+        m_tracker = std::make_unique<CTracker>(m_useLocalTracking,
+                                               tracking::DistCenters,
+                                               tracking::KalmanLinear,
+                                               tracking::FilterRect,
+                                               tracking::TrackKCF,      // Use KCF tracker for collisions resolving
+                                               tracking::MatchHungrian,
+                                               0.3f,                     // Delta time for Kalman filter
+                                               0.1f,                     // Accel noise magnitude for Kalman filter
+                                               frame.rows / 5,          // Distance threshold between region and object on two frames
+                                               1 * m_fps,                // Maximum allowed skipped frames
+                                               5 * m_fps                 // Maximum trace length
+                                               );
+
+        return true;
+    }
+
+    ///
+    /// \brief DrawData
+    /// \param frame
+    ///
+    void DrawData(cv::Mat frame, int framesCounter, int currTime)
+    {
+        if (m_showLogs)
+        {
+            std::cout << "Frame " << framesCounter << ": tracks = " << m_tracker->tracks.size() << ", time = " << currTime << std::endl;
+        }
+
+        for (const auto& track : m_tracker->tracks)
+        {
+            if (track->IsRobust(2,                           // Minimal trajectory size
+                                0.5f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
+                                cv::Size2f(0.1f, 8.0f))      // Min and max ratio: width / height
+                    )
+            {
+                DrawTrack(frame, 1, *track);
+
+                std::string label = track->m_lastRegion.m_type + ": " + std::to_string(track->m_lastRegion.m_confidence);
+                int baseLine = 0;
+                cv::Size labelSize = cv::getTextSize(label, cv::FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
+                auto rect(track->GetLastRect());
+                cv::rectangle(frame, cv::Rect(cv::Point(rect.x, rect.y - labelSize.height), cv::Size(labelSize.width, labelSize.height + baseLine)), cv::Scalar(255, 255, 255), CV_FILLED);
+                cv::putText(frame, label, cv::Point(rect.x, rect.y), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 0, 0));
+            }
+        }
+
+        m_detector->CalcMotionMap(frame);
+    }
+
+    ///
+    /// \brief GrayProcessing
+    /// \return
+    ///
+    bool GrayProcessing() const
+    {
+        return false;
+    }
 };

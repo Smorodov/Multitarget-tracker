@@ -26,7 +26,7 @@ public:
 	~CTracker(void);
 
     tracks_t tracks;
-    void Update(const std::vector<Point_t>& detections, const regions_t& regions, cv::UMat grayFrame);
+    void Update(const regions_t& regions, cv::UMat grayFrame);
 
 private:
     // Use local tracking for regions between two frames
