@@ -38,6 +38,8 @@ set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
              Detector/Subsense/BackgroundSubtractorSuBSENSE.cpp
              Detector/Subsense/LBSP.cpp
              Detector/FaceDetector.cpp
+             Detector/PedestrianDetector.cpp
+             Detector/pedestrians/c4-pedestrian-detector.cpp
 
              Tracker/Ctracker.cpp
              Tracker/track.cpp
@@ -61,8 +63,9 @@ set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
              Detector/Subsense/DistanceUtils.h
              Detector/Subsense/LBSP.h
              Detector/Subsense/RandUtils.h
-             Detector/pedestrians/c4-pedestrian-detector.h
              Detector/FaceDetector.h
+             Detector/PedestrianDetector.h
+             Detector/pedestrians/c4-pedestrian-detector.h
 
              Tracker/Ctracker.h
              Tracker/track.h

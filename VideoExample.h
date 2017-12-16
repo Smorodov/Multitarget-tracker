@@ -7,7 +7,6 @@
 #include <vector>
 #include <map>
 
-#include "Detector/pedestrians/c4-pedestrian-detector.h"
 #include "nms.h"
 
 // ----------------------------------------------------------------------
@@ -278,7 +277,7 @@ private:
 // ----------------------------------------------------------------------
 
 ///
-/// \brief The FaceDetector class
+/// \brief The FaceDetectorExample class
 ///
 class FaceDetectorExample : public VideoExample
 {
@@ -363,17 +362,14 @@ private:
 
 #define USE_HOG 0
 ///
-/// \brief The PedestrianDetector class
+/// \brief The PedestrianDetectorExample class
 ///
-class PedestrianDetector : public VideoExample
+class PedestrianDetectorExample : public VideoExample
 {
 public:
-    PedestrianDetector(const cv::CommandLineParser& parser)
+    PedestrianDetectorExample(const cv::CommandLineParser& parser)
         :
           VideoExample(parser)
-    #if !USE_HOG
-          , m_scanner(HUMAN_height, HUMAN_width, HUMAN_xdiv, HUMAN_ydiv, 256, 0.8)
-    #endif
     {
     }
 
@@ -382,15 +378,14 @@ protected:
     /// \brief InitTracker
     /// \param grayFrame
     ///
-    bool InitTracker(cv::UMat /*grayFrame*/)
+    bool InitTracker(cv::UMat grayFrame)
     {
-#if USE_HOG
-        m_hog.setSVMDetector(cv::HOGDescriptor::getDefaultPeopleDetector());
-#else
-        std::string cascade1 = "../data/combined.txt.model";
-        std::string cascade2 = "../data/combined.txt.model_";
-        LoadCascade(cascade1, cascade2, m_scanner);
-#endif
+        m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Pedestrian_HOG, m_useLocalTracking, grayFrame));
+        if (!m_detector.get())
+        {
+            return false;
+        }
+        m_detector->SetMinObjectSize(cv::Size(grayFrame.cols / 20, grayFrame.rows / 20));
 
         m_tracker = std::make_unique<CTracker>(m_useLocalTracking,
                                                tracking::DistJaccard,
@@ -414,33 +409,8 @@ protected:
     ///
     void ProcessFrame(cv::UMat grayFrame)
     {
-        regions_t regions;
-
-        std::vector<cv::Rect> foundRects;
-        std::vector<cv::Rect> filteredRects;
-
-        int neighbors = 0;
-#if USE_HOG
-        m_hog.detectMultiScale(grayFrame, foundRects, 0, cv::Size(8, 8), cv::Size(32, 32), 1.05, 4, false);
-#else
-        IntImage<double> original;
-        original.Load(grayFrame.getMat(cv::ACCESS_READ));
-
-        m_scanner.FastScan(original, foundRects, 2);
-        neighbors = 1;
-#endif
-
-        nms(foundRects, filteredRects, 0.3f, neighbors);
-
-        for (auto rect : filteredRects)
-        {
-            rect.x += cvRound(rect.width * 0.1f);
-            rect.width = cvRound(rect.width * 0.8f);
-            rect.y += cvRound(rect.height * 0.07f);
-            rect.height = cvRound(rect.height * 0.8f);
-
-            regions.push_back(rect);
-        }
+        m_detector->Detect(grayFrame);
+        const regions_t& regions = m_detector->GetDetects();
 
         m_tracker->Update(regions, grayFrame);
     }
@@ -469,17 +439,7 @@ protected:
     }
 
 private:
-
-#if USE_HOG
-    cv::HOGDescriptor m_hog;
-#else
-    static const int HUMAN_height = 108;
-    static const int HUMAN_width = 36;
-    static const int HUMAN_xdiv = 9;
-    static const int HUMAN_ydiv = 4;
-
-    DetectionScanner m_scanner;
-#endif
+    std::unique_ptr<BaseDetector> m_detector;
     std::unique_ptr<CTracker> m_tracker;
 };
 

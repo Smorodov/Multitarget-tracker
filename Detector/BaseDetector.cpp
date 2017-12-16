@@ -1,6 +1,7 @@
 #include "BaseDetector.h"
 #include "MotionDetector.h"
 #include "FaceDetector.h"
+#include "PedestrianDetector.h"
 
 ///
 /// \brief CreateDetector
@@ -50,10 +51,17 @@ BaseDetector* CreateDetector(
     }
 
     case tracking::Pedestrian_HOG:
-        return new MotionDetector(BackgroundSubtract::BGFG_ALGS::ALG_VIBE, collectPoints, gray);
-
     case tracking::Pedestrian_C4:
-        return new MotionDetector(BackgroundSubtract::BGFG_ALGS::ALG_VIBE, collectPoints, gray);
+    {
+        PedestrianDetector* pedestrianDetector = new PedestrianDetector(collectPoints, gray);
+        if (!pedestrianDetector->Init((detectorType == tracking::Pedestrian_HOG) ? PedestrianDetector::HOG : PedestrianDetector::C4,
+                                      "../data/combined.txt.model", "../data/combined.txt.model_"))
+        {
+            delete pedestrianDetector;
+            pedestrianDetector = nullptr;
+        }
+        return pedestrianDetector;
+    }
 
     default:
         return nullptr;

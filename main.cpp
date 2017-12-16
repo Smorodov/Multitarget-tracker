@@ -65,7 +65,7 @@ int main(int argc, char** argv)
 
     case 3:
     {
-        PedestrianDetector ped_detector(parser);
+        PedestrianDetectorExample ped_detector(parser);
         ped_detector.Process();
         break;
     }
