@@ -58,7 +58,7 @@ int main(int argc, char** argv)
 
     case 2:
     {
-        FaceDetector face_detector(parser);
+        FaceDetectorExample face_detector(parser);
         face_detector.Process();
         break;
     }

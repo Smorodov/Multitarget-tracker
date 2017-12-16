@@ -1,5 +1,6 @@
 #include "BaseDetector.h"
 #include "MotionDetector.h"
+#include "FaceDetector.h"
 
 ///
 /// \brief CreateDetector
@@ -38,7 +39,15 @@ BaseDetector* CreateDetector(
         return new MotionDetector(BackgroundSubtract::BGFG_ALGS::ALG_MOG2, collectPoints, gray);
 
     case tracking::Face_HAAR:
-        return new MotionDetector(BackgroundSubtract::BGFG_ALGS::ALG_VIBE, collectPoints, gray);
+    {
+        FaceDetector* faceDetector = new FaceDetector(collectPoints, gray);
+        if (!faceDetector->Init("../data/haarcascade_frontalface_alt2.xml"))
+        {
+            delete faceDetector;
+            faceDetector = nullptr;
+        }
+        return faceDetector;
+    }
 
     case tracking::Pedestrian_HOG:
         return new MotionDetector(BackgroundSubtract::BGFG_ALGS::ALG_VIBE, collectPoints, gray);

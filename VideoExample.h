@@ -265,7 +265,7 @@ protected:
             }
         }
 
-        //detector.CalcMotionMap(frame);
+        m_detector->CalcMotionMap(frame);
     }
 
 private:
@@ -280,10 +280,10 @@ private:
 ///
 /// \brief The FaceDetector class
 ///
-class FaceDetector : public VideoExample
+class FaceDetectorExample : public VideoExample
 {
 public:
-    FaceDetector(const cv::CommandLineParser& parser)
+    FaceDetectorExample(const cv::CommandLineParser& parser)
         :
           VideoExample(parser)
     {
@@ -294,15 +294,14 @@ protected:
     /// \brief InitTracker
     /// \param grayFrame
     ///
-    bool InitTracker(cv::UMat /*grayFrame*/)
+    bool InitTracker(cv::UMat grayFrame)
     {
-        std::string fileName = "../data/haarcascade_frontalface_alt2.xml";
-        m_cascade.load(fileName);
-        if (m_cascade.empty())
+        m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Face_HAAR, m_useLocalTracking, grayFrame));
+        if (!m_detector.get())
         {
-            std::cerr << "Cascade not opened!" << std::endl;
             return false;
         }
+        m_detector->SetMinObjectSize(cv::Size(grayFrame.cols / 20, grayFrame.rows / 20));
 
         m_tracker = std::make_unique<CTracker>(m_useLocalTracking,
                                                tracking::DistJaccard,
@@ -326,21 +325,8 @@ protected:
     ///
     void ProcessFrame(cv::UMat grayFrame)
     {
-        bool findLargestObject = false;
-        bool filterRects = true;
-        std::vector<cv::Rect> faceRects;
-        m_cascade.detectMultiScale(grayFrame,
-                                 faceRects,
-                                 1.1,
-                                 (filterRects || findLargestObject) ? 3 : 0,
-                                 findLargestObject ? cv::CASCADE_FIND_BIGGEST_OBJECT : 0,
-                                 cv::Size(grayFrame.cols / 20, grayFrame.rows / 20),
-                                 cv::Size(grayFrame.cols / 2, grayFrame.rows / 2));
-        regions_t regions;
-        for (auto rect : faceRects)
-        {
-            regions.push_back(rect);
-        }
+        m_detector->Detect(grayFrame);
+        const regions_t& regions = m_detector->GetDetects();
 
         m_tracker->Update(regions, grayFrame);
     }
@@ -369,8 +355,7 @@ protected:
     }
 
 private:
-
-    cv::CascadeClassifier m_cascade;
+    std::unique_ptr<BaseDetector> m_detector;
     std::unique_ptr<CTracker> m_tracker;
 };
 

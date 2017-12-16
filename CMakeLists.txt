@@ -37,6 +37,7 @@ set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
              Detector/Subsense/BackgroundSubtractorLOBSTER.cpp
              Detector/Subsense/BackgroundSubtractorSuBSENSE.cpp
              Detector/Subsense/LBSP.cpp
+             Detector/FaceDetector.cpp
 
              Tracker/Ctracker.cpp
              Tracker/track.cpp
@@ -61,6 +62,7 @@ set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
              Detector/Subsense/LBSP.h
              Detector/Subsense/RandUtils.h
              Detector/pedestrians/c4-pedestrian-detector.h
+             Detector/FaceDetector.h
 
              Tracker/Ctracker.h
              Tracker/track.h
