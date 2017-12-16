@@ -97,7 +97,7 @@ public:
 
             int64 t1 = cv::getTickCount();
 
-            ProcessFrame(gray);
+            ProcessFrame(frame, gray);
 
             int64 t2 = cv::getTickCount();
 
@@ -136,15 +136,29 @@ protected:
     std::unique_ptr<BaseDetector> m_detector;
     std::unique_ptr<CTracker> m_tracker;
 
-    virtual bool InitTracker(cv::UMat grayFrame) = 0;
+    virtual bool GrayProcessing() const
+    {
+        return true;
+    }
+
+    virtual bool InitTracker(cv::UMat frame) = 0;
 
     ///
     /// \brief ProcessFrame
     /// \param grayFrame
     ///
-    virtual void ProcessFrame(cv::UMat grayFrame)
+    virtual void ProcessFrame(cv::Mat frame, cv::UMat grayFrame)
     {
-        m_detector->Detect(grayFrame);
+        if (GrayProcessing())
+        {
+            m_detector->Detect(grayFrame);
+        }
+        else
+        {
+            cv::UMat clFrame = frame.getUMat(cv::ACCESS_READ);
+            m_detector->Detect(clFrame);
+        }
+
         const regions_t& regions = m_detector->GetDetects();
 
         m_tracker->Update(regions, grayFrame);
@@ -222,22 +236,22 @@ protected:
     /// \brief InitTracker
     /// \param grayFrame
     ///
-    bool InitTracker(cv::UMat grayFrame)
+    bool InitTracker(cv::UMat frame)
     {
-        m_minObjWidth = grayFrame.cols / 50;
+        m_minObjWidth = frame.cols / 50;
 
-        m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Motion_MOG2, m_useLocalTracking, grayFrame));
+        m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Motion_MOG2, m_useLocalTracking, frame));
         m_detector->SetMinObjectSize(cv::Size(m_minObjWidth, m_minObjWidth));
 
         m_tracker = std::make_unique<CTracker>(m_useLocalTracking,
                                                tracking::DistCenters,
                                                tracking::KalmanLinear,
                                                tracking::FilterRect,
-                                               tracking::TrackKCF,      // Use KCF tracker for collisions resolving
+                                               tracking::TrackKCF,       // Use KCF tracker for collisions resolving
                                                tracking::MatchHungrian,
                                                0.2f,                     // Delta time for Kalman filter
                                                0.1f,                     // Accel noise magnitude for Kalman filter
-                                               grayFrame.rows / 10,      // Distance threshold between region and object on two frames
+                                               frame.rows / 10,          // Distance threshold between region and object on two frames
                                                m_fps,                    // Maximum allowed skipped frames
                                                3 * m_fps                 // Maximum trace length
                                                );
@@ -293,14 +307,14 @@ protected:
     /// \brief InitTracker
     /// \param grayFrame
     ///
-    bool InitTracker(cv::UMat grayFrame)
+    bool InitTracker(cv::UMat frame)
     {
-        m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Face_HAAR, m_useLocalTracking, grayFrame));
+        m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Face_HAAR, m_useLocalTracking, frame));
         if (!m_detector.get())
         {
             return false;
         }
-        m_detector->SetMinObjectSize(cv::Size(grayFrame.cols / 20, grayFrame.rows / 20));
+        m_detector->SetMinObjectSize(cv::Size(frame.cols / 20, frame.rows / 20));
 
         m_tracker = std::make_unique<CTracker>(m_useLocalTracking,
                                                tracking::DistJaccard,
@@ -346,7 +360,6 @@ protected:
 
 // ----------------------------------------------------------------------
 
-#define USE_HOG 0
 ///
 /// \brief The PedestrianDetectorExample class
 ///
@@ -364,14 +377,14 @@ protected:
     /// \brief InitTracker
     /// \param grayFrame
     ///
-    bool InitTracker(cv::UMat grayFrame)
+    bool InitTracker(cv::UMat frame)
     {
-        m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Pedestrian_C4, m_useLocalTracking, grayFrame));
+        m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Pedestrian_C4, m_useLocalTracking, frame));
         if (!m_detector.get())
         {
             return false;
         }
-        m_detector->SetMinObjectSize(cv::Size(grayFrame.cols / 20, grayFrame.rows / 20));
+        m_detector->SetMinObjectSize(cv::Size(frame.cols / 20, frame.rows / 20));
 
         m_tracker = std::make_unique<CTracker>(m_useLocalTracking,
                                                tracking::DistJaccard,
@@ -418,12 +431,12 @@ protected:
 // ----------------------------------------------------------------------
 
 ///
-/// \brief The HybridFaceDetector class
+/// \brief The HybridFaceDetectorExample class
 ///
-class HybridFaceDetector : public VideoExample
+class HybridFaceDetectorExample : public VideoExample
 {
 public:
-    HybridFaceDetector(const cv::CommandLineParser& parser)
+    HybridFaceDetectorExample(const cv::CommandLineParser& parser)
         :
           VideoExample(parser)
     {
@@ -434,7 +447,7 @@ protected:
     /// \brief InitTracker
     /// \param grayFrame
     ///
-    bool InitTracker(cv::UMat grayFrame)
+    bool InitTracker(cv::UMat frame)
     {
         std::string fileName = "../data/haarcascade_frontalface_alt2.xml";
         m_cascade.load(fileName);
@@ -452,13 +465,13 @@ protected:
                                                tracking::MatchHungrian,
                                                0.3f,                     // Delta time for Kalman filter
                                                0.1f,                     // Accel noise magnitude for Kalman filter
-                                               grayFrame.cols / 10,      // Distance threshold between region and object on two frames
+                                               frame.cols / 10,      // Distance threshold between region and object on two frames
                                                2 * m_fps,                // Maximum allowed skipped frames
                                                5 * m_fps                 // Maximum trace length
                                                );
 
-        m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Motion_MOG2, m_useLocalTracking, grayFrame));
-        m_detector->SetMinObjectSize(cv::Size(grayFrame.cols / 50, grayFrame.rows / 50));
+        m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Motion_MOG2, m_useLocalTracking, frame));
+        m_detector->SetMinObjectSize(cv::Size(frame.cols / 50, frame.rows / 50));
 
         return true;
     }
@@ -467,7 +480,7 @@ protected:
     /// \brief ProcessFrame
     /// \param grayFrame
     ///
-    void ProcessFrame(cv::UMat grayFrame)
+    void ProcessFrame(cv::Mat /*frame*/, cv::UMat grayFrame)
     {
         bool findLargestObject = false;
         bool filterRects = true;
@@ -534,4 +547,83 @@ protected:
 private:
     std::vector<cv::Rect> m_prevRects;
     cv::CascadeClassifier m_cascade;
+};
+
+// ----------------------------------------------------------------------
+
+///
+/// \brief The DNNDetectorExample class
+///
+class DNNDetectorExample : public VideoExample
+{
+public:
+    DNNDetectorExample(const cv::CommandLineParser& parser)
+        :
+          VideoExample(parser)
+    {
+    }
+
+protected:
+    ///
+    /// \brief InitTracker
+    /// \param grayFrame
+    ///
+    bool InitTracker(cv::UMat frame)
+    {
+        m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::DNN, m_useLocalTracking, frame));
+        if (!m_detector.get())
+        {
+            return false;
+        }
+        m_detector->SetMinObjectSize(cv::Size(frame.cols / 20, frame.rows / 20));
+
+        m_tracker = std::make_unique<CTracker>(m_useLocalTracking,
+                                               tracking::DistCenters,
+                                               tracking::KalmanLinear,
+                                               tracking::FilterRect,
+                                               tracking::TrackKCF,      // Use KCF tracker for collisions resolving
+                                               tracking::MatchHungrian,
+                                               0.3f,                     // Delta time for Kalman filter
+                                               0.1f,                     // Accel noise magnitude for Kalman filter
+                                               frame.rows / 5,          // Distance threshold between region and object on two frames
+                                               1 * m_fps,                // Maximum allowed skipped frames
+                                               5 * m_fps                 // Maximum trace length
+                                               );
+
+        return true;
+    }
+
+    ///
+    /// \brief DrawData
+    /// \param frame
+    ///
+    void DrawData(cv::Mat frame, int framesCounter, int currTime)
+    {
+        if (m_showLogs)
+        {
+            std::cout << "Frame " << framesCounter << ": tracks = " << m_tracker->tracks.size() << ", time = " << currTime << std::endl;
+        }
+
+        for (const auto& track : m_tracker->tracks)
+        {
+            if (track->IsRobust(2,                           // Minimal trajectory size
+                                0.5f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
+                                cv::Size2f(0.1f, 8.0f))      // Min and max ratio: width / height
+                    )
+            {
+                DrawTrack(frame, 1, *track);
+            }
+        }
+
+        m_detector->CalcMotionMap(frame);
+    }
+
+    ///
+    /// \brief GrayProcessing
+    /// \return
+    ///
+    bool GrayProcessing() const
+    {
+        return false;
+    }
 };

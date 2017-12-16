@@ -9,17 +9,17 @@
 class BaseDetector
 {
 public:
-    BaseDetector(bool collectPoints, cv::UMat& gray)
+    BaseDetector(bool collectPoints, cv::UMat& frame)
         : m_collectPoints(collectPoints)
     {
-        m_minObjectSize.width = std::max(5, gray.cols / 100);
+        m_minObjectSize.width = std::max(5, frame.cols / 100);
         m_minObjectSize.height = m_minObjectSize.width;
     }
     virtual ~BaseDetector(void)
     {
     }
 
-    virtual void Detect(cv::UMat& gray) = 0;
+    virtual void Detect(cv::UMat& frame) = 0;
 
     void SetMinObjectSize(cv::Size minObjectSize)
     {
@@ -43,7 +43,7 @@ public:
         {
             cv::ellipse(foreground,
                         cv::RotatedRect((region.m_rect.tl() + region.m_rect.br()) / 2, region.m_rect.size(), 0),
-                                        cv::Scalar(255, 255, 255), -1);
+                                        cv::Scalar(255, 255, 255), CV_FILLED);
         }
 
         cv::Mat normFor;

@@ -50,7 +50,8 @@ enum Detectors
     Motion_MOG2,
     Face_HAAR,
     Pedestrian_HOG,
-    Pedestrian_C4
+    Pedestrian_C4,
+    DNN
 };
 
 ///

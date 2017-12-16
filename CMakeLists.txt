@@ -40,6 +40,7 @@ set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
              Detector/FaceDetector.cpp
              Detector/PedestrianDetector.cpp
              Detector/pedestrians/c4-pedestrian-detector.cpp
+             Detector/DNNDetector.cpp
 
              Tracker/Ctracker.cpp
              Tracker/track.cpp
@@ -66,6 +67,7 @@ set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
              Detector/FaceDetector.h
              Detector/PedestrianDetector.h
              Detector/pedestrians/c4-pedestrian-detector.h
+             Detector/DNNDetector.h
 
              Tracker/Ctracker.h
              Tracker/track.h

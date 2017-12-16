@@ -2,6 +2,7 @@
 #include "MotionDetector.h"
 #include "FaceDetector.h"
 #include "PedestrianDetector.h"
+#include "DNNDetector.h"
 
 ///
 /// \brief CreateDetector
@@ -41,27 +42,39 @@ BaseDetector* CreateDetector(
 
     case tracking::Face_HAAR:
     {
-        FaceDetector* faceDetector = new FaceDetector(collectPoints, gray);
-        if (!faceDetector->Init("../data/haarcascade_frontalface_alt2.xml"))
+        FaceDetector* detector = new FaceDetector(collectPoints, gray);
+        if (!detector->Init("../data/haarcascade_frontalface_alt2.xml"))
         {
-            delete faceDetector;
-            faceDetector = nullptr;
+            delete detector;
+            detector = nullptr;
         }
-        return faceDetector;
+        return detector;
     }
 
     case tracking::Pedestrian_HOG:
     case tracking::Pedestrian_C4:
     {
-        PedestrianDetector* pedestrianDetector = new PedestrianDetector(collectPoints, gray);
-        if (!pedestrianDetector->Init((detectorType == tracking::Pedestrian_HOG) ? PedestrianDetector::HOG : PedestrianDetector::C4,
-                                      "../data/combined.txt.model", "../data/combined.txt.model_"))
+        PedestrianDetector* detector = new PedestrianDetector(collectPoints, gray);
+        if (!detector->Init((detectorType == tracking::Pedestrian_HOG) ? PedestrianDetector::HOG : PedestrianDetector::C4,
+                            "../data/combined.txt.model", "../data/combined.txt.model_"))
         {
-            delete pedestrianDetector;
-            pedestrianDetector = nullptr;
+            delete detector;
+            detector = nullptr;
         }
-        return pedestrianDetector;
+        return detector;
     }
+
+    case tracking::DNN:
+    {
+        DNNDetector* detector = new DNNDetector(collectPoints, gray);
+        if (!detector->Init("../data/MobileNetSSD_deploy.prototxt", "../data/MobileNetSSD_deploy.caffemodel"))
+        {
+            delete detector;
+            detector = nullptr;
+        }
+        return detector;
+    }
+
 
     default:
         return nullptr;
