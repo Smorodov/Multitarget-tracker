@@ -22,8 +22,6 @@ public:
 
     void Detect(cv::UMat& gray);
 
-	void CalcMotionMap(cv::Mat frame);
-
 private:
     DetectorTypes m_detectorType;
 

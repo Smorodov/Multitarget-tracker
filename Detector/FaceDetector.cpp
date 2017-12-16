@@ -58,39 +58,3 @@ void FaceDetector::Detect(cv::UMat& gray)
         m_regions.push_back(rect);
     }
 }
-
-///
-/// \brief FaceDetector::CalcMotionMap
-/// \param frame
-///
-void FaceDetector::CalcMotionMap(cv::Mat frame)
-{
-	if (m_motionMap.size() != frame.size())
-	{
-		m_motionMap = cv::Mat(frame.size(), CV_32FC1, cv::Scalar(0, 0, 0));
-	}
-#if 0
-	cv::Mat normFor;
-    cv::normalize(m_fg, normFor, 255, 0, cv::NORM_MINMAX, m_motionMap.type());
-
-	double alpha = 0.95;
-	cv::addWeighted(m_motionMap, alpha, normFor, 1 - alpha, 0, m_motionMap);
-
-	const int chans = frame.channels();
-
-	for (int y = 0; y < frame.rows; ++y)
-	{
-		uchar* imgPtr = frame.ptr(y);
-		float* moPtr = reinterpret_cast<float*>(m_motionMap.ptr(y));
-		for (int x = 0; x < frame.cols; ++x)
-		{
-			for (int ci = chans - 1; ci < chans; ++ci)
-			{
-				imgPtr[ci] = cv::saturate_cast<uchar>(imgPtr[ci] + moPtr[0]);
-			}
-			imgPtr += chans;
-			++moPtr;
-		}
-	}
-#endif
-}

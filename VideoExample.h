@@ -339,6 +339,8 @@ protected:
                 DrawTrack(frame, 1, *track);
             }
         }
+
+        m_detector->CalcMotionMap(frame);
     }
 };
 
@@ -408,6 +410,8 @@ protected:
                 DrawTrack(frame, 1, *track);
             }
         }
+
+        m_detector->CalcMotionMap(frame);
     }
 };
 
