@@ -133,8 +133,23 @@ public:
     }
 
 protected:
+    std::unique_ptr<BaseDetector> m_detector;
+    std::unique_ptr<CTracker> m_tracker;
+
     virtual bool InitTracker(cv::UMat grayFrame) = 0;
-    virtual void ProcessFrame(cv::UMat grayFrame) = 0;
+
+    ///
+    /// \brief ProcessFrame
+    /// \param grayFrame
+    ///
+    virtual void ProcessFrame(cv::UMat grayFrame)
+    {
+        m_detector->Detect(grayFrame);
+        const regions_t& regions = m_detector->GetDetects();
+
+        m_tracker->Update(regions, grayFrame);
+    }
+
     virtual void DrawData(cv::Mat frame, int framesCounter, int currTime) = 0;
 
     bool m_showLogs;
@@ -231,18 +246,6 @@ protected:
     }
 
     ///
-    /// \brief ProcessFrame
-    /// \param grayFrame
-    ///
-    void ProcessFrame(cv::UMat grayFrame)
-    {
-        m_detector->Detect(grayFrame);
-        const regions_t& regions = m_detector->GetDetects();
-
-        m_tracker->Update(regions, grayFrame);
-    }
-
-    ///
     /// \brief DrawData
     /// \param frame
     ///
@@ -268,10 +271,7 @@ protected:
     }
 
 private:
-
     int m_minObjWidth;
-    std::unique_ptr<BaseDetector> m_detector;
-    std::unique_ptr<CTracker> m_tracker;
 };
 
 // ----------------------------------------------------------------------
@@ -319,18 +319,6 @@ protected:
     }
 
     ///
-    /// \brief ProcessFrame
-    /// \param grayFrame
-    ///
-    void ProcessFrame(cv::UMat grayFrame)
-    {
-        m_detector->Detect(grayFrame);
-        const regions_t& regions = m_detector->GetDetects();
-
-        m_tracker->Update(regions, grayFrame);
-    }
-
-    ///
     /// \brief DrawData
     /// \param frame
     ///
@@ -352,10 +340,6 @@ protected:
             }
         }
     }
-
-private:
-    std::unique_ptr<BaseDetector> m_detector;
-    std::unique_ptr<CTracker> m_tracker;
 };
 
 // ----------------------------------------------------------------------
@@ -380,7 +364,7 @@ protected:
     ///
     bool InitTracker(cv::UMat grayFrame)
     {
-        m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Pedestrian_HOG, m_useLocalTracking, grayFrame));
+        m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Pedestrian_C4, m_useLocalTracking, grayFrame));
         if (!m_detector.get())
         {
             return false;
@@ -401,18 +385,6 @@ protected:
                                                );
 
         return true;
-    }
-
-    ///
-    /// \brief ProcessFrame
-    /// \param grayFrame
-    ///
-    void ProcessFrame(cv::UMat grayFrame)
-    {
-        m_detector->Detect(grayFrame);
-        const regions_t& regions = m_detector->GetDetects();
-
-        m_tracker->Update(regions, grayFrame);
     }
 
     ///
@@ -437,10 +409,6 @@ protected:
             }
         }
     }
-
-private:
-    std::unique_ptr<BaseDetector> m_detector;
-    std::unique_ptr<CTracker> m_tracker;
 };
 
 // ----------------------------------------------------------------------
@@ -556,13 +524,10 @@ protected:
             }
         }
 
-        //detector.CalcMotionMap(frame);
+        m_detector->CalcMotionMap(frame);
     }
 
 private:
-    cv::CascadeClassifier m_cascade;
-    std::unique_ptr<BaseDetector> m_detector;
-    std::unique_ptr<CTracker> m_tracker;
-
     std::vector<cv::Rect> m_prevRects;
+    cv::CascadeClassifier m_cascade;
 };
