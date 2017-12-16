@@ -70,8 +70,8 @@ void DNNDetector::Detect(cv::UMat& colorFrame)
     cv::Mat detection = m_net.forward("detection_out"); //compute output
 
     std::vector<double> layersTimings;
-    double freq = cv::getTickFrequency() / 1000;
-    double time = m_net.getPerfProfile(layersTimings) / freq;
+    //double freq = cv::getTickFrequency() / 1000;
+    //double time = m_net.getPerfProfile(layersTimings) / freq;
 
     cv::Mat detectionMat(detection.size[2], detection.size[3], CV_32F, detection.ptr<float>());
 
@@ -98,12 +98,12 @@ void DNNDetector::Detect(cv::UMat& colorFrame)
 
             cv::Rect object((int)xLeftBottom, (int)yLeftBottom, (int)(xRightTop - xLeftBottom), (int)(yRightTop - yLeftBottom));
 
-            m_regions.push_back(object);
+            m_regions.push_back(CRegion(object, classNames[objectClass], confidence));
 
             //cv::rectangle(frame, object, Scalar(0, 255, 0));
-            std::string label = classNames[objectClass] + ": " + std::to_string(confidence);
-            int baseLine = 0;
-            cv::Size labelSize = cv::getTextSize(label, cv::FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
+            //std::string label = classNames[objectClass] + ": " + std::to_string(confidence);
+            //int baseLine = 0;
+            //cv::Size labelSize = cv::getTextSize(label, cv::FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
             //cv::rectangle(frame, cv::Rect(cv::Point(xLeftBottom, yLeftBottom - labelSize.height), cv::Size(labelSize.width, labelSize.height + baseLine)), cv::Scalar(255, 255, 255), CV_FILLED);
             //cv::putText(frame, label, Point(xLeftBottom, yLeftBottom), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0,0,0));
         }

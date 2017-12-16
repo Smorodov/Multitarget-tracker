@@ -18,6 +18,7 @@ class CRegion
 {
 public:
     CRegion()
+        : m_type(""), m_confidence(-1)
     {
     }
 
@@ -27,8 +28,17 @@ public:
 
     }
 
+    CRegion(const cv::Rect& rect, const std::string& type, float confidence)
+        : m_rect(rect), m_type(type), m_confidence(confidence)
+    {
+
+    }
+
     cv::Rect m_rect;
     std::vector<cv::Point2f> m_points;
+
+    std::string m_type;
+    float m_confidence;
 };
 
 typedef std::vector<CRegion> regions_t;
