@@ -311,7 +311,7 @@ protected:
                                                0.3f,                     // Delta time for Kalman filter
                                                0.1f,                     // Accel noise magnitude for Kalman filter
                                                0.8f,                     // Distance threshold between region and object on two frames
-                                               2 * m_fps,                // Maximum allowed skipped frames
+                                               m_fps / 2,                // Maximum allowed skipped frames
                                                5 * m_fps                 // Maximum trace length
                                                );
 
@@ -375,7 +375,7 @@ protected:
 
         m_tracker = std::make_unique<CTracker>(m_useLocalTracking,
                                                tracking::DistJaccard,
-                                               tracking::KalmanUnscented,
+                                               tracking::KalmanLinear,
                                                tracking::FilterRect,
                                                tracking::TrackKCF,      // Use KCF tracker for collisions resolving
                                                tracking::MatchHungrian,
