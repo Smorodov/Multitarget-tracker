@@ -86,6 +86,16 @@ track_t CTrack::CalcDistJaccard(const cv::Rect& r) const
 }
 
 ///
+/// \brief CTrack::CheckType
+/// \param type
+/// \return
+///
+bool CTrack::CheckType(const std::string& type) const
+{
+    return m_lastRegion.m_type.empty() || type.empty() || (m_lastRegion.m_type == type);
+}
+
+///
 /// \brief Update
 /// \param pt
 /// \param region
