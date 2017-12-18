@@ -91,12 +91,12 @@ void DNNDetector::Detect(cv::UMat& colorFrame)
         {
             size_t objectClass = (size_t)(detectionMat.at<float>(i, 1));
 
-            int xLeftBottom = cvRound(detectionMat.at<float>(i, 3) * colorFrame.cols);
-            int yLeftBottom = cvRound(detectionMat.at<float>(i, 4) * colorFrame.rows);
-            int xRightTop = cvRound(detectionMat.at<float>(i, 5) * colorFrame.cols);
-            int yRightTop = cvRound(detectionMat.at<float>(i, 6) * colorFrame.rows);
+            int xLeftBottom = cvRound(detectionMat.at<float>(i, 3) * crop.width) + crop.x;
+            int yLeftBottom = cvRound(detectionMat.at<float>(i, 4) * crop.height) + crop.y;
+            int xRightTop = cvRound(detectionMat.at<float>(i, 5) * crop.width) + crop.x;
+            int yRightTop = cvRound(detectionMat.at<float>(i, 6) * crop.height) + crop.y;
 
-            cv::Rect object((int)xLeftBottom, (int)yLeftBottom, (int)(xRightTop - xLeftBottom), (int)(yRightTop - yLeftBottom));
+            cv::Rect object(xLeftBottom, yLeftBottom, xRightTop - xLeftBottom, yRightTop - yLeftBottom);
 
             m_regions.push_back(CRegion(object, classNames[objectClass], confidence));
 
