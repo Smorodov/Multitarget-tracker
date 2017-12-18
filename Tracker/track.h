@@ -177,6 +177,7 @@ public:
     track_t CalcDist(const Point_t& pt) const;
     track_t CalcDist(const cv::Rect& r) const;
     track_t CalcDistJaccard(const cv::Rect& r) const;
+    bool CheckType(const std::string& type) const;
 
     void Update(const CRegion& region, bool dataCorrect, size_t max_trace_length, cv::UMat prevFrame, cv::UMat currFrame);
 

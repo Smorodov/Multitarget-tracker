@@ -92,7 +92,8 @@ void CTracker::Update(
         // -----------------------------------
         // Треки уже есть, составим матрицу расстояний
         // -----------------------------------
-		track_t maxCost = 0;
+        const track_t maxPossibleCost = grayFrame.cols * grayFrame.rows;
+        track_t maxCost = 0;
 		switch (m_distType)
         {
         case tracking::DistCenters:
@@ -100,7 +101,7 @@ void CTracker::Update(
             {
                 for (size_t j = 0; j < regions.size(); j++)
                 {
-                    auto dist = tracks[i]->CalcDist((regions[j].m_rect.tl() + regions[j].m_rect.br()) / 2);
+                    auto dist = tracks[i]->CheckType(regions[j].m_type) ? tracks[i]->CalcDist((regions[j].m_rect.tl() + regions[j].m_rect.br()) / 2) : maxPossibleCost;
 					Cost[i + j * N] = dist;
 					if (dist > maxCost)
 					{
@@ -115,7 +116,7 @@ void CTracker::Update(
             {
                 for (size_t j = 0; j < regions.size(); j++)
                 {
-					auto dist = tracks[i]->CalcDist(regions[j].m_rect);
+                    auto dist = tracks[i]->CheckType(regions[j].m_type) ? tracks[i]->CalcDist(regions[j].m_rect) : maxPossibleCost;
 					Cost[i + j * N] = dist;
 					if (dist > maxCost)
 					{
@@ -130,7 +131,7 @@ void CTracker::Update(
             {
                 for (size_t j = 0; j < regions.size(); j++)
                 {
-                    auto dist = tracks[i]->CalcDistJaccard(regions[j].m_rect);
+                    auto dist = tracks[i]->CheckType(regions[j].m_type) ? tracks[i]->CalcDistJaccard(regions[j].m_rect) : 1;
                     Cost[i + j * N] = dist;
                     if (dist > maxCost)
                     {
