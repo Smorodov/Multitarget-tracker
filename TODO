@@ -1,0 +1,4 @@
+1. Collect points for all types of detectors
+2. Tracking with types: don't assign person to the bicycle!
+3. External API for the detectors options: for Background subtractors, confidenceThreshold for DNNDetector etc.
+4. New Multitarget tracking algorithm based on Discrete-Continuous Energy Minimization: https://bitbucket.org/amilan/dctracking
