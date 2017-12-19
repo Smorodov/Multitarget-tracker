@@ -578,15 +578,15 @@ protected:
         m_detector->SetMinObjectSize(cv::Size(frame.cols / 20, frame.rows / 20));
 
         m_tracker = std::make_unique<CTracker>(m_useLocalTracking,
-                                               tracking::DistCenters,
+                                               tracking::DistRects,
                                                tracking::KalmanLinear,
                                                tracking::FilterRect,
                                                tracking::TrackKCF,      // Use KCF tracker for collisions resolving
                                                tracking::MatchHungrian,
                                                0.3f,                     // Delta time for Kalman filter
                                                0.1f,                     // Accel noise magnitude for Kalman filter
-                                               frame.rows / 5,          // Distance threshold between region and object on two frames
-                                               1 * m_fps,                // Maximum allowed skipped frames
+                                               frame.rows / 10,          // Distance threshold between region and object on two frames
+                                               2 * m_fps,                // Maximum allowed skipped frames
                                                5 * m_fps                 // Maximum trace length
                                                );
 
@@ -606,7 +606,7 @@ protected:
 
         for (const auto& track : m_tracker->tracks)
         {
-            if (track->IsRobust(2,                           // Minimal trajectory size
+            if (track->IsRobust(5,                           // Minimal trajectory size
                                 0.5f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
                                 cv::Size2f(0.1f, 8.0f))      // Min and max ratio: width / height
                     )

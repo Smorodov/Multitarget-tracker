@@ -20,4 +20,14 @@ public:
 
 private:
     cv::dnn::Net m_net;
+
+    void DetectInCrop(cv::Mat colorFrame, const cv::Rect& crop, regions_t& tmpRegions);
+
+    static const int InWidth = 300;
+    static const int InHeight = 300;
+    float m_WHRatio;
+    float m_inScaleFactor;
+    float m_meanVal;
+    float m_confidenceThreshold;
+    std::vector<std::string> m_classNames;
 };

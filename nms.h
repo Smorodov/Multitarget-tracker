@@ -145,3 +145,80 @@ inline void nms2(
         }
     }
 }
+
+
+/**
+ * @brief nms2
+ * Non maximum suppression with detection scores
+ * @param srcRects
+ * @param resRects
+ * @param thresh
+ * @param neighbors
+ */
+template<typename OBJ, typename GET_RECT_FUNC, typename GET_SCORE_FUNC>
+inline void nms3(
+        const std::vector<OBJ>& srcRects,
+        std::vector<OBJ>& resRects,
+        float thresh,
+        GET_RECT_FUNC GetRect,
+        GET_SCORE_FUNC GetScore,
+        int neighbors = 0,
+        float minScoresSum = 0.f
+        )
+{
+    resRects.clear();
+
+    const size_t size = srcRects.size();
+    if (!size)
+    {
+        return;
+    }
+
+    // Sort the bounding boxes by the detection score
+    std::multimap<float, size_t> idxs;
+    for (size_t i = 0; i < size; ++i)
+    {
+        idxs.insert(std::pair<float, size_t>(GetScore(srcRects[i]), i));
+    }
+
+    // keep looping while some indexes still remain in the indexes list
+    while (idxs.size() > 0)
+    {
+        // grab the last rectangle
+        auto lastElem = --std::end(idxs);
+        size_t lastPos = lastElem->second;
+        const cv::Rect& rect1 = GetRect(srcRects[lastPos]);
+
+        int neigborsCount = 0;
+        float scoresSum = lastElem->first;
+
+        idxs.erase(lastElem);
+
+        for (auto pos = std::begin(idxs); pos != std::end(idxs); )
+        {
+            // grab the current rectangle
+            const cv::Rect& rect2 = GetRect(srcRects[pos->second]);
+
+            float intArea = (rect1 & rect2).area();
+            float unionArea = rect1.area() + rect2.area() - intArea;
+            float overlap = intArea / unionArea;
+
+            // if there is sufficient overlap, suppress the current bounding box
+            if (overlap > thresh)
+            {
+                scoresSum += pos->first;
+                pos = idxs.erase(pos);
+                ++neigborsCount;
+            }
+            else
+            {
+                ++pos;
+            }
+        }
+        if (neigborsCount >= neighbors &&
+                scoresSum >= minScoresSum)
+        {
+            resRects.push_back(srcRects[lastPos]);
+        }
+    }
+}
