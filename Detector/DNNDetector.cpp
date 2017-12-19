@@ -1,4 +1,5 @@
 #include "DNNDetector.h"
+#include "nms.h"
 
 ///
 /// \brief DNNDetector::DNNDetector
@@ -10,8 +11,18 @@ DNNDetector::DNNDetector(
     cv::UMat& colorFrame
 	)
     :
-      BaseDetector(collectPoints, colorFrame)
+      BaseDetector(collectPoints, colorFrame),
+      m_WHRatio(InWidth / (float)InHeight),
+      m_inScaleFactor(0.007843f),
+      m_meanVal(127.5),
+      m_confidenceThreshold(0.2f)
 {
+    m_classNames = { "background",
+                     "aeroplane", "bicycle", "bird", "boat",
+                     "bottle", "bus", "car", "cat", "chair",
+                     "cow", "diningtable", "dog", "horse",
+                     "motorbike", "person", "pottedplant",
+                     "sheep", "sofa", "train", "tvmonitor" };
 }
 
 ///
@@ -38,38 +49,63 @@ bool DNNDetector::Init(std::string modelConfiguration, std::string modelBinary)
 ///
 void DNNDetector::Detect(cv::UMat& colorFrame)
 {
-    const int inWidth = 300;
-    const int inHeight = 300;
-    const float WHRatio = inWidth / (float)inHeight;
-    const float inScaleFactor = 0.007843f;
-    const float meanVal = 127.5;
-    const float confidenceThreshold = 0.2f;
-    std::string classNames[] = {"background",
-                                "aeroplane", "bicycle", "bird", "boat",
-                                "bottle", "bus", "car", "cat", "chair",
-                                "cow", "diningtable", "dog", "horse",
-                                "motorbike", "person", "pottedplant",
-                                "sheep", "sofa", "train", "tvmonitor"};
+    m_regions.clear();
 
-    cv::Size cropSize;
-    if (colorFrame.cols / (float)colorFrame.rows > WHRatio)
+    regions_t tmpRegions;
+
+    cv::Mat colorMat = colorFrame.getMat(cv::ACCESS_READ);
+
+    if (colorFrame.cols / (float)colorFrame.rows > m_WHRatio)
     {
-        cropSize = cv::Size(cvRound(colorFrame.rows * WHRatio), colorFrame.rows);
+        cv::Rect crop(0, 0, cvRound(colorFrame.rows * m_WHRatio), colorFrame.rows);
+
+        for (; crop.x < colorMat.cols; crop.x += crop.width)
+        {
+            if (crop.x + crop.width >= colorMat.cols)
+            {
+                crop.x = colorMat.cols - crop.width;
+            }
+
+            DetectInCrop(colorMat, crop, tmpRegions);
+        }
     }
     else
     {
-        cropSize = cv::Size(colorFrame.cols, cvRound(colorFrame.cols / WHRatio));
+        cv::Rect crop(0, 0, colorFrame.cols, cvRound(colorFrame.cols / m_WHRatio));
+
+        for (; crop.y < colorMat.rows; crop.y += crop.height)
+        {
+            if (crop.y + crop.height >= colorMat.rows)
+            {
+                crop.y = colorMat.rows - crop.height;
+            }
+
+            DetectInCrop(colorMat, crop, tmpRegions);
+        }
     }
 
-    cv::Rect crop(cv::Point((colorFrame.cols - cropSize.width) / 2, (colorFrame.rows - cropSize.height) / 2), cropSize);
+    nms3<CRegion>(tmpRegions, m_regions, 0.5f,
+         [](const CRegion& reg) -> cv::Rect { return reg.m_rect; },
+    [](const CRegion& reg) -> float { return reg.m_confidence; },
+    0, 0.f);
+}
 
-    cv::Mat inputBlob = cv::dnn::blobFromImage(colorFrame.getMat(cv::ACCESS_READ), inScaleFactor, cv::Size(inWidth, inHeight), meanVal, false); //Convert Mat to batch of images
+///
+/// \brief DNNDetector::DetectInCrop
+/// \param colorFrame
+/// \param crop
+/// \param tmpRegions
+///
+void DNNDetector::DetectInCrop(cv::Mat colorFrame, const cv::Rect& crop, regions_t& tmpRegions)
+{
+    //Convert Mat to batch of images
+    cv::Mat inputBlob = cv::dnn::blobFromImage(cv::Mat(colorFrame, crop), m_inScaleFactor, cv::Size(InWidth, InHeight), m_meanVal, false, true);
 
     m_net.setInput(inputBlob, "data"); //set the network input
 
     cv::Mat detection = m_net.forward("detection_out"); //compute output
 
-    std::vector<double> layersTimings;
+    //std::vector<double> layersTimings;
     //double freq = cv::getTickFrequency() / 1000;
     //double time = m_net.getPerfProfile(layersTimings) / freq;
 
@@ -81,13 +117,13 @@ void DNNDetector::Detect(cv::UMat& colorFrame)
     //putText(frame, ss.str(), Point(20,20), 0, 0.5, Scalar(0,0,255));
     //std::cout << "Inference time, ms: " << time << endl;
 
-    m_regions.clear();
+    //cv::Point correctPoint((colorFrame.cols - crop.width) / 2, (colorFrame.rows - crop.height) / 2);
 
     for (int i = 0; i < detectionMat.rows; ++i)
     {
         float confidence = detectionMat.at<float>(i, 2);
 
-        if (confidence > confidenceThreshold)
+        if (confidence > m_confidenceThreshold)
         {
             size_t objectClass = (size_t)(detectionMat.at<float>(i, 1));
 
@@ -98,7 +134,7 @@ void DNNDetector::Detect(cv::UMat& colorFrame)
 
             cv::Rect object(xLeftBottom, yLeftBottom, xRightTop - xLeftBottom, yRightTop - yLeftBottom);
 
-            m_regions.push_back(CRegion(object, classNames[objectClass], confidence));
+            tmpRegions.push_back(CRegion(object, m_classNames[objectClass], confidence));
 
             //cv::rectangle(frame, object, Scalar(0, 255, 0));
             //std::string label = classNames[objectClass] + ": " + std::to_string(confidence);
