@@ -14,7 +14,7 @@ CTracker::CTracker(
         tracking::DistType distType,
         tracking::KalmanType kalmanType,
         tracking::FilterGoal filterGoal,
-        tracking::LostTrackType useExternalTrackerForLostObjects,
+        tracking::LostTrackType lostTrackType,
         tracking::MatchType matchType,
         track_t dt_,
         track_t accelNoiseMag_,
@@ -27,7 +27,7 @@ CTracker::CTracker(
       m_distType(distType),
       m_kalmanType(kalmanType),
       m_filterGoal(filterGoal),
-      m_useExternalTrackerForLostObjects(useExternalTrackerForLostObjects),
+      m_lostTrackType(lostTrackType),
 	  m_matchType(matchType),
       dt(dt_),
       accelNoiseMag(accelNoiseMag_),
@@ -75,7 +75,7 @@ void CTracker::Update(
                                                       accelNoiseMag,
                                                       NextTrackID++,
                                                       m_filterGoal == tracking::FilterRect,
-                                                      m_useExternalTrackerForLostObjects));
+                                                      m_lostTrackType));
         }
     }
 
@@ -246,7 +246,7 @@ void CTracker::Update(
                                                       accelNoiseMag,
                                                       NextTrackID++,
                                                       m_filterGoal == tracking::FilterRect,
-                                                      m_useExternalTrackerForLostObjects));
+                                                      m_lostTrackType));
         }
     }
 

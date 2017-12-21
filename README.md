@@ -24,7 +24,7 @@ Hungarian algorithm + Kalman filter multitarget tracker implementation.
 3. Matching: Hungrian algorithm or algorithm based on weighted bipartite graphs
 4. Tracking: Linear or Unscented Kalman filter for objects center or for object coordinates and size
 5. Use or not local tracker (LK optical flow) for smooth trajectories
-6. KCF, MIL or MedianFlow tracking for lost objects and collision resolving
+6. KCF, MIL, MedianFlow, GOTURN or MOSSE tracking for lost objects and collision resolving
 7. Haar face detector from OpenCV
 8. HOG and C4 pedestrian detectors
 9. SSD detector from OpenCV and models from chuanqi305/MobileNet-SSD
@@ -71,6 +71,7 @@ Hungarian algorithm + Kalman filter multitarget tracker implementation.
 * Pedestrians detector: https://github.com/sturkmen72/C4-Real-time-pedestrian-detection
 * Non Maximum Suppression: https://github.com/Nuzhny007/Non-Maximum-Suppression
 * MobileNet SSD: https://github.com/chuanqi305/MobileNet-SSD
+* GOTURN models: https://github.com/opencv/opencv_extra/tree/c4219d5eb3105ed8e634278fad312a1a8d2c182d/testdata/tracking
 
 #### License
 GNU GPLv3: http://www.gnu.org/licenses/gpl-3.0.txt 
