@@ -16,7 +16,7 @@ public:
              tracking::DistType distType,
              tracking::KalmanType kalmanType,
              tracking::FilterGoal filterGoal,
-             tracking::LostTrackType useExternalTrackerForLostObjects,
+             tracking::LostTrackType lostTrackType,
              tracking::MatchType matchType,
              track_t dt_,
              track_t accelNoiseMag_,
@@ -28,6 +28,11 @@ public:
     tracks_t tracks;
     void Update(const regions_t& regions, cv::UMat grayFrame);
 
+    bool GrayFrameToTrack() const
+    {
+        return m_lostTrackType != tracking::LostTrackType::TrackGOTURN;
+    }
+
 private:
     // Use local tracking for regions between two frames
     bool m_useLocalTracking;
@@ -35,7 +40,7 @@ private:
     tracking::DistType m_distType;
     tracking::KalmanType m_kalmanType;
     tracking::FilterGoal m_filterGoal;
-    tracking::LostTrackType m_useExternalTrackerForLostObjects;
+    tracking::LostTrackType m_lostTrackType;
     tracking::MatchType m_matchType;
 
 	// Шаг времени опроса фильтра

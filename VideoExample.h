@@ -149,19 +149,17 @@ protected:
     ///
     virtual void ProcessFrame(cv::Mat frame, cv::UMat grayFrame)
     {
-        if (GrayProcessing())
+        cv::UMat clFrame;
+        if (!GrayProcessing() || !m_tracker->GrayFrameToTrack())
         {
-            m_detector->Detect(grayFrame);
+            clFrame = frame.getUMat(cv::ACCESS_READ);
         }
-        else
-        {
-            cv::UMat clFrame = frame.getUMat(cv::ACCESS_READ);
-            m_detector->Detect(clFrame);
-        }
+
+        m_detector->Detect(GrayProcessing() ? grayFrame : clFrame);
 
         const regions_t& regions = m_detector->GetDetects();
 
-        m_tracker->Update(regions, grayFrame);
+        m_tracker->Update(regions, m_tracker->GrayFrameToTrack() ? grayFrame : clFrame);
     }
 
     virtual void DrawData(cv::Mat frame, int framesCounter, int currTime) = 0;

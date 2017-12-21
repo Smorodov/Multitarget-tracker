@@ -227,6 +227,8 @@ void CTrack::RectUpdate(
     case tracking::TrackKCF:
     case tracking::TrackMIL:
     case tracking::TrackMedianFlow:
+    case tracking::TrackGOTURN:
+    case tracking::TrackMOSSE:
 #ifdef USE_OCV_KCF
         if (!dataCorrect)
         {
@@ -283,7 +285,7 @@ void CTrack::RectUpdate(
             }
         }
 #else
-        std::cerr << "KCF tracker was disabled in CMAKE! Set useExternalTrackerForLostObjects = TrackNone in constructor." << std::endl;
+        std::cerr << "KCF tracker was disabled in CMAKE! Set lostTrackType = TrackNone in constructor." << std::endl;
 #endif
         break;
     }
@@ -379,6 +381,34 @@ void CTrack::CreateExternalTracker()
             m_tracker = cv::TrackerMedianFlow::create(params);
 #else
             m_tracker = cv::TrackerMedianFlow::createTracker(params);
+#endif
+        }
+#endif
+        break;
+
+    case tracking::TrackGOTURN:
+#ifdef USE_OCV_KCF
+        if (!m_tracker || m_tracker.empty())
+        {
+            cv::TrackerGOTURN::Params params;
+
+#if (((CV_VERSION_MAJOR == 3) && (CV_VERSION_MINOR >= 3)) || (CV_VERSION_MAJOR > 3))
+            m_tracker = cv::TrackerGOTURN::create(params);
+#else
+            m_tracker = cv::TrackerGOTURN::createTracker(params);
+#endif
+        }
+#endif
+        break;
+
+    case tracking::TrackMOSSE:
+#ifdef USE_OCV_KCF
+        if (!m_tracker || m_tracker.empty())
+        {
+#if (((CV_VERSION_MAJOR == 3) && (CV_VERSION_MINOR >= 3)) || (CV_VERSION_MAJOR > 3))
+            m_tracker = cv::TrackerMOSSE::create();
+#else
+            m_tracker = cv::TrackerMOSSE::createTracker();
 #endif
         }
 #endif
