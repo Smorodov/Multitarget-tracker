@@ -31,6 +31,28 @@ public:
         return m_regions;
     }
 
+    virtual void CollectPoints(CRegion& region)
+    {
+        const int yStep = 5;
+        const int xStep = 5;
+
+        for (int y = region.m_rect.y, yStop = region.m_rect.y + region.m_rect.height; y < yStop; y += yStep)
+        {
+            for (int x = region.m_rect.x, xStop = region.m_rect.x + region.m_rect.width; x < xStop; x += xStep)
+            {
+                if (region.m_rect.contains(cv::Point(x, y)))
+                {
+                    region.m_points.push_back(cv::Point2f(static_cast<float>(x), static_cast<float>(y)));
+                }
+            }
+        }
+
+        if (region.m_points.empty())
+        {
+            region.m_points.push_back(cv::Point2f(region.m_rect.x + 0.5f * region.m_rect.width, region.m_rect.y + 0.5f * region.m_rect.height));
+        }
+    }
+
     virtual void CalcMotionMap(cv::Mat frame)
     {
         if (m_motionMap.size() != frame.size())

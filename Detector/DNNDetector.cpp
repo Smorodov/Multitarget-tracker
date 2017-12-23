@@ -88,6 +88,14 @@ void DNNDetector::Detect(cv::UMat& colorFrame)
          [](const CRegion& reg) -> cv::Rect { return reg.m_rect; },
     [](const CRegion& reg) -> float { return reg.m_confidence; },
     0, 0.f);
+
+    if (m_collectPoints)
+    {
+        for (auto& region : m_regions)
+        {
+            CollectPoints(region);
+        }
+    }
 }
 
 ///

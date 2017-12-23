@@ -84,4 +84,12 @@ void PedestrianDetector::Detect(cv::UMat& gray)
 
         m_regions.push_back(rect);
     }
+
+    if (m_collectPoints)
+    {
+        for (auto& region : m_regions)
+        {
+            CollectPoints(region);
+        }
+    }
 }
