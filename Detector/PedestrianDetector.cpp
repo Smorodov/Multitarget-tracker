@@ -32,7 +32,14 @@ bool PedestrianDetector::Init(const config_t& config)
 {
     auto detectorType = config.find("detectorType");
 
-    m_detectorType = (detectorType == config.end()) ? HOG : (DetectorTypes)std::stoi(detectorType->second);
+    if (detectorType == config.end())
+    {
+        m_detectorType = HOG;
+    }
+    else
+    {
+        m_detectorType = (detectorType->second == "HOG") ? HOG : C4;
+    }
 
     switch (m_detectorType)
     {

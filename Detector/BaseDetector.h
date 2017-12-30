@@ -147,4 +147,4 @@ protected:
 /// \param gray
 /// \return
 ///
-BaseDetector* CreateDetector(tracking::Detectors detectorType, bool collectPoints, cv::UMat& gray);
+BaseDetector* CreateDetector(tracking::Detectors detectorType, const BaseDetector::config_t& config, bool collectPoints, cv::UMat& gray);
