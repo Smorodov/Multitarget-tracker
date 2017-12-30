@@ -1,3 +1,2 @@
-1. External API for the detectors options: for Background subtractors, confidenceThreshold for DNNDetector etc.
-2. New Multitarget tracking algorithm based on Discrete-Continuous Energy Minimization: https://bitbucket.org/amilan/dctracking
-3. Deep SORT: https://github.com/nwojke/deep_sort
++ New Multitarget tracking algorithm based on Discrete-Continuous Energy Minimization: https://bitbucket.org/amilan/dctracking
++ Deep SORT: https://github.com/nwojke/deep_sort

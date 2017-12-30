@@ -238,7 +238,8 @@ protected:
     {
         m_minObjWidth = frame.cols / 50;
 
-        m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Motion_MOG2, m_useLocalTracking, frame));
+        BaseDetector::config_t config;
+        m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Motion_MOG2, config, m_useLocalTracking, frame));
         m_detector->SetMinObjectSize(cv::Size(m_minObjWidth, m_minObjWidth));
 
         m_tracker = std::make_unique<CTracker>(m_useLocalTracking,
@@ -307,7 +308,9 @@ protected:
     ///
     bool InitTracker(cv::UMat frame)
     {
-        m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Face_HAAR, m_useLocalTracking, frame));
+        BaseDetector::config_t config;
+        config["cascadeFileName"] = "../data/haarcascade_frontalface_alt2.xml";
+        m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Face_HAAR, config, m_useLocalTracking, frame));
         if (!m_detector.get())
         {
             return false;
@@ -377,7 +380,13 @@ protected:
     ///
     bool InitTracker(cv::UMat frame)
     {
-        m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Pedestrian_C4, m_useLocalTracking, frame));
+        tracking::Detectors detectorType = tracking::Detectors::Pedestrian_C4; // tracking::Detectors::Pedestrian_HOG;
+
+        BaseDetector::config_t config;
+        config["detectorType"] = (detectorType == tracking::Pedestrian_HOG) ? "HOG" : "C4";
+        config["cascadeFileName1"] = "../data/combined.txt.model";
+        config["cascadeFileName2"] = "../data/combined.txt.model_";
+        m_detector = std::unique_ptr<BaseDetector>(CreateDetector(detectorType, config, m_useLocalTracking, frame));
         if (!m_detector.get())
         {
             return false;
@@ -385,14 +394,14 @@ protected:
         m_detector->SetMinObjectSize(cv::Size(frame.cols / 20, frame.rows / 20));
 
         m_tracker = std::make_unique<CTracker>(m_useLocalTracking,
-                                               tracking::DistJaccard,
+                                               tracking::DistRects,
                                                tracking::KalmanLinear,
                                                tracking::FilterRect,
                                                tracking::TrackKCF,      // Use KCF tracker for collisions resolving
                                                tracking::MatchHungrian,
                                                0.3f,                     // Delta time for Kalman filter
                                                0.1f,                     // Accel noise magnitude for Kalman filter
-                                               0.8f,                     // Distance threshold between region and object on two frames
+                                               frame.rows / 10,          // Distance threshold between region and object on two frames
                                                1 * m_fps,                // Maximum allowed skipped frames
                                                5 * m_fps                 // Maximum trace length
                                                );
@@ -414,7 +423,7 @@ protected:
         for (const auto& track : m_tracker->tracks)
         {
             if (track->IsRobust(m_fps / 2,                   // Minimal trajectory size
-                                0.7f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
+                                0.4f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
                                 cv::Size2f(0.1f, 8.0f))      // Min and max ratio: width / height
                     )
             {
@@ -468,7 +477,8 @@ protected:
                                                5 * m_fps                 // Maximum trace length
                                                );
 
-        m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Motion_MOG2, m_useLocalTracking, frame));
+        BaseDetector::config_t config;
+        m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Motion_MOG2, config, m_useLocalTracking, frame));
         m_detector->SetMinObjectSize(cv::Size(frame.cols / 50, frame.rows / 50));
 
         return true;
@@ -568,7 +578,11 @@ protected:
     ///
     bool InitTracker(cv::UMat frame)
     {
-        m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::DNN, m_useLocalTracking, frame));
+        BaseDetector::config_t config;
+        config["modelConfiguration"] = "../data/MobileNetSSD_deploy.prototxt";
+        config["modelBinary"] = "../data/MobileNetSSD_deploy.caffemodel";
+        config["confidenceThreshold"] = "0.2";
+        m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::DNN, config, m_useLocalTracking, frame));
         if (!m_detector.get())
         {
             return false;

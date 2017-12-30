@@ -14,7 +14,7 @@ public:
     DNNDetector(bool collectPoints, cv::UMat& colorFrame);
     ~DNNDetector(void);
 
-    bool Init(std::string modelConfiguration = "../data/MobileNetSSD_deploy.prototxt", std::string modelBinary = "../data/MobileNetSSD_deploy.caffemodel");
+    bool Init(const config_t& config);
 
     void Detect(cv::UMat& colorFrame);
 

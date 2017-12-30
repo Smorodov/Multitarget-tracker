@@ -25,12 +25,13 @@ FaceDetector::~FaceDetector(void)
 /// \param cascadeFileName
 /// \return
 ///
-bool FaceDetector::Init(std::string cascadeFileName)
+bool FaceDetector::Init(const config_t& config)
 {
-    m_cascade.load(cascadeFileName);
-    if (m_cascade.empty())
+    auto cascadeFileName = config.find("cascadeFileName");
+    if (cascadeFileName != config.end() &&
+            (!m_cascade.load(cascadeFileName->second) || m_cascade.empty()))
     {
-        std::cerr << "Cascade not opened!" << std::endl;
+        std::cerr << "Cascade " << cascadeFileName->second << " not opened!" << std::endl;
         return false;
     }
     return true;

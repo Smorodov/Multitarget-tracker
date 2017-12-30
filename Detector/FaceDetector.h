@@ -11,7 +11,7 @@ public:
     FaceDetector(bool collectPoints, cv::UMat& gray);
     ~FaceDetector(void);
 
-    bool Init(std::string cascadeFileName = "../data/haarcascade_frontalface_alt2.xml");
+    bool Init(const config_t& config);
 
     void Detect(cv::UMat& gray);
 

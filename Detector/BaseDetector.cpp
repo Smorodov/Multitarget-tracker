@@ -13,71 +13,64 @@
 ///
 BaseDetector* CreateDetector(
         tracking::Detectors detectorType,
+        const BaseDetector::config_t& config,
         bool collectPoints,
         cv::UMat& gray
         )
 {
+    BaseDetector* detector = nullptr;
+
     switch (detectorType)
     {
     case tracking::Motion_VIBE:
-        return new MotionDetector(BackgroundSubtract::BGFG_ALGS::ALG_VIBE, collectPoints, gray);
+        detector = new MotionDetector(BackgroundSubtract::BGFG_ALGS::ALG_VIBE, collectPoints, gray);
+        break;
 
     case tracking::Motion_MOG:
-        return new MotionDetector(BackgroundSubtract::BGFG_ALGS::ALG_MOG, collectPoints, gray);
+        detector = new MotionDetector(BackgroundSubtract::BGFG_ALGS::ALG_MOG, collectPoints, gray);
+        break;
 
     case tracking::Motion_GMG:
-        return new MotionDetector(BackgroundSubtract::BGFG_ALGS::ALG_GMG, collectPoints, gray);
+        detector = new MotionDetector(BackgroundSubtract::BGFG_ALGS::ALG_GMG, collectPoints, gray);
+        break;
 
     case tracking::Motion_CNT:
-        return new MotionDetector(BackgroundSubtract::BGFG_ALGS::ALG_CNT, collectPoints, gray);
+        detector = new MotionDetector(BackgroundSubtract::BGFG_ALGS::ALG_CNT, collectPoints, gray);
+        break;
 
     case tracking::Motion_SuBSENSE:
-        return new MotionDetector(BackgroundSubtract::BGFG_ALGS::ALG_SuBSENSE, collectPoints, gray);
+        detector = new MotionDetector(BackgroundSubtract::BGFG_ALGS::ALG_SuBSENSE, collectPoints, gray);
+        break;
 
     case tracking::Motion_LOBSTER:
-        return new MotionDetector(BackgroundSubtract::BGFG_ALGS::ALG_LOBSTER, collectPoints, gray);
+        detector = new MotionDetector(BackgroundSubtract::BGFG_ALGS::ALG_LOBSTER, collectPoints, gray);
+        break;
 
     case tracking::Motion_MOG2:
-        return new MotionDetector(BackgroundSubtract::BGFG_ALGS::ALG_MOG2, collectPoints, gray);
+        detector = new MotionDetector(BackgroundSubtract::BGFG_ALGS::ALG_MOG2, collectPoints, gray);
+        break;
 
     case tracking::Face_HAAR:
-    {
-        FaceDetector* detector = new FaceDetector(collectPoints, gray);
-        if (!detector->Init("../data/haarcascade_frontalface_alt2.xml"))
-        {
-            delete detector;
-            detector = nullptr;
-        }
-        return detector;
-    }
+        detector = new FaceDetector(collectPoints, gray);
+        break;
 
     case tracking::Pedestrian_HOG:
     case tracking::Pedestrian_C4:
-    {
-        PedestrianDetector* detector = new PedestrianDetector(collectPoints, gray);
-        if (!detector->Init((detectorType == tracking::Pedestrian_HOG) ? PedestrianDetector::HOG : PedestrianDetector::C4,
-                            "../data/combined.txt.model", "../data/combined.txt.model_"))
-        {
-            delete detector;
-            detector = nullptr;
-        }
-        return detector;
-    }
+        detector = new PedestrianDetector(collectPoints, gray);
+        break;
 
     case tracking::DNN:
-    {
-        DNNDetector* detector = new DNNDetector(collectPoints, gray);
-        if (!detector->Init("../data/MobileNetSSD_deploy.prototxt", "../data/MobileNetSSD_deploy.caffemodel"))
-        {
-            delete detector;
-            detector = nullptr;
-        }
-        return detector;
-    }
-
+        detector = new DNNDetector(collectPoints, gray);
+        break;
 
     default:
-        return nullptr;
+        break;
     }
-    return nullptr;
+
+    if (!detector->Init(config))
+    {
+        delete detector;
+        detector = nullptr;
+    }
+    return detector;
 }

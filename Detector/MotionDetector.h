@@ -12,6 +12,8 @@ public:
     MotionDetector(BackgroundSubtract::BGFG_ALGS algType, bool collectPoints, cv::UMat& gray);
     ~MotionDetector(void);
 
+    bool Init(const config_t& config);
+
     void Detect(cv::UMat& gray);
 
 	void CalcMotionMap(cv::Mat frame);
