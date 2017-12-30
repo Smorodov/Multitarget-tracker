@@ -1,6 +1,8 @@
 #pragma once
 
 #include <memory>
+#include <map>
+#include <string>
 #include "defines.h"
 
 ///
@@ -9,28 +11,59 @@
 class BaseDetector
 {
 public:
+    ///
+    /// \brief BaseDetector
+    /// \param collectPoints
+    /// \param frame
+    ///
     BaseDetector(bool collectPoints, cv::UMat& frame)
         : m_collectPoints(collectPoints)
     {
         m_minObjectSize.width = std::max(5, frame.cols / 100);
         m_minObjectSize.height = m_minObjectSize.width;
     }
+    ///
+    /// \brief ~BaseDetector
+    ///
     virtual ~BaseDetector(void)
     {
     }
 
+    typedef std::map<std::string, std::string> config_t;
+    ///
+    /// \brief Init
+    /// \param config
+    ///
+    virtual bool Init(const config_t& config) = 0;
+
+    ///
+    /// \brief Detect
+    /// \param frame
+    ///
     virtual void Detect(cv::UMat& frame) = 0;
 
+    ///
+    /// \brief SetMinObjectSize
+    /// \param minObjectSize
+    ///
     void SetMinObjectSize(cv::Size minObjectSize)
     {
         m_minObjectSize = minObjectSize;
     }
 
+    ///
+    /// \brief GetDetects
+    /// \return
+    ///
     const regions_t& GetDetects() const
     {
         return m_regions;
     }
 
+    ///
+    /// \brief CollectPoints
+    /// \param region
+    ///
     virtual void CollectPoints(CRegion& region)
     {
         const int yStep = 5;
@@ -53,6 +86,10 @@ public:
         }
     }
 
+    ///
+    /// \brief CalcMotionMap
+    /// \param frame
+    ///
     virtual void CalcMotionMap(cv::Mat frame)
     {
         if (m_motionMap.size() != frame.size())

@@ -36,9 +36,20 @@ DNNDetector::~DNNDetector(void)
 /// \brief DNNDetector::Init
 /// \return
 ///
-bool DNNDetector::Init(std::string modelConfiguration, std::string modelBinary)
+bool DNNDetector::Init(const config_t& config)
 {
-    m_net = cv::dnn::readNetFromCaffe(modelConfiguration, modelBinary);
+    auto modelConfiguration = config.find("modelConfiguration");
+    auto modelBinary = config.find("modelBinary");
+    if (modelConfiguration != config.end() && modelBinary != config.end())
+    {
+        m_net = cv::dnn::readNetFromCaffe(modelConfiguration->second, modelBinary->second);
+    }
+
+    auto confidenceThreshold = config.find("confidenceThreshold");
+    if (confidenceThreshold != config.end())
+    {
+        m_confidenceThreshold = std::stof(confidenceThreshold->second);
+    }
 
     return !m_net.empty();
 }

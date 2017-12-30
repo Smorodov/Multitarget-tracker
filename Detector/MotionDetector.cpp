@@ -25,6 +25,16 @@ MotionDetector::~MotionDetector(void)
 }
 
 ///
+/// \brief MotionDetector::Init
+/// \param config
+/// \return
+///
+bool MotionDetector::Init(const config_t& config)
+{
+    return true;
+}
+
+///
 /// \brief MotionDetector::DetectContour
 ///
 void MotionDetector::DetectContour()

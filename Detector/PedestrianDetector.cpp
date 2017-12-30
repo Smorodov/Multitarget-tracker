@@ -28,9 +28,11 @@ PedestrianDetector::~PedestrianDetector(void)
 /// \param cascadeFileName
 /// \return
 ///
-bool PedestrianDetector::Init(DetectorTypes detectorType, std::string cascadeFileName1, std::string cascadeFileName2)
+bool PedestrianDetector::Init(const config_t& config)
 {
-    m_detectorType = detectorType;
+    auto detectorType = config.find("detectorType");
+
+    m_detectorType = (detectorType == config.end()) ? HOG : (DetectorTypes)std::stoi(detectorType->second);
 
     switch (m_detectorType)
     {
@@ -39,8 +41,19 @@ bool PedestrianDetector::Init(DetectorTypes detectorType, std::string cascadeFil
         return true;
 
     case C4:
-        LoadCascade(cascadeFileName1, cascadeFileName2, m_scannerC4);
-        return true;
+    {
+        auto cascadeFileName1 = config.find("cascadeFileName1");
+        auto cascadeFileName2 = config.find("cascadeFileName2");
+        if (cascadeFileName1 == config.end() || cascadeFileName2 == config.end())
+        {
+            return false;
+        }
+        else
+        {
+            LoadCascade(cascadeFileName1->second, cascadeFileName2->second, m_scannerC4);
+            return true;
+        }
+    }
 
     default:
         return false;

@@ -20,30 +20,95 @@ BaseDetector* CreateDetector(
     switch (detectorType)
     {
     case tracking::Motion_VIBE:
-        return new MotionDetector(BackgroundSubtract::BGFG_ALGS::ALG_VIBE, collectPoints, gray);
+    {
+        MotionDetector* detector = new MotionDetector(BackgroundSubtract::BGFG_ALGS::ALG_VIBE, collectPoints, gray);
+        BaseDetector::config_t config;
+        if (!detector->Init(config))
+        {
+            delete detector;
+            detector = nullptr;
+        }
+        return detector;
+    }
 
     case tracking::Motion_MOG:
-        return new MotionDetector(BackgroundSubtract::BGFG_ALGS::ALG_MOG, collectPoints, gray);
+    {
+        MotionDetector* detector = new MotionDetector(BackgroundSubtract::BGFG_ALGS::ALG_MOG, collectPoints, gray);
+        BaseDetector::config_t config;
+        if (!detector->Init(config))
+        {
+            delete detector;
+            detector = nullptr;
+        }
+        return detector;
+    }
 
     case tracking::Motion_GMG:
-        return new MotionDetector(BackgroundSubtract::BGFG_ALGS::ALG_GMG, collectPoints, gray);
+    {
+        MotionDetector* detector = new MotionDetector(BackgroundSubtract::BGFG_ALGS::ALG_GMG, collectPoints, gray);
+        BaseDetector::config_t config;
+        if (!detector->Init(config))
+        {
+            delete detector;
+            detector = nullptr;
+        }
+        return detector;
+    }
 
     case tracking::Motion_CNT:
-        return new MotionDetector(BackgroundSubtract::BGFG_ALGS::ALG_CNT, collectPoints, gray);
+    {
+        MotionDetector* detector = new MotionDetector(BackgroundSubtract::BGFG_ALGS::ALG_CNT, collectPoints, gray);
+        BaseDetector::config_t config;
+        if (!detector->Init(config))
+        {
+            delete detector;
+            detector = nullptr;
+        }
+        return detector;
+    }
 
     case tracking::Motion_SuBSENSE:
-        return new MotionDetector(BackgroundSubtract::BGFG_ALGS::ALG_SuBSENSE, collectPoints, gray);
+    {
+        MotionDetector* detector = new MotionDetector(BackgroundSubtract::BGFG_ALGS::ALG_SuBSENSE, collectPoints, gray);
+        BaseDetector::config_t config;
+        if (!detector->Init(config))
+        {
+            delete detector;
+            detector = nullptr;
+        }
+        return detector;
+    }
 
     case tracking::Motion_LOBSTER:
-        return new MotionDetector(BackgroundSubtract::BGFG_ALGS::ALG_LOBSTER, collectPoints, gray);
+    {
+        MotionDetector* detector = new MotionDetector(BackgroundSubtract::BGFG_ALGS::ALG_LOBSTER, collectPoints, gray);
+        BaseDetector::config_t config;
+        if (!detector->Init(config))
+        {
+            delete detector;
+            detector = nullptr;
+        }
+        return detector;
+    }
 
     case tracking::Motion_MOG2:
-        return new MotionDetector(BackgroundSubtract::BGFG_ALGS::ALG_MOG2, collectPoints, gray);
+    {
+        MotionDetector* detector = new MotionDetector(BackgroundSubtract::BGFG_ALGS::ALG_MOG2, collectPoints, gray);
+        BaseDetector::config_t config;
+        if (!detector->Init(config))
+        {
+            delete detector;
+            detector = nullptr;
+        }
+        return detector;
+    }
 
     case tracking::Face_HAAR:
     {
         FaceDetector* detector = new FaceDetector(collectPoints, gray);
-        if (!detector->Init("../data/haarcascade_frontalface_alt2.xml"))
+        BaseDetector::config_t config;
+        config["cascadeFileName"] = "../data/haarcascade_frontalface_alt2.xml";
+        if (!detector->Init(config))
         {
             delete detector;
             detector = nullptr;
@@ -55,8 +120,12 @@ BaseDetector* CreateDetector(
     case tracking::Pedestrian_C4:
     {
         PedestrianDetector* detector = new PedestrianDetector(collectPoints, gray);
-        if (!detector->Init((detectorType == tracking::Pedestrian_HOG) ? PedestrianDetector::HOG : PedestrianDetector::C4,
-                            "../data/combined.txt.model", "../data/combined.txt.model_"))
+        BaseDetector::config_t config;
+        config["detectorType"] = (detectorType == tracking::Pedestrian_HOG) ?
+                    std::to_string(PedestrianDetector::HOG) : std::to_string(PedestrianDetector::C4);
+        config["cascadeFileName1"] = "../data/combined.txt.model";
+        config["cascadeFileName2"] = "../data/combined.txt.model_";
+        if (!detector->Init(config))
         {
             delete detector;
             detector = nullptr;
@@ -67,7 +136,11 @@ BaseDetector* CreateDetector(
     case tracking::DNN:
     {
         DNNDetector* detector = new DNNDetector(collectPoints, gray);
-        if (!detector->Init("../data/MobileNetSSD_deploy.prototxt", "../data/MobileNetSSD_deploy.caffemodel"))
+        BaseDetector::config_t config;
+        config["modelConfiguration"] = "../data/MobileNetSSD_deploy.prototxt";
+        config["modelBinary"] = "../data/MobileNetSSD_deploy.caffemodel";
+        config["confidenceThreshold"] = "0.2";
+        if (!detector->Init(config))
         {
             delete detector;
             detector = nullptr;

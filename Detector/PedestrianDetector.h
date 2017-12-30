@@ -18,7 +18,7 @@ public:
     PedestrianDetector(bool collectPoints, cv::UMat& gray);
     ~PedestrianDetector(void);
 
-    bool Init(DetectorTypes detectorType, std::string cascadeFileName1 = "../data/combined.txt.model", std::string cascadeFileName2 = "../data/combined.txt.model_");
+    bool Init(const config_t& config);
 
     void Detect(cv::UMat& gray);
 
