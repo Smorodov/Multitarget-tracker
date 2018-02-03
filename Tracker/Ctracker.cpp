@@ -34,7 +34,8 @@ CTracker::CTracker(
       dist_thres(dist_thres_),
       maximum_allowed_skipped_frames(maximum_allowed_skipped_frames_),
       max_trace_length(max_trace_length_),
-      NextTrackID(0)
+      NextTrackID(0),
+      m_useHough3D(true)
 {
 }
 

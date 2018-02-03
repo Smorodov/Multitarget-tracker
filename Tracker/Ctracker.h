@@ -61,4 +61,7 @@ private:
     LocalTracker m_localTracker;
 
     cv::UMat m_prevFrame;
+
+    bool m_useHough3D;
+
 };

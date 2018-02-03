@@ -46,7 +46,12 @@ set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
              Tracker/track.cpp
              Tracker/HungarianAlg/HungarianAlg.cpp
              Tracker/LocalTracker.cpp
-             Tracker/Kalman.cpp)
+             Tracker/Kalman.cpp
+
+             Tracker/hough3d/hough.cpp
+             Tracker/hough3d/pointcloud.cpp
+             Tracker/hough3d/sphere.cpp
+             Tracker/hough3d/vector3d.cpp)
 
   set(folder_header
              MouseExample.h
@@ -73,7 +78,12 @@ set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
              Tracker/track.h
              Tracker/HungarianAlg/HungarianAlg.h
              Tracker/LocalTracker.h
-             Tracker/Kalman.h)
+             Tracker/Kalman.h
+
+             Tracker/hough3d/hough.h
+             Tracker/hough3d/pointcloud.h
+             Tracker/hough3d/sphere.h
+             Tracker/hough3d/vector3d.h)
 
   set(graph_source
              Tracker/graph/tokenise.cpp
