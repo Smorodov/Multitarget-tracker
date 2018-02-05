@@ -63,7 +63,7 @@ public:
 
         capture.set(cv::CAP_PROP_POS_FRAMES, m_startFrame);
 
-        m_fps = std::max(1, cvRound(capture.get(cv::CAP_PROP_FPS)));
+        m_fps = std::max(1.f, (float)capture.get(cv::CAP_PROP_FPS));
 
         capture >> frame;
         cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
@@ -108,7 +108,7 @@ public:
 
             cv::imshow("Video", frame);
 
-            int waitTime = manualMode ? 0 : std::max<int>(1, 1000 / m_fps - currTime);
+            int waitTime = manualMode ? 0 : std::max<int>(1, cvRound(1000 / m_fps - currTime));
             k = cv::waitKey(waitTime);
 
             if (k == 'm' || k == 'M')
@@ -159,13 +159,13 @@ protected:
 
         const regions_t& regions = m_detector->GetDetects();
 
-        m_tracker->Update(regions, m_tracker->GrayFrameToTrack() ? grayFrame : clFrame);
+        m_tracker->Update(regions, m_tracker->GrayFrameToTrack() ? grayFrame : clFrame, m_fps);
     }
 
     virtual void DrawData(cv::Mat frame, int framesCounter, int currTime) = 0;
 
     bool m_showLogs;
-    int m_fps;
+    float m_fps;
     bool m_useLocalTracking;
 
     ///
@@ -521,7 +521,7 @@ protected:
             regions.push_back(rect);
         }
 
-        m_tracker->Update(regions, grayFrame);
+        m_tracker->Update(regions, grayFrame, m_fps);
     }
 
     ///

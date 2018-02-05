@@ -27,7 +27,7 @@ public:
 	~CTracker(void);
 
     tracks_t tracks;
-    void Update(const regions_t& regions, cv::UMat grayFrame);
+    void Update(const regions_t& regions, cv::UMat grayFrame, float fps);
 
     bool GrayFrameToTrack() const
     {
@@ -66,4 +66,7 @@ private:
     static const int Hough3DTimeline = 12;
     bool m_useHough3D;
     std::deque<std::vector<Point_t>> m_points3D;
+
+    void UpdateHungrian(const regions_t& regions, cv::UMat grayFrame, float fps);
+    void UpdateHough3D(const regions_t& regions, cv::UMat grayFrame, float fps);
 };
