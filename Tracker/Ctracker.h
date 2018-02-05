@@ -3,6 +3,7 @@
 #include <vector>
 #include <memory>
 #include <array>
+#include <deque>
 
 #include "defines.h"
 #include "track.h"
@@ -62,6 +63,7 @@ private:
 
     cv::UMat m_prevFrame;
 
+    static const int Hough3DTimeline = 12;
     bool m_useHough3D;
-
+    std::deque<std::vector<Point_t>> m_points3D;
 };

@@ -11,21 +11,23 @@
 #define VECTOR3D_H_
 
 #include <iostream>
+#include "defines.h"
 
-class Vector3d {
+class Vector3d
+{
 public:
-  double x;
-  double y;
-  double z;
+  track_t x;
+  track_t y;
+  track_t z;
 
   Vector3d();
-  Vector3d(double a, double b, double c);
+  Vector3d(track_t a, track_t b, track_t c);
   bool operator==(const Vector3d &rhs) const;
   Vector3d& operator=(const Vector3d& other);
   // nicely formatted output
   friend std::ostream& operator<<(std::ostream& os, const Vector3d& vec);
   // Euclidean norm
-  double norm() const;
+  track_t norm() const;
 
 };
 
@@ -36,11 +38,11 @@ Vector3d operator+(Vector3d x, Vector3d y);
 // vector subtraction
 Vector3d operator-(Vector3d x, Vector3d y);
 // scalar product
-double operator*(Vector3d x, Vector3d y);
+track_t operator*(Vector3d x, Vector3d y);
 // scalar multiplication
-Vector3d operator*(Vector3d x, double c);
-Vector3d operator*(double c, Vector3d x);
-Vector3d operator/(Vector3d x, double c);
+Vector3d operator*(Vector3d x, track_t c);
+Vector3d operator*(track_t c, Vector3d x);
+Vector3d operator/(Vector3d x, track_t c);
 
 
 #endif /* VECTOR3D_H_ */

@@ -13,11 +13,11 @@
 #include <cstdlib>
 
 
-static double roundToNearest(double num) {
+static track_t roundToNearest(track_t num) {
   return (num > 0.0) ? floor(num + 0.5) : ceil(num - 0.5);
 }
 
-Hough::Hough(const Vector3d& minP, const Vector3d& maxP, double var_dx,
+Hough::Hough(const Vector3d& minP, const Vector3d& maxP, track_t var_dx,
              unsigned int sphereGranularity) {
 
   // compute directional vectors
@@ -27,7 +27,7 @@ Hough::Hough(const Vector3d& minP, const Vector3d& maxP, double var_dx,
 
   // compute x'y' discretization
   max_x = std::max(maxP.norm(), minP.norm());
-  double range_x = 2 * max_x;
+  track_t range_x = 2 * max_x;
   dx = var_dx;
   if (dx == 0.0) {
     dx = range_x / 64.0;
@@ -66,15 +66,15 @@ void Hough::pointVote(const Vector3d& point, bool add){
   for(size_t j = 0; j < sphere->vertices.size(); j++) {
 
     Vector3d b = sphere->vertices[j];
-    double beta = 1 / (1 + b.z);	// denominator in Eq. (2)
+    track_t beta = 1 / (1 + b.z);	// denominator in Eq. (2)
 
     // compute x' according to left hand side of Eq. (2)
-    double x_new = ((1 - (beta * (b.x * b.x))) * point.x)
+    track_t x_new = ((1 - (beta * (b.x * b.x))) * point.x)
       - ((beta * (b.x * b.y)) * point.y)
       - (b.x * point.z);
 
     // compute y' according to right hand side Eq. (2)
-    double y_new = ((-beta * (b.x * b.y)) * point.x)
+    track_t y_new = ((-beta * (b.x * b.y)) * point.x)
       + ((1 - (beta * (b.y * b.y))) * point.y)
       - (b.y * point.z);
 
@@ -108,12 +108,12 @@ unsigned int Hough::getLine(Vector3d* a, Vector3d* b){
   }
 
   // retrieve x' coordinate from VotingSpace[num_x * num_x * num_b]
-  double x = (int) (index / (num_x * num_b));
+  track_t x = (int) (index / (num_x * num_b));
   index -= (int) x * num_x * num_b;
   x = x * dx - max_x;
 
   // retrieve y' coordinate from VotingSpace[num_x * num_x * num_b]
-  double y = (int) index / num_b;
+  track_t y = (int) index / num_b;
   index -= (int) y * num_b;
   y = y * dx - max_x;
 

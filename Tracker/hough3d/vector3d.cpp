@@ -14,7 +14,7 @@ Vector3d::Vector3d() {
   x = 0; y = 0; z = 0;
 }
 
-Vector3d::Vector3d(double a, double b, double c) {
+Vector3d::Vector3d(track_t a, track_t b, track_t c) {
   x = a; y = b; z = c;
 }
 
@@ -31,11 +31,11 @@ Vector3d& Vector3d::operator=(const Vector3d& other) {
 
 // nicely formatted output
 std::ostream& operator<<(std::ostream& strm, const Vector3d& vec) {
-  return strm << "(" << vec.x << "," << vec.y << "," << vec.z << ")";
+  return strm << "(" << vec.x << ", " << vec.y << ", " << vec.z << ")";
 }
 
 // Euclidean norm
-double Vector3d::norm() const {
+track_t Vector3d::norm() const {
   return sqrt((x * x) + (y * y) + (z * z));
 }
 
@@ -54,20 +54,20 @@ Vector3d operator-(Vector3d x, Vector3d y) {
 }
 
 // scalar product
-double operator*(Vector3d x, Vector3d y) {
+track_t operator*(Vector3d x, Vector3d y) {
   return (x.x*y.x + x.y*y.y +  x.z*y.z);
 }
 
 // scalar multiplication
-Vector3d operator*(Vector3d x, double c) {
+Vector3d operator*(Vector3d x, track_t c) {
   Vector3d v(c*x.x, c*x.y, c*x.z);
   return v;
 }
-Vector3d operator*(double c, Vector3d x) {
+Vector3d operator*(track_t c, Vector3d x) {
   Vector3d v(c*x.x, c*x.y, c*x.z);
   return v;
 }
-Vector3d operator/(Vector3d x, double c) {
+Vector3d operator/(Vector3d x, track_t c) {
   Vector3d v(x.x/c, x.y/c, x.z/c);
   return v;
 }

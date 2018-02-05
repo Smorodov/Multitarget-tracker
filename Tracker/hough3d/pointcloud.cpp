@@ -32,7 +32,7 @@ Vector3d PointCloud::meanValue() const {
     ret = ret + points[i];
   }
   if (points.size() > 0)
-    return (ret / (double)points.size());
+    return (ret / (track_t)points.size());
   else
     return ret;
 }
@@ -89,12 +89,12 @@ int PointCloud::readFromFile(const char* path){
 }
 
 // store points closer than dx to line (a, b) in Y
-void PointCloud::pointsCloseToLine(const Vector3d &a, const Vector3d &b, double dx, PointCloud* Y) {
+void PointCloud::pointsCloseToLine(const Vector3d &a, const Vector3d &b, track_t dx, PointCloud* Y) {
 
   Y->points.clear();
   for (size_t i=0; i < points.size(); i++) {
     // distance computation after IPOL paper Eq. (7)
-    double t = (b * (points[i] - a));
+    track_t t = (b * (points[i] - a));
     Vector3d d = (points[i] - (a + (t*b)));
     if (d.norm() <= dx) {
       Y->points.push_back(points[i]);

@@ -31,7 +31,7 @@ public:
   int readFromFile(const char* path);
   // store points closer than dx to line (a, b) in Y
   void pointsCloseToLine(const Vector3d &a, const Vector3d &b,
-                         double dx, PointCloud* Y);
+                         track_t dx, PointCloud* Y);
   // removes the points in Y from PointCloud
   // WARNING: only works when points in same order as in pointCloud!
   void removePoints(const PointCloud &Y);

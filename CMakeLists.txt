@@ -19,6 +19,8 @@ set(CMAKE_BINARY_DIR ${CMAKE_SOURCE_DIR}/build)
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR})
 set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
 
+find_package(Eigen3)
+
 # ----------------------------------------------------------------------------
 # Предполагаем, что FindOpenCV.cmake расположен по адресу CMAKE_MODULE_PATH.
 # ----------------------------------------------------------------------------
@@ -229,6 +231,8 @@ endif(USE_OCV_BGFG)
 
   INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR})
   INCLUDE_DIRECTORIES(${OpenCV_INCLUDE_DIRS})
+  INCLUDE_DIRECTORIES("${EIGEN3_INCLUDE_DIR}")
+
 # ----------------------------------------------------------------------------
 # и Lib-ы opencv
 # ----------------------------------------------------------------------------

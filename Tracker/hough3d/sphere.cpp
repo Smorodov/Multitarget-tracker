@@ -147,7 +147,7 @@ void Sphere::getIcosahedron(){
 // one subdivision step
 void Sphere::subDivide(){
   unsigned int vert_num = vertices.size();
-  double norm;
+  track_t norm;
   // subdivide each triangle
   int num = triangles.size() / 3;
   for(int i = 0; i < num; i++) {

@@ -25,11 +25,11 @@ public:
   Sphere *sphere;
   size_t num_b;
   // x' and y'
-  double dx, max_x;
+  track_t dx, max_x;
   size_t num_x;
 
   // parameter space discretization and allocation of voting space
-  Hough(const Vector3d& minP, const Vector3d& maxP, double dx,
+  Hough(const Vector3d& minP, const Vector3d& maxP, track_t dx,
         unsigned int sphereGranularity);
   ~Hough();
   // returns the line with most votes (rc = number of votes)
