@@ -271,7 +271,7 @@ protected:
 
         for (const auto& track : m_tracker->tracks)
         {
-            if (track->IsRobust(m_fps / 2,                         // Minimal trajectory size
+            if (track->IsRobust(cvRound(m_fps / 2),          // Minimal trajectory size
                                 0.6f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
                                 cv::Size2f(0.1f, 8.0f))      // Min and max ratio: width / height
                     )
@@ -422,7 +422,7 @@ protected:
 
         for (const auto& track : m_tracker->tracks)
         {
-            if (track->IsRobust(m_fps / 2,                   // Minimal trajectory size
+			if (track->IsRobust(cvRound(m_fps / 2),          // Minimal trajectory size
                                 0.4f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
                                 cv::Size2f(0.1f, 8.0f))      // Min and max ratio: width / height
                     )
@@ -513,7 +513,7 @@ protected:
         faceRects.insert(faceRects.end(), m_prevRects.begin(), m_prevRects.end());
         scores.insert(scores.end(), m_prevRects.size(), 0.4f);
         std::vector<cv::Rect> allRects;
-        nms2(faceRects, scores, allRects, 0.3f, 1, 0.7);
+        nms2(faceRects, scores, allRects, 0.3f, 1, 0.7f);
 
         regions_t regions;
         for (auto rect : allRects)

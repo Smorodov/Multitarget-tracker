@@ -79,8 +79,8 @@ track_t CTrack::CalcDistJaccard(const cv::Rect& r) const
 {
     cv::Rect rr(GetLastRect());
 
-    track_t intArea = (r & rr).area();
-    track_t unionArea = r.area() + rr.area() - intArea;
+	track_t intArea = static_cast<track_t>((r & rr).area());
+	track_t unionArea = static_cast<track_t>(r.area() + rr.area() - intArea);
 
     return 1 - intArea / unionArea;
 }
@@ -346,7 +346,7 @@ void CTrack::CreateExternalTracker()
             params.desc_pca = cv::TrackerKCF::GRAY;
             params.desc_npca = cv::TrackerKCF::GRAY;
             params.resize = true;
-            params.detect_thresh = 0.3;
+            params.detect_thresh = 0.3f;
 #if (((CV_VERSION_MAJOR == 3) && (CV_VERSION_MINOR >= 3)) || (CV_VERSION_MAJOR > 3))
             m_tracker = cv::TrackerKCF::create(params);
 #else
@@ -406,7 +406,7 @@ void CTrack::CreateExternalTracker()
         if (!m_tracker || m_tracker.empty())
         {
 #if (((CV_VERSION_MAJOR == 3) && (CV_VERSION_MINOR >= 3)) || (CV_VERSION_MAJOR > 3))
-            m_tracker = cv::TrackerMOSSE::create();
+            //m_tracker = cv::TrackerMOSSE::create();
 #else
             m_tracker = cv::TrackerMOSSE::createTracker();
 #endif
@@ -445,7 +445,7 @@ void CTrack::PointUpdate(
         m_predictionPoint = m_kalman->Update(pt, dataCorrect);
     }
 
-    auto Clamp = [](float& v, int hi)
+	auto Clamp = [](track_t& v, int hi)
     {
         if (v < 0)
         {
@@ -453,7 +453,7 @@ void CTrack::PointUpdate(
         }
         else if (hi && v > hi - 1)
         {
-            v = hi - 1;
+			v = static_cast<track_t>(hi - 1);
         }
     };
     Clamp(m_predictionPoint.x, frameSize.width);

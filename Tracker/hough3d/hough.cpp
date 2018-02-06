@@ -12,11 +12,6 @@
 
 #include <cstdlib>
 
-
-static track_t roundToNearest(track_t num) {
-  return (num > 0.0) ? floor(num + 0.5) : ceil(num - 0.5);
-}
-
 Hough::Hough(const Vector3d& minP, const Vector3d& maxP, track_t var_dx,
              unsigned int sphereGranularity) {
 
@@ -30,9 +25,9 @@ Hough::Hough(const Vector3d& minP, const Vector3d& maxP, track_t var_dx,
   track_t range_x = 2 * max_x;
   dx = var_dx;
   if (dx == 0.0) {
-    dx = range_x / 64.0;
+    dx = range_x / 64.0f;
   }
-  num_x = roundToNearest(range_x / dx);
+  num_x = cvRound(range_x / dx);
 
   // allocate voting space
   VotingSpace.resize(num_x * num_x * num_b);
@@ -78,8 +73,8 @@ void Hough::pointVote(const Vector3d& point, bool add){
       + ((1 - (beta * (b.y * b.y))) * point.y)
       - (b.y * point.z);
 
-    size_t x_i = roundToNearest((x_new + max_x) / dx);
-    size_t y_i = roundToNearest((y_new + max_x) / dx);
+	size_t x_i = cvRound((x_new + max_x) / dx);
+	size_t y_i = cvRound((y_new + max_x) / dx);
 
     // compute one-dimensional index from three indices
 	// x_i * #planes * #direction_Vec + y_i * #direction_Vec + #loop

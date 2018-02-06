@@ -31,7 +31,7 @@ CTracker::CTracker(
       m_kalmanType(kalmanType),
       m_filterGoal(filterGoal),
       m_lostTrackType(lostTrackType),
-	  m_matchType(matchType),
+      m_matchType(matchType),
       dt(dt_),
       accelNoiseMag(accelNoiseMag_),
       dist_thres(dist_thres_),
@@ -120,27 +120,9 @@ void CTracker::Update(
 void CTracker::UpdateHungrian(
         const regions_t& regions,
         cv::UMat grayFrame,
-        float fps
+        float /*fps*/
         )
 {
-    // -----------------------------------
-    // If there is no tracks yet, then every cv::Point begins its own track.
-    // -----------------------------------
-    if (tracks.size() == 0)
-    {
-        // If no tracks yet
-        for (size_t i = 0; i < regions.size(); ++i)
-        {
-            tracks.push_back(std::make_unique<CTrack>(regions[i],
-                                                      m_kalmanType,
-                                                      dt,
-                                                      accelNoiseMag,
-                                                      NextTrackID++,
-                                                      m_filterGoal == tracking::FilterRect,
-                                                      m_lostTrackType));
-        }
-    }
-
     size_t N = tracks.size();		// треки
     size_t M = regions.size();	// детекты
 
@@ -339,134 +321,136 @@ void CTracker::UpdateHough3D(
         float fps
         )
 {
-        std::vector<Point_t> points3d;
+    std::vector<Point_t> points3d;
 
-        for (const auto& region : regions)
+    for (const auto& region : regions)
+    {
+        points3d.push_back(Point_t((region.m_rect.tl() + region.m_rect.br()) / 2));
+    }
+
+    m_points3D.push_back(points3d);
+    if (m_points3D.size() > Hough3DTimeline)
+    {
+        m_points3D.pop_front();
+    }
+
+    if (m_points3D.size() != Hough3DTimeline)
+    {
+        return;
+    }
+
+    track_t dTime = std::max(1.f, 1000.f / fps);
+
+    size_t allPoints = 0;
+    for (const auto& points : m_points3D)
+    {
+        allPoints += points.size();
+    }
+
+    if (allPoints > 2)
+    {
+        PointCloud X;
+        X.points.reserve(allPoints);
+
+        track_t ptTime = 0;
+        for (const auto& points : m_points3D)
         {
-            points3d.push_back(Point_t((region.m_rect.tl() + region.m_rect.br()) / 2));
+            for (const auto& pt : points)
+            {
+                X.points.push_back(Vector3d(ptTime, pt.x, pt.y));
+            }
+
+            ptTime += dTime;
         }
 
-        m_points3D.push_back(points3d);
-        if (m_points3D.size() > Hough3DTimeline)
-        {
-            m_points3D.pop_front();
-        }
+        // center cloud and compute new bounding box
+        Vector3d minP;
+        Vector3d maxP;
+        X.getMinMax3D(&minP, &maxP);
+        track_t d = (maxP - minP).norm();
+        X.shiftToOrigin();
+        Vector3d minPshifted;
+        Vector3d maxPshifted;
+        X.getMinMax3D(&minPshifted, &maxPshifted);
 
-        if (m_points3D.size() == Hough3DTimeline)
-        {
-            track_t dTime = std::max(1.f, 1000.f / fps);
+        // estimate size of Hough space
+        // number of icosahedron subdivisions for direction discretization
+        int granularity = 4;
+        int num_directions[7] = {12, 21, 81, 321, 1281, 5121, 20481};
 
-            size_t allPoints = 0;
+        track_t opt_dx = d / 64.0;
+
+        track_t num_x = floor(d / opt_dx + 0.5f);
+        track_t num_cells = num_x * num_x * num_directions[granularity];
+
+        std::unique_ptr<Hough> hough = std::make_unique<Hough>(minPshifted, maxPshifted, opt_dx, granularity);
+        hough->add(X);
+
+        // iterative Hough transform (Algorithm 1 in IPOL paper)
+        PointCloud Y;	// points close to line
+        size_t opt_minvotes = Hough3DTimeline / 2;
+        std::deque<std::pair<Vector3d, Vector3d>> lines;
+        do
+        {
+            Vector3d a; // anchor point of line
+            Vector3d b; // direction of line
+
+            hough->subtract(Y); // do it here to save one call
+
+            hough->getLine(&a, &b);
+
+            X.pointsCloseToLine(a, b, opt_dx, &Y);
+
+            if (!orthogonal_LSQ(Y, &a, &b))
+                break;
+
+            X.pointsCloseToLine(a, b, opt_dx, &Y);
+
+            if (Y.points.size() < opt_minvotes)
+                break;
+
+            if (!orthogonal_LSQ(Y, &a, &b))
+                break;
+
+            a = a + X.shift;
+
+            lines.push_back(std::make_pair(a, b));
+
+            X.removePoints(Y);
+
+        } while (X.points.size() > 1);
+
+        if (1)
+        {
+            std::cout << "Hough3D: points = " << allPoints << ", lines = " << lines.size() << std::endl;
+
+            cv::Mat dbgLines;
+            cv::cvtColor(grayFrame.getMat(cv::ACCESS_READ), dbgLines, CV_GRAY2BGR);
+
             for (const auto& points : m_points3D)
             {
-                allPoints += points.size();
+                for (const auto& pt : points)
+                {
+                    cv::circle(dbgLines, cv::Point(pt.x, pt.y), 4, cv::Scalar(0, 0, 255));
+
+                }
             }
 
-            if (allPoints > 2)
+            for (auto line : lines)
             {
-                PointCloud X;
-                X.points.reserve(allPoints);
+                track_t minT = line.first.x;
+                track_t maxT = line.first.x + dTime * (Hough3DTimeline - 1) * line.second.x;
+                track_t dt = fabs(maxT - minT);
 
-                track_t ptTime = 0;
-                for (const auto& points : m_points3D)
-                {
-                    for (const auto& pt : points)
-                    {
-                        X.points.push_back(Vector3d(ptTime, pt.x, pt.y));
-                    }
+                //std::cout << "a = " << line.first << ", b = " << line.second << ", dt = " << dt << std::endl;
 
-                    ptTime += dTime;
-                }
-
-                // center cloud and compute new bounding box
-                Vector3d minP;
-                Vector3d maxP;
-                X.getMinMax3D(&minP, &maxP);
-                track_t d = (maxP - minP).norm();
-                X.shiftToOrigin();
-                Vector3d minPshifted;
-                Vector3d maxPshifted;
-                X.getMinMax3D(&minPshifted, &maxPshifted);
-
-                // estimate size of Hough space
-                // number of icosahedron subdivisions for direction discretization
-                int granularity = 4;
-                int num_directions[7] = {12, 21, 81, 321, 1281, 5121, 20481};
-
-                track_t opt_dx = d / 64.0;
-
-                track_t num_x = floor(d / opt_dx + 0.5f);
-                track_t num_cells = num_x * num_x * num_directions[granularity];
-
-                std::unique_ptr<Hough> hough = std::make_unique<Hough>(minPshifted, maxPshifted, opt_dx, granularity);
-                hough->add(X);
-
-                // iterative Hough transform (Algorithm 1 in IPOL paper)
-                PointCloud Y;	// points close to line
-                size_t opt_minvotes = Hough3DTimeline / 2;
-                std::deque<std::pair<Vector3d, Vector3d>> lines;
-                do
-                {
-                    Vector3d a; // anchor point of line
-                    Vector3d b; // direction of line
-
-                    hough->subtract(Y); // do it here to save one call
-
-                    hough->getLine(&a, &b);
-
-                    X.pointsCloseToLine(a, b, opt_dx, &Y);
-
-                    if (!orthogonal_LSQ(Y, &a, &b))
-                        break;
-
-                    X.pointsCloseToLine(a, b, opt_dx, &Y);
-
-                    if (Y.points.size() < opt_minvotes)
-                        break;
-
-                    if (!orthogonal_LSQ(Y, &a, &b))
-                        break;
-
-                    a = a + X.shift;
-
-                    lines.push_back(std::make_pair(a, b));
-
-                    X.removePoints(Y);
-
-                } while (X.points.size() > 1);
-
-                if (1)
-                {
-                    std::cout << "Hough3D: points = " << allPoints << ", lines = " << lines.size() << std::endl;
-
-                    cv::Mat dbgLines;
-                    cv::cvtColor(grayFrame.getMat(cv::ACCESS_READ), dbgLines, CV_GRAY2BGR);
-
-                    for (const auto& points : m_points3D)
-                    {
-                        for (const auto& pt : points)
-                        {
-                            cv::circle(dbgLines, cv::Point(pt.x, pt.y), 4, cv::Scalar(0, 0, 255));
-
-                        }
-                    }
-
-                    for (auto line : lines)
-                    {
-                        track_t minT = line.first.x;
-                        track_t maxT = line.first.x + dTime * (Hough3DTimeline - 1) * line.second.x;
-                        track_t dt = fabs(maxT - minT);
-
-                        //std::cout << "a = " << line.first << ", b = " << line.second << ", dt = " << dt << std::endl;
-
-                        cv::line(dbgLines,
-                                 cv::Point(line.first.y, line.first.z),
-                                 cv::Point(line.first.y + dt * line.second.y, line.first.z + dt * line.second.z),
-                                 cv::Scalar(255, 0, 0),
-                                 2);
-                    }
-                    cv::imshow("hough3d", dbgLines);
-                }
+                cv::line(dbgLines,
+                         cv::Point(line.first.y, line.first.z),
+                         cv::Point(line.first.y + dt * line.second.y, line.first.z + dt * line.second.z),
+                         cv::Scalar(255, 0, 0),
+                         2);
             }
+            cv::imshow("hough3d", dbgLines);
         }
+    }
 }

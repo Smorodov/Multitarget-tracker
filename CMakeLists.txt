@@ -231,7 +231,10 @@ endif(USE_OCV_BGFG)
 
   INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR})
   INCLUDE_DIRECTORIES(${OpenCV_INCLUDE_DIRS})
+
+if (EIGEN3_FOUND)
   INCLUDE_DIRECTORIES("${EIGEN3_INCLUDE_DIR}")
+endif()
 
 # ----------------------------------------------------------------------------
 # и Lib-ы opencv

@@ -27,7 +27,7 @@ void Sphere::fromIcosahedron(int subDivisions){
 void Sphere::getIcosahedron(){
   vertices.clear();
   triangles.clear();
-  float tau = 1.61803399; // golden_ratio
+  float tau = 1.61803399f; // golden_ratio
   float norm = sqrt(1 + tau * tau);
   float v = 1 / norm;
   tau = tau / norm;
