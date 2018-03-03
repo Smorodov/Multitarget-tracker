@@ -176,7 +176,8 @@ protected:
     ///
     void DrawTrack(cv::Mat frame,
                    int resizeCoeff,
-                   const CTrack& track
+                   const CTrack& track,
+                   bool drawTrajectory = true
                    )
     {
         auto ResizeRect = [&](const cv::Rect& r) -> cv::Rect
@@ -190,17 +191,20 @@ protected:
 
         cv::rectangle(frame, ResizeRect(track.GetLastRect()), cv::Scalar(0, 255, 0), 1, CV_AA);
 
-        cv::Scalar cl = m_colors[track.m_trackID % m_colors.size()];
-
-        for (size_t j = 0; j < track.m_trace.size() - 1; ++j)
+        if (drawTrajectory)
         {
-            const TrajectoryPoint& pt1 = track.m_trace.at(j);
-            const TrajectoryPoint& pt2 = track.m_trace.at(j + 1);
+            cv::Scalar cl = m_colors[track.m_trackID % m_colors.size()];
 
-            cv::line(frame, ResizePoint(pt1.m_prediction), ResizePoint(pt2.m_prediction), cl, 1, CV_AA);
-            if (!pt2.m_hasRaw)
+            for (size_t j = 0; j < track.m_trace.size() - 1; ++j)
             {
-                cv::circle(frame, ResizePoint(pt2.m_prediction), 4, cl, 1, CV_AA);
+                const TrajectoryPoint& pt1 = track.m_trace.at(j);
+                const TrajectoryPoint& pt2 = track.m_trace.at(j + 1);
+
+                cv::line(frame, ResizePoint(pt1.m_prediction), ResizePoint(pt2.m_prediction), cl, 1, CV_AA);
+                if (!pt2.m_hasRaw)
+                {
+                    cv::circle(frame, ResizePoint(pt2.m_prediction), 4, cl, 1, CV_AA);
+                }
             }
         }
     }
