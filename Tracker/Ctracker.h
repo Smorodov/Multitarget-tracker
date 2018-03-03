@@ -45,19 +45,19 @@ private:
     tracking::MatchType m_matchType;
 
 	// Шаг времени опроса фильтра
-	track_t dt;
+    track_t m_dt;
 
-	track_t accelNoiseMag;
+    track_t m_accelNoiseMag;
 
 	// Порог расстояния. Если точки находятся дуг от друга на расстоянии,
 	// превышающем этот порог, то эта пара не рассматривается в задаче о назначениях.
-	track_t dist_thres;
+    track_t m_distThres;
 	// Максимальное количество кадров которое трек сохраняется не получая данных о измерений.
-    size_t maximum_allowed_skipped_frames;
+    size_t m_maximumAllowedSkippedFrames;
 	// Максимальная длина следа
-    size_t max_trace_length;
+    size_t m_maxTraceLength;
 
-	size_t NextTrackID;
+    size_t m_nextTrackID;
 
     LocalTracker m_localTracker;
 

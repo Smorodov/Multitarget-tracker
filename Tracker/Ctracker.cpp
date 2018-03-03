@@ -32,13 +32,13 @@ CTracker::CTracker(
       m_filterGoal(filterGoal),
       m_lostTrackType(lostTrackType),
       m_matchType(matchType),
-      dt(dt_),
-      accelNoiseMag(accelNoiseMag_),
-      dist_thres(dist_thres_),
-      maximum_allowed_skipped_frames(maximum_allowed_skipped_frames_),
-      max_trace_length(max_trace_length_),
-      NextTrackID(0),
-      m_useHough3D(true)
+      m_dt(dt_),
+      m_accelNoiseMag(accelNoiseMag_),
+      m_distThres(dist_thres_),
+      m_maximumAllowedSkippedFrames(maximum_allowed_skipped_frames_),
+      m_maxTraceLength(max_trace_length_),
+      m_nextTrackID(0),
+      m_useHough3D(false)
 {
 }
 
@@ -184,6 +184,9 @@ void CTracker::UpdateHungrian(
                 }
             }
             break;
+
+        //case tracking::DistLines:
+            //break;
         }
         // -----------------------------------
         // Solving assignment problem (tracks and predictions of Kalman filter)
@@ -216,7 +219,7 @@ void CTracker::UpdateHungrian(
 
                     edge e = G.new_edge(nodes[i], nodes[N + j]);
 
-                    if (currCost < dist_thres)
+                    if (currCost < m_distThres)
                     {
                         int weight = maxCost - currCost + 1;
                         G.set_edge_weight(e, weight);
@@ -250,7 +253,7 @@ void CTracker::UpdateHungrian(
         {
             if (assignment[i] != -1)
             {
-                if (Cost[i + assignment[i] * N] > dist_thres)
+                if (Cost[i + assignment[i] * N] > m_distThres)
                 {
                     assignment[i] = -1;
                     tracks[i]->m_skippedFrames++;
@@ -268,7 +271,7 @@ void CTracker::UpdateHungrian(
         // -----------------------------------
         for (int i = 0; i < static_cast<int>(tracks.size()); i++)
         {
-            if (tracks[i]->m_skippedFrames > maximum_allowed_skipped_frames)
+            if (tracks[i]->m_skippedFrames > m_maximumAllowedSkippedFrames)
             {
                 tracks.erase(tracks.begin() + i);
                 assignment.erase(assignment.begin() + i);
@@ -286,9 +289,9 @@ void CTracker::UpdateHungrian(
         {
             tracks.push_back(std::make_unique<CTrack>(regions[i],
                                                       m_kalmanType,
-                                                      dt,
-                                                      accelNoiseMag,
-                                                      NextTrackID++,
+                                                      m_dt,
+                                                      m_accelNoiseMag,
+                                                      m_nextTrackID++,
                                                       m_filterGoal == tracking::FilterRect,
                                                       m_lostTrackType));
         }
@@ -303,11 +306,11 @@ void CTracker::UpdateHungrian(
         if (assignment[i] != -1) // If we have assigned detect, then update using its coordinates,
         {
             tracks[i]->m_skippedFrames = 0;
-            tracks[i]->Update(regions[assignment[i]], true, max_trace_length, m_prevFrame, grayFrame);
+            tracks[i]->Update(regions[assignment[i]], true, m_maxTraceLength, m_prevFrame, grayFrame);
         }
         else				     // if not continue using predictions
         {
-            tracks[i]->Update(CRegion(), false, max_trace_length, m_prevFrame, grayFrame);
+            tracks[i]->Update(CRegion(), false, m_maxTraceLength, m_prevFrame, grayFrame);
         }
     }
 }

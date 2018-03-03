@@ -72,6 +72,7 @@ enum DistType
     DistCenters = 0,
     DistRects = 1,
     DistJaccard = 2
+    //DistLines = 3
 };
 
 ///
