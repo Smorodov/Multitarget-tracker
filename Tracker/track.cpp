@@ -246,6 +246,7 @@ void CTrack::RectUpdate(
             Clamp(roiRect.x, roiRect.width, currFrame.cols);
             Clamp(roiRect.y, roiRect.height, currFrame.rows);
 
+            bool inited = false;
             if (!m_tracker || m_tracker.empty())
             {
                 CreateExternalTracker();
@@ -258,6 +259,13 @@ void CTrack::RectUpdate(
                         lastRect.area() > 0)
                 {
                     m_tracker->init(cv::UMat(prevFrame, roiRect), lastRect);
+#if 0
+                    cv::Mat tmp = cv::UMat(prevFrame, roiRect).getMat(cv::ACCESS_READ).clone();
+                    cv::rectangle(tmp, lastRect, cv::Scalar(255, 255, 255), 2);
+                    cv::imshow("init", tmp);
+#endif
+
+                    inited = true;
                 }
                 else
                 {
@@ -265,8 +273,14 @@ void CTrack::RectUpdate(
                 }
             }
             cv::Rect2d newRect;
-            if (!m_tracker.empty() && m_tracker->update(cv::UMat(currFrame, roiRect), newRect))
+            if (!inited && !m_tracker.empty() && m_tracker->update(cv::UMat(currFrame, roiRect), newRect))
             {
+#if 0
+                cv::Mat tmp2 = cv::UMat(currFrame, roiRect).getMat(cv::ACCESS_READ).clone();
+                cv::rectangle(tmp2, newRect, cv::Scalar(255, 255, 255), 2);
+                cv::imshow("track", tmp2);
+#endif
+
                 cv::Rect prect(cvRound(newRect.x) + roiRect.x, cvRound(newRect.y) + roiRect.y, cvRound(newRect.width), cvRound(newRect.height));
 
                 m_predictionRect = m_kalman->Update(prect, true);
