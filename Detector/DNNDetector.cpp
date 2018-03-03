@@ -15,7 +15,8 @@ DNNDetector::DNNDetector(
       m_WHRatio(InWidth / (float)InHeight),
       m_inScaleFactor(0.007843f),
       m_meanVal(127.5),
-      m_confidenceThreshold(0.2f)
+      m_confidenceThreshold(0.5f),
+      m_maxCropRatio(2.0f)
 {
     m_classNames = { "background",
                      "aeroplane", "bicycle", "bird", "boat",
@@ -51,6 +52,16 @@ bool DNNDetector::Init(const config_t& config)
         m_confidenceThreshold = std::stof(confidenceThreshold->second);
     }
 
+    auto maxCropRatio = config.find("maxCropRatio");
+    if (maxCropRatio != config.end())
+    {
+        m_maxCropRatio = std::stof(maxCropRatio->second);
+        if (m_maxCropRatio < 1.f)
+        {
+            m_maxCropRatio = 1.f;
+        }
+    }
+
     return !m_net.empty();
 }
 
@@ -66,36 +77,59 @@ void DNNDetector::Detect(cv::UMat& colorFrame)
 
     cv::Mat colorMat = colorFrame.getMat(cv::ACCESS_READ);
 
+    int cropHeight = cvRound(m_maxCropRatio * InHeight);
+    int cropWidth = cvRound(m_maxCropRatio * InWidth);
+
     if (colorFrame.cols / (float)colorFrame.rows > m_WHRatio)
     {
-        cv::Rect crop(0, 0, cvRound(colorFrame.rows * m_WHRatio), colorFrame.rows);
-
-        for (; crop.x < colorMat.cols; crop.x += crop.width)
+        if (m_maxCropRatio <= 0 || cropHeight >= colorFrame.rows)
         {
-            if (crop.x + crop.width >= colorMat.cols)
-            {
-                crop.x = colorMat.cols - crop.width;
-            }
-
-            DetectInCrop(colorMat, crop, tmpRegions);
+            cropHeight = colorFrame.rows;
         }
+        cropWidth = cvRound(cropHeight * m_WHRatio);
     }
     else
     {
-        cv::Rect crop(0, 0, colorFrame.cols, cvRound(colorFrame.cols / m_WHRatio));
-
-        for (; crop.y < colorMat.rows; crop.y += crop.height)
+        if (m_maxCropRatio <= 0 || cropWidth >= colorFrame.cols)
         {
-            if (crop.y + crop.height >= colorMat.rows)
+            cropWidth = colorFrame.cols;
+        }
+        cropHeight = cvRound(colorFrame.cols / m_WHRatio);
+    }
+
+    cv::Rect crop(0, 0, cropWidth, cropHeight);
+
+    for (; crop.y < colorMat.rows; crop.y += crop.height / 2)
+    {
+        bool needBreakY = false;
+        if (crop.y + crop.height >= colorMat.rows)
+        {
+            crop.y = colorMat.rows - crop.height;
+            needBreakY = true;
+        }
+        for (crop.x = 0; crop.x < colorMat.cols; crop.x += crop.width / 2)
+        {
+            bool needBreakX = false;
+            if (crop.x + crop.width >= colorMat.cols)
             {
-                crop.y = colorMat.rows - crop.height;
+                crop.x = colorMat.cols - crop.width;
+                needBreakX = true;
             }
 
             DetectInCrop(colorMat, crop, tmpRegions);
+
+            if (needBreakX)
+            {
+                break;
+            }
+        }
+        if (needBreakY)
+        {
+            break;
         }
     }
 
-    nms3<CRegion>(tmpRegions, m_regions, 0.5f,
+    nms3<CRegion>(tmpRegions, m_regions, 0.4f,
          [](const CRegion& reg) -> cv::Rect { return reg.m_rect; },
     [](const CRegion& reg) -> float { return reg.m_confidence; },
     0, 0.f);

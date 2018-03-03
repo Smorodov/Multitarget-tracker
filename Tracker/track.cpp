@@ -346,7 +346,7 @@ void CTrack::CreateExternalTracker()
             params.desc_pca = cv::TrackerKCF::GRAY;
             params.desc_npca = cv::TrackerKCF::GRAY;
             params.resize = true;
-            params.detect_thresh = 0.3f;
+            params.detect_thresh = 0.5f;
 #if (((CV_VERSION_MAJOR == 3) && (CV_VERSION_MINOR >= 3)) || (CV_VERSION_MAJOR > 3))
             m_tracker = cv::TrackerKCF::create(params);
 #else

@@ -581,7 +581,8 @@ protected:
         BaseDetector::config_t config;
         config["modelConfiguration"] = "../data/MobileNetSSD_deploy.prototxt";
         config["modelBinary"] = "../data/MobileNetSSD_deploy.caffemodel";
-        config["confidenceThreshold"] = "0.2";
+        config["confidenceThreshold"] = "0.5";
+        config["maxCropRatio"] = "3.0";
         m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::DNN, config, m_useLocalTracking, frame));
         if (!m_detector.get())
         {
@@ -619,7 +620,7 @@ protected:
         for (const auto& track : m_tracker->tracks)
         {
             if (track->IsRobust(5,                           // Minimal trajectory size
-                                0.5f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
+                                0.2f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
                                 cv::Size2f(0.1f, 8.0f))      // Min and max ratio: width / height
                     )
             {
@@ -634,7 +635,7 @@ protected:
             }
         }
 
-        m_detector->CalcMotionMap(frame);
+        //m_detector->CalcMotionMap(frame);
     }
 
     ///
