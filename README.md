@@ -6,6 +6,10 @@ Hungarian algorithm + Kalman filter multitarget tracker implementation.
 
 #### Demo Videos
 
+* MobileNet SSD and tracking for low resolution and low quality videos from car DVR:
+
+[![Tracking:](https://img.youtube.com/vi/gVFXZ3-BNhA/0.jpg)](https://www.youtube.com/watch?v=gVFXZ3-BNhA)
+
 * Mouse tracking:
 
 [![Tracking:](https://img.youtube.com/vi/2fW5TmAtAXM/0.jpg)](https://www.youtube.com/watch?v=2fW5TmAtAXM)
