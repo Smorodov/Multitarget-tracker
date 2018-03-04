@@ -25,7 +25,11 @@ set(CMAKE_BINARY_DIR ${CMAKE_SOURCE_DIR}/build)
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR})
 set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
 
-find_package(Eigen3)
+option(USE_HOUGH3D "Should use the Hough3D for trajectories matching?" OFF)
+if (USE_HOUGH3D)
+    find_package(Eigen3)
+    add_definitions(-DUSE_HOUGH3D)
+endif()
 
 # ----------------------------------------------------------------------------
 # Предполагаем, что FindOpenCV.cmake расположен по адресу CMAKE_MODULE_PATH.
@@ -55,13 +59,9 @@ find_package(Eigen3)
              Tracker/HungarianAlg/HungarianAlg.cpp
              Tracker/LocalTracker.cpp
              Tracker/Kalman.cpp
+)
 
-             Tracker/hough3d/hough.cpp
-             Tracker/hough3d/pointcloud.cpp
-             Tracker/hough3d/sphere.cpp
-             Tracker/hough3d/vector3d.cpp)
-
-  set(folder_header
+  set(folder_headers
              MouseExample.h
              VideoExample.h
              nms.h
@@ -87,11 +87,22 @@ find_package(Eigen3)
              Tracker/HungarianAlg/HungarianAlg.h
              Tracker/LocalTracker.h
              Tracker/Kalman.h
+)
 
+
+if (USE_HOUGH3D)
+    set(folder_source ${folder_source}
+             Tracker/hough3d/hough.cpp
+             Tracker/hough3d/pointcloud.cpp
+             Tracker/hough3d/sphere.cpp
+             Tracker/hough3d/vector3d.cpp)
+
+    set(folder_headers ${folder_headers}
              Tracker/hough3d/hough.h
              Tracker/hough3d/pointcloud.h
              Tracker/hough3d/sphere.h
              Tracker/hough3d/vector3d.h)
+endif()
 
   set(graph_source
              Tracker/graph/tokenise.cpp
@@ -186,7 +197,7 @@ find_package(Eigen3)
              )
 
   SOURCE_GROUP("Source Files" FILES ${folder_source})
-  SOURCE_GROUP("Header Files" FILES ${folder_header})
+  SOURCE_GROUP("Header Files" FILES ${folder_headers})
 
   SOURCE_GROUP("graph" FILES ${graph_source} ${graph_header})
   SOURCE_GROUP("GTL" FILES ${gtl_source} ${gtl_header})
@@ -222,7 +233,7 @@ endif(USE_OCV_BGFG)
 # ----------------------------------------------------------------------------  
 # создаем проект
 # ----------------------------------------------------------------------------
-  ADD_EXECUTABLE(MultitargetTracker ${folder_source} ${folder_header} ${graph_source} ${graph_header} ${gtl_source} ${gtl_header})
+  ADD_EXECUTABLE(MultitargetTracker ${folder_source} ${folder_headers} ${graph_source} ${graph_header} ${gtl_source} ${gtl_header})
 # ----------------------------------------------------------------------------
 # добавляем include директории
 # ----------------------------------------------------------------------------

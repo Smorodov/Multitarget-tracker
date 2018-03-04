@@ -68,5 +68,7 @@ private:
     std::deque<std::vector<Point_t>> m_points3D;
 
     void UpdateHungrian(const regions_t& regions, cv::UMat grayFrame, float fps);
+#ifdef USE_HOUGH3D
     void UpdateHough3D(const regions_t& regions, cv::UMat grayFrame, float fps);
+#endif
 };

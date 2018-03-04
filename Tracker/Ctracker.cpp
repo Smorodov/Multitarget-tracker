@@ -6,8 +6,10 @@
 #include "mwbmatching.h"
 #include "tokenise.h"
 
+#ifdef USE_HOUGH3D
 #include "hough3d/hough.h"
 #include <Eigen/Dense>
+#endif
 
 // ---------------------------------------------------------------------------
 // Tracker. Manage tracks. Create, remove, update.
@@ -49,6 +51,7 @@ CTracker::~CTracker(void)
 {
 }
 
+#ifdef USE_HOUGH3D
 //
 // orthogonal least squares fit with libeigen
 // rc = largest eigenvalue
@@ -84,7 +87,7 @@ int orthogonal_LSQ(const PointCloud &pc, Vector3d* a, Vector3d* b)
     int rc = eig.eigenvalues()(2);
     return rc;
 }
-
+#endif
 // ---------------------------------------------------------------------------
 //
 // ---------------------------------------------------------------------------
@@ -102,11 +105,13 @@ void CTracker::Update(
         }
     }
 
+#ifdef USE_HOUGH3D
     if (m_useHough3D)
     {
         UpdateHough3D(regions, grayFrame, fps);
     }
     else
+#endif
     {
         UpdateHungrian(regions, grayFrame, fps);
     }
@@ -318,6 +323,7 @@ void CTracker::UpdateHungrian(
 // ---------------------------------------------------------------------------
 //
 // ---------------------------------------------------------------------------
+#ifdef USE_HOUGH3D
 void CTracker::UpdateHough3D(
         const regions_t& regions,
         cv::UMat grayFrame,
@@ -457,3 +463,4 @@ void CTracker::UpdateHough3D(
         }
     }
 }
+#endif
