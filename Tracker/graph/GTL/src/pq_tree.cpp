@@ -72,7 +72,7 @@ bool pq_tree::bubble_up (std::list<pq_leaf*>& leaves)
     }
     
     sons_iterator next, prev, end;
-    pq_node* father;
+    pq_node* father = nullptr;
     int size = pert_leaves_count;
     
     while (size + block_count + off_the_top > 1) {

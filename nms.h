@@ -48,8 +48,8 @@ inline void nms(
             // grab the current rectangle
             const cv::Rect& rect2 = srcRects[pos->second];
 
-            float intArea = (rect1 & rect2).area();
-            float unionArea = rect1.area() + rect2.area() - intArea;
+			float intArea = static_cast<float>((rect1 & rect2).area());
+			float unionArea = static_cast<float>(rect1.area() + rect2.area() - intArea);
             float overlap = intArea / unionArea;
 
             // if there is sufficient overlap, suppress the current bounding box
@@ -122,8 +122,8 @@ inline void nms2(
             // grab the current rectangle
             const cv::Rect& rect2 = srcRects[pos->second];
 
-            float intArea = (rect1 & rect2).area();
-            float unionArea = rect1.area() + rect2.area() - intArea;
+			float intArea = static_cast<float>((rect1 & rect2).area());
+			float unionArea = static_cast<float>(rect1.area() + rect2.area() - intArea);
             float overlap = intArea / unionArea;
 
             // if there is sufficient overlap, suppress the current bounding box
@@ -199,8 +199,8 @@ inline void nms3(
             // grab the current rectangle
             const cv::Rect& rect2 = GetRect(srcRects[pos->second]);
 
-            float intArea = (rect1 & rect2).area();
-            float unionArea = rect1.area() + rect2.area() - intArea;
+			float intArea = static_cast<float>((rect1 & rect2).area());
+			float unionArea = static_cast<float>(rect1.area() + rect2.area() - intArea);
             float overlap = intArea / unionArea;
 
             // if there is sufficient overlap, suppress the current bounding box

@@ -3,6 +3,7 @@
 #include <vector>
 #include <memory>
 #include <array>
+#include <deque>
 
 #include "defines.h"
 #include "track.h"
@@ -26,7 +27,7 @@ public:
 	~CTracker(void);
 
     tracks_t tracks;
-    void Update(const regions_t& regions, cv::UMat grayFrame);
+    void Update(const regions_t& regions, cv::UMat grayFrame, float fps);
 
     bool GrayFrameToTrack() const
     {
@@ -44,21 +45,30 @@ private:
     tracking::MatchType m_matchType;
 
 	// Шаг времени опроса фильтра
-	track_t dt;
+    track_t m_dt;
 
-	track_t accelNoiseMag;
+    track_t m_accelNoiseMag;
 
 	// Порог расстояния. Если точки находятся дуг от друга на расстоянии,
 	// превышающем этот порог, то эта пара не рассматривается в задаче о назначениях.
-	track_t dist_thres;
+    track_t m_distThres;
 	// Максимальное количество кадров которое трек сохраняется не получая данных о измерений.
-    size_t maximum_allowed_skipped_frames;
+    size_t m_maximumAllowedSkippedFrames;
 	// Максимальная длина следа
-    size_t max_trace_length;
+    size_t m_maxTraceLength;
 
-	size_t NextTrackID;
+    size_t m_nextTrackID;
 
     LocalTracker m_localTracker;
 
     cv::UMat m_prevFrame;
+
+    static const int Hough3DTimeline = 12;
+    bool m_useHough3D;
+    std::deque<std::vector<Point_t>> m_points3D;
+
+    void UpdateHungrian(const regions_t& regions, cv::UMat grayFrame, float fps);
+#ifdef USE_HOUGH3D
+    void UpdateHough3D(const regions_t& regions, cv::UMat grayFrame, float fps);
+#endif
 };

@@ -29,5 +29,6 @@ private:
     float m_inScaleFactor;
     float m_meanVal;
     float m_confidenceThreshold;
+    float m_maxCropRatio;
     std::vector<std::string> m_classNames;
 };

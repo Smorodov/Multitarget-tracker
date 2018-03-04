@@ -87,7 +87,7 @@ void MouseTracking(cv::CommandLineParser parser)
             cv::circle(frame, pts[i], 3, cv::Scalar(0, 255, 0), 1, CV_AA);
         }
 
-        tracker.Update(regions, cv::UMat());
+        tracker.Update(regions, cv::UMat(), 100);
 
         std::cout << tracker.tracks.size() << std::endl;
 

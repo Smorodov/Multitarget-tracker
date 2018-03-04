@@ -6,6 +6,12 @@ project(MultitargetTracker)
 
 unset(CMAKE_CXX_FLAGS CACHE)
 
+find_package(OpenMP)
+if (OPENMP_FOUND)
+    list(APPEND CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+    list(APPEND CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+endif()
+
 if (CMAKE_COMPILER_IS_GNUCXX)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic-errors --std=gnu++14" CACHE STRING COMPILE_FLAGS FORCE)
     set(CMAKE_CXX_FLAGS_RELEASE "-O3 -g -march=native -mtune=native --fast-math -ffast-math -funroll-loops -Wall -DNDEBUG -DBOOST_DISABLE_ASSERTS" CACHE STRING COMPILE_FLAGS FORCE)
@@ -18,6 +24,12 @@ endif()
 set(CMAKE_BINARY_DIR ${CMAKE_SOURCE_DIR}/build)
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR})
 set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
+
+option(USE_HOUGH3D "Should use the Hough3D for trajectories matching?" OFF)
+if (USE_HOUGH3D)
+    find_package(Eigen3)
+    add_definitions(-DUSE_HOUGH3D)
+endif()
 
 # ----------------------------------------------------------------------------
 # Предполагаем, что FindOpenCV.cmake расположен по адресу CMAKE_MODULE_PATH.
@@ -46,9 +58,10 @@ set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
              Tracker/track.cpp
              Tracker/HungarianAlg/HungarianAlg.cpp
              Tracker/LocalTracker.cpp
-             Tracker/Kalman.cpp)
+             Tracker/Kalman.cpp
+)
 
-  set(folder_header
+  set(folder_headers
              MouseExample.h
              VideoExample.h
              nms.h
@@ -73,7 +86,23 @@ set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
              Tracker/track.h
              Tracker/HungarianAlg/HungarianAlg.h
              Tracker/LocalTracker.h
-             Tracker/Kalman.h)
+             Tracker/Kalman.h
+)
+
+
+if (USE_HOUGH3D)
+    set(folder_source ${folder_source}
+             Tracker/hough3d/hough.cpp
+             Tracker/hough3d/pointcloud.cpp
+             Tracker/hough3d/sphere.cpp
+             Tracker/hough3d/vector3d.cpp)
+
+    set(folder_headers ${folder_headers}
+             Tracker/hough3d/hough.h
+             Tracker/hough3d/pointcloud.h
+             Tracker/hough3d/sphere.h
+             Tracker/hough3d/vector3d.h)
+endif()
 
   set(graph_source
              Tracker/graph/tokenise.cpp
@@ -168,7 +197,7 @@ set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
              )
 
   SOURCE_GROUP("Source Files" FILES ${folder_source})
-  SOURCE_GROUP("Header Files" FILES ${folder_header})
+  SOURCE_GROUP("Header Files" FILES ${folder_headers})
 
   SOURCE_GROUP("graph" FILES ${graph_source} ${graph_header})
   SOURCE_GROUP("GTL" FILES ${gtl_source} ${gtl_header})
@@ -204,7 +233,7 @@ endif(USE_OCV_BGFG)
 # ----------------------------------------------------------------------------  
 # создаем проект
 # ----------------------------------------------------------------------------
-  ADD_EXECUTABLE(MultitargetTracker ${folder_source} ${folder_header} ${graph_source} ${graph_header} ${gtl_source} ${gtl_header})
+  ADD_EXECUTABLE(MultitargetTracker ${folder_source} ${folder_headers} ${graph_source} ${graph_header} ${gtl_source} ${gtl_header})
 # ----------------------------------------------------------------------------
 # добавляем include директории
 # ----------------------------------------------------------------------------
@@ -219,6 +248,11 @@ endif(USE_OCV_BGFG)
 
   INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR})
   INCLUDE_DIRECTORIES(${OpenCV_INCLUDE_DIRS})
+
+if (EIGEN3_FOUND)
+  INCLUDE_DIRECTORIES("${EIGEN3_INCLUDE_DIR}")
+endif()
+
 # ----------------------------------------------------------------------------
 # и Lib-ы opencv
 # ----------------------------------------------------------------------------

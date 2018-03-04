@@ -63,7 +63,7 @@ public:
 
         capture.set(cv::CAP_PROP_POS_FRAMES, m_startFrame);
 
-        m_fps = std::max(1, cvRound(capture.get(cv::CAP_PROP_FPS)));
+        m_fps = std::max(1.f, (float)capture.get(cv::CAP_PROP_FPS));
 
         capture >> frame;
         cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
@@ -108,7 +108,7 @@ public:
 
             cv::imshow("Video", frame);
 
-            int waitTime = manualMode ? 0 : std::max<int>(1, 1000 / m_fps - currTime);
+            int waitTime = manualMode ? 0 : std::max<int>(1, cvRound(1000 / m_fps - currTime));
             k = cv::waitKey(waitTime);
 
             if (k == 'm' || k == 'M')
@@ -159,13 +159,13 @@ protected:
 
         const regions_t& regions = m_detector->GetDetects();
 
-        m_tracker->Update(regions, m_tracker->GrayFrameToTrack() ? grayFrame : clFrame);
+        m_tracker->Update(regions, m_tracker->GrayFrameToTrack() ? grayFrame : clFrame, m_fps);
     }
 
     virtual void DrawData(cv::Mat frame, int framesCounter, int currTime) = 0;
 
     bool m_showLogs;
-    int m_fps;
+    float m_fps;
     bool m_useLocalTracking;
 
     ///
@@ -176,7 +176,8 @@ protected:
     ///
     void DrawTrack(cv::Mat frame,
                    int resizeCoeff,
-                   const CTrack& track
+                   const CTrack& track,
+                   bool drawTrajectory = true
                    )
     {
         auto ResizeRect = [&](const cv::Rect& r) -> cv::Rect
@@ -190,17 +191,20 @@ protected:
 
         cv::rectangle(frame, ResizeRect(track.GetLastRect()), cv::Scalar(0, 255, 0), 1, CV_AA);
 
-        cv::Scalar cl = m_colors[track.m_trackID % m_colors.size()];
-
-        for (size_t j = 0; j < track.m_trace.size() - 1; ++j)
+        if (drawTrajectory)
         {
-            const TrajectoryPoint& pt1 = track.m_trace.at(j);
-            const TrajectoryPoint& pt2 = track.m_trace.at(j + 1);
+            cv::Scalar cl = m_colors[track.m_trackID % m_colors.size()];
 
-            cv::line(frame, ResizePoint(pt1.m_prediction), ResizePoint(pt2.m_prediction), cl, 1, CV_AA);
-            if (!pt2.m_hasRaw)
+            for (size_t j = 0; j < track.m_trace.size() - 1; ++j)
             {
-                cv::circle(frame, ResizePoint(pt2.m_prediction), 4, cl, 1, CV_AA);
+                const TrajectoryPoint& pt1 = track.m_trace.at(j);
+                const TrajectoryPoint& pt2 = track.m_trace.at(j + 1);
+
+                cv::line(frame, ResizePoint(pt1.m_prediction), ResizePoint(pt2.m_prediction), cl, 1, CV_AA);
+                if (!pt2.m_hasRaw)
+                {
+                    cv::circle(frame, ResizePoint(pt2.m_prediction), 4, cl, 1, CV_AA);
+                }
             }
         }
     }
@@ -271,7 +275,7 @@ protected:
 
         for (const auto& track : m_tracker->tracks)
         {
-            if (track->IsRobust(m_fps / 2,                         // Minimal trajectory size
+            if (track->IsRobust(cvRound(m_fps / 2),          // Minimal trajectory size
                                 0.6f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
                                 cv::Size2f(0.1f, 8.0f))      // Min and max ratio: width / height
                     )
@@ -422,7 +426,7 @@ protected:
 
         for (const auto& track : m_tracker->tracks)
         {
-            if (track->IsRobust(m_fps / 2,                   // Minimal trajectory size
+			if (track->IsRobust(cvRound(m_fps / 2),          // Minimal trajectory size
                                 0.4f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
                                 cv::Size2f(0.1f, 8.0f))      // Min and max ratio: width / height
                     )
@@ -513,7 +517,7 @@ protected:
         faceRects.insert(faceRects.end(), m_prevRects.begin(), m_prevRects.end());
         scores.insert(scores.end(), m_prevRects.size(), 0.4f);
         std::vector<cv::Rect> allRects;
-        nms2(faceRects, scores, allRects, 0.3f, 1, 0.7);
+        nms2(faceRects, scores, allRects, 0.3f, 1, 0.7f);
 
         regions_t regions;
         for (auto rect : allRects)
@@ -521,7 +525,7 @@ protected:
             regions.push_back(rect);
         }
 
-        m_tracker->Update(regions, grayFrame);
+        m_tracker->Update(regions, grayFrame, m_fps);
     }
 
     ///
@@ -581,7 +585,8 @@ protected:
         BaseDetector::config_t config;
         config["modelConfiguration"] = "../data/MobileNetSSD_deploy.prototxt";
         config["modelBinary"] = "../data/MobileNetSSD_deploy.caffemodel";
-        config["confidenceThreshold"] = "0.2";
+        config["confidenceThreshold"] = "0.5";
+        config["maxCropRatio"] = "3.0";
         m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::DNN, config, m_useLocalTracking, frame));
         if (!m_detector.get())
         {
@@ -619,7 +624,7 @@ protected:
         for (const auto& track : m_tracker->tracks)
         {
             if (track->IsRobust(5,                           // Minimal trajectory size
-                                0.5f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
+                                0.2f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
                                 cv::Size2f(0.1f, 8.0f))      // Min and max ratio: width / height
                     )
             {
@@ -634,7 +639,7 @@ protected:
             }
         }
 
-        m_detector->CalcMotionMap(frame);
+        //m_detector->CalcMotionMap(frame);
     }
 
     ///
