@@ -32,6 +32,7 @@ Hungarian algorithm + Kalman filter multitarget tracker implementation.
 7. Haar face detector from OpenCV
 8. HOG and C4 pedestrian detectors
 9. SSD detector from OpenCV and models from chuanqi305/MobileNet-SSD
+10. YOLO and Tiny YOLO detectors from https://pjreddie.com/darknet/yolo/
 
 #### Build
 1. Download project sources
@@ -51,7 +52,7 @@ Hungarian algorithm + Kalman filter multitarget tracker implementation.
 
            Params: 
            1. Movie file, for example ../data/atrium.avi
-           2. [Optional] Number of example: 0 - MouseTracking, 1 - MotionDetector, 2 - FaceDetector, 3 - PedestrianDetector, 4 - Hybrid face and motion detectors, 5 - MobileNet SSD detector
+           2. [Optional] Number of example: 0 - MouseTracking, 1 - MotionDetector, 2 - FaceDetector, 3 - PedestrianDetector, 4 - Hybrid face and motion detectors, 5 - MobileNet SSD detector, 6 - YOLO detector
               -e=0 or --example=1
            3. [Optional] Frame number to start a video from this position
               -sf=0 or --start_frame==1500
@@ -75,6 +76,7 @@ Hungarian algorithm + Kalman filter multitarget tracker implementation.
 * Pedestrians detector: https://github.com/sturkmen72/C4-Real-time-pedestrian-detection
 * Non Maximum Suppression: https://github.com/Nuzhny007/Non-Maximum-Suppression
 * MobileNet SSD: https://github.com/chuanqi305/MobileNet-SSD
+* YOLO: https://pjreddie.com/darknet/yolo/
 * GOTURN models: https://github.com/opencv/opencv_extra/tree/c4219d5eb3105ed8e634278fad312a1a8d2c182d/testdata/tracking
 
 #### License

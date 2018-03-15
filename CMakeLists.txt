@@ -52,7 +52,8 @@ endif()
              Detector/FaceDetector.cpp
              Detector/PedestrianDetector.cpp
              Detector/pedestrians/c4-pedestrian-detector.cpp
-             Detector/DNNDetector.cpp
+             Detector/SSDMobileNetDetector.cpp
+             Detector/YoloDetector.cpp
 
              Tracker/Ctracker.cpp
              Tracker/track.cpp
@@ -80,7 +81,8 @@ endif()
              Detector/FaceDetector.h
              Detector/PedestrianDetector.h
              Detector/pedestrians/c4-pedestrian-detector.h
-             Detector/DNNDetector.h
+             Detector/SSDMobileNetDetector.h
+             Detector/YoloDetector.h
 
              Tracker/Ctracker.h
              Tracker/track.h
@@ -250,7 +252,7 @@ endif(USE_OCV_BGFG)
   INCLUDE_DIRECTORIES(${OpenCV_INCLUDE_DIRS})
 
 if (EIGEN3_FOUND)
-  INCLUDE_DIRECTORIES("${EIGEN3_INCLUDE_DIR}")
+  INCLUDE_DIRECTORIES(${EIGEN3_INCLUDE_DIR})
 endif()
 
 # ----------------------------------------------------------------------------
