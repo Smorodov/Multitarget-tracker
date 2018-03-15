@@ -61,7 +61,8 @@ enum Detectors
     Face_HAAR,
     Pedestrian_HOG,
     Pedestrian_C4,
-    DNN
+    SSD_MobileNet,
+    Yolo
 };
 
 ///

@@ -564,12 +564,12 @@ private:
 // ----------------------------------------------------------------------
 
 ///
-/// \brief The DNNDetectorExample class
+/// \brief The SSDMobileNetExample class
 ///
-class DNNDetectorExample : public VideoExample
+class SSDMobileNetExample : public VideoExample
 {
 public:
-    DNNDetectorExample(const cv::CommandLineParser& parser)
+    SSDMobileNetExample(const cv::CommandLineParser& parser)
         :
           VideoExample(parser)
     {
@@ -587,7 +587,99 @@ protected:
         config["modelBinary"] = "../data/MobileNetSSD_deploy.caffemodel";
         config["confidenceThreshold"] = "0.5";
         config["maxCropRatio"] = "3.0";
-        m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::DNN, config, m_useLocalTracking, frame));
+        m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::SSD_MobileNet, config, m_useLocalTracking, frame));
+        if (!m_detector.get())
+        {
+            return false;
+        }
+        m_detector->SetMinObjectSize(cv::Size(frame.cols / 20, frame.rows / 20));
+
+        m_tracker = std::make_unique<CTracker>(m_useLocalTracking,
+                                               tracking::DistRects,
+                                               tracking::KalmanLinear,
+                                               tracking::FilterRect,
+                                               tracking::TrackKCF,      // Use KCF tracker for collisions resolving
+                                               tracking::MatchHungrian,
+                                               0.3f,                     // Delta time for Kalman filter
+                                               0.1f,                     // Accel noise magnitude for Kalman filter
+                                               frame.rows / 10,          // Distance threshold between region and object on two frames
+                                               2 * m_fps,                // Maximum allowed skipped frames
+                                               5 * m_fps                 // Maximum trace length
+                                               );
+
+        return true;
+    }
+
+    ///
+    /// \brief DrawData
+    /// \param frame
+    ///
+    void DrawData(cv::Mat frame, int framesCounter, int currTime)
+    {
+        if (m_showLogs)
+        {
+            std::cout << "Frame " << framesCounter << ": tracks = " << m_tracker->tracks.size() << ", time = " << currTime << std::endl;
+        }
+
+        for (const auto& track : m_tracker->tracks)
+        {
+            if (track->IsRobust(5,                           // Minimal trajectory size
+                                0.2f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
+                                cv::Size2f(0.1f, 8.0f))      // Min and max ratio: width / height
+                    )
+            {
+                DrawTrack(frame, 1, *track);
+
+                std::string label = track->m_lastRegion.m_type + ": " + std::to_string(track->m_lastRegion.m_confidence);
+                int baseLine = 0;
+                cv::Size labelSize = cv::getTextSize(label, cv::FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
+                auto rect(track->GetLastRect());
+                cv::rectangle(frame, cv::Rect(cv::Point(rect.x, rect.y - labelSize.height), cv::Size(labelSize.width, labelSize.height + baseLine)), cv::Scalar(255, 255, 255), CV_FILLED);
+                cv::putText(frame, label, cv::Point(rect.x, rect.y), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 0, 0));
+            }
+        }
+
+        //m_detector->CalcMotionMap(frame);
+    }
+
+    ///
+    /// \brief GrayProcessing
+    /// \return
+    ///
+    bool GrayProcessing() const
+    {
+        return false;
+    }
+};
+
+// ----------------------------------------------------------------------
+
+///
+/// \brief The YoloExample class
+///
+class YoloExample : public VideoExample
+{
+public:
+    YoloExample(const cv::CommandLineParser& parser)
+        :
+          VideoExample(parser)
+    {
+    }
+
+protected:
+    ///
+    /// \brief InitTracker
+    /// \param grayFrame
+    ///
+    bool InitTracker(cv::UMat frame)
+    {
+        BaseDetector::config_t config;
+        config["modelConfiguration"] = "../data/tiny-yolo.cfg";
+        config["modelBinary"] = "../data/tiny-yolo.weights";
+        config["classNames"] = "../data/coco.names";
+        config["confidenceThreshold"] = "0.5";
+        config["maxCropRatio"] = "3.0";
+        m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Yolo, config, m_useLocalTracking, frame));
         if (!m_detector.get())
         {
             return false;

@@ -2,7 +2,8 @@
 #include "MotionDetector.h"
 #include "FaceDetector.h"
 #include "PedestrianDetector.h"
-#include "DNNDetector.h"
+#include "SSDMobileNetDetector.h"
+#include "YoloDetector.h"
 
 ///
 /// \brief CreateDetector
@@ -59,8 +60,12 @@ BaseDetector* CreateDetector(
         detector = new PedestrianDetector(collectPoints, gray);
         break;
 
-    case tracking::DNN:
-        detector = new DNNDetector(collectPoints, gray);
+    case tracking::SSD_MobileNet:
+        detector = new SSDMobileNetDetector(collectPoints, gray);
+        break;
+
+    case tracking::Yolo:
+        detector = new YoloDetector(collectPoints, gray);
         break;
 
     default:
