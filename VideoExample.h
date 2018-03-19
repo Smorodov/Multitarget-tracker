@@ -6,6 +6,10 @@
 #include <iostream>
 #include <vector>
 #include <map>
+#include <thread>
+#include <mutex>
+#include <chrono>
+#include <condition_variable>
 
 #include "nms.h"
 
@@ -19,8 +23,14 @@ class VideoExample
 public:
     VideoExample(const cv::CommandLineParser& parser)
         :
+          m_showLogs(true),
           m_fps(25),
-          m_useLocalTracking(false)
+          m_useLocalTracking(false),
+          m_isTrackerInitialized(false),
+          m_startFrame(0),
+          m_endFrame(0),
+          m_finishDelay(0),
+          m_currFrame(0)
     {
         m_inFile = parser.get<std::string>(0);
         m_outFile = parser.get<std::string>("out");
@@ -49,29 +59,22 @@ public:
     ///
     void Process()
     {
+        m_currFrame = 1;
+        bool stopCapture = false;
+        std::mutex frameLock;
+        std::condition_variable frameCond;
+        std::condition_variable trackCond;
+        std::thread thCapDet(CaptureAndDetect, this, &stopCapture, &frameLock, &frameCond, &trackCond);
+        thCapDet.detach();
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
+        trackCond.notify_one();
+        //std::cout << "0: trackCond.notify_one(); " << std::endl;
+
         cv::VideoWriter writer;
 
-        cv::VideoCapture capture(m_inFile);
-        if (!capture.isOpened())
-        {
-            std::cerr << "Can't open " << m_inFile << std::endl;
-            return;
-        }
         cv::namedWindow("Video");
-        cv::Mat frame;
-        cv::UMat gray;
-
-        capture.set(cv::CAP_PROP_POS_FRAMES, m_startFrame);
-
-        m_fps = std::max(1.f, (float)capture.get(cv::CAP_PROP_FPS));
-
-        capture >> frame;
-        cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
-
-        if (!InitTracker(gray))
-        {
-            return;
-        }
 
         int k = 0;
 
@@ -81,32 +84,47 @@ public:
 
         bool manualMode = false;
         int framesCounter = m_startFrame + 1;
-        while (k != 27)
+
+        const int captureTimeOut = 5000;
+
+        for (; !stopCapture && k != 27; )
         {
-            capture >> frame;
-            if (frame.empty())
+            int currFrame = 0;
+            {
+                //std::cout << "Process: frameCond.wait_until" << std::endl;
+
+                std::unique_lock<std::mutex> lock(frameLock);
+                auto now = std::chrono::system_clock::now();
+                if (frameCond.wait_until(lock, now + std::chrono::milliseconds(captureTimeOut)) == std::cv_status::timeout)
+                {
+                    std::cerr << "Frame capture timeout" << std::endl;
+                    break;
+                }
+                currFrame = m_currFrame;
+                //std::cout << "Process: currFrame = " << currFrame << std::endl;
+            }
+            if (stopCapture)
             {
                 break;
             }
-            cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
 
             if (!writer.isOpened())
             {
-                writer.open(m_outFile, cv::VideoWriter::fourcc('M', 'J', 'P', 'G'), capture.get(cv::CAP_PROP_FPS), frame.size(), true);
+                writer.open(m_outFile, cv::VideoWriter::fourcc('M', 'J', 'P', 'G'), m_fps, m_frameInfo[currFrame].m_frame.size(), true);
             }
 
             int64 t1 = cv::getTickCount();
 
-            ProcessFrame(frame, gray);
+            Tracking(m_frameInfo[currFrame].m_frame, m_frameInfo[currFrame].m_gray, m_frameInfo[currFrame].m_regions);
 
             int64 t2 = cv::getTickCount();
 
-            allTime += t2 - t1;
-            int currTime = cvRound(1000 * (t2 - t1) / freq);
+            allTime += t2 - t1 + m_frameInfo[currFrame].m_dt;
+            int currTime = cvRound(1000 * (t2 - t1 + m_frameInfo[currFrame].m_dt) / freq);
 
-            DrawData(frame, framesCounter, currTime);
+            DrawData(m_frameInfo[currFrame].m_frame, framesCounter, currTime);
 
-            cv::imshow("Video", frame);
+            cv::imshow("Video", m_frameInfo[currFrame].m_frame);
 
             int waitTime = manualMode ? 0 : std::max<int>(1, cvRound(1000 / m_fps - currTime));
             k = cv::waitKey(waitTime);
@@ -118,14 +136,23 @@ public:
 
             if (writer.isOpened())
             {
-                writer << frame;
+                writer << m_frameInfo[currFrame].m_frame;
             }
+
+            trackCond.notify_one();
+            //std::cout << "1: trackCond.notify_one(); " << std::endl;
 
             ++framesCounter;
             if (m_endFrame && framesCounter > m_endFrame)
             {
                 break;
             }
+        }
+        stopCapture = true;
+
+        if (thCapDet.joinable())
+        {
+            thCapDet.join();
         }
 
         std::cout << "work time = " << (allTime / freq) << std::endl;
@@ -136,18 +163,111 @@ protected:
     std::unique_ptr<BaseDetector> m_detector;
     std::unique_ptr<CTracker> m_tracker;
 
+    bool m_showLogs;
+    float m_fps;
+    bool m_useLocalTracking;
+
+
+    ///
+    /// \brief CaptureAndDetect
+    /// \param stopCapture
+    /// \param frameLock
+    /// \param frameCond
+    ///
+    static void CaptureAndDetect(VideoExample* thisPtr,
+                                 bool* stopCapture,
+                                 std::mutex* frameLock,
+                                 std::condition_variable* frameCond,
+                                 std::condition_variable* trackCond)
+    {
+        cv::VideoCapture capture(thisPtr->m_inFile);
+
+        if (!capture.isOpened())
+        {
+            std::cerr << "Can't open " << thisPtr->m_inFile << std::endl;
+            return;
+        }
+
+        capture.set(cv::CAP_PROP_POS_FRAMES, thisPtr->m_startFrame);
+
+        thisPtr->m_fps = std::max(1.f, (float)capture.get(cv::CAP_PROP_FPS));
+
+        const int trackingTimeOut = 5000;
+
+        for (; !(*stopCapture);)
+        {
+            int currFrame = 0;
+            {
+                //std::cout << "CaptureAndDetect: trackCond->wait_until" << std::endl;
+
+                std::unique_lock<std::mutex> lock(*frameLock);
+                auto now = std::chrono::system_clock::now();
+                if (trackCond->wait_until(lock, now + std::chrono::milliseconds(trackingTimeOut)) == std::cv_status::timeout)
+                {
+                    std::cerr << "Tracking timeout!" << std::endl;
+                    break;
+                }
+                currFrame = thisPtr->m_currFrame ? 0 : 1;
+                //std::cout << "CaptureAndDetect: currFrame = " << currFrame << std::endl;
+            }
+
+            capture >> thisPtr->m_frameInfo[currFrame].m_frame;
+            if (thisPtr->m_frameInfo[currFrame].m_frame.empty())
+            {
+                break;
+            }
+            cv::cvtColor(thisPtr->m_frameInfo[currFrame].m_frame, thisPtr->m_frameInfo[currFrame].m_gray, cv::COLOR_BGR2GRAY);
+
+            if (!thisPtr->m_isTrackerInitialized)
+            {
+                thisPtr->m_isTrackerInitialized = thisPtr->InitTracker(thisPtr->m_frameInfo[currFrame].m_gray);
+                if (!thisPtr->m_isTrackerInitialized)
+                {
+                    std::cerr << "Tracker initilize error!!!" << std::endl;
+                    break;
+                }
+            }
+
+            int64 t1 = cv::getTickCount();
+            thisPtr->Detection(thisPtr->m_frameInfo[currFrame].m_frame, thisPtr->m_frameInfo[currFrame].m_gray, thisPtr->m_frameInfo[currFrame].m_regions);
+            int64 t2 = cv::getTickCount();
+            thisPtr->m_frameInfo[currFrame].m_dt = t2 - t1;
+
+            frameLock->lock();
+            thisPtr->m_currFrame = thisPtr->m_currFrame ? 0 : 1;
+            //std::cout << "CaptureAndDetect: thisPtr->m_currFrame = " << thisPtr->m_currFrame << std::endl;
+            frameLock->unlock();
+            frameCond->notify_one();
+            //std::cout << "0 : CaptureAndDetect: frameCond->notify_one();" << std::endl;
+        }
+
+        *stopCapture = true;
+        frameCond->notify_one();
+        //std::cout << "1 : CaptureAndDetect: frameCond->notify_one();" << std::endl;
+    }
+
+    ///
+    /// \brief GrayProcessing
+    /// \return
+    ///
     virtual bool GrayProcessing() const
     {
         return true;
     }
 
+    ///
+    /// \brief InitTracker
+    /// \param frame
+    /// \return
+    ///
     virtual bool InitTracker(cv::UMat frame) = 0;
 
     ///
-    /// \brief ProcessFrame
+    /// \brief Detection
+    /// \param frame
     /// \param grayFrame
     ///
-    virtual void ProcessFrame(cv::Mat frame, cv::UMat grayFrame)
+    void Detection(cv::Mat frame, cv::UMat grayFrame, regions_t& regions)
     {
         cv::UMat clFrame;
         if (!GrayProcessing() || !m_tracker->GrayFrameToTrack())
@@ -157,16 +277,34 @@ protected:
 
         m_detector->Detect(GrayProcessing() ? grayFrame : clFrame);
 
-        const regions_t& regions = m_detector->GetDetects();
+        const regions_t& regs = m_detector->GetDetects();
+
+        regions.assign(std::begin(regs), std::end(regs));
+    }
+
+    ///
+    /// \brief Tracking
+    /// \param frame
+    /// \param grayFrame
+    ///
+    void Tracking(cv::Mat frame, cv::UMat grayFrame, const regions_t& regions)
+    {
+        cv::UMat clFrame;
+        if (!GrayProcessing() || !m_tracker->GrayFrameToTrack())
+        {
+            clFrame = frame.getUMat(cv::ACCESS_READ);
+        }
 
         m_tracker->Update(regions, m_tracker->GrayFrameToTrack() ? grayFrame : clFrame, m_fps);
     }
 
+    ///
+    /// \brief DrawData
+    /// \param frame
+    /// \param framesCounter
+    /// \param currTime
+    ///
     virtual void DrawData(cv::Mat frame, int framesCounter, int currTime) = 0;
-
-    bool m_showLogs;
-    float m_fps;
-    bool m_useLocalTracking;
 
     ///
     /// \brief DrawTrack
@@ -210,12 +348,30 @@ protected:
     }
 
 private:
+    bool m_isTrackerInitialized;
     std::string m_inFile;
     std::string m_outFile;
     int m_startFrame;
     int m_endFrame;
     int m_finishDelay;
     std::vector<cv::Scalar> m_colors;
+
+    struct FrameInfo
+    {
+        cv::Mat m_frame;
+        cv::UMat m_gray;
+        regions_t m_regions;
+        int64 m_dt;
+
+        FrameInfo()
+            : m_dt(0)
+        {
+
+        }
+    };
+    FrameInfo m_frameInfo[2];
+
+    int m_currFrame;
 };
 
 // ----------------------------------------------------------------------
