@@ -20,7 +20,7 @@ static void Help()
 const char* keys =
 {
     "{ @1             |../data/atrium.avi  | movie file | }"
-    "{ e  example     |1                   | number of example 0 - MouseTracking, 1 - MotionDetector, 2 - FaceDetector, 3 - PedestrianDetector, 4 - Hybrid face and motion detectors, 5 - MobileNet SSD detector, 6 - Yolo detector | }"
+    "{ e  example     |1                   | number of example 0 - MouseTracking, 1 - MotionDetector, 2 - FaceDetector, 3 - PedestrianDetector, 4 - MobileNet SSD detector, 5 - Yolo detector | }"
     "{ sf start_frame |0                   | Start a video from this position | }"
     "{ ef end_frame   |0                   | Play a video to this position (if 0 then played to the end of file) | }"
     "{ ed end_delay   |0                   | Delay in milliseconds after video ending | }"
@@ -72,24 +72,21 @@ int main(int argc, char** argv)
 
     case 4:
     {
-        HybridFaceDetectorExample face_detector(parser);
-        face_detector.Process();
-        break;
-    }
-
-    case 5:
-    {
         SSDMobileNetExample dnn_detector(parser);
         dnn_detector.Process();
         break;
     }
 
-    case 6:
+    case 5:
     {
         YoloExample yolo_detector(parser);
         yolo_detector.Process();
         break;
     }
+
+    default:
+        std::cerr << "Wrong example number!" << std::endl;
+        break;
     }
 
 
