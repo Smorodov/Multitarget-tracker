@@ -63,14 +63,30 @@ public:
         bool stopCapture = false;
         std::mutex frameLock;
         std::condition_variable frameCond;
+        std::mutex trackLock;
         std::condition_variable trackCond;
-        std::thread thCapDet(CaptureAndDetect, this, &stopCapture, &frameLock, &frameCond, &trackCond);
+        std::thread thCapDet(CaptureAndDetect, this, &stopCapture, &frameLock, &frameCond, &trackLock, &trackCond);
         thCapDet.detach();
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        const int captureTimeOut = 5000;
 
-        trackCond.notify_one();
-        //std::cout << "0: trackCond.notify_one(); " << std::endl;
+        {
+            //std::cout << "Process -1: frameLock" << std::endl;
+            std::unique_lock<std::mutex> lock(frameLock);
+            //std::cout << "Process -1: frameCond.wait_until" << std::endl;
+            auto now = std::chrono::system_clock::now();
+            if (frameCond.wait_until(lock, now + std::chrono::milliseconds(captureTimeOut)) == std::cv_status::timeout)
+            {
+                std::cerr << "Process: Init capture timeout" << std::endl;
+                stopCapture = true;
+
+                if (thCapDet.joinable())
+                {
+                    thCapDet.join();
+                }
+                return;
+            }
+        }
 
         cv::VideoWriter writer;
 
@@ -85,28 +101,36 @@ public:
         bool manualMode = false;
         int framesCounter = m_startFrame + 1;
 
-        const int captureTimeOut = 5000;
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        trackCond.notify_all();
+        //std::cout << "Process 0: trackCond.notify_all(); " << std::endl;
 
+        int currFrame = 0;
         for (; !stopCapture && k != 27; )
         {
-            int currFrame = 0;
-            {
-                //std::cout << "Process: frameCond.wait_until" << std::endl;
+            //std::cout << "Process: m_currFrame = " << m_currFrame << ", currFrame = " << currFrame << std::endl;
 
+            //if (currFrame == m_currFrame)
+            {
+                //std::cout << "Process: frameLock" << std::endl;
                 std::unique_lock<std::mutex> lock(frameLock);
+                //std::cout << "Process: frameCond.wait_until" << std::endl;
                 auto now = std::chrono::system_clock::now();
                 if (frameCond.wait_until(lock, now + std::chrono::milliseconds(captureTimeOut)) == std::cv_status::timeout)
                 {
-                    std::cerr << "Frame capture timeout" << std::endl;
+                    std::cerr << "Process: Frame capture timeout" << std::endl;
                     break;
                 }
-                currFrame = m_currFrame;
-                //std::cout << "Process: currFrame = " << currFrame << std::endl;
             }
             if (stopCapture)
             {
                 break;
             }
+
+            frameLock.lock();
+            currFrame = m_currFrame;
+            //std::cout << "Process: currFrame = " << currFrame << std::endl;
+            frameLock.unlock();
 
             if (!writer.isOpened())
             {
@@ -118,6 +142,7 @@ public:
             Tracking(m_frameInfo[currFrame].m_frame, m_frameInfo[currFrame].m_gray, m_frameInfo[currFrame].m_regions);
 
             int64 t2 = cv::getTickCount();
+            //std::cout << "Process: tracking" << std::endl;
 
             allTime += t2 - t1 + m_frameInfo[currFrame].m_dt;
             int currTime = cvRound(1000 * (t2 - t1 + m_frameInfo[currFrame].m_dt) / freq);
@@ -128,6 +153,7 @@ public:
 
             int waitTime = manualMode ? 0 : std::max<int>(1, cvRound(1000 / m_fps - currTime));
             k = cv::waitKey(waitTime);
+            std::cout << "Process: waitkey" << std::endl;
 
             if (k == 'm' || k == 'M')
             {
@@ -139,12 +165,13 @@ public:
                 writer << m_frameInfo[currFrame].m_frame;
             }
 
-            trackCond.notify_one();
-            //std::cout << "1: trackCond.notify_one(); " << std::endl;
+            trackCond.notify_all();
+            //std::cout << "Process 1: trackCond.notify_all(); " << std::endl;
 
             ++framesCounter;
             if (m_endFrame && framesCounter > m_endFrame)
             {
+                std::cout << "Process: riched last " << m_endFrame << " frame" << std::endl;
                 break;
             }
         }
@@ -178,6 +205,7 @@ protected:
                                  bool* stopCapture,
                                  std::mutex* frameLock,
                                  std::condition_variable* frameCond,
+                                 std::mutex* trackLock,
                                  std::condition_variable* trackCond)
     {
         cv::VideoCapture capture(thisPtr->m_inFile);
@@ -194,36 +222,46 @@ protected:
 
         const int trackingTimeOut = 5000;
 
+        frameCond->notify_all();
+        //std::cout << "CaptureAndDetect: init capture frameCond->notify_all();" << std::endl;
+
+        int currFrame = 0;
         for (; !(*stopCapture);)
         {
-            int currFrame = 0;
-            {
-                //std::cout << "CaptureAndDetect: trackCond->wait_until" << std::endl;
+            //std::cout << "CaptureAndDetect: m_currFrame = " << thisPtr->m_currFrame << ", currFrame = " << currFrame << std::endl;
 
-                std::unique_lock<std::mutex> lock(*frameLock);
+            {
+                //std::cout << "CaptureAndDetect: trackLock" << std::endl;
+                std::unique_lock<std::mutex> lock(*trackLock);
+                //std::cout << "CaptureAndDetect: trackCond->wait_until" << std::endl;
                 auto now = std::chrono::system_clock::now();
                 if (trackCond->wait_until(lock, now + std::chrono::milliseconds(trackingTimeOut)) == std::cv_status::timeout)
                 {
-                    std::cerr << "Tracking timeout!" << std::endl;
+                    std::cerr << "CaptureAndDetect: Tracking timeout!" << std::endl;
                     break;
                 }
-                currFrame = thisPtr->m_currFrame ? 0 : 1;
-                //std::cout << "CaptureAndDetect: currFrame = " << currFrame << std::endl;
             }
+            frameLock->lock();
+            currFrame = thisPtr->m_currFrame ? 0 : 1;
+            //std::cout << "CaptureAndDetect: currFrame = " << currFrame << std::endl;
+            frameLock->unlock();
 
             capture >> thisPtr->m_frameInfo[currFrame].m_frame;
             if (thisPtr->m_frameInfo[currFrame].m_frame.empty())
             {
+                std::cerr << "CaptureAndDetect: frame is empty!" << std::endl;
                 break;
             }
             cv::cvtColor(thisPtr->m_frameInfo[currFrame].m_frame, thisPtr->m_frameInfo[currFrame].m_gray, cv::COLOR_BGR2GRAY);
+
+            //std::cout << "CaptureAndDetect: capture" << std::endl;
 
             if (!thisPtr->m_isTrackerInitialized)
             {
                 thisPtr->m_isTrackerInitialized = thisPtr->InitTracker(thisPtr->m_frameInfo[currFrame].m_gray);
                 if (!thisPtr->m_isTrackerInitialized)
                 {
-                    std::cerr << "Tracker initilize error!!!" << std::endl;
+                    std::cerr << "CaptureAndDetect: Tracker initilize error!!!" << std::endl;
                     break;
                 }
             }
@@ -233,17 +271,19 @@ protected:
             int64 t2 = cv::getTickCount();
             thisPtr->m_frameInfo[currFrame].m_dt = t2 - t1;
 
+            //std::cout << "CaptureAndDetect: detection" << std::endl;
+
             frameLock->lock();
             thisPtr->m_currFrame = thisPtr->m_currFrame ? 0 : 1;
             //std::cout << "CaptureAndDetect: thisPtr->m_currFrame = " << thisPtr->m_currFrame << std::endl;
             frameLock->unlock();
-            frameCond->notify_one();
-            //std::cout << "0 : CaptureAndDetect: frameCond->notify_one();" << std::endl;
+            frameCond->notify_all();
+            //std::cout << "CaptureAndDetect 0: frameCond->notify_all();" << std::endl;
         }
 
         *stopCapture = true;
-        frameCond->notify_one();
-        //std::cout << "1 : CaptureAndDetect: frameCond->notify_one();" << std::endl;
+        frameCond->notify_all();
+        //std::cout << "CaptureAndDetect 1: frameCond->notify_all();" << std::endl;
     }
 
     ///
