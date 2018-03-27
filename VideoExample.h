@@ -63,13 +63,13 @@ public:
         bool stopCapture = false;
         std::mutex frameLock;
         std::condition_variable frameCond;
+
         std::mutex trackLock;
         std::condition_variable trackCond;
         std::thread thCapDet(CaptureAndDetect, this, &stopCapture, &frameLock, &frameCond, &trackLock, &trackCond);
         thCapDet.detach();
 
         const int captureTimeOut = 5000;
-
         {
             //std::cout << "Process -1: frameLock" << std::endl;
             std::unique_lock<std::mutex> lock(frameLock);
