@@ -153,7 +153,7 @@ public:
 
             int waitTime = manualMode ? 0 : std::max<int>(1, cvRound(1000 / m_fps - currTime));
             k = cv::waitKey(waitTime);
-            std::cout << "Process: waitkey" << std::endl;
+            //std::cout << "Process: waitkey" << std::endl;
 
             if (k == 'm' || k == 'M')
             {
@@ -385,6 +385,16 @@ protected:
                 }
             }
         }
+
+        if (m_useLocalTracking)
+        {
+            cv::Scalar cl = m_colors[track.m_trackID % m_colors.size()];
+
+            for (auto pt : track.m_lastRegion.m_points)
+            {
+                cv::circle(frame, cv::Point(cvRound(pt.x), cvRound(pt.y)), 1, cl, -1, CV_AA);
+            }
+        }
     }
 
 private:
@@ -436,6 +446,8 @@ protected:
     ///
     bool InitTracker(cv::UMat frame)
     {
+        m_useLocalTracking = false;
+
         m_minObjWidth = frame.cols / 50;
 
         BaseDetector::config_t config;
@@ -445,10 +457,10 @@ protected:
         m_tracker = std::make_unique<CTracker>(m_useLocalTracking,
                                                tracking::DistCenters,
                                                tracking::KalmanLinear,
-                                               tracking::FilterRect,
+                                               tracking::FilterCenter,
                                                tracking::TrackKCF,       // Use KCF tracker for collisions resolving
                                                tracking::MatchHungrian,
-                                               0.2f,                     // Delta time for Kalman filter
+                                               1.0f,                     // Delta time for Kalman filter
                                                0.1f,                     // Accel noise magnitude for Kalman filter
                                                frame.rows / 10,          // Distance threshold between region and object on two frames
                                                m_fps,                    // Maximum allowed skipped frames
@@ -471,12 +483,12 @@ protected:
 
         for (const auto& track : m_tracker->tracks)
         {
-            if (track->IsRobust(cvRound(m_fps / 2),          // Minimal trajectory size
-                                0.6f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
+            if (track->IsRobust(cvRound(m_fps / 4),          // Minimal trajectory size
+                                0.7f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
                                 cv::Size2f(0.1f, 8.0f))      // Min and max ratio: width / height
                     )
             {
-                DrawTrack(frame, 1, *track);
+                DrawTrack(frame, 1, *track, true);
             }
         }
 
@@ -713,7 +725,7 @@ protected:
             }
         }
 
-        //m_detector->CalcMotionMap(frame);
+        m_detector->CalcMotionMap(frame);
     }
 
     ///
@@ -747,6 +759,8 @@ protected:
     ///
     bool InitTracker(cv::UMat frame)
     {
+        m_useLocalTracking = false;
+
         BaseDetector::config_t config;
         config["modelConfiguration"] = "../data/tiny-yolo.cfg";
         config["modelBinary"] = "../data/tiny-yolo.weights";
@@ -805,7 +819,7 @@ protected:
             }
         }
 
-        //m_detector->CalcMotionMap(frame);
+        m_detector->CalcMotionMap(frame);
     }
 
     ///
