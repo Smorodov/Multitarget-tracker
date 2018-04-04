@@ -25,6 +25,7 @@ CTrack::CTrack(
       m_lastRegion(region),
       m_predictionPoint((region.m_rect.tl() + region.m_rect.br()) / 2),
       m_filterObjectSize(filterObjectSize),
+      m_outOfTheFrame(false),
       m_externalTrackerForLost(externalTrackerForLost)
 {
     if (filterObjectSize)
@@ -162,6 +163,10 @@ bool CTrack::IsRobust(int minTraceSize, float minRawRatio, cv::Size2f sizeRatio)
             res &= (sr < sizeRatio.height);
         }
     }
+    if (m_outOfTheFrame)
+    {
+        res = false;
+    }
     return res;
 }
 
@@ -203,7 +208,7 @@ void CTrack::RectUpdate(
 
     bool recalcPrediction = true;
 
-    auto Clamp = [](int& v, int& size, int hi)
+    auto Clamp = [](int& v, int& size, int hi) -> bool
     {
         if (size < 2)
         {
@@ -212,11 +217,14 @@ void CTrack::RectUpdate(
         if (v < 0)
         {
             v = 0;
+            return true;
         }
         else if (v + size > hi - 1)
         {
             v = hi - 1 - size;
+            return true;
         }
+        return false;
     };
 
     switch (m_externalTrackerForLost)
@@ -266,10 +274,12 @@ void CTrack::RectUpdate(
 #endif
 
                     inited = true;
+                    m_outOfTheFrame = false;
                 }
                 else
                 {
                     m_tracker.release();
+                    m_outOfTheFrame = true;
                 }
             }
             cv::Rect2d newRect;
@@ -335,8 +345,9 @@ void CTrack::RectUpdate(
         }
     }
 
-    Clamp(m_predictionRect.x, m_predictionRect.width, currFrame.cols);
-    Clamp(m_predictionRect.y, m_predictionRect.height, currFrame.rows);
+    m_outOfTheFrame = false;
+    m_outOfTheFrame |= Clamp(m_predictionRect.x, m_predictionRect.width, currFrame.cols);
+    m_outOfTheFrame |= Clamp(m_predictionRect.y, m_predictionRect.height, currFrame.rows);
 
     m_predictionPoint = (m_predictionRect.tl() + m_predictionRect.br()) / 2;
 }
@@ -459,17 +470,21 @@ void CTrack::PointUpdate(
         m_predictionPoint = m_kalman->Update(pt, dataCorrect);
     }
 
-	auto Clamp = [](track_t& v, int hi)
+    auto Clamp = [](track_t& v, int hi) -> bool
     {
         if (v < 0)
         {
             v = 0;
+            return true;
         }
         else if (hi && v > hi - 1)
         {
 			v = static_cast<track_t>(hi - 1);
+            return true;
         }
+        return false;
     };
-    Clamp(m_predictionPoint.x, frameSize.width);
-    Clamp(m_predictionPoint.y, frameSize.height);
+    m_outOfTheFrame = false;
+    m_outOfTheFrame |= Clamp(m_predictionPoint.x, frameSize.width);
+    m_outOfTheFrame |= Clamp(m_predictionPoint.y, frameSize.height);
 }

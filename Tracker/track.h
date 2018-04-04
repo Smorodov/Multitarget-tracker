@@ -197,6 +197,7 @@ private:
     cv::Rect m_predictionRect;
     TKalmanFilter* m_kalman;
     bool m_filterObjectSize;
+    bool m_outOfTheFrame;
 
     tracking::LostTrackType m_externalTrackerForLost;
 #ifdef USE_OCV_KCF
