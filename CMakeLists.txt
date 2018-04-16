@@ -25,12 +25,6 @@ set(CMAKE_BINARY_DIR ${CMAKE_SOURCE_DIR}/build)
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR})
 set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
 
-option(USE_HOUGH3D "Should use the Hough3D for trajectories matching?" OFF)
-if (USE_HOUGH3D)
-    find_package(Eigen3)
-    add_definitions(-DUSE_HOUGH3D)
-endif()
-
 # ----------------------------------------------------------------------------
 # Предполагаем, что FindOpenCV.cmake расположен по адресу CMAKE_MODULE_PATH.
 # ----------------------------------------------------------------------------
@@ -90,21 +84,6 @@ endif()
              Tracker/LocalTracker.h
              Tracker/Kalman.h
 )
-
-
-if (USE_HOUGH3D)
-    set(folder_source ${folder_source}
-             Tracker/hough3d/hough.cpp
-             Tracker/hough3d/pointcloud.cpp
-             Tracker/hough3d/sphere.cpp
-             Tracker/hough3d/vector3d.cpp)
-
-    set(folder_headers ${folder_headers}
-             Tracker/hough3d/hough.h
-             Tracker/hough3d/pointcloud.h
-             Tracker/hough3d/sphere.h
-             Tracker/hough3d/vector3d.h)
-endif()
 
   set(graph_source
              Tracker/graph/tokenise.cpp
@@ -250,10 +229,6 @@ endif(USE_OCV_BGFG)
 
   INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR})
   INCLUDE_DIRECTORIES(${OpenCV_INCLUDE_DIRS})
-
-if (EIGEN3_FOUND)
-  INCLUDE_DIRECTORIES(${EIGEN3_INCLUDE_DIR})
-endif()
 
 # ----------------------------------------------------------------------------
 # и Lib-ы opencv
