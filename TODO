@@ -1,2 +1,4 @@
++ Integrate: https://github.com/nwojke/mcf
 + New Multitarget tracking algorithm based on Discrete-Continuous Energy Minimization: https://bitbucket.org/amilan/dctracking
 + Deep SORT: https://github.com/nwojke/deep_sort
++ Yolo v3 detector

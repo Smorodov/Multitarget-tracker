@@ -52,7 +52,7 @@ Hungarian algorithm + Kalman filter multitarget tracker implementation.
 
            Params: 
            1. Movie file, for example ../data/atrium.avi
-           2. [Optional] Number of example: 0 - MouseTracking, 1 - MotionDetector, 2 - FaceDetector, 3 - PedestrianDetector, 4 - Hybrid face and motion detectors, 5 - MobileNet SSD detector, 6 - YOLO detector
+           2. [Optional] Number of example: 0 - MouseTracking, 1 - MotionDetector, 2 - FaceDetector, 3 - PedestrianDetector, 4 - MobileNet SSD detector, 5 - YOLO detector
               -e=0 or --example=1
            3. [Optional] Frame number to start a video from this position
               -sf=0 or --start_frame==1500
