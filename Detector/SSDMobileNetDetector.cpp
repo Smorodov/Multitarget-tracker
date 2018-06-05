@@ -46,6 +46,22 @@ bool SSDMobileNetDetector::Init(const config_t& config)
         m_net = cv::dnn::readNetFromCaffe(modelConfiguration->second, modelBinary->second);
     }
 
+    auto dnnTarget = config.find("dnnTarget");
+    if (dnnTarget != config.end())
+    {
+        std::map<std::string, cv::dnn::Target> targets;
+        targets["DNN_TARGET_CPU"] = cv::dnn::DNN_TARGET_CPU;
+        targets["DNN_TARGET_OPENCL"] = cv::dnn::DNN_TARGET_OPENCL;
+        targets["DNN_TARGET_OPENCL_FP16"] = cv::dnn::DNN_TARGET_OPENCL_FP16;
+        targets["DNN_TARGET_MYRIAD"] = cv::dnn::DNN_TARGET_MYRIAD;
+
+        auto target = targets.find(dnnTarget->second);
+        if (target != std::end(targets))
+        {
+            m_net.setPreferableTarget(target->second);
+        }
+    }
+
     auto confidenceThreshold = config.find("confidenceThreshold");
     if (confidenceThreshold != config.end())
     {
