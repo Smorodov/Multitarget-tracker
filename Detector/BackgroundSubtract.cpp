@@ -94,18 +94,26 @@ void BackgroundSubtract::subtract(const cv::UMat& image, cv::UMat& foreground)
 	{
 		if (image.channels() != m_channels)
 		{
-			if (image.channels() == 1)
-			{
-                cv::UMat newImg;
-				cv::cvtColor(image, newImg, CV_GRAY2BGR);
-				return newImg;
-			}
-			else if (image.channels() == 3)
-			{
-                cv::UMat newImg;
-				cv::cvtColor(image, newImg, CV_BGR2GRAY);
-				return newImg;
-			}
+            if (image.channels() == 1)
+    {
+            cv::UMat newImg;
+        #if (CV_VERSION_MAJOR < 4)
+            cv::cvtColor(image, newImg, CV_GRAY2BGR);
+        #else
+            cv::cvtColor(image, newImg, cv::COLOR_GRAY2BGR);
+        #endif
+            return newImg;
+}
+            else if (image.channels() == 3)
+    {
+            cv::UMat newImg;
+        #if (CV_VERSION_MAJOR < 4)
+            cv::cvtColor(image, newImg, CV_BGR2GRAY);
+        #else
+            cv::cvtColor(image, newImg, cv::COLOR_BGR2GRAY);
+        #endif
+            return newImg;
+}
 		}
 		return image;
 	};

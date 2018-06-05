@@ -1,7 +1,6 @@
 #pragma once
 
-#include <opencv2/features2d/features2d.hpp>
-#include <opencv2/video/background_segm.hpp>
+#include <opencv2/opencv.hpp>
 #include "LBSP.h"
 
 /*!

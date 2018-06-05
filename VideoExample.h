@@ -762,8 +762,10 @@ protected:
         m_useLocalTracking = false;
 
         BaseDetector::config_t config;
-        config["modelConfiguration"] = "../data/tiny-yolo.cfg";
-        config["modelBinary"] = "../data/tiny-yolo.weights";
+        //config["modelConfiguration"] = "../data/tiny-yolo.cfg";
+        //config["modelBinary"] = "../data/tiny-yolo.weights";
+        config["modelConfiguration"] = "../data/yolov3-tiny.cfg";
+        config["modelBinary"] = "../data/yolov3-tiny.weights";
         config["classNames"] = "../data/coco.names";
         config["confidenceThreshold"] = "0.5";
         config["maxCropRatio"] = "3.0";
