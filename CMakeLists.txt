@@ -245,4 +245,4 @@ set(LIBS
     ${OpenCV_LIBS}
 )
 endif()
-TARGET_LINK_LIBRARIES(MultitargetTracker ${LIBS})
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${LIBS})
