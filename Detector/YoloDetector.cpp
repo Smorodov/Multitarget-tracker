@@ -52,9 +52,10 @@ bool YoloDetector::Init(const config_t& config)
         std::map<std::string, cv::dnn::Target> targets;
         targets["DNN_TARGET_CPU"] = cv::dnn::DNN_TARGET_CPU;
         targets["DNN_TARGET_OPENCL"] = cv::dnn::DNN_TARGET_OPENCL;
+#if (CV_VERSION_MAJOR >= 4)
         targets["DNN_TARGET_OPENCL_FP16"] = cv::dnn::DNN_TARGET_OPENCL_FP16;
         targets["DNN_TARGET_MYRIAD"] = cv::dnn::DNN_TARGET_MYRIAD;
-
+#endif
         auto target = targets.find(dnnTarget->second);
         if (target != std::end(targets))
         {
