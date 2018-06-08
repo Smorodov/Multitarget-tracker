@@ -208,7 +208,7 @@ protected:
 
         thisPtr->m_fps = std::max(1.f, (float)capture.get(cv::CAP_PROP_FPS));
 
-        const int trackingTimeOut = 5000;
+        const int trackingTimeOut = 10000;
 
         frameCond->notify_all();
 
