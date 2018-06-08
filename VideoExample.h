@@ -465,7 +465,7 @@ protected:
         if (settings.m_useAbandonedDetection)
         {
             settings.m_minStaticTime = minStaticTime;
-            settings.m_maxStaticTime = 5 * minStaticTime;
+            settings.m_maxStaticTime = 60;
             settings.m_maximumAllowedSkippedFrames = settings.m_minStaticTime * m_fps; // Maximum allowed skipped frames
             settings.m_maxTraceLength = 2 * settings.m_maximumAllowedSkippedFrames;        // Maximum trace length
         }
@@ -509,7 +509,7 @@ protected:
             }
         }
 
-        m_detector->CalcMotionMap(frame);
+        //m_detector->CalcMotionMap(frame);
     }
 
 private:
