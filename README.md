@@ -24,7 +24,7 @@ Hungarian algorithm + Kalman filter multitarget tracker implementation.
 
 * Simple Abandoned detector:
 
-[![Multiple Faces tracking:](https://img.youtube.com/vi/fpkHRsFzspA/0.jpg)](https://www.youtube.com/watch?v=fpkHRsFzspA)
+[![Simple Abandoned detector:](https://img.youtube.com/vi/fpkHRsFzspA/0.jpg)](https://www.youtube.com/watch?v=fpkHRsFzspA)
 
 #### Parameters
 1. Background substraction: built-in Vibe, SuBSENSE and LOBSTER; MOG2 from opencv; MOG, GMG and CNT from opencv_contrib
