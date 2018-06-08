@@ -1,5 +1,4 @@
-#ifndef _BACKGROUND_SUBTRACT_H_
-#define _BACKGROUND_SUBTRACT_H_
+#pragma once
 
 #include "defines.h"
 #include "vibe_src/vibe.hpp"
@@ -10,6 +9,9 @@
 #include <opencv2/bgsegm.hpp>
 #endif
 
+///
+/// \brief The BackgroundSubtract class
+///
 class BackgroundSubtract
 {
 public:
@@ -24,10 +26,12 @@ public:
         ALG_MOG2
 	};
 
-	BackgroundSubtract(BGFG_ALGS algType, int channels = 1, int samples = 20, int pixel_neighbor = 1, int distance_threshold = 20, int matching_threshold = 3, int update_factor = 16);
+    BackgroundSubtract(BGFG_ALGS algType, int channels);
 	~BackgroundSubtract();
 
-    void subtract(const cv::UMat& image, cv::UMat& foreground);
+    bool Init(const config_t& config);
+
+    void Subtract(const cv::UMat& image, cv::UMat& foreground);
 	
 	int m_channels;
 	BGFG_ALGS m_algType;
@@ -37,5 +41,3 @@ private:
 	cv::Ptr<cv::BackgroundSubtractor> m_modelOCV;
     std::unique_ptr<BackgroundSubtractorLBSP> m_modelSuBSENSE;
 };
-
-#endif

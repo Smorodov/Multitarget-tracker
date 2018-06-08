@@ -24,4 +24,6 @@ private:
     std::unique_ptr<BackgroundSubtract> m_backgroundSubst;
 
     cv::UMat m_fg;
+
+    BackgroundSubtract::BGFG_ALGS m_algType;
 };

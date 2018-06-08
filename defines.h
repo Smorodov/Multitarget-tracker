@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <string>
+#include <map>
 #include <opencv2/opencv.hpp>
 
 
@@ -11,6 +12,11 @@
 typedef float track_t;
 typedef cv::Point_<track_t> Point_t;
 #define Mat_t CV_32FC
+
+///
+/// \brief config_t
+///
+typedef std::map<std::string, std::string> config_t;
 
 ///
 /// \brief The CRegion class
@@ -74,7 +80,6 @@ enum DistType
     DistCenters = 0,
     DistRects = 1,
     DistJaccard = 2
-    //DistLines = 3
 };
 
 ///

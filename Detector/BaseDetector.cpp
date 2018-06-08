@@ -14,7 +14,7 @@
 ///
 BaseDetector* CreateDetector(
         tracking::Detectors detectorType,
-        const BaseDetector::config_t& config,
+        const config_t& config,
         bool collectPoints,
         cv::UMat& gray
         )

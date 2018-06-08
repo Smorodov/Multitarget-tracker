@@ -1,8 +1,6 @@
 #pragma once
 
 #include <memory>
-#include <map>
-#include <string>
 #include "defines.h"
 
 ///
@@ -29,7 +27,6 @@ public:
     {
     }
 
-    typedef std::map<std::string, std::string> config_t;
     ///
     /// \brief Init
     /// \param config
@@ -153,4 +150,4 @@ protected:
 /// \param gray
 /// \return
 ///
-BaseDetector* CreateDetector(tracking::Detectors detectorType, const BaseDetector::config_t& config, bool collectPoints, cv::UMat& gray);
+BaseDetector* CreateDetector(tracking::Detectors detectorType, const config_t& config, bool collectPoints, cv::UMat& gray);

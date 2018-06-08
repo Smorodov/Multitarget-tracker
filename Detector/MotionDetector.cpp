@@ -11,7 +11,9 @@ MotionDetector::MotionDetector(
 	bool collectPoints,
     cv::UMat& gray
 	)
-    : BaseDetector(collectPoints, gray)
+    :
+      BaseDetector(collectPoints, gray),
+      m_algType(algType)
 {
 	m_fg = gray.clone();
 	m_backgroundSubst = std::make_unique<BackgroundSubtract>(algType, gray.channels());
@@ -31,7 +33,7 @@ MotionDetector::~MotionDetector(void)
 ///
 bool MotionDetector::Init(const config_t& config)
 {
-    return true;
+    return m_backgroundSubst->Init(config);
 }
 
 ///
@@ -95,7 +97,7 @@ void MotionDetector::DetectContour()
 ///
 void MotionDetector::Detect(cv::UMat& gray)
 {
-	m_backgroundSubst->subtract(gray, m_fg);
+    m_backgroundSubst->Subtract(gray, m_fg);
 
 	DetectContour();
 }
