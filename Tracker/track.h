@@ -174,14 +174,35 @@ public:
             bool filterObjectSize,
             tracking::LostTrackType externalTrackerForLost);
 
+    ///
+    /// \brief CalcDist
+    /// Euclidean distance in pixels between objects centres on two N and N+1 frames
+    /// \param pt
+    /// \return
+    ///
     track_t CalcDist(const Point_t& pt) const;
+    ///
+    /// \brief CalcDist
+    /// Euclidean distance in pixels between object rectangles on two N and N+1 frames
+    /// \param r
+    /// \return
+    ///
     track_t CalcDist(const cv::Rect& r) const;
+    ///
+    /// \brief CalcDistJaccard
+    /// Jaccard distance from 0 to 1 between object rectangles on two N and N+1 frames
+    /// \param r
+    /// \return
+    ///
     track_t CalcDistJaccard(const cv::Rect& r) const;
+
     bool CheckType(const std::string& type) const;
 
-    void Update(const CRegion& region, bool dataCorrect, size_t max_trace_length, cv::UMat prevFrame, cv::UMat currFrame);
+    void Update(const CRegion& region, bool dataCorrect, size_t max_trace_length, cv::UMat prevFrame, cv::UMat currFrame, int trajLen);
 
     bool IsRobust(int minTraceSize, float minRawRatio, cv::Size2f sizeRatio) const;
+    bool IsStatic() const;
+    bool IsStaticTimeout(int framesTime) const;
 
     Trace m_trace;
     size_t m_trackID;
@@ -209,6 +230,12 @@ private:
     void CreateExternalTracker();
 
     void PointUpdate(const Point_t& pt, bool dataCorrect, const cv::Size& frameSize);
+
+    bool CheckStatic(int trajLen, cv::UMat currFrame, const CRegion& region);
+    bool m_isStatic = false;
+    int m_staticFrames = 0;
+    cv::UMat m_staticFrame;
+    cv::Rect m_staticRect;
 };
 
 typedef std::vector<std::unique_ptr<CTrack>> tracks_t;

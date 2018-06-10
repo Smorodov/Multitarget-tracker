@@ -11,7 +11,9 @@ MotionDetector::MotionDetector(
 	bool collectPoints,
     cv::UMat& gray
 	)
-    : BaseDetector(collectPoints, gray)
+    :
+      BaseDetector(collectPoints, gray),
+      m_algType(algType)
 {
 	m_fg = gray.clone();
 	m_backgroundSubst = std::make_unique<BackgroundSubtract>(algType, gray.channels());
@@ -31,7 +33,7 @@ MotionDetector::~MotionDetector(void)
 ///
 bool MotionDetector::Init(const config_t& config)
 {
-    return true;
+    return m_backgroundSubst->Init(config);
 }
 
 ///
@@ -41,8 +43,12 @@ void MotionDetector::DetectContour()
 {
 	m_regions.clear();
     std::vector<std::vector<cv::Point>> contours;
-	std::vector<cv::Vec4i> hierarchy;
+    std::vector<cv::Vec4i> hierarchy;
+#if (CV_VERSION_MAJOR < 4)
 	cv::findContours(m_fg, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, cv::Point());
+#else
+    cv::findContours(m_fg, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE, cv::Point());
+#endif
 	if (contours.size() > 0)
 	{
 		for (size_t i = 0; i < contours.size(); i++)
@@ -91,7 +97,7 @@ void MotionDetector::DetectContour()
 ///
 void MotionDetector::Detect(cv::UMat& gray)
 {
-	m_backgroundSubst->subtract(gray, m_fg);
+    m_backgroundSubst->Subtract(gray, m_fg);
 
 	DetectContour();
 }

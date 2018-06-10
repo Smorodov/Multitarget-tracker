@@ -69,11 +69,9 @@ public:
         std::thread thCapDet(CaptureAndDetect, this, &stopCapture, &frameLock, &frameCond, &trackLock, &trackCond);
         thCapDet.detach();
 
-        const int captureTimeOut = 5000;
+        const int captureTimeOut = 10000;
         {
-            //std::cout << "Process -1: frameLock" << std::endl;
             std::unique_lock<std::mutex> lock(frameLock);
-            //std::cout << "Process -1: frameCond.wait_until" << std::endl;
             auto now = std::chrono::system_clock::now();
             if (frameCond.wait_until(lock, now + std::chrono::milliseconds(captureTimeOut)) == std::cv_status::timeout)
             {
@@ -90,7 +88,7 @@ public:
 
         cv::VideoWriter writer;
 
-        cv::namedWindow("Video");
+        cv::namedWindow("Video", cv::WINDOW_NORMAL | cv::WINDOW_KEEPRATIO);
 
         int k = 0;
 
@@ -103,18 +101,12 @@ public:
 
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         trackCond.notify_all();
-        //std::cout << "Process 0: trackCond.notify_all(); " << std::endl;
 
         int currFrame = 0;
         for (; !stopCapture && k != 27; )
         {
-            //std::cout << "Process: m_currFrame = " << m_currFrame << ", currFrame = " << currFrame << std::endl;
-
-            //if (currFrame == m_currFrame)
             {
-                //std::cout << "Process: frameLock" << std::endl;
                 std::unique_lock<std::mutex> lock(frameLock);
-                //std::cout << "Process: frameCond.wait_until" << std::endl;
                 auto now = std::chrono::system_clock::now();
                 if (frameCond.wait_until(lock, now + std::chrono::milliseconds(captureTimeOut)) == std::cv_status::timeout)
                 {
@@ -129,7 +121,6 @@ public:
 
             frameLock.lock();
             currFrame = m_currFrame;
-            //std::cout << "Process: currFrame = " << currFrame << std::endl;
             frameLock.unlock();
 
             if (!writer.isOpened())
@@ -142,7 +133,6 @@ public:
             Tracking(m_frameInfo[currFrame].m_frame, m_frameInfo[currFrame].m_gray, m_frameInfo[currFrame].m_regions);
 
             int64 t2 = cv::getTickCount();
-            //std::cout << "Process: tracking" << std::endl;
 
             allTime += t2 - t1 + m_frameInfo[currFrame].m_dt;
             int currTime = cvRound(1000 * (t2 - t1 + m_frameInfo[currFrame].m_dt) / freq);
@@ -153,8 +143,6 @@ public:
 
             int waitTime = manualMode ? 0 : std::max<int>(1, cvRound(1000 / m_fps - currTime));
             k = cv::waitKey(waitTime);
-            //std::cout << "Process: waitkey" << std::endl;
-
             if (k == 'm' || k == 'M')
             {
                 manualMode = !manualMode;
@@ -166,7 +154,6 @@ public:
             }
 
             trackCond.notify_all();
-            //std::cout << "Process 1: trackCond.notify_all(); " << std::endl;
 
             ++framesCounter;
             if (m_endFrame && framesCounter > m_endFrame)
@@ -220,20 +207,15 @@ protected:
 
         thisPtr->m_fps = std::max(1.f, (float)capture.get(cv::CAP_PROP_FPS));
 
-        const int trackingTimeOut = 5000;
+        const int trackingTimeOut = 10000;
 
         frameCond->notify_all();
-        //std::cout << "CaptureAndDetect: init capture frameCond->notify_all();" << std::endl;
 
         int currFrame = 0;
         for (; !(*stopCapture);)
         {
-            //std::cout << "CaptureAndDetect: m_currFrame = " << thisPtr->m_currFrame << ", currFrame = " << currFrame << std::endl;
-
             {
-                //std::cout << "CaptureAndDetect: trackLock" << std::endl;
                 std::unique_lock<std::mutex> lock(*trackLock);
-                //std::cout << "CaptureAndDetect: trackCond->wait_until" << std::endl;
                 auto now = std::chrono::system_clock::now();
                 if (trackCond->wait_until(lock, now + std::chrono::milliseconds(trackingTimeOut)) == std::cv_status::timeout)
                 {
@@ -243,7 +225,6 @@ protected:
             }
             frameLock->lock();
             currFrame = thisPtr->m_currFrame ? 0 : 1;
-            //std::cout << "CaptureAndDetect: currFrame = " << currFrame << std::endl;
             frameLock->unlock();
 
             capture >> thisPtr->m_frameInfo[currFrame].m_frame;
@@ -253,8 +234,6 @@ protected:
                 break;
             }
             cv::cvtColor(thisPtr->m_frameInfo[currFrame].m_frame, thisPtr->m_frameInfo[currFrame].m_gray, cv::COLOR_BGR2GRAY);
-
-            //std::cout << "CaptureAndDetect: capture" << std::endl;
 
             if (!thisPtr->m_isTrackerInitialized)
             {
@@ -271,19 +250,14 @@ protected:
             int64 t2 = cv::getTickCount();
             thisPtr->m_frameInfo[currFrame].m_dt = t2 - t1;
 
-            //std::cout << "CaptureAndDetect: detection" << std::endl;
-
             frameLock->lock();
             thisPtr->m_currFrame = thisPtr->m_currFrame ? 0 : 1;
-            //std::cout << "CaptureAndDetect: thisPtr->m_currFrame = " << thisPtr->m_currFrame << std::endl;
             frameLock->unlock();
             frameCond->notify_all();
-            //std::cout << "CaptureAndDetect 0: frameCond->notify_all();" << std::endl;
         }
 
         *stopCapture = true;
         frameCond->notify_all();
-        //std::cout << "CaptureAndDetect 1: frameCond->notify_all();" << std::endl;
     }
 
     ///
@@ -355,7 +329,8 @@ protected:
     void DrawTrack(cv::Mat frame,
                    int resizeCoeff,
                    const CTrack& track,
-                   bool drawTrajectory = true
+                   bool drawTrajectory = true,
+                   bool isStatic = false
                    )
     {
         auto ResizeRect = [&](const cv::Rect& r) -> cv::Rect
@@ -367,7 +342,14 @@ protected:
             return cv::Point(resizeCoeff * pt.x, resizeCoeff * pt.y);
         };
 
-        cv::rectangle(frame, ResizeRect(track.GetLastRect()), cv::Scalar(0, 255, 0), 1, CV_AA);
+        if (isStatic)
+        {
+            cv::rectangle(frame, ResizeRect(track.GetLastRect()), cv::Scalar(255, 0, 255), 2, CV_AA);
+        }
+        else
+        {
+            cv::rectangle(frame, ResizeRect(track.GetLastRect()), cv::Scalar(0, 255, 0), 1, CV_AA);
+        }
 
         if (drawTrajectory)
         {
@@ -450,22 +432,49 @@ protected:
 
         m_minObjWidth = frame.cols / 50;
 
-        BaseDetector::config_t config;
+        const int minStaticTime = 5;
+
+        config_t config;
+#if 0
+        config["history"] = std::to_string(cvRound(10 * minStaticTime * m_fps));
+        config["varThreshold"] = "16";
+        config["detectShadows"] = "1";
         m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Motion_MOG2, config, m_useLocalTracking, frame));
+#else
+        config["minPixelStability"] = "15";
+        config["maxPixelStability"] = "900";
+        config["useHistory"] = "1";
+        config["isParallel"] = "1";
+        m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Motion_CNT, config, m_useLocalTracking, frame));
+#endif
         m_detector->SetMinObjectSize(cv::Size(m_minObjWidth, m_minObjWidth));
 
-        m_tracker = std::make_unique<CTracker>(m_useLocalTracking,
-                                               tracking::DistCenters,
-                                               tracking::KalmanLinear,
-                                               tracking::FilterCenter,
-                                               tracking::TrackKCF,       // Use KCF tracker for collisions resolving
-                                               tracking::MatchHungrian,
-                                               1.0f,                     // Delta time for Kalman filter
-                                               0.1f,                     // Accel noise magnitude for Kalman filter
-                                               frame.rows / 10,          // Distance threshold between region and object on two frames
-                                               m_fps,                    // Maximum allowed skipped frames
-                                               3 * m_fps                 // Maximum trace length
-                                               );
+        TrackerSettings settings;
+        settings.m_useLocalTracking = m_useLocalTracking;
+        settings.m_distType = tracking::DistCenters;
+        settings.m_kalmanType = tracking::KalmanLinear;
+        settings.m_filterGoal = tracking::FilterRect;
+        settings.m_lostTrackType = tracking::TrackKCF;    // Use KCF tracker for collisions resolving
+        settings.m_matchType = tracking::MatchHungrian;
+        settings.m_dt = 0.5f;                             // Delta time for Kalman filter
+        settings.m_accelNoiseMag = 0.1f;                  // Accel noise magnitude for Kalman filter
+        settings.m_distThres = frame.rows / 20;           // Distance threshold between region and object on two frames
+
+        settings.m_useAbandonedDetection = true;
+        if (settings.m_useAbandonedDetection)
+        {
+            settings.m_minStaticTime = minStaticTime;
+            settings.m_maxStaticTime = 60;
+            settings.m_maximumAllowedSkippedFrames = settings.m_minStaticTime * m_fps; // Maximum allowed skipped frames
+            settings.m_maxTraceLength = 2 * settings.m_maximumAllowedSkippedFrames;        // Maximum trace length
+        }
+        else
+        {
+            settings.m_maximumAllowedSkippedFrames = 2 * m_fps; // Maximum allowed skipped frames
+            settings.m_maxTraceLength = 4 * m_fps;              // Maximum trace length
+        }
+
+        m_tracker = std::make_unique<CTracker>(settings);
 
         return true;
     }
@@ -483,16 +492,23 @@ protected:
 
         for (const auto& track : m_tracker->tracks)
         {
-            if (track->IsRobust(cvRound(m_fps / 4),          // Minimal trajectory size
-                                0.7f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
-                                cv::Size2f(0.1f, 8.0f))      // Min and max ratio: width / height
-                    )
+            if (track->IsStatic())
             {
-                DrawTrack(frame, 1, *track, true);
+                DrawTrack(frame, 1, *track, true, true);
+            }
+            else
+            {
+                if (track->IsRobust(cvRound(m_fps / 4),          // Minimal trajectory size
+                                    0.7f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
+                                    cv::Size2f(0.1f, 8.0f))      // Min and max ratio: width / height
+                        )
+                {
+                    DrawTrack(frame, 1, *track, true);
+                }
             }
         }
 
-        m_detector->CalcMotionMap(frame);
+        //m_detector->CalcMotionMap(frame);
     }
 
 private:
@@ -520,7 +536,7 @@ protected:
     ///
     bool InitTracker(cv::UMat frame)
     {
-        BaseDetector::config_t config;
+        config_t config;
         config["cascadeFileName"] = "../data/haarcascade_frontalface_alt2.xml";
         m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Face_HAAR, config, m_useLocalTracking, frame));
         if (!m_detector.get())
@@ -529,18 +545,20 @@ protected:
         }
         m_detector->SetMinObjectSize(cv::Size(frame.cols / 20, frame.rows / 20));
 
-        m_tracker = std::make_unique<CTracker>(m_useLocalTracking,
-                                               tracking::DistJaccard,
-                                               tracking::KalmanUnscented,
-                                               tracking::FilterRect,
-                                               tracking::TrackKCF,      // Use KCF tracker for collisions resolving
-                                               tracking::MatchHungrian,
-                                               0.3f,                     // Delta time for Kalman filter
-                                               0.1f,                     // Accel noise magnitude for Kalman filter
-                                               0.8f,                     // Distance threshold between region and object on two frames
-                                               m_fps / 2,                // Maximum allowed skipped frames
-                                               5 * m_fps                 // Maximum trace length
-                                               );
+        TrackerSettings settings;
+        settings.m_useLocalTracking = m_useLocalTracking;
+        settings.m_distType = tracking::DistJaccard;
+        settings.m_kalmanType = tracking::KalmanUnscented;
+        settings.m_filterGoal = tracking::FilterRect;
+        settings.m_lostTrackType = tracking::TrackKCF;    // Use KCF tracker for collisions resolving
+        settings.m_matchType = tracking::MatchHungrian;
+        settings.m_dt = 0.3f;                             // Delta time for Kalman filter
+        settings.m_accelNoiseMag = 0.1f;                  // Accel noise magnitude for Kalman filter
+        settings.m_distThres = 0.8f;           // Distance threshold between region and object on two frames
+        settings.m_maximumAllowedSkippedFrames = m_fps / 2;   // Maximum allowed skipped frames
+        settings.m_maxTraceLength = 5 * m_fps;            // Maximum trace length
+
+        m_tracker = std::make_unique<CTracker>(settings);
 
         return true;
     }
@@ -594,7 +612,7 @@ protected:
     {
         tracking::Detectors detectorType = tracking::Detectors::Pedestrian_C4; // tracking::Detectors::Pedestrian_HOG;
 
-        BaseDetector::config_t config;
+        config_t config;
         config["detectorType"] = (detectorType == tracking::Pedestrian_HOG) ? "HOG" : "C4";
         config["cascadeFileName1"] = "../data/combined.txt.model";
         config["cascadeFileName2"] = "../data/combined.txt.model_";
@@ -605,18 +623,21 @@ protected:
         }
         m_detector->SetMinObjectSize(cv::Size(frame.cols / 20, frame.rows / 20));
 
-        m_tracker = std::make_unique<CTracker>(m_useLocalTracking,
-                                               tracking::DistRects,
-                                               tracking::KalmanLinear,
-                                               tracking::FilterRect,
-                                               tracking::TrackKCF,      // Use KCF tracker for collisions resolving
-                                               tracking::MatchHungrian,
-                                               0.3f,                     // Delta time for Kalman filter
-                                               0.1f,                     // Accel noise magnitude for Kalman filter
-                                               frame.rows / 10,          // Distance threshold between region and object on two frames
-                                               1 * m_fps,                // Maximum allowed skipped frames
-                                               5 * m_fps                 // Maximum trace length
-                                               );
+
+        TrackerSettings settings;
+        settings.m_useLocalTracking = m_useLocalTracking;
+        settings.m_distType = tracking::DistRects;
+        settings.m_kalmanType = tracking::KalmanLinear;
+        settings.m_filterGoal = tracking::FilterRect;
+        settings.m_lostTrackType = tracking::TrackKCF;    // Use KCF tracker for collisions resolving
+        settings.m_matchType = tracking::MatchHungrian;
+        settings.m_dt = 0.3f;                             // Delta time for Kalman filter
+        settings.m_accelNoiseMag = 0.1f;                  // Accel noise magnitude for Kalman filter
+        settings.m_distThres = frame.rows / 10;           // Distance threshold between region and object on two frames
+        settings.m_maximumAllowedSkippedFrames = m_fps;   // Maximum allowed skipped frames
+        settings.m_maxTraceLength = 5 * m_fps;            // Maximum trace length
+
+        m_tracker = std::make_unique<CTracker>(settings);
 
         return true;
     }
@@ -668,11 +689,12 @@ protected:
     ///
     bool InitTracker(cv::UMat frame)
     {
-        BaseDetector::config_t config;
+        config_t config;
         config["modelConfiguration"] = "../data/MobileNetSSD_deploy.prototxt";
         config["modelBinary"] = "../data/MobileNetSSD_deploy.caffemodel";
         config["confidenceThreshold"] = "0.5";
         config["maxCropRatio"] = "3.0";
+        config["dnnTarget"] = "DNN_TARGET_OPENCL_FP16";
         m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::SSD_MobileNet, config, m_useLocalTracking, frame));
         if (!m_detector.get())
         {
@@ -680,18 +702,20 @@ protected:
         }
         m_detector->SetMinObjectSize(cv::Size(frame.cols / 20, frame.rows / 20));
 
-        m_tracker = std::make_unique<CTracker>(m_useLocalTracking,
-                                               tracking::DistRects,
-                                               tracking::KalmanLinear,
-                                               tracking::FilterRect,
-                                               tracking::TrackKCF,      // Use KCF tracker for collisions resolving
-                                               tracking::MatchHungrian,
-                                               0.3f,                     // Delta time for Kalman filter
-                                               0.1f,                     // Accel noise magnitude for Kalman filter
-                                               frame.rows / 10,          // Distance threshold between region and object on two frames
-                                               2 * m_fps,                // Maximum allowed skipped frames
-                                               5 * m_fps                 // Maximum trace length
-                                               );
+        TrackerSettings settings;
+        settings.m_useLocalTracking = m_useLocalTracking;
+        settings.m_distType = tracking::DistRects;
+        settings.m_kalmanType = tracking::KalmanLinear;
+        settings.m_filterGoal = tracking::FilterRect;
+        settings.m_lostTrackType = tracking::TrackKCF;       // Use KCF tracker for collisions resolving
+        settings.m_matchType = tracking::MatchHungrian;
+        settings.m_dt = 0.3f;                                // Delta time for Kalman filter
+        settings.m_accelNoiseMag = 0.1f;                     // Accel noise magnitude for Kalman filter
+        settings.m_distThres = frame.rows / 10;              // Distance threshold between region and object on two frames
+        settings.m_maximumAllowedSkippedFrames = 2 * m_fps;  // Maximum allowed skipped frames
+        settings.m_maxTraceLength = 5 * m_fps;               // Maximum trace length
+
+        m_tracker = std::make_unique<CTracker>(settings);
 
         return true;
     }
@@ -761,12 +785,16 @@ protected:
     {
         m_useLocalTracking = false;
 
-        BaseDetector::config_t config;
-        config["modelConfiguration"] = "../data/tiny-yolo.cfg";
-        config["modelBinary"] = "../data/tiny-yolo.weights";
+        config_t config;
+        //config["modelConfiguration"] = "../data/tiny-yolo.cfg";
+        //config["modelBinary"] = "../data/tiny-yolo.weights";
+        config["modelConfiguration"] = "../data/yolov3-tiny.cfg";
+        config["modelBinary"] = "../data/yolov3-tiny.weights";
         config["classNames"] = "../data/coco.names";
         config["confidenceThreshold"] = "0.5";
         config["maxCropRatio"] = "3.0";
+        config["dnnTarget"] = "DNN_TARGET_OPENCL_FP16";
+
         m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Yolo, config, m_useLocalTracking, frame));
         if (!m_detector.get())
         {
@@ -774,18 +802,20 @@ protected:
         }
         m_detector->SetMinObjectSize(cv::Size(frame.cols / 20, frame.rows / 20));
 
-        m_tracker = std::make_unique<CTracker>(m_useLocalTracking,
-                                               tracking::DistRects,
-                                               tracking::KalmanLinear,
-                                               tracking::FilterRect,
-                                               tracking::TrackKCF,      // Use KCF tracker for collisions resolving
-                                               tracking::MatchHungrian,
-                                               0.3f,                     // Delta time for Kalman filter
-                                               0.1f,                     // Accel noise magnitude for Kalman filter
-                                               frame.rows / 10,          // Distance threshold between region and object on two frames
-                                               2 * m_fps,                // Maximum allowed skipped frames
-                                               5 * m_fps                 // Maximum trace length
-                                               );
+        TrackerSettings settings;
+        settings.m_useLocalTracking = m_useLocalTracking;
+        settings.m_distType = tracking::DistRects;
+        settings.m_kalmanType = tracking::KalmanLinear;
+        settings.m_filterGoal = tracking::FilterRect;
+        settings.m_lostTrackType = tracking::TrackKCF;       // Use KCF tracker for collisions resolving
+        settings.m_matchType = tracking::MatchHungrian;
+        settings.m_dt = 0.3f;                                // Delta time for Kalman filter
+        settings.m_accelNoiseMag = 0.1f;                     // Accel noise magnitude for Kalman filter
+        settings.m_distThres = frame.rows / 10;              // Distance threshold between region and object on two frames
+        settings.m_maximumAllowedSkippedFrames = 2 * m_fps;  // Maximum allowed skipped frames
+        settings.m_maxTraceLength = 5 * m_fps;               // Maximum trace length
+
+        m_tracker = std::make_unique<CTracker>(settings);
 
         return true;
     }

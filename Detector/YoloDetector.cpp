@@ -46,6 +46,23 @@ bool YoloDetector::Init(const config_t& config)
         m_net = cv::dnn::readNetFromDarknet(modelConfiguration->second, modelBinary->second);
     }
 
+    auto dnnTarget = config.find("dnnTarget");
+    if (dnnTarget != config.end())
+    {
+        std::map<std::string, cv::dnn::Target> targets;
+        targets["DNN_TARGET_CPU"] = cv::dnn::DNN_TARGET_CPU;
+        targets["DNN_TARGET_OPENCL"] = cv::dnn::DNN_TARGET_OPENCL;
+#if (CV_VERSION_MAJOR >= 4)
+        targets["DNN_TARGET_OPENCL_FP16"] = cv::dnn::DNN_TARGET_OPENCL_FP16;
+        targets["DNN_TARGET_MYRIAD"] = cv::dnn::DNN_TARGET_MYRIAD;
+#endif
+        auto target = targets.find(dnnTarget->second);
+        if (target != std::end(targets))
+        {
+            m_net.setPreferableTarget(target->second);
+        }
+    }
+
     auto classNames = config.find("classNames");
     if (classNames != config.end())
     {
@@ -172,7 +189,13 @@ void YoloDetector::DetectInCrop(cv::Mat colorFrame, const cv::Rect& crop, region
 
     m_net.setInput(inputBlob, "data"); //set the network input
 
-    cv::Mat detectionMat = m_net.forward("detection_out"); //compute output
+#if (CV_VERSION_MAJOR < 4)
+    cv::String outputName = "detection_out";
+#else
+    cv::String outputName = cv::String();
+#endif
+    cv::Mat detectionMat = m_net.forward(outputName); //compute output
+
 
     for (int i = 0; i < detectionMat.rows; ++i)
     {

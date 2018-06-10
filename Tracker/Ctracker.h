@@ -10,20 +10,81 @@
 #include "LocalTracker.h"
 
 // ----------------------------------------------------------------------
+
+///
+/// \brief The TrackerSettings struct
+///
+struct TrackerSettings
+{
+    ///
+    /// \brief m_useLocalTracking
+    /// Use local tracking for regions between two frames
+    /// It was coined for tracking small and slow objects: key points on objects tracking with LK optical flow
+    /// The most applications don't need this parameter
+    ///
+    bool m_useLocalTracking = false;
+
+    tracking::DistType m_distType = tracking::DistCenters;
+    tracking::KalmanType m_kalmanType = tracking::KalmanLinear;
+    tracking::FilterGoal m_filterGoal = tracking::FilterCenter;
+    tracking::LostTrackType m_lostTrackType = tracking::TrackKCF;
+    tracking::MatchType m_matchType = tracking::MatchHungrian;
+
+    ///
+    /// \brief m_dt
+    /// Time step for Kalman
+    ///
+    track_t m_dt = 1.0f;
+
+    ///
+    /// \brief m_accelNoiseMag
+    /// Noise magnitude for Kalman
+    ///
+    track_t m_accelNoiseMag = 0.1f;
+
+    ///
+    /// \brief m_distThres
+    /// Distance threshold for Assignment problem for tracking::DistCenters or for tracking::DistRects (for tracking::DistJaccard it need from 0 to 1)
+    ///
+    track_t m_distThres = 50;
+
+    ///
+    /// \brief m_maximumAllowedSkippedFrames
+    /// If the object don't assignment more than this frames then it will be removed
+    ///
+    size_t m_maximumAllowedSkippedFrames = 25;
+
+    ///
+    /// \brief m_maxTraceLength
+    /// The maximum trajectory length
+    ///
+    size_t m_maxTraceLength = 50;
+
+    ///
+    /// \brief m_useAbandonedDetection
+    /// Detection abandoned objects
+    ///
+    bool m_useAbandonedDetection = false;
+
+    ///
+    /// \brief m_minStaticTime
+    /// After this time (in seconds) the object is considered abandoned
+    ///
+    int m_minStaticTime = 5;
+    ///
+    /// \brief m_maxStaticTime
+    /// After this time (in seconds) the abandoned object will be removed
+    ///
+    int m_maxStaticTime = 25;
+};
+
+///
+/// \brief The CTracker class
+///
 class CTracker
 {
 public:
-    CTracker(bool useLocalTracking,
-             tracking::DistType distType,
-             tracking::KalmanType kalmanType,
-             tracking::FilterGoal filterGoal,
-             tracking::LostTrackType lostTrackType,
-             tracking::MatchType matchType,
-             track_t dt_,
-             track_t accelNoiseMag_,
-             track_t dist_thres_ = 60,
-             size_t maximum_allowed_skipped_frames_ = 10,
-             size_t max_trace_length_ = 10);
+    CTracker(const TrackerSettings& settings);
 	~CTracker(void);
 
     tracks_t tracks;
@@ -31,31 +92,11 @@ public:
 
     bool GrayFrameToTrack() const
     {
-        return m_lostTrackType != tracking::LostTrackType::TrackGOTURN;
+        return m_settings.m_lostTrackType != tracking::LostTrackType::TrackGOTURN;
     }
 
 private:
-    // Use local tracking for regions between two frames
-    bool m_useLocalTracking;
-
-    tracking::DistType m_distType;
-    tracking::KalmanType m_kalmanType;
-    tracking::FilterGoal m_filterGoal;
-    tracking::LostTrackType m_lostTrackType;
-    tracking::MatchType m_matchType;
-
-	// Шаг времени опроса фильтра
-    track_t m_dt;
-
-    track_t m_accelNoiseMag;
-
-	// Порог расстояния. Если точки находятся дуг от друга на расстоянии,
-	// превышающем этот порог, то эта пара не рассматривается в задаче о назначениях.
-    track_t m_distThres;
-	// Максимальное количество кадров которое трек сохраняется не получая данных о измерений.
-    size_t m_maximumAllowedSkippedFrames;
-	// Максимальная длина следа
-    size_t m_maxTraceLength;
+    TrackerSettings m_settings;
 
     size_t m_nextTrackID;
 

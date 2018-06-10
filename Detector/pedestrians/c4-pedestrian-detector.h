@@ -9,8 +9,7 @@
 #include <cmath>
 #include <vector>
 
-#include <opencv2/highgui.hpp>
-#include <opencv2/imgproc.hpp>
+#include <opencv2/opencv.hpp>
 
 #define USE_DOUBLE
 
@@ -274,6 +273,7 @@ bool IntImage<T>::Load(cv::Mat img)
 template<class T>
 void IntImage<T>::Save(const std::string& filename) const
 {
+#if (CV_VERSION_MAJOR < 4)
     IplImage* img;
 
     img = cvCreateImage(cvSize(ncol,nrow),IPL_DEPTH_8U,1);
@@ -285,6 +285,9 @@ void IntImage<T>::Save(const std::string& filename) const
     }
     cvSaveImage(filename.c_str(),img);
     cvReleaseImage(&img);
+#else
+    assert(0);
+#endif
 }
 
 template<class T>

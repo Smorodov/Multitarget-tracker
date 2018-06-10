@@ -1,8 +1,6 @@
 #pragma once
 
 #include <memory>
-#include <map>
-#include <string>
 #include "defines.h"
 
 ///
@@ -29,7 +27,6 @@ public:
     {
     }
 
-    typedef std::map<std::string, std::string> config_t;
     ///
     /// \brief Init
     /// \param config
@@ -100,9 +97,15 @@ public:
         cv::Mat foreground(m_motionMap.size(), CV_8UC1, cv::Scalar(0, 0, 0));
         for (const auto& region : m_regions)
         {
+#if (CV_VERSION_MAJOR < 4)
             cv::ellipse(foreground,
                         cv::RotatedRect((region.m_rect.tl() + region.m_rect.br()) / 2, region.m_rect.size(), 0),
                                         cv::Scalar(255, 255, 255), CV_FILLED);
+#else
+            cv::ellipse(foreground,
+                        cv::RotatedRect((region.m_rect.tl() + region.m_rect.br()) / 2, region.m_rect.size(), 0),
+                                        cv::Scalar(255, 255, 255), cv::FILLED);
+#endif
         }
 
         cv::Mat normFor;
@@ -147,4 +150,4 @@ protected:
 /// \param gray
 /// \return
 ///
-BaseDetector* CreateDetector(tracking::Detectors detectorType, const BaseDetector::config_t& config, bool collectPoints, cv::UMat& gray);
+BaseDetector* CreateDetector(tracking::Detectors detectorType, const config_t& config, bool collectPoints, cv::UMat& gray);

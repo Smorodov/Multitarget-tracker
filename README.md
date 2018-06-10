@@ -22,6 +22,10 @@ Hungarian algorithm + Kalman filter multitarget tracker implementation.
 
 [![Multiple Faces tracking:](https://img.youtube.com/vi/j67CFwFtciU/0.jpg)](https://www.youtube.com/watch?v=j67CFwFtciU)
 
+* Simple Abandoned detector:
+
+[![Simple Abandoned detector:](https://img.youtube.com/vi/fpkHRsFzspA/0.jpg)](https://www.youtube.com/watch?v=fpkHRsFzspA)
+
 #### Parameters
 1. Background substraction: built-in Vibe, SuBSENSE and LOBSTER; MOG2 from opencv; MOG, GMG and CNT from opencv_contrib
 2. Foreground segmentation: contours
@@ -33,6 +37,7 @@ Hungarian algorithm + Kalman filter multitarget tracker implementation.
 8. HOG and C4 pedestrian detectors
 9. SSD detector from OpenCV and models from chuanqi305/MobileNet-SSD
 10. YOLO and Tiny YOLO detectors from https://pjreddie.com/darknet/yolo/
+11. Simple Abandoned detector
 
 #### Build
 1. Download project sources
@@ -52,7 +57,7 @@ Hungarian algorithm + Kalman filter multitarget tracker implementation.
 
            Params: 
            1. Movie file, for example ../data/atrium.avi
-           2. [Optional] Number of example: 0 - MouseTracking, 1 - MotionDetector, 2 - FaceDetector, 3 - PedestrianDetector, 4 - Hybrid face and motion detectors, 5 - MobileNet SSD detector, 6 - YOLO detector
+           2. [Optional] Number of example: 0 - MouseTracking, 1 - MotionDetector, 2 - FaceDetector, 3 - PedestrianDetector, 4 - MobileNet SSD detector, 5 - YOLO detector
               -e=0 or --example=1
            3. [Optional] Frame number to start a video from this position
               -sf=0 or --start_frame==1500

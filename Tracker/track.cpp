@@ -110,7 +110,8 @@ void CTrack::Update(
         bool dataCorrect,
         size_t max_trace_length,
         cv::UMat prevFrame,
-        cv::UMat currFrame
+        cv::UMat currFrame,
+        int trajLen
         )
 {
     cv::Point pt((region.m_rect.tl() + region.m_rect.br()) / 2);
@@ -128,6 +129,8 @@ void CTrack::Update(
     {
         m_lastRegion = region;
         m_trace.push_back(m_predictionPoint, pt);
+
+        CheckStatic(trajLen, currFrame, region);
     }
     else
     {
@@ -168,6 +171,87 @@ bool CTrack::IsRobust(int minTraceSize, float minRawRatio, cv::Size2f sizeRatio)
         res = false;
     }
     return res;
+}
+
+///
+/// \brief CTrack::IsStatic
+/// \return
+///
+bool CTrack::IsStatic() const
+{
+    return m_isStatic;
+}
+
+///
+/// \brief CTrack::IsStaticTimeout
+/// \param framesTime
+/// \return
+///
+bool CTrack::IsStaticTimeout(int framesTime) const
+{
+    return (m_staticFrames > framesTime);
+}
+
+///
+/// \brief CTrack::CheckStatic
+/// \param trajLen
+/// \return
+///
+bool CTrack::CheckStatic(int trajLen, cv::UMat currFrame, const CRegion& region)
+{
+    if (!trajLen || static_cast<int>(m_trace.size()) < trajLen)
+    {
+        m_isStatic = false;
+        m_staticFrames = 0;
+        m_staticFrame = cv::UMat();
+    }
+    else
+    {
+        track_t kx = 0;
+        track_t bx = 0;
+        track_t ky = 0;
+        track_t by = 0;
+        get_lin_regress_params(m_trace, m_trace.size() - trajLen, m_trace.size(), kx, bx, ky, by);
+        track_t speed = sqrt(sqr(kx * trajLen) + sqr(ky * trajLen));
+        const track_t speedThresh = 10;
+        if (speed < speedThresh)
+        {
+            if (!m_isStatic)
+            {
+                m_staticFrame = currFrame.clone();
+                m_staticRect = region.m_rect;
+#if 0
+                cv::namedWindow("m_staticFrame", cv::WINDOW_NORMAL);
+                cv::Mat img = m_staticFrame.getMat(cv::ACCESS_READ).clone();
+                cv::rectangle(img, m_staticRect, cv::Scalar(255, 0, 255), 1);
+                for (size_t i = m_trace.size() - trajLen; i < m_trace.size() - 1; ++i)
+                {
+                    cv::line(img, m_trace[i], m_trace[i + 1], cv::Scalar(0, 0, 0), 1, cv::LINE_8);
+                }
+                std::string label = "(" + std::to_string(kx) + ", "  + std::to_string(ky) + ") = " + std::to_string(speed);
+                cv::line(img,
+                         cv::Point(bx, by),
+                         cv::Point(kx * trajLen + bx, ky * trajLen + by),
+                         cv::Scalar(0, 0, 0), 1, cv::LINE_8);
+                cv::putText(img, label, m_staticRect.tl(), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 0, 0));
+                cv::imshow("m_staticFrame", img);
+                std::cout << "m_staticRect = " << m_staticRect << std::endl;
+                cv::waitKey(1);
+#endif
+            }
+
+            ++m_staticFrames;
+            m_isStatic = true;
+        }
+        else
+        {
+            m_isStatic = false;
+            m_staticFrames = 0;
+            m_staticFrame = cv::UMat();
+        }
+    }
+
+    return m_isStatic;
 }
 
 ///
@@ -260,13 +344,29 @@ void CTrack::RectUpdate(
                 CreateExternalTracker();
 
                 cv::Rect2d lastRect(m_predictionRect.x - roiRect.x, m_predictionRect.y - roiRect.y, m_predictionRect.width, m_predictionRect.height);
+                if (m_staticFrame.empty())
+                {
+                    lastRect = cv::Rect2d(m_predictionRect.x - roiRect.x, m_predictionRect.y - roiRect.y, m_predictionRect.width, m_predictionRect.height);
+                }
+                else
+                {
+                    lastRect = cv::Rect2d(m_staticRect.x - roiRect.x, m_staticRect.y - roiRect.y, m_staticRect.width, m_staticRect.height);
+                }
+
                 if (lastRect.x >= 0 &&
                         lastRect.y >= 0 &&
                         lastRect.x + lastRect.width < roiRect.width &&
                         lastRect.y + lastRect.height < roiRect.height &&
                         lastRect.area() > 0)
                 {
-                    m_tracker->init(cv::UMat(prevFrame, roiRect), lastRect);
+                    if (m_staticFrame.empty())
+                    {
+                        m_tracker->init(cv::UMat(prevFrame, roiRect), lastRect);
+                    }
+                    else
+                    {
+                        m_tracker->init(cv::UMat(m_staticFrame, roiRect), lastRect);
+                    }
 #if 0
                     cv::Mat tmp = cv::UMat(prevFrame, roiRect).getMat(cv::ACCESS_READ).clone();
                     cv::rectangle(tmp, lastRect, cv::Scalar(255, 255, 255), 2);

@@ -9,31 +9,9 @@
 // ---------------------------------------------------------------------------
 // Tracker. Manage tracks. Create, remove, update.
 // ---------------------------------------------------------------------------
-CTracker::CTracker(
-        bool useLocalTracking,
-        tracking::DistType distType,
-        tracking::KalmanType kalmanType,
-        tracking::FilterGoal filterGoal,
-        tracking::LostTrackType lostTrackType,
-        tracking::MatchType matchType,
-        track_t dt_,
-        track_t accelNoiseMag_,
-        track_t dist_thres_,
-        size_t maximum_allowed_skipped_frames_,
-        size_t max_trace_length_
-        )
+CTracker::CTracker(const TrackerSettings& settings)
     :
-      m_useLocalTracking(useLocalTracking),
-      m_distType(distType),
-      m_kalmanType(kalmanType),
-      m_filterGoal(filterGoal),
-      m_lostTrackType(lostTrackType),
-      m_matchType(matchType),
-      m_dt(dt_),
-      m_accelNoiseMag(accelNoiseMag_),
-      m_distThres(dist_thres_),
-      m_maximumAllowedSkippedFrames(maximum_allowed_skipped_frames_),
-      m_maxTraceLength(max_trace_length_),
+      m_settings(settings),
       m_nextTrackID(0)
 {
 }
@@ -56,7 +34,7 @@ void CTracker::Update(
 {
     if (m_prevFrame.size() == grayFrame.size())
     {
-        if (m_useLocalTracking)
+        if (m_settings.m_useLocalTracking)
         {
             m_localTracker.Update(tracks, m_prevFrame, grayFrame);
         }
@@ -73,7 +51,7 @@ void CTracker::Update(
 void CTracker::UpdateHungrian(
         const regions_t& regions,
         cv::UMat grayFrame,
-        float /*fps*/
+        float fps
         )
 {
     size_t N = tracks.size();		// треки
@@ -91,7 +69,7 @@ void CTracker::UpdateHungrian(
         // -----------------------------------
         const track_t maxPossibleCost = grayFrame.cols * grayFrame.rows;
         track_t maxCost = 0;
-        switch (m_distType)
+        switch (m_settings.m_distType)
         {
         case tracking::DistCenters:
             for (size_t i = 0; i < tracks.size(); i++)
@@ -144,7 +122,7 @@ void CTracker::UpdateHungrian(
         // -----------------------------------
         // Solving assignment problem (tracks and predictions of Kalman filter)
         // -----------------------------------
-        if (m_matchType == tracking::MatchHungrian)
+        if (m_settings.m_matchType == tracking::MatchHungrian)
         {
             AssignmentProblemSolver APS;
             APS.Solve(Cost, N, M, assignment, AssignmentProblemSolver::optimal);
@@ -172,7 +150,7 @@ void CTracker::UpdateHungrian(
 
                     edge e = G.new_edge(nodes[i], nodes[N + j]);
 
-                    if (currCost < m_distThres)
+                    if (currCost < m_settings.m_distThres)
                     {
                         int weight = maxCost - currCost + 1;
                         G.set_edge_weight(e, weight);
@@ -206,7 +184,7 @@ void CTracker::UpdateHungrian(
         {
             if (assignment[i] != -1)
             {
-                if (Cost[i + assignment[i] * N] > m_distThres)
+                if (Cost[i + assignment[i] * N] > m_settings.m_distThres)
                 {
                     assignment[i] = -1;
                     tracks[i]->m_skippedFrames++;
@@ -224,7 +202,8 @@ void CTracker::UpdateHungrian(
         // -----------------------------------
         for (int i = 0; i < static_cast<int>(tracks.size()); i++)
         {
-            if (tracks[i]->m_skippedFrames > m_maximumAllowedSkippedFrames)
+            if (tracks[i]->m_skippedFrames > m_settings.m_maximumAllowedSkippedFrames ||
+                    tracks[i]->IsStaticTimeout(cvRound(fps * (m_settings.m_maxStaticTime - m_settings.m_minStaticTime))))
             {
                 tracks.erase(tracks.begin() + i);
                 assignment.erase(assignment.begin() + i);
@@ -241,12 +220,12 @@ void CTracker::UpdateHungrian(
         if (find(assignment.begin(), assignment.end(), i) == assignment.end())
         {
             tracks.push_back(std::make_unique<CTrack>(regions[i],
-                                                      m_kalmanType,
-                                                      m_dt,
-                                                      m_accelNoiseMag,
+                                                      m_settings.m_kalmanType,
+                                                      m_settings.m_dt,
+                                                      m_settings.m_accelNoiseMag,
                                                       m_nextTrackID++,
-                                                      m_filterGoal == tracking::FilterRect,
-                                                      m_lostTrackType));
+                                                      m_settings.m_filterGoal == tracking::FilterRect,
+                                                      m_settings.m_lostTrackType));
         }
     }
 
@@ -259,11 +238,15 @@ void CTracker::UpdateHungrian(
         if (assignment[i] != -1) // If we have assigned detect, then update using its coordinates,
         {
             tracks[i]->m_skippedFrames = 0;
-            tracks[i]->Update(regions[assignment[i]], true, m_maxTraceLength, m_prevFrame, grayFrame);
+            tracks[i]->Update(
+                        regions[assignment[i]], true,
+                    m_settings.m_maxTraceLength,
+                    m_prevFrame, grayFrame,
+                    m_settings.m_useAbandonedDetection ? cvRound(m_settings.m_minStaticTime * fps) : 0);
         }
         else				     // if not continue using predictions
         {
-            tracks[i]->Update(CRegion(), false, m_maxTraceLength, m_prevFrame, grayFrame);
+            tracks[i]->Update(CRegion(), false, m_settings.m_maxTraceLength, m_prevFrame, grayFrame, 0);
         }
     }
 }

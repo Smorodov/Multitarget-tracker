@@ -1,7 +1,5 @@
 #pragma once
 
-//#include <opencv2/highgui/highgui_c.h>
-
 #include "Ctracker.h"
 
 #include <iostream>
@@ -46,17 +44,21 @@ void MouseTracking(cv::CommandLineParser parser)
 
     bool useLocalTracking = false;
 
-    CTracker tracker(useLocalTracking,
-                     tracking::DistCenters,
-                     tracking::KalmanLinear,
-                     tracking::FilterCenter,
-                     tracking::TrackNone,
-                     tracking::MatchHungrian,
-                     0.2f,
-                     0.5f,
-                     100.0f,
-                     25,
-                     25);
+    TrackerSettings settings;
+    settings.m_useLocalTracking = useLocalTracking;
+    settings.m_distType = tracking::DistCenters;
+    settings.m_kalmanType = tracking::KalmanLinear;
+    settings.m_filterGoal = tracking::FilterCenter;
+    settings.m_lostTrackType = tracking::TrackNone;
+    settings.m_matchType = tracking::MatchHungrian;
+    settings.m_dt = 0.2f;
+    settings.m_accelNoiseMag = 0.5f;
+    settings.m_distThres = 100.0f;
+    settings.m_maximumAllowedSkippedFrames = 25;
+    settings.m_maxTraceLength = 25;
+
+    CTracker tracker(settings);
+
     track_t alpha = 0;
     cv::RNG rng;
     while (k != 27)
