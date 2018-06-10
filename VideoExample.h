@@ -143,7 +143,6 @@ public:
 
             int waitTime = manualMode ? 0 : std::max<int>(1, cvRound(1000 / m_fps - currTime));
             k = cv::waitKey(waitTime);
-
             if (k == 'm' || k == 'M')
             {
                 manualMode = !manualMode;
