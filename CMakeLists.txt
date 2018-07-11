@@ -34,6 +34,7 @@ set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
 # ----------------------------------------------------------------------------
   set(folder_source
              main.cpp
+             VideoExample.cpp
 
              Detector/BaseDetector.cpp
              Detector/MotionDetector.cpp
