@@ -69,11 +69,10 @@ public:
         std::thread thCapDet(CaptureAndDetect, this, &stopCapture, &frameLock, &frameCond, &trackLock, &trackCond);
         thCapDet.detach();
 
-        const int captureTimeOut = 10000;
         {
             std::unique_lock<std::mutex> lock(frameLock);
             auto now = std::chrono::system_clock::now();
-            if (frameCond.wait_until(lock, now + std::chrono::milliseconds(captureTimeOut)) == std::cv_status::timeout)
+            if (frameCond.wait_until(lock, now + std::chrono::milliseconds(CaptureTimeOut)) == std::cv_status::timeout)
             {
                 std::cerr << "Process: Init capture timeout" << std::endl;
                 stopCapture = true;
@@ -108,7 +107,7 @@ public:
             {
                 std::unique_lock<std::mutex> lock(frameLock);
                 auto now = std::chrono::system_clock::now();
-                if (frameCond.wait_until(lock, now + std::chrono::milliseconds(captureTimeOut)) == std::cv_status::timeout)
+                if (frameCond.wait_until(lock, now + std::chrono::milliseconds(CaptureTimeOut)) == std::cv_status::timeout)
                 {
                     std::cerr << "Process: Frame capture timeout" << std::endl;
                     break;
@@ -181,6 +180,9 @@ protected:
     float m_fps;
     bool m_useLocalTracking;
 
+    static const int CaptureTimeOut = 60000;
+    static const int TrackingTimeOut = 60000;
+
 
     ///
     /// \brief CaptureAndDetect
@@ -207,8 +209,6 @@ protected:
 
         thisPtr->m_fps = std::max(1.f, (float)capture.get(cv::CAP_PROP_FPS));
 
-        const int trackingTimeOut = 10000;
-
         frameCond->notify_all();
 
         int currFrame = 0;
@@ -217,7 +217,7 @@ protected:
             {
                 std::unique_lock<std::mutex> lock(*trackLock);
                 auto now = std::chrono::system_clock::now();
-                if (trackCond->wait_until(lock, now + std::chrono::milliseconds(trackingTimeOut)) == std::cv_status::timeout)
+                if (trackCond->wait_until(lock, now + std::chrono::milliseconds(TrackingTimeOut)) == std::cv_status::timeout)
                 {
                     std::cerr << "CaptureAndDetect: Tracking timeout!" << std::endl;
                     break;
