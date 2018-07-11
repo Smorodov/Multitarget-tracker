@@ -4,31 +4,17 @@ dist: trusty
 compiler:
   - g++
 
-
 matrix:
   include:
-    # works on Precise and Trusty
     - os: linux
       addons:
         apt:
           sources:
             - ubuntu-toolchain-r-test
           packages:
-            - g++-4.9
+            - g++
       env:
-         - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
-
-    # works on Precise and Trusty
-    - os: linux
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - g++-5
-      env:
-         - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
-
+         - MATRIX_EVAL="CC=gcc && CXX=g++"
 
 before_install:
   - eval "${MATRIX_EVAL}"
