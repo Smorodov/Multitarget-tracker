@@ -177,7 +177,16 @@ void VideoExample::CaptureAndDetect(VideoExample* thisPtr,
                                     std::mutex* trackLock,
                                     std::condition_variable* trackCond)
 {
-    cv::VideoCapture capture(thisPtr->m_inFile);
+    cv::VideoCapture capture;
+
+    if (thisPtr->m_inFile.size() == 1)
+    {
+        capture.open(atoi(thisPtr->m_inFile.c_str()));
+    }
+    else
+    {
+        capture.open(thisPtr->m_inFile);
+    }
 
     if (!capture.isOpened())
     {

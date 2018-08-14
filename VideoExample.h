@@ -115,7 +115,7 @@ protected:
         const int minStaticTime = 5;
 
         config_t config;
-#if 0
+#if 1
         config["history"] = std::to_string(cvRound(10 * minStaticTime * m_fps));
         config["varThreshold"] = "16";
         config["detectShadows"] = "1";
@@ -136,8 +136,8 @@ protected:
         settings.m_filterGoal = tracking::FilterRect;
         settings.m_lostTrackType = tracking::TrackKCF;    // Use KCF tracker for collisions resolving
         settings.m_matchType = tracking::MatchHungrian;
-        settings.m_dt = 0.5f;                             // Delta time for Kalman filter
-        settings.m_accelNoiseMag = 0.1f;                  // Accel noise magnitude for Kalman filter
+        settings.m_dt = 0.4f;                             // Delta time for Kalman filter
+        settings.m_accelNoiseMag = 0.5f;                  // Accel noise magnitude for Kalman filter
         settings.m_distThres = frame.rows / 20;           // Distance threshold between region and object on two frames
 
         settings.m_useAbandonedDetection = true;
@@ -188,7 +188,7 @@ protected:
             }
         }
 
-        //m_detector->CalcMotionMap(frame);
+        m_detector->CalcMotionMap(frame);
     }
 
 private:
@@ -490,7 +490,7 @@ protected:
         settings.m_lostTrackType = tracking::TrackKCF;       // Use KCF tracker for collisions resolving
         settings.m_matchType = tracking::MatchHungrian;
         settings.m_dt = 0.3f;                                // Delta time for Kalman filter
-        settings.m_accelNoiseMag = 0.1f;                     // Accel noise magnitude for Kalman filter
+        settings.m_accelNoiseMag = 0.2f;                     // Accel noise magnitude for Kalman filter
         settings.m_distThres = frame.rows / 10;              // Distance threshold between region and object on two frames
         settings.m_maximumAllowedSkippedFrames = 2 * m_fps;  // Maximum allowed skipped frames
         settings.m_maxTraceLength = 5 * m_fps;               // Maximum trace length

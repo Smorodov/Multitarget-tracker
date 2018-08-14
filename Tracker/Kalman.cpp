@@ -14,8 +14,13 @@ TKalmanFilter::TKalmanFilter(
       m_type(type),
       m_initialized(false),
       m_deltaTime(deltaTime),
+      m_deltaTimeMin(deltaTime),
+      m_deltaTimeMax(2 * deltaTime),
+      m_lastDist(0),
       m_accelNoiseMag(accelNoiseMag)
 {
+    m_deltaStep = (m_deltaTimeMax - m_deltaTimeMin) / m_deltaStepsCount;
+
     m_initialPoints.push_back(pt);
     m_lastPointResult = pt;
 }
@@ -31,8 +36,13 @@ TKalmanFilter::TKalmanFilter(
       m_type(type),
       m_initialized(false),
       m_deltaTime(deltaTime),
+      m_deltaTimeMin(deltaTime),
+      m_deltaTimeMax(2 * deltaTime),
+      m_lastDist(0),
       m_accelNoiseMag(accelNoiseMag)
 {
+    m_deltaStep = (m_deltaTimeMax - m_deltaTimeMin) / m_deltaStepsCount;
+
     m_initialRects.push_back(rect);
     m_lastRectResult = rect;
 }
@@ -50,7 +60,7 @@ void TKalmanFilter::CreateLinear(Point_t xy0, Point_t xyv0)
     // Process noise. (standard deviation of acceleration: m/s^2)
     // shows, woh much target can accelerate.
 
-    //4 state variables, 2 measurements
+    // 4 state variables, 2 measurements
     m_linearKalman = std::make_unique<cv::KalmanFilter>(4, 2, 0);
     // Transition cv::Matrix
     m_linearKalman->transitionMatrix = (cv::Mat_<track_t>(4, 4) <<
@@ -96,7 +106,7 @@ void TKalmanFilter::CreateLinear(cv::Rect_<track_t> rect0, Point_t rectv0)
     // Process noise. (standard deviation of acceleration: m/s^2)
     // shows, woh much target can accelerate.
 
-    //4 state variables (x, y, dx, dy, width, height), 4 measurements (x, y, width, height)
+    // 6 state variables (x, y, dx, dy, width, height), 4 measurements (x, y, width, height)
     m_linearKalman = std::make_unique<cv::KalmanFilter>(6, 4, 0);
     // Transition cv::Matrix
     m_linearKalman->transitionMatrix = (cv::Mat_<track_t>(6, 6) <<
@@ -488,6 +498,7 @@ Point_t TKalmanFilter::Update(Point_t pt, bool dataCorrect)
 #endif
                 break;
             }
+            m_lastDist = 0;
         }
     }
 
@@ -509,8 +520,26 @@ Point_t TKalmanFilter::Update(Point_t pt, bool dataCorrect)
         switch (m_type)
         {
         case tracking::KalmanLinear:
+        {
             estimated = m_linearKalman->correct(measurement);
+
+            // Inertia correction
+            track_t currDist = sqrtf(sqr(estimated.at<track_t>(0) - pt.x) + sqr(estimated.at<track_t>(1) - pt.y));
+            if (currDist > m_lastDist)
+            {
+                m_deltaTime = std::min(m_deltaTime + m_deltaStep, m_deltaTimeMax);
+            }
+            else
+            {
+                m_deltaTime = std::max(m_deltaTime - m_deltaStep, m_deltaTimeMin);
+            }
+            m_lastDist = currDist;
+
+            m_linearKalman->transitionMatrix.at<track_t>(0, 2) = m_deltaTime;
+            m_linearKalman->transitionMatrix.at<track_t>(1, 3) = m_deltaTime;
+
             break;
+        }
 
         case tracking::KalmanUnscented:
         case tracking::KalmanAugmentedUnscented:
@@ -651,13 +680,31 @@ cv::Rect TKalmanFilter::Update(cv::Rect rect, bool dataCorrect)
         switch (m_type)
         {
         case tracking::KalmanLinear:
+        {
             estimated = m_linearKalman->correct(measurement);
 
             m_lastRectResult.x = estimated.at<track_t>(0);   //update using measurements
             m_lastRectResult.y = estimated.at<track_t>(1);
             m_lastRectResult.width = estimated.at<track_t>(2);
             m_lastRectResult.height = estimated.at<track_t>(3);
+
+            // Inertia correction
+            track_t currDist = sqrtf(sqr(estimated.at<track_t>(0) - rect.x) + sqr(estimated.at<track_t>(1) - rect.y) + sqr(estimated.at<track_t>(2) - rect.width) + sqr(estimated.at<track_t>(3) - rect.height));
+            if (currDist > m_lastDist)
+            {
+                m_deltaTime = std::min(m_deltaTime + m_deltaStep, m_deltaTimeMax);
+            }
+            else
+            {
+                m_deltaTime = std::max(m_deltaTime - m_deltaStep, m_deltaTimeMin);
+            }
+            m_lastDist = currDist;
+
+            m_linearKalman->transitionMatrix.at<track_t>(0, 4) = m_deltaTime;
+            m_linearKalman->transitionMatrix.at<track_t>(1, 5) = m_deltaTime;
+
             break;
+        }
 
         case tracking::KalmanUnscented:
         case tracking::KalmanAugmentedUnscented:

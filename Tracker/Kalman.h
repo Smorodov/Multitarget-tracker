@@ -43,6 +43,11 @@ private:
 
     bool m_initialized;
     track_t m_deltaTime;
+    track_t m_deltaTimeMin;
+    track_t m_deltaTimeMax;
+    track_t m_lastDist;
+    track_t m_deltaStep;
+    static const int m_deltaStepsCount = 20;
     track_t m_accelNoiseMag;
 
     void CreateLinear(Point_t xy0, Point_t xyv0);

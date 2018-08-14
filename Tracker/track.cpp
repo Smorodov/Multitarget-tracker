@@ -47,7 +47,7 @@ CTrack::CTrack(
 track_t CTrack::CalcDist(const Point_t& pt) const
 {
     Point_t diff = m_predictionPoint - pt;
-    return sqrtf(diff.x * diff.x + diff.y * diff.y);
+    return sqrtf(sqr(diff.x) + sqr(diff.y));
 }
 
 ///
@@ -66,7 +66,7 @@ track_t CTrack::CalcDist(const cv::Rect& r) const
     track_t dist = 0;
     for (size_t i = 0; i < diff.size(); ++i)
     {
-        dist += diff[i] * diff[i];
+        dist += sqr(diff[i]);
     }
     return sqrtf(dist);
 }
@@ -324,7 +324,7 @@ void CTrack::RectUpdate(
 #ifdef USE_OCV_KCF
         if (!dataCorrect)
         {
-            cv::Size roiSize(std::max(2 * m_predictionRect.width, currFrame.cols / 4), std::min(2 * m_predictionRect.height, currFrame.rows / 4));
+            cv::Size roiSize(std::max(2 * m_predictionRect.width, currFrame.cols / 4), std::max(2 * m_predictionRect.height, currFrame.rows / 4));
             if (roiSize.width > currFrame.cols)
             {
                 roiSize.width = currFrame.cols;
