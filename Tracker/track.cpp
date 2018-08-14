@@ -47,7 +47,7 @@ CTrack::CTrack(
 track_t CTrack::CalcDist(const Point_t& pt) const
 {
     Point_t diff = m_predictionPoint - pt;
-    return sqrtf(diff.x * diff.x + diff.y * diff.y);
+    return sqrtf(sqr(diff.x) + sqr(diff.y));
 }
 
 ///
@@ -66,7 +66,7 @@ track_t CTrack::CalcDist(const cv::Rect& r) const
     track_t dist = 0;
     for (size_t i = 0; i < diff.size(); ++i)
     {
-        dist += diff[i] * diff[i];
+        dist += sqr(diff[i]);
     }
     return sqrtf(dist);
 }
