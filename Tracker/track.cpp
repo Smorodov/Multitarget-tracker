@@ -324,7 +324,7 @@ void CTrack::RectUpdate(
 #ifdef USE_OCV_KCF
         if (!dataCorrect)
         {
-            cv::Size roiSize(std::max(2 * m_predictionRect.width, currFrame.cols / 4), std::min(2 * m_predictionRect.height, currFrame.rows / 4));
+            cv::Size roiSize(std::max(2 * m_predictionRect.width, currFrame.cols / 4), std::max(2 * m_predictionRect.height, currFrame.rows / 4));
             if (roiSize.width > currFrame.cols)
             {
                 roiSize.width = currFrame.cols;
