@@ -1,6 +1,8 @@
 #include "YoloDetector.h"
 #include "nms.h"
 
+#include <opencv2/dnn/blob.hpp>
+
 ///
 /// \brief YoloDetector::YoloDetector
 /// \param collectPoints

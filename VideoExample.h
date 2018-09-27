@@ -466,21 +466,32 @@ protected:
         m_useLocalTracking = false;
 
         config_t config;
-        //config["modelConfiguration"] = "../data/tiny-yolo.cfg";
-        //config["modelBinary"] = "../data/tiny-yolo.weights";
-        config["modelConfiguration"] = "../data/yolov3-tiny.cfg";
-        config["modelBinary"] = "../data/yolov3-tiny.weights";
-        config["classNames"] = "../data/coco.names";
-        config["confidenceThreshold"] = "0.5";
-        config["maxCropRatio"] = "3.0";
-        config["dnnTarget"] = "DNN_TARGET_OPENCL_FP16";
+        const int yoloTest = 0;
+
+        switch (yoloTest)
+        {
+        case 0:
+            config["modelConfiguration"] = "../data/tiny-yolo.cfg";
+            config["modelBinary"] = "../data/tiny-yolo.weights";
+            break;
+
+        case 1:
+            config["modelConfiguration"] = "../data/yolov3-tiny.cfg";
+            config["modelBinary"] = "../data/yolov3-tiny.weights";
+            config["classNames"] = "../data/coco.names";
+            break;
+        }
+
+        config["confidenceThreshold"] = "0.1";
+        config["maxCropRatio"] = "2.0";
+        config["dnnTarget"] = "DNN_TARGET_OPENCL";
 
         m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Yolo, config, m_useLocalTracking, frame));
         if (!m_detector.get())
         {
             return false;
         }
-        m_detector->SetMinObjectSize(cv::Size(frame.cols / 20, frame.rows / 20));
+        m_detector->SetMinObjectSize(cv::Size(frame.cols / 40, frame.rows / 40));
 
         TrackerSettings settings;
         settings.m_useLocalTracking = m_useLocalTracking;
@@ -513,8 +524,8 @@ protected:
 
         for (const auto& track : m_tracker->tracks)
         {
-            if (track->IsRobust(5,                           // Minimal trajectory size
-                                0.2f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
+            if (track->IsRobust(1,                           // Minimal trajectory size
+                                0.1f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
                                 cv::Size2f(0.1f, 8.0f))      // Min and max ratio: width / height
                     )
             {
