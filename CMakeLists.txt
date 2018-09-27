@@ -27,4 +27,5 @@ FIND_PACKAGE(OpenCV)
 
 add_subdirectory(src)
 add_subdirectory(example)
+add_subdirectory(cars_counting)
 
