@@ -1,5 +1,5 @@
 #include "Ctracker.h"
-#include "HungarianAlg.h"
+#include "HungarianAlg/HungarianAlg.h"
 
 #include <GTL/GTL.h>
 #include "mygraph.h"
