@@ -1,6 +1,10 @@
 #include "YoloDetector.h"
 #include "nms.h"
 
+#if (CV_VERSION_MAJOR > 3)
+#include <opencv2/dnn/blob.hpp>
+#endif
+
 ///
 /// \brief YoloDetector::YoloDetector
 /// \param collectPoints
