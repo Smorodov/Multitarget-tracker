@@ -93,7 +93,7 @@ void CarsCounting::Process()
             m_isTrackerInitialized = InitTracker(grayFrame);
             if (!m_isTrackerInitialized)
             {
-                std::cerr << "CaptureAndDetect: Tracker initilize error!!!" << std::endl;
+                std::cerr << "Tracker initilize error!!!" << std::endl;
                 break;
             }
         }
@@ -131,6 +131,10 @@ void CarsCounting::Process()
         if (k == 'm' || k == 'M')
         {
             manualMode = !manualMode;
+        }
+        else if (k == 27)
+        {
+            break;
         }
 
         if (writer.isOpened())
@@ -306,5 +310,58 @@ void CarsCounting::DrawData(cv::Mat frame, int framesCounter, int currTime)
         }
     }
 
-    m_detector->CalcMotionMap(frame);
+    //m_detector->CalcMotionMap(frame);
+
+    for (const auto& rl : m_lines)
+    {
+        rl.Draw(frame);
+    }
+}
+
+///
+/// \brief CarsCounting::AddLine
+/// \param newLine
+///
+void CarsCounting::AddLine(const RoadLine& newLine)
+{
+    m_lines.push_back(newLine);
+}
+
+///
+/// \brief CarsCounting::GetLine
+/// \param lineUid
+/// \return
+///
+bool CarsCounting::GetLine(unsigned int lineUid, RoadLine& line)
+{
+    for (const auto& rl : m_lines)
+    {
+        if (rl.m_uid == lineUid)
+        {
+            line = rl;
+            return true;
+        }
+    }
+    return false;
+}
+
+///
+/// \brief CarsCounting::RemoveLine
+/// \param lineUid
+/// \return
+///
+bool CarsCounting::RemoveLine(unsigned int lineUid)
+{
+    for (auto it = std::begin(m_lines); it != std::end(m_lines);)
+    {
+        if (it->m_uid == lineUid)
+        {
+            it = m_lines.erase(it);
+        }
+        else
+        {
+            ++it;
+        }
+    }
+    return false;
 }
