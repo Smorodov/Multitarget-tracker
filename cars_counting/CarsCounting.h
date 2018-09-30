@@ -258,7 +258,6 @@ protected:
                    bool drawTrajectory = true,
                    bool isStatic = false);
 
-
 private:
 
     bool m_isTrackerInitialized = false;
