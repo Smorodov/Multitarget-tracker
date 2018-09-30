@@ -306,6 +306,8 @@ void CarsCounting::DrawData(cv::Mat frame, int framesCounter, int currTime)
                     )
             {
                 DrawTrack(frame, 1, *track, true);
+
+                CheckLinesIntersection(*track, static_cast<float>(frame.cols), static_cast<float>(frame.rows));
             }
         }
     }
@@ -364,4 +366,21 @@ bool CarsCounting::RemoveLine(unsigned int lineUid)
         }
     }
     return false;
+}
+
+///
+/// \brief CarsCounting::CheckLinesIntersection
+/// \param track
+///
+void CarsCounting::CheckLinesIntersection(const CTrack& track, float xMax, float yMax)
+{
+    auto Pti2f = [&](cv::Point pt) -> cv::Point2f
+    {
+        return cv::Point2f(pt.x / xMax, pt.y / yMax);
+    };
+
+    for (auto& rl : m_lines)
+    {
+        rl.IsIntersect(Pti2f(track.m_trace[track.m_trace.size() - 2]), Pti2f(track.m_trace[track.m_trace.size() - 1]));
+    }
 }
