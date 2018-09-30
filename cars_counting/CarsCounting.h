@@ -28,19 +28,9 @@ protected:
     std::unique_ptr<BaseDetector> m_detector;
     std::unique_ptr<CTracker> m_tracker;
 
-    bool m_showLogs;
-    float m_fps;
-    bool m_useLocalTracking;
-
-    int m_captureTimeOut;
-    int m_trackingTimeOut;
-
-    static void CaptureAndDetect(CarsCounting* thisPtr,
-                                 bool* stopCapture,
-                                 std::mutex* frameLock,
-                                 std::condition_variable* frameCond,
-                                 std::mutex* trackLock,
-                                 std::condition_variable* trackCond);
+    bool m_showLogs = false;
+    float m_fps = 0;
+    bool m_useLocalTracking = false;
 
     virtual bool GrayProcessing() const;
 
@@ -56,31 +46,15 @@ protected:
                    const CTrack& track,
                    bool drawTrajectory = true,
                    bool isStatic = false);
+
 private:
-    bool m_isTrackerInitialized;
+    bool m_isTrackerInitialized = false;
     std::string m_inFile;
     std::string m_outFile;
-    int m_startFrame;
-    int m_endFrame;
-    int m_finishDelay;
+    int m_startFrame = 0;
+    int m_endFrame = 0;
+    int m_finishDelay = 0;
     std::vector<cv::Scalar> m_colors;
-
-    struct FrameInfo
-    {
-        cv::Mat m_frame;
-        cv::UMat m_gray;
-        regions_t m_regions;
-        int64 m_dt;
-
-        FrameInfo()
-            : m_dt(0)
-        {
-
-        }
-    };
-    FrameInfo m_frameInfo[2];
-
-    int m_currFrame;
 
     int m_minObjWidth = 10;
 };

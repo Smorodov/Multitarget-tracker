@@ -9,13 +9,10 @@ CarsCounting::CarsCounting(const cv::CommandLineParser& parser)
       m_showLogs(true),
       m_fps(25),
       m_useLocalTracking(false),
-      m_captureTimeOut(60000),
-      m_trackingTimeOut(60000),
       m_isTrackerInitialized(false),
       m_startFrame(0),
       m_endFrame(0),
-      m_finishDelay(0),
-      m_currFrame(0)
+      m_finishDelay(0)
 {
     m_inFile = parser.get<std::string>(0);
     m_outFile = parser.get<std::string>("out");
@@ -48,32 +45,6 @@ CarsCounting::~CarsCounting()
 ///
 void CarsCounting::Process()
 {
-    m_currFrame = 1;
-    bool stopCapture = false;
-    std::mutex frameLock;
-    std::condition_variable frameCond;
-
-    std::mutex trackLock;
-    std::condition_variable trackCond;
-    std::thread thCapDet(CaptureAndDetect, this, &stopCapture, &frameLock, &frameCond, &trackLock, &trackCond);
-    thCapDet.detach();
-
-    {
-        std::unique_lock<std::mutex> lock(frameLock);
-        auto now = std::chrono::system_clock::now();
-        if (frameCond.wait_until(lock, now + std::chrono::milliseconds(m_captureTimeOut)) == std::cv_status::timeout)
-        {
-            std::cerr << "Process: Init capture timeout" << std::endl;
-            stopCapture = true;
-
-            if (thCapDet.joinable())
-            {
-                thCapDet.join();
-            }
-            return;
-        }
-    }
-
     cv::VideoWriter writer;
 
     cv::namedWindow("Video", cv::WINDOW_NORMAL | cv::WINDOW_KEEPRATIO);
@@ -87,47 +58,73 @@ void CarsCounting::Process()
     bool manualMode = false;
     int framesCounter = m_startFrame + 1;
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-    trackCond.notify_all();
-
-    int currFrame = 0;
-    for (; !stopCapture && k != 27; )
+    cv::VideoCapture capture;
+    if (m_inFile.size() == 1)
     {
+        capture.open(atoi(m_inFile.c_str()));
+    }
+    else
+    {
+        capture.open(m_inFile);
+    }
+    if (!capture.isOpened())
+    {
+        std::cerr << "Can't open " << m_inFile << std::endl;
+        return;
+    }
+    capture.set(cv::CAP_PROP_POS_FRAMES, m_startFrame);
+
+    m_fps = std::max(1.f, (float)capture.get(cv::CAP_PROP_FPS));
+
+    cv::Mat colorFrame;
+    cv::UMat grayFrame;
+    for (;;)
+    {
+        capture >> colorFrame;
+        if (colorFrame.empty())
         {
-            std::unique_lock<std::mutex> lock(frameLock);
-            auto now = std::chrono::system_clock::now();
-            if (frameCond.wait_until(lock, now + std::chrono::milliseconds(m_captureTimeOut)) == std::cv_status::timeout)
+            std::cerr << "Frame is empty!" << std::endl;
+            break;
+        }
+        cv::cvtColor(colorFrame, grayFrame, cv::COLOR_BGR2GRAY);
+
+        if (!m_isTrackerInitialized)
+        {
+            m_isTrackerInitialized = InitTracker(grayFrame);
+            if (!m_isTrackerInitialized)
             {
-                std::cerr << "Process: Frame capture timeout" << std::endl;
+                std::cerr << "CaptureAndDetect: Tracker initilize error!!!" << std::endl;
                 break;
             }
         }
-        if (stopCapture)
-        {
-            break;
-        }
-
-        frameLock.lock();
-        currFrame = m_currFrame;
-        frameLock.unlock();
 
         if (!writer.isOpened())
         {
-            writer.open(m_outFile, cv::VideoWriter::fourcc('M', 'J', 'P', 'G'), m_fps, m_frameInfo[currFrame].m_frame.size(), true);
+            writer.open(m_outFile, cv::VideoWriter::fourcc('M', 'J', 'P', 'G'), m_fps, colorFrame.size(), true);
         }
 
         int64 t1 = cv::getTickCount();
 
-        Tracking(m_frameInfo[currFrame].m_frame, m_frameInfo[currFrame].m_gray, m_frameInfo[currFrame].m_regions);
+        cv::UMat clFrame;
+        if (!GrayProcessing() || !m_tracker->GrayFrameToTrack())
+        {
+            clFrame = colorFrame.getUMat(cv::ACCESS_READ);
+        }
+
+        m_detector->Detect(GrayProcessing() ? grayFrame : clFrame);
+
+        const regions_t& regions = m_detector->GetDetects();
+
+        m_tracker->Update(regions, m_tracker->GrayFrameToTrack() ? grayFrame : clFrame, m_fps);
 
         int64 t2 = cv::getTickCount();
 
-        allTime += t2 - t1 + m_frameInfo[currFrame].m_dt;
-        int currTime = cvRound(1000 * (t2 - t1 + m_frameInfo[currFrame].m_dt) / freq);
+        allTime += t2 - t1;
+        int currTime = cvRound(1000 * (t2 - t1) / freq);
 
-        DrawData(m_frameInfo[currFrame].m_frame, framesCounter, currTime);
+        DrawData(colorFrame, framesCounter, currTime);
 
-        cv::imshow("Video", m_frameInfo[currFrame].m_frame);
+        cv::imshow("Video", colorFrame);
 
         int waitTime = manualMode ? 0 : std::max<int>(1, cvRound(1000 / m_fps - currTime));
         k = cv::waitKey(waitTime);
@@ -138,10 +135,8 @@ void CarsCounting::Process()
 
         if (writer.isOpened())
         {
-            writer << m_frameInfo[currFrame].m_frame;
+            writer << colorFrame;
         }
-
-        trackCond.notify_all();
 
         ++framesCounter;
         if (m_endFrame && framesCounter > m_endFrame)
@@ -150,103 +145,9 @@ void CarsCounting::Process()
             break;
         }
     }
-    stopCapture = true;
-
-    if (thCapDet.joinable())
-    {
-        thCapDet.join();
-    }
 
     std::cout << "work time = " << (allTime / freq) << std::endl;
     cv::waitKey(m_finishDelay);
-}
-
-///
-/// \brief CarsCounting::CaptureAndDetect
-/// \param thisPtr
-/// \param stopCapture
-/// \param frameLock
-/// \param frameCond
-/// \param trackLock
-/// \param trackCond
-///
-void CarsCounting::CaptureAndDetect(CarsCounting* thisPtr,
-                                    bool* stopCapture,
-                                    std::mutex* frameLock,
-                                    std::condition_variable* frameCond,
-                                    std::mutex* trackLock,
-                                    std::condition_variable* trackCond)
-{
-    cv::VideoCapture capture;
-
-    if (thisPtr->m_inFile.size() == 1)
-    {
-        capture.open(atoi(thisPtr->m_inFile.c_str()));
-    }
-    else
-    {
-        capture.open(thisPtr->m_inFile);
-    }
-
-    if (!capture.isOpened())
-    {
-        std::cerr << "Can't open " << thisPtr->m_inFile << std::endl;
-        return;
-    }
-
-    capture.set(cv::CAP_PROP_POS_FRAMES, thisPtr->m_startFrame);
-
-    thisPtr->m_fps = std::max(1.f, (float)capture.get(cv::CAP_PROP_FPS));
-
-    frameCond->notify_all();
-
-    int currFrame = 0;
-    for (; !(*stopCapture);)
-    {
-        {
-            std::unique_lock<std::mutex> lock(*trackLock);
-            auto now = std::chrono::system_clock::now();
-            if (trackCond->wait_until(lock, now + std::chrono::milliseconds(thisPtr->m_trackingTimeOut)) == std::cv_status::timeout)
-            {
-                std::cerr << "CaptureAndDetect: Tracking timeout!" << std::endl;
-                break;
-            }
-        }
-        frameLock->lock();
-        currFrame = thisPtr->m_currFrame ? 0 : 1;
-        frameLock->unlock();
-
-        capture >> thisPtr->m_frameInfo[currFrame].m_frame;
-        if (thisPtr->m_frameInfo[currFrame].m_frame.empty())
-        {
-            std::cerr << "CaptureAndDetect: frame is empty!" << std::endl;
-            break;
-        }
-        cv::cvtColor(thisPtr->m_frameInfo[currFrame].m_frame, thisPtr->m_frameInfo[currFrame].m_gray, cv::COLOR_BGR2GRAY);
-
-        if (!thisPtr->m_isTrackerInitialized)
-        {
-            thisPtr->m_isTrackerInitialized = thisPtr->InitTracker(thisPtr->m_frameInfo[currFrame].m_gray);
-            if (!thisPtr->m_isTrackerInitialized)
-            {
-                std::cerr << "CaptureAndDetect: Tracker initilize error!!!" << std::endl;
-                break;
-            }
-        }
-
-        int64 t1 = cv::getTickCount();
-        thisPtr->Detection(thisPtr->m_frameInfo[currFrame].m_frame, thisPtr->m_frameInfo[currFrame].m_gray, thisPtr->m_frameInfo[currFrame].m_regions);
-        int64 t2 = cv::getTickCount();
-        thisPtr->m_frameInfo[currFrame].m_dt = t2 - t1;
-
-        frameLock->lock();
-        thisPtr->m_currFrame = thisPtr->m_currFrame ? 0 : 1;
-        frameLock->unlock();
-        frameCond->notify_all();
-    }
-
-    *stopCapture = true;
-    frameCond->notify_all();
 }
 
 ///
@@ -256,44 +157,6 @@ void CarsCounting::CaptureAndDetect(CarsCounting* thisPtr,
 bool CarsCounting::GrayProcessing() const
 {
     return true;
-}
-
-///
-/// \brief CarsCounting::Detection
-/// \param frame
-/// \param grayFrame
-/// \param regions
-///
-void CarsCounting::Detection(cv::Mat frame, cv::UMat grayFrame, regions_t& regions)
-{
-    cv::UMat clFrame;
-    if (!GrayProcessing() || !m_tracker->GrayFrameToTrack())
-    {
-        clFrame = frame.getUMat(cv::ACCESS_READ);
-    }
-
-    m_detector->Detect(GrayProcessing() ? grayFrame : clFrame);
-
-    const regions_t& regs = m_detector->GetDetects();
-
-    regions.assign(std::begin(regs), std::end(regs));
-}
-
-///
-/// \brief CarsCounting::Tracking
-/// \param frame
-/// \param grayFrame
-/// \param regions
-///
-void CarsCounting::Tracking(cv::Mat frame, cv::UMat grayFrame, const regions_t& regions)
-{
-    cv::UMat clFrame;
-    if (!GrayProcessing() || !m_tracker->GrayFrameToTrack())
-    {
-        clFrame = frame.getUMat(cv::ACCESS_READ);
-    }
-
-    m_tracker->Update(regions, m_tracker->GrayFrameToTrack() ? grayFrame : clFrame, m_fps);
 }
 
 ///
