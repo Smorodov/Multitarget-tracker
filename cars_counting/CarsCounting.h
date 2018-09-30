@@ -14,6 +14,41 @@
 // ----------------------------------------------------------------------
 
 ///
+/// \brief The RoadLine struct
+///
+struct RoadLine
+{
+    ///
+    /// \brief RoadLine
+    ///
+    RoadLine()
+    {
+    }
+    RoadLine(const cv::Point2f& pt1, const cv::Point2f& pt2)
+        :
+          m_pt1(pt1), m_pt2(pt2)
+    {
+    }
+
+    cv::Point2f m_pt1;
+    cv::Point2f m_pt2;
+
+    unsigned int m_uid;
+    std::string m_name;
+
+    ///
+    /// \brief operator ==
+    /// \param line
+    /// \return
+    ///
+    bool operator==(const RoadLine &line) const
+    {
+        return line.m_uid == m_uid;
+    }
+};
+// ----------------------------------------------------------------------
+
+///
 /// \brief The CarsCounting class
 ///
 class CarsCounting
