@@ -16,8 +16,9 @@
 ///
 /// \brief The RoadLine struct
 ///
-struct RoadLine
+class RoadLine
 {
+public:
     ///
     /// \brief RoadLine
     ///
@@ -64,7 +65,7 @@ struct RoadLine
         std::string label = "Line " + std::to_string(m_uid) + ": " + std::to_string(m_intersect1) + "/" + std::to_string(m_intersect2);
         //int baseLine = 0;
         //cv::Size labelSize = cv::getTextSize(label, cv::FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
-        cv::putText(frame, label, Ptf2i(0.5f * (m_pt1 + m_pt2)), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 0, 0));
+        cv::putText(frame, label, Ptf2i(0.5f * (m_pt1 + m_pt2)), cv::FONT_HERSHEY_TRIPLEX, 0.5, cv::Scalar(0, 0, 0));
     }
 
     ///
@@ -124,6 +125,8 @@ struct RoadLine
 
         return direction;
     }
+
+private:
 
     ///
     /// \brief CheckIntersection
@@ -272,5 +275,6 @@ private:
 
     // Road lines
     std::deque<RoadLine> m_lines;
-    void CheckLinesIntersection(const CTrack& track, float xMax, float yMax);
+    void CheckLinesIntersection(const CTrack& track, float xMax, float yMax, std::set<size_t>& currIntersections);
+    std::set<size_t> m_lastIntersections;
 };

@@ -100,7 +100,7 @@ void CarsCounting::Process()
 
         if (!writer.isOpened())
         {
-            writer.open(m_outFile, cv::VideoWriter::fourcc('M', 'J', 'P', 'G'), m_fps, colorFrame.size(), true);
+            writer.open(m_outFile, cv::VideoWriter::fourcc('H', 'F', 'Y', 'U'), m_fps, colorFrame.size(), true);
         }
 
         int64 t1 = cv::getTickCount();
@@ -258,7 +258,7 @@ bool CarsCounting::InitTracker(cv::UMat frame)
     settings.m_filterGoal = tracking::FilterRect;
     settings.m_lostTrackType = tracking::TrackKCF;    // Use KCF tracker for collisions resolving
     settings.m_matchType = tracking::MatchHungrian;
-    settings.m_dt = 0.4f;                             // Delta time for Kalman filter
+    settings.m_dt = 0.5f;                             // Delta time for Kalman filter
     settings.m_accelNoiseMag = 0.5f;                  // Accel noise magnitude for Kalman filter
     settings.m_distThres = frame.rows / 20;           // Distance threshold between region and object on two frames
 
@@ -292,6 +292,8 @@ void CarsCounting::DrawData(cv::Mat frame, int framesCounter, int currTime)
         std::cout << "Frame " << framesCounter << ": tracks = " << m_tracker->tracks.size() << ", time = " << currTime << std::endl;
     }
 
+    std::set<size_t> currIntersections;
+
     for (const auto& track : m_tracker->tracks)
     {
         if (track->IsStatic())
@@ -307,10 +309,13 @@ void CarsCounting::DrawData(cv::Mat frame, int framesCounter, int currTime)
             {
                 DrawTrack(frame, 1, *track, true);
 
-                CheckLinesIntersection(*track, static_cast<float>(frame.cols), static_cast<float>(frame.rows));
+                CheckLinesIntersection(*track, static_cast<float>(frame.cols), static_cast<float>(frame.rows), currIntersections);
             }
         }
     }
+
+    m_lastIntersections.clear();
+    m_lastIntersections = currIntersections;
 
     //m_detector->CalcMotionMap(frame);
 
@@ -372,7 +377,7 @@ bool CarsCounting::RemoveLine(unsigned int lineUid)
 /// \brief CarsCounting::CheckLinesIntersection
 /// \param track
 ///
-void CarsCounting::CheckLinesIntersection(const CTrack& track, float xMax, float yMax)
+void CarsCounting::CheckLinesIntersection(const CTrack& track, float xMax, float yMax, std::set<size_t>& currIntersections)
 {
     auto Pti2f = [&](cv::Point pt) -> cv::Point2f
     {
@@ -381,6 +386,12 @@ void CarsCounting::CheckLinesIntersection(const CTrack& track, float xMax, float
 
     for (auto& rl : m_lines)
     {
-        rl.IsIntersect(Pti2f(track.m_trace[track.m_trace.size() - 2]), Pti2f(track.m_trace[track.m_trace.size() - 1]));
+        if (m_lastIntersections.find(track.m_trackID) == m_lastIntersections.end())
+        {
+            if (rl.IsIntersect(Pti2f(track.m_trace[track.m_trace.size() - 3]), Pti2f(track.m_trace[track.m_trace.size() - 1])))
+            {
+                currIntersections.insert(track.m_trackID);
+            }
+        }
     }
 }
