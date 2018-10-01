@@ -306,6 +306,11 @@ void CTrack::RectUpdate(
         else if (v + size > hi - 1)
         {
             v = hi - 1 - size;
+            if (v < 0)
+            {
+                size += v;
+                v = 0;
+            }
             return true;
         }
         return false;
