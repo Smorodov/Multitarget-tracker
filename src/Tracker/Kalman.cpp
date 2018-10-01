@@ -142,8 +142,8 @@ void TKalmanFilter::CreateLinear(cv::Rect_<track_t> rect0, Point_t rectv0)
     m_linearKalman->processNoiseCov = (cv::Mat_<track_t>(8, 8) <<
                                        n1, 0,  0,  0,  n2, 0,  0,  0,
                                        0,  n1, 0,  0,  0,  n2, 0,  0,
-                                       0,  0,  n1, 0,  0,  0,  0,  0,
-                                       0,  0,  0,  n1, 0,  0,  0,  0,
+                                       0,  0,  n1, 0,  0,  0,  n2, 0,
+                                       0,  0,  0,  n1, 0,  0,  0,  n2,
                                        n2, 0,  0,  0,  n3, 0,  0,  0,
                                        0,  n2, 0,  0,  0,  n3, 0,  0,
                                        0,  0,  n2, 0,  0,  0,  n3, 0,
@@ -708,6 +708,8 @@ cv::Rect TKalmanFilter::Update(cv::Rect rect, bool dataCorrect)
 
             m_linearKalman->transitionMatrix.at<track_t>(0, 4) = m_deltaTime;
             m_linearKalman->transitionMatrix.at<track_t>(1, 5) = m_deltaTime;
+            m_linearKalman->transitionMatrix.at<track_t>(2, 6) = m_deltaTime;
+            m_linearKalman->transitionMatrix.at<track_t>(3, 7) = m_deltaTime;
 
             break;
         }
