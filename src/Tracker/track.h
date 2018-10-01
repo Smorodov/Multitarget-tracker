@@ -229,7 +229,7 @@ private:
 
     void CreateExternalTracker();
 
-    void PointUpdate(const Point_t& pt, bool dataCorrect, const cv::Size& frameSize);
+    void PointUpdate(const Point_t& pt, const cv::Size& newObjSize, bool dataCorrect, const cv::Size& frameSize);
 
     bool CheckStatic(int trajLen, cv::UMat currFrame, const CRegion& region);
     bool m_isStatic = false;
