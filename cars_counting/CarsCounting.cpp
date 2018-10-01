@@ -230,8 +230,6 @@ void CarsCounting::DrawTrack(cv::Mat frame,
 ///
 bool CarsCounting::InitTracker(cv::UMat frame)
 {
-    m_useLocalTracking = false;
-
     m_minObjWidth = frame.cols / 50;
 
     const int minStaticTime = 5;
@@ -260,7 +258,7 @@ bool CarsCounting::InitTracker(cv::UMat frame)
     settings.m_matchType = tracking::MatchHungrian;
     settings.m_dt = 0.5f;                             // Delta time for Kalman filter
     settings.m_accelNoiseMag = 0.5f;                  // Accel noise magnitude for Kalman filter
-    settings.m_distThres = frame.rows / 20;           // Distance threshold between region and object on two frames
+    settings.m_distThres = frame.rows / 15;           // Distance threshold between region and object on two frames
 
     settings.m_useAbandonedDetection = false;
     if (settings.m_useAbandonedDetection)

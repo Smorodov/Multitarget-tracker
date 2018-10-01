@@ -115,9 +115,6 @@ void CTracker::UpdateHungrian(
                 }
             }
             break;
-
-        //case tracking::DistLines:
-            //break;
         }
         // -----------------------------------
         // Solving assignment problem (tracks and predictions of Kalman filter)

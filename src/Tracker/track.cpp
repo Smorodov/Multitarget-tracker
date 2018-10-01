@@ -352,7 +352,9 @@ void CTrack::RectUpdate(
                 cv::Rect2d lastRect(m_predictionRect.x - roiRect.x, m_predictionRect.y - roiRect.y, m_predictionRect.width, m_predictionRect.height);
                 if (m_staticFrame.empty())
                 {
-                    lastRect = cv::Rect2d(m_predictionRect.x - roiRect.x, m_predictionRect.y - roiRect.y, m_predictionRect.width, m_predictionRect.height);
+                    int dx = 1;//m_predictionRect.width / 8;
+                    int dy = 1;//m_predictionRect.height / 8;
+                    lastRect = cv::Rect2d(m_predictionRect.x - roiRect.x - dx, m_predictionRect.y - roiRect.y - dy, m_predictionRect.width + 2 * dx, m_predictionRect.height + 2 * dy);
                 }
                 else
                 {
