@@ -24,6 +24,7 @@ CTrack::CTrack(
       m_skippedFrames(0),
       m_lastRegion(region),
       m_predictionPoint((region.m_rect.tl() + region.m_rect.br()) / 2),
+      m_predictionRect(region.m_rect),
       m_filterObjectSize(filterObjectSize),
       m_outOfTheFrame(false),
       m_externalTrackerForLost(externalTrackerForLost)
@@ -122,7 +123,7 @@ void CTrack::Update(
     }
     else // Kalman filter only for object center
     {
-        PointUpdate(pt, dataCorrect, currFrame.size());
+        PointUpdate(pt, region.m_rect.size(), dataCorrect, currFrame.size());
     }
 
     if (dataCorrect)
@@ -269,8 +270,8 @@ cv::Rect CTrack::GetLastRect() const
         return cv::Rect(
                     static_cast<int>(m_predictionPoint.x - m_lastRegion.m_rect.width / 2),
                     static_cast<int>(m_predictionPoint.y - m_lastRegion.m_rect.height / 2),
-                    m_lastRegion.m_rect.width,
-                    m_lastRegion.m_rect.height);
+                    m_predictionRect.width,
+                    m_predictionRect.height);
     }
 }
 
@@ -306,6 +307,11 @@ void CTrack::RectUpdate(
         else if (v + size > hi - 1)
         {
             v = hi - 1 - size;
+            if (v < 0)
+            {
+                size += v;
+                v = 0;
+            }
             return true;
         }
         return false;
@@ -346,7 +352,9 @@ void CTrack::RectUpdate(
                 cv::Rect2d lastRect(m_predictionRect.x - roiRect.x, m_predictionRect.y - roiRect.y, m_predictionRect.width, m_predictionRect.height);
                 if (m_staticFrame.empty())
                 {
-                    lastRect = cv::Rect2d(m_predictionRect.x - roiRect.x, m_predictionRect.y - roiRect.y, m_predictionRect.width, m_predictionRect.height);
+                    int dx = 1;//m_predictionRect.width / 8;
+                    int dy = 1;//m_predictionRect.height / 8;
+                    lastRect = cv::Rect2d(m_predictionRect.x - roiRect.x - dx, m_predictionRect.y - roiRect.y - dy, m_predictionRect.width + 2 * dx, m_predictionRect.height + 2 * dy);
                 }
                 else
                 {
@@ -531,7 +539,7 @@ void CTrack::CreateExternalTracker()
         if (!m_tracker || m_tracker.empty())
         {
 #if (((CV_VERSION_MAJOR == 3) && (CV_VERSION_MINOR >= 3)) || (CV_VERSION_MAJOR > 3))
-            //m_tracker = cv::TrackerMOSSE::create();
+            m_tracker = cv::TrackerMOSSE::create();
 #else
             m_tracker = cv::TrackerMOSSE::createTracker();
 #endif
@@ -548,6 +556,7 @@ void CTrack::CreateExternalTracker()
 ///
 void CTrack::PointUpdate(
         const Point_t& pt,
+        const cv::Size& newObjSize,
         bool dataCorrect,
         const cv::Size& frameSize
         )
@@ -568,6 +577,13 @@ void CTrack::PointUpdate(
     else
     {
         m_predictionPoint = m_kalman->Update(pt, dataCorrect);
+    }
+    if (dataCorrect)
+    {
+        const int a1 = 1;
+        const int a2 = 9;
+        m_predictionRect.width = (a1 * newObjSize.width + a2 * m_predictionRect.width) / (a1 + a2);
+        m_predictionRect.height = (a1 * newObjSize.height + a2 * m_predictionRect.height) / (a1 + a2);
     }
 
     auto Clamp = [](track_t& v, int hi) -> bool

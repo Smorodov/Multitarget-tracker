@@ -107,15 +107,17 @@ void TKalmanFilter::CreateLinear(cv::Rect_<track_t> rect0, Point_t rectv0)
     // shows, woh much target can accelerate.
 
     // 6 state variables (x, y, dx, dy, width, height), 4 measurements (x, y, width, height)
-    m_linearKalman = std::make_unique<cv::KalmanFilter>(6, 4, 0);
+    m_linearKalman = std::make_unique<cv::KalmanFilter>(8, 4, 0);
     // Transition cv::Matrix
-    m_linearKalman->transitionMatrix = (cv::Mat_<track_t>(6, 6) <<
-                                        1, 0, 0, 0, m_deltaTime, 0,
-                                        0, 1, 0, 0, 0,           m_deltaTime,
-                                        0, 0, 1, 0, 0,           0,
-                                        0, 0, 0, 1, 0,           0,
-                                        0, 0, 0, 0, 1,           0,
-                                        0, 0, 0, 0, 0,           1);
+    m_linearKalman->transitionMatrix = (cv::Mat_<track_t>(8, 8) <<
+                                        1, 0, 0, 0, m_deltaTime, 0,           0,           0,
+                                        0, 1, 0, 0, 0,           m_deltaTime, 0,           0,
+                                        0, 0, 1, 0, 0,           0,           m_deltaTime, 0,
+                                        0, 0, 0, 1, 0,           0,           0,           m_deltaTime,
+                                        0, 0, 0, 0, 1,           0,           0,           0,
+                                        0, 0, 0, 0, 0,           1,           0,           0,
+                                        0, 0, 0, 0, 0,           0,           1,           0,
+                                        0, 0, 0, 0, 0,           0,           0,           1);
 
     // init...
     m_linearKalman->statePre.at<track_t>(0) = rect0.x;      // x
@@ -124,6 +126,8 @@ void TKalmanFilter::CreateLinear(cv::Rect_<track_t> rect0, Point_t rectv0)
     m_linearKalman->statePre.at<track_t>(3) = rect0.height; // height
     m_linearKalman->statePre.at<track_t>(4) = rectv0.x;     // dx
     m_linearKalman->statePre.at<track_t>(5) = rectv0.y;     // dy
+    m_linearKalman->statePre.at<track_t>(6) = 0;            // dw
+    m_linearKalman->statePre.at<track_t>(7) = 0;            // dh
 
     m_linearKalman->statePost.at<track_t>(0) = rect0.x;
     m_linearKalman->statePost.at<track_t>(1) = rect0.y;
@@ -135,13 +139,15 @@ void TKalmanFilter::CreateLinear(cv::Rect_<track_t> rect0, Point_t rectv0)
     track_t n1 = pow(m_deltaTime, 4.) / 4.;
     track_t n2 = pow(m_deltaTime, 3.) / 2.;
     track_t n3 = pow(m_deltaTime, 2.);
-    m_linearKalman->processNoiseCov = (cv::Mat_<track_t>(6, 6) <<
-                                       n1, 0,  0,  0,  n2, 0,
-                                       0,  n1, 0,  0,  0,  n2,
-                                       0,  0,  n1, 0,  0,  0,
-                                       0,  0,  0,  n1, 0,  0,
-                                       n2, 0,  0,  0,  n3, 0,
-                                       0,  n2, 0,  0,  0,  n3);
+    m_linearKalman->processNoiseCov = (cv::Mat_<track_t>(8, 8) <<
+                                       n1, 0,  0,  0,  n2, 0,  0,  0,
+                                       0,  n1, 0,  0,  0,  n2, 0,  0,
+                                       0,  0,  n1, 0,  0,  0,  n2, 0,
+                                       0,  0,  0,  n1, 0,  0,  0,  n2,
+                                       n2, 0,  0,  0,  n3, 0,  0,  0,
+                                       0,  n2, 0,  0,  0,  n3, 0,  0,
+                                       0,  0,  n2, 0,  0,  0,  n3, 0,
+                                       0,  0,  0,  n2, 0,  0,  0,  n3);
 
     m_linearKalman->processNoiseCov *= m_accelNoiseMag;
 
@@ -702,6 +708,8 @@ cv::Rect TKalmanFilter::Update(cv::Rect rect, bool dataCorrect)
 
             m_linearKalman->transitionMatrix.at<track_t>(0, 4) = m_deltaTime;
             m_linearKalman->transitionMatrix.at<track_t>(1, 5) = m_deltaTime;
+            m_linearKalman->transitionMatrix.at<track_t>(2, 6) = m_deltaTime;
+            m_linearKalman->transitionMatrix.at<track_t>(3, 7) = m_deltaTime;
 
             break;
         }
