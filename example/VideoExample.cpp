@@ -322,11 +322,19 @@ void VideoExample::DrawTrack(cv::Mat frame,
 
     if (isStatic)
     {
-        cv::rectangle(frame, ResizeRect(track.GetLastRect()), cv::Scalar(255, 0, 255), 2, CV_AA);
+#if (CV_VERSION_MAJOR >= 4)
+        cv::rectangle(frame, ResizeRect(track.GetLastRect()), cv::Scalar(255, 0, 255), 2, cv::LINE_AA);
+#else
+		cv::rectangle(frame, ResizeRect(track.GetLastRect()), cv::Scalar(255, 0, 255), 2, CV_AA);
+#endif
     }
     else
     {
-        cv::rectangle(frame, ResizeRect(track.GetLastRect()), cv::Scalar(0, 255, 0), 1, CV_AA);
+#if (CV_VERSION_MAJOR >= 4)
+        cv::rectangle(frame, ResizeRect(track.GetLastRect()), cv::Scalar(0, 255, 0), 1, cv::LINE_AA);
+#else
+		cv::rectangle(frame, ResizeRect(track.GetLastRect()), cv::Scalar(0, 255, 0), 1, CV_AA);
+#endif
     }
 
     if (drawTrajectory)
@@ -337,11 +345,18 @@ void VideoExample::DrawTrack(cv::Mat frame,
         {
             const TrajectoryPoint& pt1 = track.m_trace.at(j);
             const TrajectoryPoint& pt2 = track.m_trace.at(j + 1);
-
-            cv::line(frame, ResizePoint(pt1.m_prediction), ResizePoint(pt2.m_prediction), cl, 1, CV_AA);
+#if (CV_VERSION_MAJOR >= 4)
+            cv::line(frame, ResizePoint(pt1.m_prediction), ResizePoint(pt2.m_prediction), cl, 1, cv::LINE_AA);
+#else
+			cv::line(frame, ResizePoint(pt1.m_prediction), ResizePoint(pt2.m_prediction), cl, 1, CV_AA);
+#endif
             if (!pt2.m_hasRaw)
             {
-                cv::circle(frame, ResizePoint(pt2.m_prediction), 4, cl, 1, CV_AA);
+#if (CV_VERSION_MAJOR >= 4)
+                cv::circle(frame, ResizePoint(pt2.m_prediction), 4, cl, 1, cv::LINE_AA);
+#else
+				cv::circle(frame, ResizePoint(pt2.m_prediction), 4, cl, 1, CV_AA);
+#endif
             }
         }
     }
@@ -352,7 +367,11 @@ void VideoExample::DrawTrack(cv::Mat frame,
 
         for (auto pt : track.m_lastRegion.m_points)
         {
-            cv::circle(frame, cv::Point(cvRound(pt.x), cvRound(pt.y)), 1, cl, -1, CV_AA);
+#if (CV_VERSION_MAJOR >= 4)
+            cv::circle(frame, cv::Point(cvRound(pt.x), cvRound(pt.y)), 1, cl, -1, cv::LINE_AA);
+#else
+			cv::circle(frame, cv::Point(cvRound(pt.x), cvRound(pt.y)), 1, cl, -1, CV_AA);
+#endif
         }
     }
 }

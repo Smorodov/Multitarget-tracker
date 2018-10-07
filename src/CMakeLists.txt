@@ -1,8 +1,10 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.5)
 
 project(mtracking)
 
-  set(folder_source
+set(main_sources nms.h defines.h)
+
+  set(detector_sources
              Detector/BaseDetector.cpp
              Detector/MotionDetector.cpp
              Detector/BackgroundSubtract.cpp
@@ -16,17 +18,6 @@ project(mtracking)
              Detector/pedestrians/c4-pedestrian-detector.cpp
              Detector/SSDMobileNetDetector.cpp
              Detector/YoloDetector.cpp
-
-             Tracker/Ctracker.cpp
-             Tracker/track.cpp
-             Tracker/HungarianAlg/HungarianAlg.cpp
-             Tracker/LocalTracker.cpp
-             Tracker/Kalman.cpp
-)
-
-  set(folder_headers
-             nms.h
-             defines.h
 
              Detector/BaseDetector.h
              Detector/MotionDetector.h
@@ -43,6 +34,14 @@ project(mtracking)
              Detector/pedestrians/c4-pedestrian-detector.h
              Detector/SSDMobileNetDetector.h
              Detector/YoloDetector.h
+)
+
+  set(tracker_sources
+             Tracker/Ctracker.cpp
+             Tracker/track.cpp
+             Tracker/HungarianAlg/HungarianAlg.cpp
+             Tracker/LocalTracker.cpp
+             Tracker/Kalman.cpp
 
              Tracker/Ctracker.h
              Tracker/track.h
@@ -143,11 +142,13 @@ project(mtracking)
              Tracker/graph/GTL/include/GTL/GTL.h
              )
 
-  SOURCE_GROUP("Source Files" FILES ${folder_source})
-  SOURCE_GROUP("Header Files" FILES ${folder_headers})
+  SOURCE_GROUP("Src" FILES ${main_sources})
+			
+  SOURCE_GROUP("Detector" FILES ${detector_sources})
+  SOURCE_GROUP("Tracker" FILES ${tracker_sources})
 
-  SOURCE_GROUP("graph" FILES ${graph_source} ${graph_header})
-  SOURCE_GROUP("GTL" FILES ${gtl_source} ${gtl_header})
+  SOURCE_GROUP("Tracker/graph" FILES ${graph_source} ${graph_header})
+  SOURCE_GROUP("Tracker/GTL" FILES ${gtl_source} ${gtl_header})
 
 include(CheckIncludeFileCXX)
 check_include_file_cxx(opencv2/bgsegm.hpp HAVE_OPENCV_CONTRIB)
@@ -186,7 +187,21 @@ INCLUDE_DIRECTORIES(
                     ${PROJECT_SOURCE_DIR}/Tracker/graph/GTL/include
 )
 
-add_library(${PROJECT_NAME} SHARED ${folder_source} ${folder_headers} ${graph_source} ${graph_header} ${gtl_source} ${gtl_header})
+if (CMAKE_COMPILER_IS_GNUCXX)
+    add_library(${PROJECT_NAME} SHARED 
+        ${main_sources}
+	${detector_sources}
+	${tracker_sources}
+	${graph_source} ${graph_header}
+	${gtl_source} ${gtl_header})
+else(CMAKE_COMPILER_IS_GNUCXX)
+    add_library(${PROJECT_NAME}
+        ${main_sources}
+	${detector_sources}
+	${tracker_sources}
+	${graph_source} ${graph_header}
+	${gtl_source} ${gtl_header})
+endif()
 
 if (CMAKE_COMPILER_IS_GNUCXX)
 set(LIBS

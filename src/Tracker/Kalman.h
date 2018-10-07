@@ -2,7 +2,7 @@
 #include "defines.h"
 #include <memory>
 
-#include <opencv/cv.h>
+#include <opencv2/opencv.hpp>
 
 #ifdef USE_OCV_UKF
 #include <opencv2/tracking.hpp>
