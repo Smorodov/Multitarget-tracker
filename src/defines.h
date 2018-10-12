@@ -120,6 +120,7 @@ enum LostTrackType
     TrackMIL,
     TrackMedianFlow,
     TrackGOTURN,
-    TrackMOSSE
+    TrackMOSSE,
+	TrackerCSRT
 };
 }
