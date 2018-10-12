@@ -273,7 +273,7 @@ bool CarsCounting::InitTracker(cv::UMat frame)
     settings.m_distType = tracking::DistCenters;
     settings.m_kalmanType = tracking::KalmanLinear;
     settings.m_filterGoal = tracking::FilterRect;
-    settings.m_lostTrackType = tracking::TrackKCF;    // Use KCF tracker for collisions resolving
+    settings.m_lostTrackType = tracking::TrackerCSRT; // Use KCF tracker for collisions resolving
     settings.m_matchType = tracking::MatchHungrian;
     settings.m_dt = 0.5f;                             // Delta time for Kalman filter
     settings.m_accelNoiseMag = 0.5f;                  // Accel noise magnitude for Kalman filter

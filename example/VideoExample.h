@@ -138,20 +138,20 @@ protected:
         settings.m_matchType = tracking::MatchHungrian;
         settings.m_dt = 0.4f;                             // Delta time for Kalman filter
         settings.m_accelNoiseMag = 0.5f;                  // Accel noise magnitude for Kalman filter
-        settings.m_distThres = frame.rows / 20;           // Distance threshold between region and object on two frames
+        settings.m_distThres = frame.rows / 20.f;         // Distance threshold between region and object on two frames
 
         settings.m_useAbandonedDetection = true;
         if (settings.m_useAbandonedDetection)
         {
             settings.m_minStaticTime = minStaticTime;
             settings.m_maxStaticTime = 60;
-            settings.m_maximumAllowedSkippedFrames = settings.m_minStaticTime * m_fps; // Maximum allowed skipped frames
+            settings.m_maximumAllowedSkippedFrames = cvRound(settings.m_minStaticTime * m_fps); // Maximum allowed skipped frames
             settings.m_maxTraceLength = 2 * settings.m_maximumAllowedSkippedFrames;        // Maximum trace length
         }
         else
         {
-            settings.m_maximumAllowedSkippedFrames = 2 * m_fps; // Maximum allowed skipped frames
-            settings.m_maxTraceLength = 4 * m_fps;              // Maximum trace length
+            settings.m_maximumAllowedSkippedFrames = cvRound(2 * m_fps); // Maximum allowed skipped frames
+            settings.m_maxTraceLength = cvRound(4 * m_fps);              // Maximum trace length
         }
 
         m_tracker = std::make_unique<CTracker>(settings);
@@ -235,8 +235,8 @@ protected:
         settings.m_dt = 0.3f;                             // Delta time for Kalman filter
         settings.m_accelNoiseMag = 0.1f;                  // Accel noise magnitude for Kalman filter
         settings.m_distThres = 0.8f;           // Distance threshold between region and object on two frames
-        settings.m_maximumAllowedSkippedFrames = m_fps / 2;   // Maximum allowed skipped frames
-        settings.m_maxTraceLength = 5 * m_fps;            // Maximum trace length
+        settings.m_maximumAllowedSkippedFrames = cvRound(m_fps / 2);   // Maximum allowed skipped frames
+        settings.m_maxTraceLength = cvRound(5 * m_fps);            // Maximum trace length
 
         m_tracker = std::make_unique<CTracker>(settings);
 
@@ -313,9 +313,9 @@ protected:
         settings.m_matchType = tracking::MatchHungrian;
         settings.m_dt = 0.3f;                             // Delta time for Kalman filter
         settings.m_accelNoiseMag = 0.1f;                  // Accel noise magnitude for Kalman filter
-        settings.m_distThres = frame.rows / 10;           // Distance threshold between region and object on two frames
-        settings.m_maximumAllowedSkippedFrames = m_fps;   // Maximum allowed skipped frames
-        settings.m_maxTraceLength = 5 * m_fps;            // Maximum trace length
+        settings.m_distThres = frame.rows / 10.f;         // Distance threshold between region and object on two frames
+        settings.m_maximumAllowedSkippedFrames = cvRound(m_fps);   // Maximum allowed skipped frames
+        settings.m_maxTraceLength = cvRound(5 * m_fps);   // Maximum trace length
 
         m_tracker = std::make_unique<CTracker>(settings);
 
@@ -391,9 +391,9 @@ protected:
         settings.m_matchType = tracking::MatchHungrian;
         settings.m_dt = 0.3f;                                // Delta time for Kalman filter
         settings.m_accelNoiseMag = 0.1f;                     // Accel noise magnitude for Kalman filter
-        settings.m_distThres = frame.rows / 10;              // Distance threshold between region and object on two frames
-        settings.m_maximumAllowedSkippedFrames = 2 * m_fps;  // Maximum allowed skipped frames
-        settings.m_maxTraceLength = 5 * m_fps;               // Maximum trace length
+        settings.m_distThres = frame.rows / 10.f;            // Distance threshold between region and object on two frames
+        settings.m_maximumAllowedSkippedFrames = cvRound(2 * m_fps); // Maximum allowed skipped frames
+        settings.m_maxTraceLength = cvRound(5 * m_fps);      // Maximum trace length
 
         m_tracker = std::make_unique<CTracker>(settings);
 
@@ -506,9 +506,9 @@ protected:
         settings.m_matchType = tracking::MatchHungrian;
         settings.m_dt = 0.3f;                                // Delta time for Kalman filter
         settings.m_accelNoiseMag = 0.2f;                     // Accel noise magnitude for Kalman filter
-        settings.m_distThres = frame.rows / 10;              // Distance threshold between region and object on two frames
-        settings.m_maximumAllowedSkippedFrames = 2 * m_fps;  // Maximum allowed skipped frames
-        settings.m_maxTraceLength = 5 * m_fps;               // Maximum trace length
+        settings.m_distThres = frame.rows / 10.f;            // Distance threshold between region and object on two frames
+        settings.m_maximumAllowedSkippedFrames = cvRound(2 * m_fps); // Maximum allowed skipped frames
+        settings.m_maxTraceLength = cvRound(5 * m_fps);      // Maximum trace length
 
         m_tracker = std::make_unique<CTracker>(settings);
 
