@@ -25,6 +25,14 @@ set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
 FIND_PACKAGE(OpenCV)
 
 add_subdirectory(src)
-add_subdirectory(example)
-add_subdirectory(cars_counting)
 
+option(BUILD_EXAMPLES "Should compiled examples (motion detection, pedestrians, faces, DNNs etc)?" ON)
+if (BUILD_EXAMPLES)
+    add_subdirectory(example)
+endif(BUILD_EXAMPLES)
+
+option(BUILD_CARS_COUNTING "Should compiled Cars counting example?" OFF)
+if (BUILD_CARS_COUNTING)
+    add_subdirectory(cars_counting)
+endif(BUILD_CARS_COUNTING)
+                                  
