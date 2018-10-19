@@ -277,20 +277,20 @@ bool CarsCounting::InitTracker(cv::UMat frame)
     settings.m_matchType = tracking::MatchHungrian;
     settings.m_dt = 0.5f;                             // Delta time for Kalman filter
     settings.m_accelNoiseMag = 0.5f;                  // Accel noise magnitude for Kalman filter
-    settings.m_distThres = frame.rows / 15;           // Distance threshold between region and object on two frames
+    settings.m_distThres = frame.rows / 15.f;         // Distance threshold between region and object on two frames
 
     settings.m_useAbandonedDetection = false;
     if (settings.m_useAbandonedDetection)
     {
         settings.m_minStaticTime = minStaticTime;
         settings.m_maxStaticTime = 60;
-        settings.m_maximumAllowedSkippedFrames = settings.m_minStaticTime * m_fps; // Maximum allowed skipped frames
+        settings.m_maximumAllowedSkippedFrames = cvRound(settings.m_minStaticTime * m_fps); // Maximum allowed skipped frames
         settings.m_maxTraceLength = 2 * settings.m_maximumAllowedSkippedFrames;        // Maximum trace length
     }
     else
     {
-        settings.m_maximumAllowedSkippedFrames = 2 * m_fps; // Maximum allowed skipped frames
-        settings.m_maxTraceLength = 4 * m_fps;              // Maximum trace length
+        settings.m_maximumAllowedSkippedFrames = cvRound(2 * m_fps); // Maximum allowed skipped frames
+        settings.m_maxTraceLength = cvRound(4 * m_fps);              // Maximum trace length
     }
 
     m_tracker = std::make_unique<CTracker>(settings);
