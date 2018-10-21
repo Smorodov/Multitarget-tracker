@@ -76,6 +76,8 @@ void CarsCounting::Process()
 
     m_fps = std::max(1.f, (float)capture.get(cv::CAP_PROP_FPS));
 
+    m_fps = std::max(1.f, (float)capture.get(cv::CAP_PROP_FPS));
+
     cv::Mat colorFrame;
     cv::UMat grayFrame;
     for (;;)
