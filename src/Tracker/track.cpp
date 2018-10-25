@@ -327,6 +327,7 @@ void CTrack::RectUpdate(
     case tracking::TrackMedianFlow:
     case tracking::TrackGOTURN:
     case tracking::TrackMOSSE:
+	case tracking::TrackerCSRT:
 #ifdef USE_OCV_KCF
         if (!dataCorrect)
         {
@@ -546,6 +547,16 @@ void CTrack::CreateExternalTracker()
         }
 #endif
         break;
+
+	case tracking::TrackerCSRT:
+#ifdef USE_OCV_KCF
+		if (!m_tracker || m_tracker.empty())
+		{
+			cv::TrackerCSRT::Params params;
+			m_tracker = cv::TrackerCSRT::create(params);
+		}
+#endif
+		break;
     }
 }
 

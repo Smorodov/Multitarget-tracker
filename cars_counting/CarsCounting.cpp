@@ -76,6 +76,8 @@ void CarsCounting::Process()
 
     m_fps = std::max(1.f, (float)capture.get(cv::CAP_PROP_FPS));
 
+    m_fps = std::max(1.f, (float)capture.get(cv::CAP_PROP_FPS));
+
     cv::Mat colorFrame;
     cv::UMat grayFrame;
     for (;;)
@@ -189,11 +191,19 @@ void CarsCounting::DrawTrack(cv::Mat frame,
 
     if (isStatic)
     {
-        cv::rectangle(frame, ResizeRect(track.GetLastRect()), cv::Scalar(255, 0, 255), 2, CV_AA);
+#if (CV_VERSION_MAJOR >= 4)
+        cv::rectangle(frame, ResizeRect(track.GetLastRect()), cv::Scalar(255, 0, 255), 2, cv::LINE_AA);
+#else
+		cv::rectangle(frame, ResizeRect(track.GetLastRect()), cv::Scalar(255, 0, 255), 2, CV_AA);
+#endif
     }
     else
     {
-        cv::rectangle(frame, ResizeRect(track.GetLastRect()), cv::Scalar(0, 255, 0), 1, CV_AA);
+#if (CV_VERSION_MAJOR >= 4)
+        cv::rectangle(frame, ResizeRect(track.GetLastRect()), cv::Scalar(0, 255, 0), 1, cv::LINE_AA);
+#else
+		cv::rectangle(frame, ResizeRect(track.GetLastRect()), cv::Scalar(0, 255, 0), 1, CV_AA);
+#endif
     }
 
     if (drawTrajectory)
@@ -204,11 +214,18 @@ void CarsCounting::DrawTrack(cv::Mat frame,
         {
             const TrajectoryPoint& pt1 = track.m_trace.at(j);
             const TrajectoryPoint& pt2 = track.m_trace.at(j + 1);
-
-            cv::line(frame, ResizePoint(pt1.m_prediction), ResizePoint(pt2.m_prediction), cl, 1, CV_AA);
+#if (CV_VERSION_MAJOR >= 4)
+            cv::line(frame, ResizePoint(pt1.m_prediction), ResizePoint(pt2.m_prediction), cl, 1, cv::LINE_AA);
+#else
+			cv::line(frame, ResizePoint(pt1.m_prediction), ResizePoint(pt2.m_prediction), cl, 1, CV_AA);
+#endif
             if (!pt2.m_hasRaw)
             {
-                cv::circle(frame, ResizePoint(pt2.m_prediction), 4, cl, 1, CV_AA);
+#if (CV_VERSION_MAJOR >= 4)
+                cv::circle(frame, ResizePoint(pt2.m_prediction), 4, cl, 1, cv::LINE_AA);
+#else
+				cv::circle(frame, ResizePoint(pt2.m_prediction), 4, cl, 1, CV_AA);
+#endif
             }
         }
     }
@@ -219,7 +236,11 @@ void CarsCounting::DrawTrack(cv::Mat frame,
 
         for (auto pt : track.m_lastRegion.m_points)
         {
-            cv::circle(frame, cv::Point(cvRound(pt.x), cvRound(pt.y)), 1, cl, -1, CV_AA);
+#if (CV_VERSION_MAJOR >= 4)
+            cv::circle(frame, cv::Point(cvRound(pt.x), cvRound(pt.y)), 1, cl, -1, cv::LINE_AA);
+#else
+			cv::circle(frame, cv::Point(cvRound(pt.x), cvRound(pt.y)), 1, cl, -1, CV_AA);
+#endif
         }
     }
 }
@@ -254,24 +275,24 @@ bool CarsCounting::InitTracker(cv::UMat frame)
     settings.m_distType = tracking::DistCenters;
     settings.m_kalmanType = tracking::KalmanLinear;
     settings.m_filterGoal = tracking::FilterRect;
-    settings.m_lostTrackType = tracking::TrackKCF;    // Use KCF tracker for collisions resolving
+    settings.m_lostTrackType = tracking::TrackerCSRT; // Use KCF tracker for collisions resolving
     settings.m_matchType = tracking::MatchHungrian;
     settings.m_dt = 0.5f;                             // Delta time for Kalman filter
     settings.m_accelNoiseMag = 0.5f;                  // Accel noise magnitude for Kalman filter
-    settings.m_distThres = frame.rows / 15;           // Distance threshold between region and object on two frames
+    settings.m_distThres = frame.rows / 15.f;         // Distance threshold between region and object on two frames
 
     settings.m_useAbandonedDetection = false;
     if (settings.m_useAbandonedDetection)
     {
         settings.m_minStaticTime = minStaticTime;
         settings.m_maxStaticTime = 60;
-        settings.m_maximumAllowedSkippedFrames = settings.m_minStaticTime * m_fps; // Maximum allowed skipped frames
+        settings.m_maximumAllowedSkippedFrames = cvRound(settings.m_minStaticTime * m_fps); // Maximum allowed skipped frames
         settings.m_maxTraceLength = 2 * settings.m_maximumAllowedSkippedFrames;        // Maximum trace length
     }
     else
     {
-        settings.m_maximumAllowedSkippedFrames = 2 * m_fps; // Maximum allowed skipped frames
-        settings.m_maxTraceLength = 4 * m_fps;              // Maximum trace length
+        settings.m_maximumAllowedSkippedFrames = cvRound(2 * m_fps); // Maximum allowed skipped frames
+        settings.m_maxTraceLength = cvRound(4 * m_fps);              // Maximum trace length
     }
 
     m_tracker = std::make_unique<CTracker>(settings);

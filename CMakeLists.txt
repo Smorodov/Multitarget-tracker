@@ -1,6 +1,6 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.5)
 
-project(MultitargetTracking)
+project(MTTracking)
 
 unset(CMAKE_CXX_FLAGS CACHE)
 
@@ -18,7 +18,6 @@ elseif (MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc /W4 -DGTL_STATIC" CACHE STRING COMPILE_FLAGS FORCE)
 endif()
 
-
 set(CMAKE_BINARY_DIR ${CMAKE_SOURCE_DIR}/build)
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR})
 set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
@@ -26,6 +25,14 @@ set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
 FIND_PACKAGE(OpenCV)
 
 add_subdirectory(src)
-add_subdirectory(example)
-add_subdirectory(cars_counting)
 
+option(BUILD_EXAMPLES "Should compiled examples (motion detection, pedestrians, faces, DNNs etc)?" ON)
+if (BUILD_EXAMPLES)
+    add_subdirectory(example)
+endif(BUILD_EXAMPLES)
+
+option(BUILD_CARS_COUNTING "Should compiled Cars counting example?" OFF)
+if (BUILD_CARS_COUNTING)
+    add_subdirectory(cars_counting)
+endif(BUILD_CARS_COUNTING)
+                                  

@@ -86,7 +86,11 @@ void MouseTracking(cv::CommandLineParser parser)
 
         for (size_t i = 0; i < pts.size(); i++)
         {
-            cv::circle(frame, pts[i], 3, cv::Scalar(0, 255, 0), 1, CV_AA);
+#if (CV_VERSION_MAJOR >= 4)
+            cv::circle(frame, pts[i], 3, cv::Scalar(0, 255, 0), 1, cv::LINE_AA);
+#else
+			cv::circle(frame, pts[i], 3, cv::Scalar(0, 255, 0), 1, CV_AA);
+#endif
         }
 
         tracker.Update(regions, cv::UMat(), 100);
@@ -101,7 +105,11 @@ void MouseTracking(cv::CommandLineParser parser)
             {
                 for (size_t j = 0; j < track->m_trace.size() - 1; j++)
                 {
-                    cv::line(frame, track->m_trace[j], track->m_trace[j + 1], colors[i % colors.size()], 2, CV_AA);
+#if (CV_VERSION_MAJOR >= 4)
+                    cv::line(frame, track->m_trace[j], track->m_trace[j + 1], colors[i % colors.size()], 2, cv::LINE_AA);
+#else
+					cv::line(frame, track->m_trace[j], track->m_trace[j + 1], colors[i % colors.size()], 2, CV_AA);
+#endif
                 }
             }
         }
