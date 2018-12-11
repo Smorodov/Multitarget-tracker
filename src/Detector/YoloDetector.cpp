@@ -63,6 +63,25 @@ bool YoloDetector::Init(const config_t& config)
         }
     }
 
+#if (CV_VERSION_MAJOR >= 4)
+    auto dnnBackend = config.find("dnnBackend");
+    if (dnnBackend != config.end())
+    {
+        std::map<std::string, cv::dnn::Backend> backends;
+        backends["DNN_BACKEND_DEFAULT"] = cv::dnn::DNN_BACKEND_DEFAULT;
+        backends["DNN_BACKEND_HALIDE"] = cv::dnn::DNN_BACKEND_HALIDE;
+        backends["DNN_BACKEND_INFERENCE_ENGINE"] = cv::dnn::DNN_BACKEND_INFERENCE_ENGINE;
+        backends["DNN_BACKEND_OPENCV"] = cv::dnn::DNN_BACKEND_OPENCV;
+        backends["DNN_BACKEND_VKCOM"] = cv::dnn::DNN_BACKEND_VKCOM;
+
+        auto backend = backends.find(dnnTarget->second);
+        if (backend != std::end(backends))
+        {
+            m_net.setPreferableBackend(backend->second);
+        }
+    }
+#endif
+
     auto classNames = config.find("classNames");
     if (classNames != config.end())
     {
