@@ -32,7 +32,7 @@ Hungarian algorithm + Kalman filter multitarget tracker implementation.
 3. Matching: Hungrian algorithm or algorithm based on weighted bipartite graphs
 4. Tracking: Linear or Unscented Kalman filter for objects center or for object coordinates and size
 5. Use or not local tracker (LK optical flow) for smooth trajectories
-6. KCF, MIL, MedianFlow, GOTURN or MOSSE tracking for lost objects and collision resolving
+6. KCF, MIL, MedianFlow, GOTURN, MOSSE or CSRT tracking for lost objects and collision resolving
 7. Haar face detector from OpenCV
 8. HOG and C4 pedestrian detectors
 9. SSD detector from OpenCV and models from chuanqi305/MobileNet-SSD
