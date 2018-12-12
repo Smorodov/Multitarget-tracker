@@ -67,7 +67,7 @@ void CTracker::UpdateHungrian(
         // -----------------------------------
         // Треки уже есть, составим матрицу расстояний
         // -----------------------------------
-        const track_t maxPossibleCost = grayFrame.cols * grayFrame.rows;
+        const track_t maxPossibleCost = static_cast<track_t>(grayFrame.cols * grayFrame.rows);
         track_t maxCost = 0;
         switch (m_settings.m_distType)
         {
@@ -149,7 +149,7 @@ void CTracker::UpdateHungrian(
 
                     if (currCost < m_settings.m_distThres)
                     {
-                        int weight = maxCost - currCost + 1;
+                        int weight = static_cast<int>(maxCost - currCost + 1);
                         G.set_edge_weight(e, weight);
                         weights[e] = weight;
                     }
@@ -170,7 +170,7 @@ void CTracker::UpdateHungrian(
             {
                 node a = it->source();
                 node b = it->target();
-                assignment[b.id()] = a.id() - N;
+                assignment[b.id()] = static_cast<assignments_t::value_type>(a.id() - N);
             }
         }
 
@@ -227,8 +227,9 @@ void CTracker::UpdateHungrian(
     }
 
     // Update Kalman Filters state
-
-    for (size_t i = 0; i < assignment.size(); i++)
+	const int stop_i = static_cast<int>(assignment.size());
+#pragma omp parallel for
+    for (int i = 0; i < stop_i; ++i)
     {
         // If track updated less than one time, than filter state is not correct.
 
