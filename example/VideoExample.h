@@ -216,8 +216,14 @@ protected:
     ///
     bool InitTracker(cv::UMat frame)
     {
+#ifdef _WIN32
+		std::string pathToModel = "../../data/";
+#else
+		std::string pathToModel = "../data/";
+#endif
+
         config_t config;
-        config["cascadeFileName"] = "../data/haarcascade_frontalface_alt2.xml";
+        config["cascadeFileName"] = pathToModel + "haarcascade_frontalface_alt2.xml";
         m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Face_HAAR, config, m_useLocalTracking, frame));
         if (!m_detector.get())
         {
@@ -292,10 +298,16 @@ protected:
     {
         tracking::Detectors detectorType = tracking::Detectors::Pedestrian_C4; // tracking::Detectors::Pedestrian_HOG;
 
+#ifdef _WIN32
+		std::string pathToModel = "../../data/";
+#else
+		std::string pathToModel = "../data/";
+#endif
+
         config_t config;
         config["detectorType"] = (detectorType == tracking::Pedestrian_HOG) ? "HOG" : "C4";
-        config["cascadeFileName1"] = "../data/combined.txt.model";
-        config["cascadeFileName2"] = "../data/combined.txt.model_";
+        config["cascadeFileName1"] = pathToModel + "combined.txt.model";
+        config["cascadeFileName2"] = pathToModel + "combined.txt.model_";
         m_detector = std::unique_ptr<BaseDetector>(CreateDetector(detectorType, config, m_useLocalTracking, frame));
         if (!m_detector.get())
         {
@@ -369,9 +381,14 @@ protected:
     ///
     bool InitTracker(cv::UMat frame)
     {
+#ifdef _WIN32
+		std::string pathToModel = "../../data/";
+#else
+		std::string pathToModel = "../data/";
+#endif
         config_t config;
-        config["modelConfiguration"] = "../data/MobileNetSSD_deploy.prototxt";
-        config["modelBinary"] = "../data/MobileNetSSD_deploy.caffemodel";
+        config["modelConfiguration"] = pathToModel + "MobileNetSSD_deploy.prototxt";
+        config["modelBinary"] = pathToModel + "MobileNetSSD_deploy.caffemodel";
         config["confidenceThreshold"] = "0.5";
         config["maxCropRatio"] = "3.0";
         config["dnnTarget"] = "DNN_TARGET_CPU";
@@ -474,17 +491,23 @@ protected:
         config_t config;
         const int yoloTest = 0;
 
+#ifdef _WIN32
+		std::string pathToModel = "../../data/";
+#else
+		std::string pathToModel = "../data/";
+#endif
+
         switch (yoloTest)
         {
         case 0:
-            config["modelConfiguration"] = "../data/tiny-yolo.cfg";
-            config["modelBinary"] = "../data/tiny-yolo.weights";
+            config["modelConfiguration"] = pathToModel + "tiny-yolo.cfg";
+            config["modelBinary"] = pathToModel + "tiny-yolo.weights";
             break;
 
         case 1:
-            config["modelConfiguration"] = "../data/yolov3-tiny.cfg";
-            config["modelBinary"] = "../data/yolov3-tiny.weights";
-            config["classNames"] = "../data/coco.names";
+            config["modelConfiguration"] = pathToModel + "yolov3-tiny.cfg";
+            config["modelBinary"] = pathToModel + "yolov3-tiny.weights";
+            config["classNames"] = pathToModel + "coco.names";
             break;
         }
 
