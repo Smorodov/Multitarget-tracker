@@ -374,7 +374,7 @@ protected:
         config["modelBinary"] = "../data/MobileNetSSD_deploy.caffemodel";
         config["confidenceThreshold"] = "0.5";
         config["maxCropRatio"] = "3.0";
-        config["dnnTarget"] = "DNN_TARGET_OPENCL_FP16";
+        config["dnnTarget"] = "DNN_TARGET_CPU";
         config["dnnBackend"] = "DNN_BACKEND_INFERENCE_ENGINE";
 
         m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::SSD_MobileNet, config, m_useLocalTracking, frame));
@@ -490,7 +490,7 @@ protected:
 
         config["confidenceThreshold"] = "0.1";
         config["maxCropRatio"] = "2.0";
-        config["dnnTarget"] = "DNN_TARGET_OPENCL";
+        config["dnnTarget"] = "DNN_TARGET_CPU";
         config["dnnBackend"] = "DNN_BACKEND_INFERENCE_ENGINE";
 
         m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Yolo, config, m_useLocalTracking, frame));
