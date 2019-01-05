@@ -69,7 +69,8 @@ enum Detectors
     Pedestrian_HOG,
     Pedestrian_C4,
     SSD_MobileNet,
-    Yolo
+    Yolo_OCV,
+	Yolo_Darknet
 };
 
 ///

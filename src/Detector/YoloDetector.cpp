@@ -6,7 +6,7 @@
 /// \param collectPoints
 /// \param gray
 ///
-YoloDetector::YoloDetector(
+YoloOCVDetector::YoloOCVDetector(
 	bool collectPoints,
     cv::UMat& colorFrame
 	)
@@ -29,7 +29,7 @@ YoloDetector::YoloDetector(
 ///
 /// \brief YoloDetector::~YoloDetector
 ///
-YoloDetector::~YoloDetector(void)
+YoloOCVDetector::~YoloOCVDetector(void)
 {
 }
 
@@ -37,7 +37,7 @@ YoloDetector::~YoloDetector(void)
 /// \brief YoloDetector::Init
 /// \return
 ///
-bool YoloDetector::Init(const config_t& config)
+bool YoloOCVDetector::Init(const config_t& config)
 {
     auto modelConfiguration = config.find("modelConfiguration");
     auto modelBinary = config.find("modelBinary");
@@ -120,7 +120,7 @@ bool YoloDetector::Init(const config_t& config)
 /// \brief YoloDetector::Detect
 /// \param gray
 ///
-void YoloDetector::Detect(cv::UMat& colorFrame)
+void YoloOCVDetector::Detect(cv::UMat& colorFrame)
 {
     m_regions.clear();
 
@@ -201,7 +201,7 @@ void YoloDetector::Detect(cv::UMat& colorFrame)
 /// \param crop
 /// \param tmpRegions
 ///
-void YoloDetector::DetectInCrop(cv::Mat colorFrame, const cv::Rect& crop, regions_t& tmpRegions)
+void YoloOCVDetector::DetectInCrop(cv::Mat colorFrame, const cv::Rect& crop, regions_t& tmpRegions)
 {
     //Convert Mat to batch of images
     cv::Mat inputBlob = cv::dnn::blobFromImage(cv::Mat(colorFrame, crop), m_inScaleFactor, cv::Size(InWidth, InHeight), m_meanVal, false, true);
@@ -235,7 +235,7 @@ void YoloDetector::DetectInCrop(cv::Mat colorFrame, const cv::Rect& crop, region
             cv::Point p2(cvRound(x_center + width / 2), cvRound(y_center + height / 2));
             cv::Rect object(p1, p2);
 
-            tmpRegions.push_back(CRegion(object, m_classNames[objectClass], confidence));
+            tmpRegions.emplace_back(object, m_classNames[objectClass], confidence);
         }
     }
 }

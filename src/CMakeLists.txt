@@ -36,6 +36,10 @@ set(main_sources nms.h defines.h)
              Detector/YoloDetector.h
 )
 
+if (BUILD_YOLO_LIB)
+    set(detector_sources ${detector_sources} Detector/YoloDarknetDetector.cpp Detector/YoloDarknetDetector.h)
+endif()
+
   set(tracker_sources
              Tracker/Ctracker.cpp
              Tracker/track.cpp
@@ -213,6 +217,10 @@ set(LIBS
     ${OpenCV_LIBS}
 )
 endif()
+
+if (BUILD_YOLO_LIB)
+    set(LIBS ${LIBS} yolo_lib)
+endif(BUILD_YOLO_LIB)
 
 target_link_libraries(${PROJECT_NAME} ${LIBS})
 

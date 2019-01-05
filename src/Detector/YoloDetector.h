@@ -11,13 +11,13 @@
 // Class names can be downloaded here: https://github.com/pjreddie/darknet/tree/master/data
 
 ///
-/// \brief The YoloDetector class
+/// \brief The YoloOCVDetector class
 ///
-class YoloDetector : public BaseDetector
+class YoloOCVDetector : public BaseDetector
 {
 public:
-    YoloDetector(bool collectPoints, cv::UMat& colorFrame);
-    ~YoloDetector(void);
+    YoloOCVDetector(bool collectPoints, cv::UMat& colorFrame);
+    ~YoloOCVDetector(void);
 
     bool Init(const config_t& config);
 

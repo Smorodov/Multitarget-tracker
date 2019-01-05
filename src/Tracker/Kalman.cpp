@@ -622,7 +622,7 @@ cv::Rect TKalmanFilter::Update(cv::Rect rect, bool dataCorrect)
             Point_t averageSize(0, 0);
             for (const auto& r : m_initialRects)
             {
-                initialPoints.push_back(Point_t(r.x, r.y));
+                initialPoints.emplace_back(r.x, r.y);
                 averageSize.x += r.width;
                 averageSize.y += r.height;
             }

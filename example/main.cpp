@@ -10,7 +10,7 @@ static void Help()
 {
     printf("\nExamples of the Multitarget tracking algorithm\n"
            "Usage: \n"
-           "          ./MultitargetTracker <path to movie file> [--example]=<number of example 0..5> [--start_frame]=<start a video from this position> [--end_frame]=<play a video to this position> [--end_delay]=<delay in milliseconds after video ending> [--out]=<name of result video file> [--show_logs]=<show logs> \n\n"
+           "          ./MultitargetTracker <path to movie file> [--example]=<number of example 0..6> [--start_frame]=<start a video from this position> [--end_frame]=<play a video to this position> [--end_delay]=<delay in milliseconds after video ending> [--out]=<name of result video file> [--show_logs]=<show logs> \n\n"
            "Press:\n"
            "\'m\' key for change mode: play|pause. When video is paused you can press any key for get next frame. \n\n"
            "Press Esc to exit from video \n\n"
@@ -20,7 +20,7 @@ static void Help()
 const char* keys =
 {
     "{ @1             |../data/atrium.avi  | movie file | }"
-    "{ e  example     |1                   | number of example 0 - MouseTracking, 1 - MotionDetector, 2 - FaceDetector, 3 - PedestrianDetector, 4 - MobileNet SSD detector, 5 - Yolo detector | }"
+    "{ e  example     |1                   | number of example 0 - MouseTracking, 1 - MotionDetector, 2 - FaceDetector, 3 - PedestrianDetector, 4 - MobileNet SSD detector, 5 - Yolo OpenCV detector, 6 - Yolo Darknet detector | }"
     "{ sf start_frame |0                   | Start a video from this position | }"
     "{ ef end_frame   |0                   | Play a video to this position (if 0 then played to the end of file) | }"
     "{ ed end_delay   |0                   | Delay in milliseconds after video ending | }"
@@ -83,6 +83,15 @@ int main(int argc, char** argv)
         yolo_detector.Process();
         break;
     }
+
+#ifdef BUILD_YOLO_LIB
+	case 6:
+	{
+		YoloDarknetExample yolo_detector(parser);
+		yolo_detector.Process();
+		break;
+	}
+#endif
 
     default:
         std::cerr << "Wrong example number!" << std::endl;
