@@ -36,7 +36,7 @@ Hungarian algorithm + Kalman filter multitarget tracker implementation.
 7. Haar face detector from OpenCV
 8. HOG and C4 pedestrian detectors
 9. SSD detector from OpenCV and models from chuanqi305/MobileNet-SSD
-10. YOLO and Tiny YOLO detectors from https://pjreddie.com/darknet/yolo/
+10. YOLO and Tiny YOLO detectors from https://pjreddie.com/darknet/yolo/ (inference from opencv_dnn or from https://github.com/AlexeyAB/darknet )
 11. Simple Abandoned detector
 
 #### Build
@@ -49,7 +49,7 @@ Hungarian algorithm + Kalman filter multitarget tracker implementation.
 **Usage:**
 
            Usage:
-             ./MultitargetTracker <path to movie file> [--example]=<number of example 0..3> [--start_frame]=<start a video from this position> [--end_frame]=<play a video to this position> [--end_delay]=<delay in milliseconds after video ending> [--out]=<name of result video file> [--show_logs]=<show logs> [--gpu]=<use OpenCL>
+             ./MultitargetTracker <path to movie file> [--example]=<number of example 0..6> [--start_frame]=<start a video from this position> [--end_frame]=<play a video to this position> [--end_delay]=<delay in milliseconds after video ending> [--out]=<name of result video file> [--show_logs]=<show logs> [--gpu]=<use OpenCL>
              ./MultitargetTracker ../data/atrium.avi -e=1 -o=../data/atrium_motion.avi
            Press:
            * 'm' key for change mode: play|pause. When video is paused you can press any key for get next frame.
@@ -57,7 +57,7 @@ Hungarian algorithm + Kalman filter multitarget tracker implementation.
 
            Params: 
            1. Movie file, for example ../data/atrium.avi
-           2. [Optional] Number of example: 0 - MouseTracking, 1 - MotionDetector, 2 - FaceDetector, 3 - PedestrianDetector, 4 - MobileNet SSD detector, 5 - YOLO detector
+           2. [Optional] Number of example: 0 - MouseTracking, 1 - MotionDetector, 2 - FaceDetector, 3 - PedestrianDetector, 4 - MobileNet SSD detector, 5 - YOLO OpenCV detector, 6 - Yolo Darknet detector
               -e=0 or --example=1
            3. [Optional] Frame number to start a video from this position
               -sf=0 or --start_frame==1500
@@ -80,8 +80,9 @@ Hungarian algorithm + Kalman filter multitarget tracker implementation.
 * MWBM: https://github.com/rdmpage/maximum-weighted-bipartite-matching
 * Pedestrians detector: https://github.com/sturkmen72/C4-Real-time-pedestrian-detection
 * Non Maximum Suppression: https://github.com/Nuzhny007/Non-Maximum-Suppression
-* MobileNet SSD: https://github.com/chuanqi305/MobileNet-SSD
-* YOLO: https://pjreddie.com/darknet/yolo/
+* MobileNet SSD models: https://github.com/chuanqi305/MobileNet-SSD
+* YOLO models: https://pjreddie.com/darknet/yolo/
+* Darknet inference: https://github.com/AlexeyAB/darknet
 * GOTURN models: https://github.com/opencv/opencv_extra/tree/c4219d5eb3105ed8e634278fad312a1a8d2c182d/testdata/tracking
 
 #### License
