@@ -53,12 +53,14 @@ else()
     set(LIB_PTHREAD pthread)
 endif()
 
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/src/Detector/darknet/3rdparty/dll/${BIT_SYSTEM}/pthreadVC2.dll DESTINATION ${CMAKE_BINARY_DIR}/Debug)
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/src/Detector/darknet/3rdparty/dll/${BIT_SYSTEM}/pthreadVC2.dll DESTINATION ${CMAKE_BINARY_DIR}/Release)
+if (MSVC)
+    file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/src/Detector/darknet/3rdparty/dll/${BIT_SYSTEM}/pthreadVC2.dll DESTINATION ${CMAKE_BINARY_DIR}/Debug)
+    file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/src/Detector/darknet/3rdparty/dll/${BIT_SYSTEM}/pthreadVC2.dll DESTINATION ${CMAKE_BINARY_DIR}/Release)
 
-file(GLOB CUDNN_DLL ${CUDNN_DIR}/bin/*.dll)
-file(COPY ${CUDNN_DLL} DESTINATION ${CMAKE_BINARY_DIR}/Release)
-file(COPY ${CUDNN_DLL} DESTINATION ${CMAKE_BINARY_DIR}/Debug)
+    file(GLOB CUDNN_DLL ${CUDNN_DIR}/bin/*.dll)
+    file(COPY ${CUDNN_DLL} DESTINATION ${CMAKE_BINARY_DIR}/Release)
+    file(COPY ${CUDNN_DLL} DESTINATION ${CMAKE_BINARY_DIR}/Debug)
+endif()
 
 endif(BUILD_YOLO_LIB)
 
