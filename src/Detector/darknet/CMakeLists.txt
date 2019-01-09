@@ -5,10 +5,23 @@ project(${libname})
 
 #cuda
 find_package(CUDA REQUIRED)
-set(CUDA_PROPAGATE_HOST_FLAGS OFF)
-set(CUDA_HOST_COMPILATION_CPP ON)
-set(CUDA_NVCC_FLAGS -std=c++11 -g -Xcompiler -fexceptions -Xcompiler -fPIC)
-set(CUDA_SEPARABLE_COMPILATION ON)
+
+if (CMAKE_COMPILER_IS_GNUCXX)
+    set(CUDA_PROPAGATE_HOST_FLAGS OFF)
+    set(CUDA_HOST_COMPILATION_CPP ON)
+    set(CUDA_NVCC_FLAGS -std=c++11 -g -Xcompiler -fexceptions -Xcompiler -fPIC)
+    set(CUDA_SEPARABLE_COMPILATION ON)
+elseif(MSVC)
+#    set(CUDA_PROPAGATE_HOST_FLAGS OFF)
+    set(CUDA_HOST_COMPILATION_CPP ON)
+#    set(CUDA_NVCC_FLAGS -std=c++11 -g -Xcompiler -fexceptions -Xcompiler -fPIC)
+    set(CUDA_SEPARABLE_COMPILATION ON)
+else()
+#    set(CUDA_PROPAGATE_HOST_FLAGS OFF)
+    set(CUDA_HOST_COMPILATION_CPP ON)
+    set(CUDA_NVCC_FLAGS -std=c++11 -g -Xcompiler -fexceptions -Xcompiler -fPIC)
+    set(CUDA_SEPARABLE_COMPILATION ON)
+endif()
 
 set(CUDA_WARNING "cross-execution-space-call")
 # new flags introduced in CUDA 9 set(CUDA_WARNING "reorder,cross-execution-
