@@ -56,6 +56,12 @@ set(DARKNET_SOURCE_FILES ${DARKNET_SOURCE_FILES} yolo_v2_class.cpp http_stream.c
 file(GLOB DARKNET_HEADER_FILES *.h)
 set(DARKNET_HEADER_FILES ${DARKNET_HEADER_FILES} yolo_v2_class.hpp)
 
+if (CMAKE_COMPILER_IS_GNUCXX)
+    # message("${DARKNET_HEADER_FILES}")
+    list(REMOVE_ITEM DARKNET_HEADER_FILES ${PROJECT_SOURCE_DIR}/unistd.h)
+    # message("${DARKNET_HEADER_FILES}")
+endif()
+
 file(GLOB DARKNET_CUDA_FILES *.cu)
 
 add_definitions(-DYOLO_DETECTOR_EXPORTS)
