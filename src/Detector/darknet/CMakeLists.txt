@@ -5,7 +5,11 @@ project(${libname})
 
 #cuda
 find_package(CUDA REQUIRED)
-# set(CUDA_PROPAGATE_HOST_FLAGS OFF)
+set(CUDA_PROPAGATE_HOST_FLAGS OFF)
+set(CUDA_HOST_COMPILATION_CPP ON)
+set(CUDA_NVCC_FLAGS -std=c++11 -g -Xcompiler -fexceptions -Xcompiler -fPIC)
+set(CUDA_SEPARABLE_COMPILATION ON)
+
 set(CUDA_WARNING "cross-execution-space-call")
 # new flags introduced in CUDA 9 set(CUDA_WARNING "reorder,cross-execution-
 # space-call,deprecated-declarations")
@@ -16,7 +20,7 @@ set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -gencode arch=compute_50,code=sm_50")
 set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -gencode arch=compute_35,code=sm_35")
 set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -gencode arch=compute_30,code=sm_30")
 set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -gencode arch=compute_75,code=sm_75")
-set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -gencode arch=compute_75,code=compute_75")	
+set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -gencode arch=compute_75,code=compute_75")
 
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 find_package(CUDNN REQUIRED)
@@ -71,7 +75,7 @@ cuda_add_library(${libname} SHARED
 )
 
 set(YOLO_LIBS
-    ${OpenCV_LIBS} 
+    ${OpenCV_LIBS}
     #${CUDA_LIBRARIES}
     ${CUDA_CUDART_LIBRARY}
     #${CUDA_CUDA_LIBRARY}
