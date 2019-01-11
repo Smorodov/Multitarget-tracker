@@ -539,7 +539,7 @@ void CTrack::CreateExternalTracker()
 #ifdef USE_OCV_KCF
         if (!m_tracker || m_tracker.empty())
         {
-#if (((CV_VERSION_MAJOR == 3) && (CV_VERSION_MINOR >= 3)) || (CV_VERSION_MAJOR > 3))
+#if (((CV_VERSION_MAJOR == 3) && (CV_VERSION_MINOR > 3)) || (CV_VERSION_MAJOR > 3))
             m_tracker = cv::TrackerMOSSE::create();
 #else
             m_tracker = cv::TrackerMOSSE::createTracker();
