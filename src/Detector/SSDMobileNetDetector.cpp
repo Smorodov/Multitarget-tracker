@@ -224,7 +224,7 @@ void SSDMobileNetDetector::DetectInCrop(cv::Mat colorFrame, const cv::Rect& crop
 
             cv::Rect object(xLeftBottom, yLeftBottom, xRightTop - xLeftBottom, yRightTop - yLeftBottom);
 
-            tmpRegions.push_back(CRegion(object, m_classNames[objectClass], confidence));
+            tmpRegions.emplace_back(object, m_classNames[objectClass], confidence);
 
             //cv::rectangle(frame, object, Scalar(0, 255, 0));
             //std::string label = classNames[objectClass] + ": " + std::to_string(confidence);

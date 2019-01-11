@@ -72,14 +72,14 @@ public:
             {
                 if (region.m_rect.contains(cv::Point(x, y)))
                 {
-                    region.m_points.push_back(cv::Point2f(static_cast<float>(x), static_cast<float>(y)));
+                    region.m_points.emplace_back(static_cast<float>(x), static_cast<float>(y));
                 }
             }
         }
 
         if (region.m_points.empty())
         {
-            region.m_points.push_back(cv::Point2f(region.m_rect.x + 0.5f * region.m_rect.width, region.m_rect.y + 0.5f * region.m_rect.height));
+            region.m_points.emplace_back(region.m_rect.x + 0.5f * region.m_rect.width, region.m_rect.y + 0.5f * region.m_rect.height);
         }
     }
 

@@ -5,6 +5,9 @@
 #include "SSDMobileNetDetector.h"
 #include "YoloDetector.h"
 
+#ifdef BUILD_YOLO_LIB
+#include "YoloDarknetDetector.h"
+#endif
 ///
 /// \brief CreateDetector
 /// \param detectorType
@@ -64,9 +67,17 @@ BaseDetector* CreateDetector(
         detector = new SSDMobileNetDetector(collectPoints, gray);
         break;
 
-    case tracking::Yolo:
-        detector = new YoloDetector(collectPoints, gray);
+    case tracking::Yolo_OCV:
+        detector = new YoloOCVDetector(collectPoints, gray);
         break;
+
+	case tracking::Yolo_Darknet:
+#ifdef BUILD_YOLO_LIB
+		detector = new YoloDarknetDetector(collectPoints, gray);
+#else
+		std::cerr << "Darknet inference engine was not configured in CMake" << std::endl;
+#endif
+		break;
 
     default:
         break;

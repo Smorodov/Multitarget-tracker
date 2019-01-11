@@ -107,11 +107,11 @@ public:
     ///
     void push_back(const Point_t& prediction)
     {
-        m_trace.push_back(TrajectoryPoint(prediction));
+        m_trace.emplace_back(prediction);
     }
     void push_back(const Point_t& prediction, const Point_t& raw)
     {
-        m_trace.push_back(TrajectoryPoint(prediction, raw));
+        m_trace.emplace_back(prediction, raw);
     }
 
     ///

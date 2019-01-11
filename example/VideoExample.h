@@ -216,8 +216,14 @@ protected:
     ///
     bool InitTracker(cv::UMat frame)
     {
+#ifdef _WIN32
+		std::string pathToModel = "../../data/";
+#else
+		std::string pathToModel = "../data/";
+#endif
+
         config_t config;
-        config["cascadeFileName"] = "../data/haarcascade_frontalface_alt2.xml";
+        config["cascadeFileName"] = pathToModel + "haarcascade_frontalface_alt2.xml";
         m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Face_HAAR, config, m_useLocalTracking, frame));
         if (!m_detector.get())
         {
@@ -292,10 +298,16 @@ protected:
     {
         tracking::Detectors detectorType = tracking::Detectors::Pedestrian_C4; // tracking::Detectors::Pedestrian_HOG;
 
+#ifdef _WIN32
+		std::string pathToModel = "../../data/";
+#else
+		std::string pathToModel = "../data/";
+#endif
+
         config_t config;
         config["detectorType"] = (detectorType == tracking::Pedestrian_HOG) ? "HOG" : "C4";
-        config["cascadeFileName1"] = "../data/combined.txt.model";
-        config["cascadeFileName2"] = "../data/combined.txt.model_";
+        config["cascadeFileName1"] = pathToModel + "combined.txt.model";
+        config["cascadeFileName2"] = pathToModel + "combined.txt.model_";
         m_detector = std::unique_ptr<BaseDetector>(CreateDetector(detectorType, config, m_useLocalTracking, frame));
         if (!m_detector.get())
         {
@@ -369,12 +381,17 @@ protected:
     ///
     bool InitTracker(cv::UMat frame)
     {
+#ifdef _WIN32
+		std::string pathToModel = "../../data/";
+#else
+		std::string pathToModel = "../data/";
+#endif
         config_t config;
-        config["modelConfiguration"] = "../data/MobileNetSSD_deploy.prototxt";
-        config["modelBinary"] = "../data/MobileNetSSD_deploy.caffemodel";
+        config["modelConfiguration"] = pathToModel + "MobileNetSSD_deploy.prototxt";
+        config["modelBinary"] = pathToModel + "MobileNetSSD_deploy.caffemodel";
         config["confidenceThreshold"] = "0.5";
         config["maxCropRatio"] = "3.0";
-        config["dnnTarget"] = "DNN_TARGET_OPENCL_FP16";
+        config["dnnTarget"] = "DNN_TARGET_CPU";
         config["dnnBackend"] = "DNN_BACKEND_INFERENCE_ENGINE";
 
         m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::SSD_MobileNet, config, m_useLocalTracking, frame));
@@ -474,26 +491,32 @@ protected:
         config_t config;
         const int yoloTest = 0;
 
+#ifdef _WIN32
+		std::string pathToModel = "../../data/";
+#else
+		std::string pathToModel = "../data/";
+#endif
+
         switch (yoloTest)
         {
         case 0:
-            config["modelConfiguration"] = "../data/tiny-yolo.cfg";
-            config["modelBinary"] = "../data/tiny-yolo.weights";
+            config["modelConfiguration"] = pathToModel + "tiny-yolo.cfg";
+            config["modelBinary"] = pathToModel + "tiny-yolo.weights";
             break;
 
         case 1:
-            config["modelConfiguration"] = "../data/yolov3-tiny.cfg";
-            config["modelBinary"] = "../data/yolov3-tiny.weights";
-            config["classNames"] = "../data/coco.names";
+            config["modelConfiguration"] = pathToModel + "yolov3-tiny.cfg";
+            config["modelBinary"] = pathToModel + "yolov3-tiny.weights";
+            config["classNames"] = pathToModel + "coco.names";
             break;
         }
 
         config["confidenceThreshold"] = "0.1";
         config["maxCropRatio"] = "2.0";
-        config["dnnTarget"] = "DNN_TARGET_OPENCL";
+        config["dnnTarget"] = "DNN_TARGET_CPU";
         config["dnnBackend"] = "DNN_BACKEND_INFERENCE_ENGINE";
 
-        m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Yolo, config, m_useLocalTracking, frame));
+        m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Yolo_OCV, config, m_useLocalTracking, frame));
         if (!m_detector.get())
         {
             return false;
@@ -563,3 +586,115 @@ protected:
         return false;
     }
 };
+
+#ifdef BUILD_YOLO_LIB
+// ----------------------------------------------------------------------
+
+///
+/// \brief The YoloDarknetExample class
+///
+class YoloDarknetExample : public VideoExample
+{
+public:
+	YoloDarknetExample(const cv::CommandLineParser& parser)
+		:
+		VideoExample(parser)
+	{
+	}
+
+protected:
+	///
+	/// \brief InitTracker
+	/// \param grayFrame
+	///
+	bool InitTracker(cv::UMat frame)
+	{
+		m_useLocalTracking = false;
+
+		config_t config;
+		const int yoloTest = 0;
+
+#ifdef _WIN32
+		std::string pathToModel = "../../data/";
+#else
+		std::string pathToModel = "../data/";
+#endif
+
+		config["modelConfiguration"] = pathToModel + "yolov3-tiny.cfg";
+		config["modelBinary"] = pathToModel + "yolov3-tiny.weights";
+		config["classNames"] = pathToModel + "coco.names";
+		config["confidenceThreshold"] = "0.1";
+		config["maxCropRatio"] = "2.0";
+
+		m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Yolo_Darknet, config, m_useLocalTracking, frame));
+		if (!m_detector.get())
+		{
+			return false;
+		}
+		m_detector->SetMinObjectSize(cv::Size(frame.cols / 40, frame.rows / 40));
+
+		TrackerSettings settings;
+		settings.m_useLocalTracking = m_useLocalTracking;
+		settings.m_distType = tracking::DistRects;
+		settings.m_kalmanType = tracking::KalmanLinear;
+		settings.m_filterGoal = tracking::FilterRect;
+		settings.m_lostTrackType = tracking::TrackKCF;       // Use KCF tracker for collisions resolving
+		settings.m_matchType = tracking::MatchHungrian;
+		settings.m_dt = 0.3f;                                // Delta time for Kalman filter
+		settings.m_accelNoiseMag = 0.2f;                     // Accel noise magnitude for Kalman filter
+		settings.m_distThres = frame.rows / 10.f;            // Distance threshold between region and object on two frames
+		settings.m_maximumAllowedSkippedFrames = cvRound(2 * m_fps); // Maximum allowed skipped frames
+		settings.m_maxTraceLength = cvRound(5 * m_fps);      // Maximum trace length
+
+		m_tracker = std::make_unique<CTracker>(settings);
+
+		return true;
+	}
+
+	///
+	/// \brief DrawData
+	/// \param frame
+	///
+	void DrawData(cv::Mat frame, int framesCounter, int currTime)
+	{
+		if (m_showLogs)
+		{
+			std::cout << "Frame " << framesCounter << ": tracks = " << m_tracker->tracks.size() << ", time = " << currTime << std::endl;
+		}
+
+		for (const auto& track : m_tracker->tracks)
+		{
+			if (track->IsRobust(1,                           // Minimal trajectory size
+				0.1f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
+				cv::Size2f(0.1f, 8.0f))      // Min and max ratio: width / height
+				)
+			{
+				DrawTrack(frame, 1, *track);
+
+				std::string label = track->m_lastRegion.m_type + ": " + std::to_string(track->m_lastRegion.m_confidence);
+				int baseLine = 0;
+				cv::Size labelSize = cv::getTextSize(label, cv::FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
+				auto rect(track->GetLastRect());
+#if (CV_VERSION_MAJOR >= 4)
+				cv::rectangle(frame, cv::Rect(cv::Point(rect.x, rect.y - labelSize.height), cv::Size(labelSize.width, labelSize.height + baseLine)), cv::Scalar(255, 255, 255), cv::FILLED);
+#else
+				cv::rectangle(frame, cv::Rect(cv::Point(rect.x, rect.y - labelSize.height), cv::Size(labelSize.width, labelSize.height + baseLine)), cv::Scalar(255, 255, 255), CV_FILLED);
+#endif
+				cv::putText(frame, label, cv::Point(rect.x, rect.y), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 0, 0));
+			}
+		}
+
+		m_detector->CalcMotionMap(frame);
+	}
+
+	///
+	/// \brief GrayProcessing
+	/// \return
+	///
+	bool GrayProcessing() const
+	{
+		return false;
+	}
+};
+
+#endif
