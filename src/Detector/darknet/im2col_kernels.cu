@@ -490,15 +490,25 @@ __global__ void im2col_align_bin_gpu_kernel(const int n, const float* data_im,
                 for (int t = 0; t < WARP_SIZE; ++t)
                 {
                     const int lane_id = threadIdx.x % WARP_SIZE;
-
+#if (__CUDACC_VER_MAJOR__ > 8)
+                    const int cur_wh_index = __shfl_sync(0xFFFFFFFF, send_wh_index, t) + lane_id;
+#else
                     const int cur_wh_index = __shfl(send_wh_index, t) + lane_id;
+#endif
 
                     if (cur_wh_index < (width_col*height_col))// && (cur_i_pad+pad) < ksize)
                     {
+#if (__CUDACC_VER_MAJOR__ > 8)
+                        const int cur_pre_out_index = __shfl_sync(0xFFFFFFFF, pre_out_index, t);
+
+                        const int cur_pre_in_index = __shfl_sync(0xFFFFFFFF, pre_in_index, t);
+                        const int cur_pre_in_wh_index = __shfl_sync(0xFFFFFFFF, pre_in_wh_index, t) + lane_id;
+#else
                         const int cur_pre_out_index = __shfl(pre_out_index, t);
 
                         const int cur_pre_in_index = __shfl(pre_in_index, t);
                         const int cur_pre_in_wh_index = __shfl(pre_in_wh_index, t) + lane_id;
+#endif
 
                         int w = cur_pre_in_wh_index % width;
                         int h = cur_pre_in_wh_index / width;
@@ -511,8 +521,11 @@ __global__ void im2col_align_bin_gpu_kernel(const int n, const float* data_im,
 
                         //data_col[out_index] = val;
                         //tmp_s[0] = val;
-
+#if (__CUDACC_VER_MAJOR__ > 8)
+                        uint32_t bit_mask = __ballot_sync(0xffffffff, val > 0);
+#else
                         uint32_t bit_mask = __ballot(val > 0);
+#endif
                         if (lane_id == 0) {
                             uint8_t *bit8_ptr = &(((uint8_t *)data_col)[out_index / 8]);
                             uint32_t *bit32_ptr = (uint32_t *)bit8_ptr;
@@ -590,7 +603,11 @@ __global__ void float_to_bit_gpu_kernel(float *src, unsigned char *dst, size_t s
         const int warp_id = threadIdx.x / WARP_SIZE;
         const int lane_id = threadIdx.x % WARP_SIZE;
 
+#if (__CUDACC_VER_MAJOR__ > 8)
+        uint32_t bit_mask = __ballot_sync(0xffffffff, src_val > 0);
+#else
         uint32_t bit_mask = __ballot(src_val > 0);
+#endif
         if (lane_id == 0) tmp[warp_id] = bit_mask;
 
         __syncthreads();
@@ -1081,7 +1098,11 @@ __global__ void gemm_nn_custom_bin_mean_transposed_gpu_kernel(int M, int N, int 
 __inline__ __device__
 int warpAllReduceSum(int val) {
     for (int mask = WARP_SIZE / 2; mask > 0; mask /= 2)
+#if (__CUDACC_VER_MAJOR__ > 8)
+        val += __shfl_xor_sync(0xffffffff, val, mask);
+#else
         val += __shfl_xor(val, mask);
+#endif
     return val;
 }
 
@@ -1169,8 +1190,13 @@ __global__ void gemm_nn_custom_bin_mean_transposed_gpu_kernel(int M, int N, int 
                 for (int t = 0; t < WARP_SIZE; ++t) {
                     const int lane_id = threadIdx.x % WARP_SIZE;
 
+#if (__CUDACC_VER_MAJOR__ > 8)
+                    const int64_t A_i = __shfl_sync(0xffffffffffffffff, A_cur_index, t) + 8 * lane_id;
+                    const int64_t B_i = __shfl_sync(0xffffffffffffffff, B_cur_index, t) + 8 * lane_id;
+#else
                     const int64_t A_i = __shfl(A_cur_index, t) + 8 * lane_id;
                     const int64_t B_i = __shfl(B_cur_index, t) + 8 * lane_id;
+#endif
 
                     {
                         //uint64_t a_bit64 = *((uint64_t *)(A + A_i));    // weights
@@ -1198,9 +1224,13 @@ __global__ void gemm_nn_custom_bin_mean_transposed_gpu_kernel(int M, int N, int 
                 #pragma unroll
                 for (int t = 0; t < WARP_SIZE; ++t) {
                     const int lane_id = threadIdx.x % WARP_SIZE;
-
+#if (__CUDACC_VER_MAJOR__ > 8)
+                    const int64_t A_i = __shfl_sync(0xffffffffffffffff, A_cur_index, t) + 4 * lane_id;
+                    const int64_t B_i = __shfl_sync(0xffffffffffffffff, B_cur_index, t) + 4 * lane_id;
+#else
                     const int64_t A_i = __shfl(A_cur_index, t) + 4 * lane_id;
                     const int64_t B_i = __shfl(B_cur_index, t) + 4 * lane_id;
+#endif
 
                     {
                         //uint64_t a_bit64 = *((uint64_t *)(A + A_i));    // weights
@@ -1510,7 +1540,11 @@ __global__ void gemm_nn_custom_bin_mean_transposed_sequentially_gpu_kernel(int M
                 //atomicAdd(&C[i*ldc + j], (2 * count) * mean_val);
 
                 for (int offset = WARP_SIZE / 2; offset > 0; offset /= 2)
+#if (__CUDACC_VER_MAJOR__ > 8)
+                    count += __shfl_down_sync(0xffffffff, count, offset);
+#else
                     count += __shfl_down(count, offset);
+#endif
 
 
                 if (threadIdx.x % WARP_SIZE == 0) {
