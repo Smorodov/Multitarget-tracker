@@ -1,3 +1,4 @@
+#include <fstream>
 #include "YoloDetector.h"
 #include "nms.h"
 
@@ -235,7 +236,7 @@ void YoloOCVDetector::DetectInCrop(cv::Mat colorFrame, const cv::Rect& crop, reg
             cv::Point p2(cvRound(x_center + width / 2), cvRound(y_center + height / 2));
             cv::Rect object(p1, p2);
 
-            tmpRegions.emplace_back(object, m_classNames[objectClass], confidence);
+            tmpRegions.emplace_back(object, (objectClass < m_classNames.size()) ? m_classNames[objectClass] : "", confidence);
         }
     }
 }
