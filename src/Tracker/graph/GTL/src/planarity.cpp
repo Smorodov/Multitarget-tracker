@@ -472,11 +472,13 @@ void planarity::correct_embedding (
 		
 	std::list<direction_indicator>::iterator d_it = dirs[curr].begin();
 		
-	while (!dirs[curr].empty()) {
-			
-	    if (d_it->direction && turn[st_[curr] - 1] || 
-		!d_it->direction && !turn[st_[curr] - 1]) {
-		turn[d_it->id - 1] = true;
+    while (!dirs[curr].empty())
+    {
+
+        if ((d_it->direction && turn[st_[curr] - 1]) ||
+        (!d_it->direction && !turn[st_[curr] - 1]))
+        {
+            turn[d_it->id - 1] = true;
 	    }
 	    
 	    d_it = dirs[curr].erase (d_it);
