@@ -16,6 +16,62 @@
 // ----------------------------------------------------------------------
 
 ///
+/// \brief The Gate struct
+///
+struct Gate
+{
+    bool m_gateOpen = false;
+    mutable std::condition_variable m_cond;
+    mutable std::mutex m_mutex;
+
+    void Lock()
+    {
+        m_mutex.lock();
+        m_gateOpen = false;
+    }
+    void Unlock()
+    {
+        m_gateOpen = true;
+        m_mutex.unlock();
+    }
+
+    void OpenGate()
+    {
+        {
+            std::unique_lock<std::mutex> lock(m_mutex);
+            m_gateOpen = true;
+        }
+        m_cond.notify_all();
+    }
+
+    void WaitAtGate()
+    {
+        std::unique_lock<std::mutex> lock(m_mutex);
+#if 1
+        m_cond.wait(lock);
+#else
+        m_cond.wait( lock, [this]{ return m_gateOpen; } );
+#endif
+        m_gateOpen = false;
+    }
+
+    bool WaitAtGateUntil(int timeOut)
+    {
+        std::unique_lock<std::mutex> lock(m_mutex);
+        auto now = std::chrono::system_clock::now();
+#if 1
+        bool res = m_cond.wait_until(lock, now + std::chrono::milliseconds(timeOut)) != std::cv_status::timeout;
+#else
+        bool res = m_cond.wait_until(lock, now + std::chrono::milliseconds(timeOut), [this]{ return m_gateOpen; });
+#endif
+        m_gateOpen = false;
+        return res;
+    }
+};
+
+// ----------------------------------------------------------------------
+
+///
 /// \brief The VideoExample class
 ///
 class VideoExample
@@ -39,10 +95,8 @@ protected:
 
     static void CaptureAndDetect(VideoExample* thisPtr,
                                  bool* stopCapture,
-                                 std::mutex* frameLock,
-                                 std::condition_variable* frameCond,
-                                 std::mutex* trackLock,
-                                 std::condition_variable* trackCond);
+                                 Gate* frameLock,
+                                 Gate* trackLock);
 
     virtual bool GrayProcessing() const;
 
@@ -612,7 +666,6 @@ protected:
 		m_useLocalTracking = false;
 
 		config_t config;
-		const int yoloTest = 0;
 
 #ifdef _WIN32
 		std::string pathToModel = "../../data/";
