@@ -43,8 +43,10 @@ Hungarian algorithm + Kalman filter multitarget tracker implementation.
 1. Download project sources
 2. Install CMake
 3. Install OpenCV (https://github.com/opencv/opencv) and OpenCV contrib (https://github.com/opencv/opencv_contrib) repositories
-4. Configure project CmakeLists.txt, set OpenCV_DIR. If opencv_contrib don't installed then set disable options USE_OCV_BGFG, USE_OCV_KCF and USE_OCV_UKF
-5. Go to the build directory and run make
+4. Configure project CmakeLists.txt, set OpenCV_DIR.
+5. If opencv_contrib don't installed then set disable options USE_OCV_BGFG, USE_OCV_KCF and USE_OCV_UKF
+6. If you want to use native YOLO detector with CUDA + cuDNN then set BUILD_YOLO_LIB=ON
+7. Go to the build directory and run make
 
 **Usage:**
 
