@@ -8,6 +8,7 @@
 #include "defines.h"
 #include "track.h"
 #include "LocalTracker.h"
+#include "HungarianAlg/HungarianAlg.h"
 
 // ----------------------------------------------------------------------
 
@@ -104,5 +105,10 @@ private:
 
     cv::UMat m_prevFrame;
 
-    void UpdateHungrian(const regions_t& regions, cv::UMat grayFrame, float fps);
+    void CreateDistaceMatrix(const regions_t& regions, distMatrix_t& costMatrix, track_t maxPossibleCost, track_t& maxCost);
+
+    void SolveHungrian(const distMatrix_t& costMatrix, size_t N, size_t M, assignments_t& assignment);
+    void SolveBipartiteGraphs(const distMatrix_t& costMatrix, size_t N, size_t M, assignments_t& assignment, track_t maxCost);
+
+    void UpdateTrackingState(const regions_t& regions, cv::UMat grayFrame, float fps);
 };
