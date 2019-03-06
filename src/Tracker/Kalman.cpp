@@ -91,9 +91,9 @@ void TKalmanFilter::CreateLinear(Point_t xy0, Point_t xyv0)
 
     m_linearKalman->processNoiseCov *= m_accelNoiseMag;
 
-    setIdentity(m_linearKalman->measurementNoiseCov, cv::Scalar::all(0.1));
+    cv::setIdentity(m_linearKalman->measurementNoiseCov, cv::Scalar::all(0.1));
 
-    setIdentity(m_linearKalman->errorCovPost, cv::Scalar::all(.1));
+    cv::setIdentity(m_linearKalman->errorCovPost, cv::Scalar::all(.1));
 
     m_initialized = true;
 }
@@ -151,9 +151,9 @@ void TKalmanFilter::CreateLinear(cv::Rect_<track_t> rect0, Point_t rectv0)
 
     m_linearKalman->processNoiseCov *= m_accelNoiseMag;
 
-    setIdentity(m_linearKalman->measurementNoiseCov, cv::Scalar::all(0.1));
+    cv::setIdentity(m_linearKalman->measurementNoiseCov, cv::Scalar::all(0.1));
 
-    setIdentity(m_linearKalman->errorCovPost, cv::Scalar::all(.1));
+    cv::setIdentity(m_linearKalman->errorCovPost, cv::Scalar::all(.1));
 
     m_initialized = true;
 }
