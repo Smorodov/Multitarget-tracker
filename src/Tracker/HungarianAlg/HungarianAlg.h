@@ -8,12 +8,13 @@
 typedef std::vector<int> assignments_t;
 typedef std::vector<track_t> distMatrix_t;
 
+///
+/// \brief The AssignmentProblemSolver class
+///
 class AssignmentProblemSolver
 {
 private:
-	// --------------------------------------------------------------------------
 	// Computes the optimal assignment (minimum overall costs) using Munkres algorithm.
-	// --------------------------------------------------------------------------
 	void assignmentoptimal(assignments_t& assignment, track_t& cost, const distMatrix_t& distMatrixIn, size_t nOfRows, size_t nOfColumns);
 	void buildassignmentvector(assignments_t& assignment, bool *starMatrix, size_t nOfRows, size_t nOfColumns);
 	void computeassignmentcost(const assignments_t& assignment, track_t& cost, const distMatrix_t& distMatrixIn, size_t nOfRows);
@@ -21,13 +22,10 @@ private:
 	void step2b(assignments_t& assignment, track_t *distMatrix, bool *starMatrix, bool *newStarMatrix, bool *primeMatrix, bool *coveredColumns, bool *coveredRows, size_t nOfRows, size_t nOfColumns, size_t minDim);
 	void step3_5(assignments_t& assignment, track_t *distMatrix, bool *starMatrix, bool *newStarMatrix, bool *primeMatrix, bool *coveredColumns, bool *coveredRows, size_t nOfRows, size_t nOfColumns, size_t minDim);
 	void step4(assignments_t& assignment, track_t *distMatrix, bool *starMatrix, bool *newStarMatrix, bool *primeMatrix, bool *coveredColumns, bool *coveredRows, size_t nOfRows, size_t nOfColumns, size_t minDim, size_t row, size_t col);
-	// --------------------------------------------------------------------------
+
 	// Computes a suboptimal solution. Good for cases with many forbidden assignments.
-	// --------------------------------------------------------------------------
 	void assignmentsuboptimal1(assignments_t& assignment, track_t& cost, const distMatrix_t& distMatrixIn, size_t nOfRows, size_t nOfColumns);
-	// --------------------------------------------------------------------------
 	// Computes a suboptimal solution. Good for cases with many forbidden assignments.
-	// --------------------------------------------------------------------------
 	void assignmentsuboptimal2(assignments_t& assignment, track_t& cost, const distMatrix_t& distMatrixIn, size_t nOfRows, size_t nOfColumns);
 
 public:

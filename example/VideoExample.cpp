@@ -2,6 +2,9 @@
 #include <iomanip>
 #include <ctime>
 
+#define MULTITHREADING_LOGS 0
+
+#if MULTITHREADING_LOGS
 ///
 /// \brief currTime
 /// \return
@@ -16,7 +19,11 @@ std::string CurrTime()
     return oss.str();
 }
 
-#if 1
+#define LOG_TIME std::cout << CurrTime()
+#define LOG_ERR_TIME (std::cerr << CurrTime())
+
+#else
+
 class NullBuffer : public std::streambuf
 {
 public:
@@ -25,10 +32,9 @@ public:
 NullBuffer NullBuffer;
 std::ostream NullStream(&NullBuffer);
 #define LOG_TIME NullStream
-#else
-#define LOG_TIME std::cout << CurrTime()
+#define LOG_ERR_TIME std::cerr
+
 #endif
-#define LOG_ERR_TIME (std::cerr << CurrTime())
 
 ///
 /// \brief VideoExample::VideoExample
