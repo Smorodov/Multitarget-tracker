@@ -582,7 +582,7 @@ protected:
         settings.m_distType = tracking::DistRects;
         settings.m_kalmanType = tracking::KalmanLinear;
         settings.m_filterGoal = tracking::FilterRect;
-        settings.m_lostTrackType = tracking::TrackKCF;       // Use KCF tracker for collisions resolving
+        settings.m_lostTrackType = tracking::TrackerDAT;       // Use KCF tracker for collisions resolving
         settings.m_matchType = tracking::MatchHungrian;
         settings.m_dt = 0.3f;                                // Delta time for Kalman filter
         settings.m_accelNoiseMag = 0.2f;                     // Accel noise magnitude for Kalman filter
