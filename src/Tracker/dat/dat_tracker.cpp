@@ -40,7 +40,10 @@ void DAT_TRACKER::Initialize(const cv::Mat &im, cv::Rect region)
     cv::resize(im, img, cv::Size(), scale_factor_, scale_factor_);
     switch (cfg.color_space) {
     case 1: //1rgb
-        img.copyTo(img);
+		if (img.channels() == 1)
+		{
+			cv::cvtColor(img, img, CV_GRAY2BGR);
+		}
         break;
     case 2: //2lab
         cv::cvtColor(img, img, CV_BGR2Lab);
@@ -49,7 +52,10 @@ void DAT_TRACKER::Initialize(const cv::Mat &im, cv::Rect region)
         cv::cvtColor(img, img, CV_BGR2HSV);
         break;
     case 4: //4gray
-        cv::cvtColor(img, img, CV_BGR2GRAY);
+		if (img.channels() == 3)
+		{
+			cv::cvtColor(img, img, CV_BGR2GRAY);
+		}
         break;
     default:
         std::cout << "int_variable does not equal any of the above cases" << std::endl;
@@ -84,7 +90,14 @@ cv::Rect DAT_TRACKER::Update(const cv::Mat &im)
     cv::Mat img;
     switch (cfg.color_space) {
     case 1://1rgb
-        img_preprocessed.copyTo(img);
+		if (img_preprocessed.channels() == 1)
+		{
+			cv::cvtColor(img_preprocessed, img, CV_GRAY2BGR);
+		}
+		else
+		{
+			img_preprocessed.copyTo(img);
+		}
         break;
     case 2://2lab
         cv::cvtColor(img_preprocessed, img, CV_BGR2Lab);
@@ -93,7 +106,10 @@ cv::Rect DAT_TRACKER::Update(const cv::Mat &im)
         cv::cvtColor(img_preprocessed, img, CV_BGR2HSV);
         break;
     case 4://4gray
-        cv::cvtColor(img_preprocessed, img, CV_BGR2GRAY);
+		if (img_preprocessed.channels() == 3)
+		{
+			cv::cvtColor(img_preprocessed, img, CV_BGR2GRAY);
+		}
         break;
     default:
         std::cout << "int_variable does not equal any of the above cases" << std::endl;

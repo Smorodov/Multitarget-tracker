@@ -429,60 +429,35 @@ void CTrack::RectUpdate(
     case tracking::TrackerSTAPLE:
         if (!dataCorrect)
         {
-            cv::Size roiSize(std::max(2 * m_predictionRect.width, currFrame.cols / 4), std::max(2 * m_predictionRect.height, currFrame.rows / 4));
-            if (roiSize.width > currFrame.cols)
-            {
-                roiSize.width = currFrame.cols;
-            }
-            if (roiSize.height > currFrame.rows)
-            {
-                roiSize.height = currFrame.rows;
-            }
-            cv::Point roiTL(m_predictionRect.x + m_predictionRect.width / 2 - roiSize.width / 2, m_predictionRect.y + m_predictionRect.height / 2 - roiSize.height / 2);
-            cv::Rect roiRect(roiTL, roiSize);
-            Clamp(roiRect.x, roiRect.width, currFrame.cols);
-            Clamp(roiRect.y, roiRect.height, currFrame.rows);
-
             bool inited = false;
             if (!m_VOTTracker)
             {
                 CreateExternalTracker();
 
-                cv::Rect2d lastRect(m_predictionRect.x - roiRect.x, m_predictionRect.y - roiRect.y, m_predictionRect.width, m_predictionRect.height);
-                if (m_staticFrame.empty())
+                cv::Rect2d lastRect(m_predictionRect.x, m_predictionRect.y, m_predictionRect.width, m_predictionRect.height);
+                if (!m_staticFrame.empty())
                 {
-                    int dx = 1;//m_predictionRect.width / 8;
-                    int dy = 1;//m_predictionRect.height / 8;
-                    lastRect = cv::Rect2d(m_predictionRect.x - roiRect.x - dx, m_predictionRect.y - roiRect.y - dy, m_predictionRect.width + 2 * dx, m_predictionRect.height + 2 * dy);
-                }
-                else
-                {
-                    lastRect = cv::Rect2d(m_staticRect.x - roiRect.x, m_staticRect.y - roiRect.y, m_staticRect.width, m_staticRect.height);
+                    lastRect = cv::Rect2d(m_staticRect.x, m_staticRect.y, m_staticRect.width, m_staticRect.height);
                 }
 
                 if (lastRect.x >= 0 &&
                         lastRect.y >= 0 &&
-                        lastRect.x + lastRect.width < roiRect.width &&
-                        lastRect.y + lastRect.height < roiRect.height &&
+                        lastRect.x + lastRect.width < prevFrame.cols &&
+                        lastRect.y + lastRect.height < prevFrame.rows &&
                         lastRect.area() > 0)
                 {
                     if (m_staticFrame.empty())
                     {
-                        cv::Mat roiMat = cv::Mat(prevFrame.getMat(cv::ACCESS_READ), roiRect);
-                        m_VOTTracker->Initialize(roiMat, lastRect);
-                        m_VOTTracker->Train(roiMat, true);
+                        cv::Mat mat = prevFrame.getMat(cv::ACCESS_READ);
+                        m_VOTTracker->Initialize(mat, lastRect);
+                        m_VOTTracker->Train(mat, true);
                     }
                     else
                     {
-                        cv::Mat roiMat = cv::Mat(m_staticFrame.getMat(cv::ACCESS_READ), roiRect);
-                        m_VOTTracker->Initialize(roiMat, lastRect);
-                        m_VOTTracker->Train(roiMat, true);
+                        cv::Mat mat = m_staticFrame.getMat(cv::ACCESS_READ);
+                        m_VOTTracker->Initialize(mat, lastRect);
+                        m_VOTTracker->Train(mat, true);
                     }
-#if 0
-                    cv::Mat tmp = cv::UMat(prevFrame, roiRect).getMat(cv::ACCESS_READ).clone();
-                    cv::rectangle(tmp, lastRect, cv::Scalar(255, 255, 255), 2);
-                    cv::imshow("init", tmp);
-#endif
 
                     inited = true;
                     m_outOfTheFrame = false;
@@ -495,18 +470,11 @@ void CTrack::RectUpdate(
             }
             if (!inited && m_VOTTracker)
             {
-                cv::Mat roiMat = cv::Mat(currFrame.getMat(cv::ACCESS_READ), roiRect);
-                cv::Rect newRect = m_VOTTracker->Update(roiMat);
-                m_VOTTracker->Train(roiMat, false);
-#if 0
-                cv::Mat tmp2 = cv::UMat(currFrame, roiRect).getMat(cv::ACCESS_READ).clone();
-                cv::rectangle(tmp2, newRect, cv::Scalar(255, 255, 255), 2);
-                cv::imshow("track", tmp2);
-#endif
+                cv::Mat mat = currFrame.getMat(cv::ACCESS_READ);
+                cv::Rect newRect = m_VOTTracker->Update(mat);
+                m_VOTTracker->Train(mat, false);
 
-                cv::Rect prect(newRect.x + roiRect.x, newRect.y + roiRect.y, newRect.width, newRect.height);
-
-                m_predictionRect = m_kalman->Update(prect, true);
+                m_predictionRect = m_kalman->Update(newRect, true);
 
                 recalcPrediction = false;
 
@@ -574,10 +542,12 @@ void CTrack::CreateExternalTracker()
         {
             m_VOTTracker = nullptr;
         }
+#ifdef USE_OCV_KCF
         if (m_tracker && !m_tracker.empty())
         {
             m_tracker.release();
         }
+#endif
         break;
 
     case tracking::TrackKCF:
@@ -694,10 +664,12 @@ void CTrack::CreateExternalTracker()
 		break;
 
     case tracking::TrackerDAT:
-        if (m_tracker && !m_tracker.empty())
+#ifdef USE_OCV_KCF
+		if (m_tracker && !m_tracker.empty())
         {
             m_tracker.release();
         }
+#endif
         if (!m_VOTTracker)
         {
             m_VOTTracker = std::unique_ptr<DAT_TRACKER>(new DAT_TRACKER());
@@ -705,10 +677,12 @@ void CTrack::CreateExternalTracker()
         break;
 
     case tracking::TrackerSTAPLE:
+#ifdef USE_OCV_KCF
         if (m_tracker && !m_tracker.empty())
         {
             m_tracker.release();
         }
+#endif
         if (!m_VOTTracker)
         {
             m_VOTTracker = std::unique_ptr<STAPLE_TRACKER>(new STAPLE_TRACKER());
