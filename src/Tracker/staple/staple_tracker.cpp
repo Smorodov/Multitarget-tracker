@@ -103,8 +103,8 @@ void STAPLE_TRACKER::initializeAllAreas(const cv::Mat &im)
     fg_area.width = fg_area.width + (bg_area.width - fg_area.width) % 2;
     fg_area.height = fg_area.height + (bg_area.height - fg_area.width) % 2;
 
-    std::cout << "bg_area.width " << bg_area.width << " bg_area.height " << bg_area.height << std::endl;
-    std::cout << "fg_area.width " << fg_area.width << " fg_area.height " << fg_area.height << std::endl;
+    //std::cout << "bg_area.width " << bg_area.width << " bg_area.height " << bg_area.height << std::endl;
+    //std::cout << "fg_area.width " << fg_area.width << " fg_area.height " << fg_area.height << std::endl;
 
     // Compute the rectangle with (or close to) params.fixedArea
     // and same aspect ratio as the target bbox
@@ -113,7 +113,7 @@ void STAPLE_TRACKER::initializeAllAreas(const cv::Mat &im)
     norm_bg_area.width = round(bg_area.width * area_resize_factor);
     norm_bg_area.height = round(bg_area.height * area_resize_factor);
 
-    std::cout << "area_resize_factor " << area_resize_factor << " norm_bg_area.width " << norm_bg_area.width << " norm_bg_area.height " << norm_bg_area.height << std::endl;
+    //std::cout << "area_resize_factor " << area_resize_factor << " norm_bg_area.width " << norm_bg_area.width << " norm_bg_area.height " << norm_bg_area.height << std::endl;
 
     // Correlation Filter (HOG) feature space
     // It smaller that the norm bg area if HOG cell size is > 1
@@ -129,7 +129,7 @@ void STAPLE_TRACKER::initializeAllAreas(const cv::Mat &im)
     norm_target_sz.width = round(norm_target_sz_w);
     norm_target_sz.height = round(norm_target_sz_h);
 
-    std::cout << "norm_target_sz.width " << norm_target_sz.width << " norm_target_sz.height " << norm_target_sz.height << std::endl;
+    //std::cout << "norm_target_sz.width " << norm_target_sz.width << " norm_target_sz.height " << norm_target_sz.height << std::endl;
 
     // distance (on one side) between target and bg area
     cv::Size norm_pad;
@@ -149,7 +149,7 @@ void STAPLE_TRACKER::initializeAllAreas(const cv::Mat &im)
     norm_pwp_search_area.width = norm_target_sz.width + norm_delta_area.width - 1;
     norm_pwp_search_area.height = norm_target_sz.height + norm_delta_area.height - 1;
 
-    std::cout << "norm_pwp_search_area.width " << norm_pwp_search_area.width << " norm_pwp_search_area.height " << norm_pwp_search_area.height << std::endl;
+    //std::cout << "norm_pwp_search_area.width " << norm_pwp_search_area.width << " norm_pwp_search_area.height " << norm_pwp_search_area.height << std::endl;
 }
 
 ///
