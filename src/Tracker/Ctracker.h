@@ -93,7 +93,10 @@ public:
 
     bool GrayFrameToTrack() const
     {
-        return m_settings.m_lostTrackType != tracking::LostTrackType::TrackGOTURN;
+		bool needColor = (m_settings.m_lostTrackType == tracking::LostTrackType::TrackGOTURN) ||
+			(m_settings.m_lostTrackType == tracking::LostTrackType::TrackDAT) ||
+			(m_settings.m_lostTrackType == tracking::LostTrackType::TrackSTAPLE);
+        return !needColor;
     }
 
 private:

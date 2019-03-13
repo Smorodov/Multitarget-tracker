@@ -1,5 +1,8 @@
 #include "track.h"
 
+#include "dat/dat_tracker.hpp"
+#include "staple/staple_tracker.hpp"
+
 ///
 /// \brief CTrack
 /// \param pt
@@ -327,7 +330,7 @@ void CTrack::RectUpdate(
     case tracking::TrackMedianFlow:
     case tracking::TrackGOTURN:
     case tracking::TrackMOSSE:
-	case tracking::TrackerCSRT:
+	case tracking::TrackCSRT:
 #ifdef USE_OCV_KCF
         if (!dataCorrect)
         {
@@ -421,6 +424,72 @@ void CTrack::RectUpdate(
         std::cerr << "KCF tracker was disabled in CMAKE! Set lostTrackType = TrackNone in constructor." << std::endl;
 #endif
         break;
+
+    case tracking::TrackDAT:
+    case tracking::TrackSTAPLE:
+        if (!dataCorrect)
+        {
+            bool inited = false;
+            if (!m_VOTTracker)
+            {
+                CreateExternalTracker();
+
+                cv::Rect2d lastRect(m_predictionRect.x, m_predictionRect.y, m_predictionRect.width, m_predictionRect.height);
+                if (!m_staticFrame.empty())
+                {
+                    lastRect = cv::Rect2d(m_staticRect.x, m_staticRect.y, m_staticRect.width, m_staticRect.height);
+                }
+
+                if (lastRect.x >= 0 &&
+                        lastRect.y >= 0 &&
+                        lastRect.x + lastRect.width < prevFrame.cols &&
+                        lastRect.y + lastRect.height < prevFrame.rows &&
+                        lastRect.area() > 0)
+                {
+                    if (m_staticFrame.empty())
+                    {
+                        cv::Mat mat = prevFrame.getMat(cv::ACCESS_READ);
+                        m_VOTTracker->Initialize(mat, lastRect);
+                        m_VOTTracker->Train(mat, true);
+                    }
+                    else
+                    {
+                        cv::Mat mat = m_staticFrame.getMat(cv::ACCESS_READ);
+                        m_VOTTracker->Initialize(mat, lastRect);
+                        m_VOTTracker->Train(mat, true);
+                    }
+
+                    inited = true;
+                    m_outOfTheFrame = false;
+                }
+                else
+                {
+					m_VOTTracker = nullptr;
+                    m_outOfTheFrame = true;
+                }
+            }
+            if (!inited && m_VOTTracker)
+            {
+                cv::Mat mat = currFrame.getMat(cv::ACCESS_READ);
+                cv::Rect newRect = m_VOTTracker->Update(mat);
+                m_VOTTracker->Train(mat, false);
+
+                m_predictionRect = m_kalman->Update(newRect, true);
+
+                recalcPrediction = false;
+
+                m_boundidgRect = cv::Rect();
+                m_lastRegion.m_points.clear();
+            }
+        }
+        else
+        {
+            if (m_VOTTracker)
+            {
+                m_VOTTracker = nullptr;
+            }
+        }
+        break;
     }
 
     if (recalcPrediction)
@@ -469,6 +538,16 @@ void CTrack::CreateExternalTracker()
     switch (m_externalTrackerForLost)
     {
     case tracking::TrackNone:
+        if (m_VOTTracker)
+        {
+            m_VOTTracker = nullptr;
+        }
+#ifdef USE_OCV_KCF
+        if (m_tracker && !m_tracker.empty())
+        {
+            m_tracker.release();
+        }
+#endif
         break;
 
     case tracking::TrackKCF:
@@ -488,6 +567,10 @@ void CTrack::CreateExternalTracker()
 #endif
         }
 #endif
+        if (m_VOTTracker)
+        {
+            m_VOTTracker = nullptr;
+        }
         break;
 
     case tracking::TrackMIL:
@@ -503,6 +586,10 @@ void CTrack::CreateExternalTracker()
 #endif
         }
 #endif
+        if (m_VOTTracker)
+        {
+            m_VOTTracker = nullptr;
+        }
         break;
 
     case tracking::TrackMedianFlow:
@@ -518,6 +605,10 @@ void CTrack::CreateExternalTracker()
 #endif
         }
 #endif
+        if (m_VOTTracker)
+        {
+            m_VOTTracker = nullptr;
+        }
         break;
 
     case tracking::TrackGOTURN:
@@ -533,6 +624,10 @@ void CTrack::CreateExternalTracker()
 #endif
         }
 #endif
+        if (m_VOTTracker)
+        {
+            m_VOTTracker = nullptr;
+        }
         break;
 
     case tracking::TrackMOSSE:
@@ -546,9 +641,13 @@ void CTrack::CreateExternalTracker()
 #endif
         }
 #endif
+        if (m_VOTTracker)
+        {
+            m_VOTTracker = nullptr;
+        }
         break;
 
-	case tracking::TrackerCSRT:
+	case tracking::TrackCSRT:
 #ifdef USE_OCV_KCF
 		if (!m_tracker || m_tracker.empty())
 		{
@@ -558,7 +657,37 @@ void CTrack::CreateExternalTracker()
 #endif
 		}
 #endif
+        if (m_VOTTracker)
+        {
+            m_VOTTracker = nullptr;
+        }
 		break;
+
+    case tracking::TrackDAT:
+#ifdef USE_OCV_KCF
+		if (m_tracker && !m_tracker.empty())
+        {
+            m_tracker.release();
+        }
+#endif
+        if (!m_VOTTracker)
+        {
+            m_VOTTracker = std::unique_ptr<DAT_TRACKER>(new DAT_TRACKER());
+        }
+        break;
+
+    case tracking::TrackSTAPLE:
+#ifdef USE_OCV_KCF
+        if (m_tracker && !m_tracker.empty())
+        {
+            m_tracker.release();
+        }
+#endif
+        if (!m_VOTTracker)
+        {
+            m_VOTTracker = std::unique_ptr<STAPLE_TRACKER>(new STAPLE_TRACKER());
+        }
+        break;
     }
 }
 
