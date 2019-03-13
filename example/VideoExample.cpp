@@ -86,16 +86,20 @@ void VideoExample::Process()
 {
     m_currFrame = 1;
     bool stopCapture = false;
-    Gate frameLock;
+    std::mutex frameLock;
+    std::condition_variable frameCond;
 
-    Gate trackLock;
-    std::thread thCapDet(CaptureAndDetect, this, &stopCapture, &frameLock, &trackLock);
+    std::mutex trackLock;
+    std::condition_variable trackCond;
+    std::thread thCapDet(CaptureAndDetect, this, &stopCapture, &frameLock, &frameCond, &trackLock, &trackCond);
     thCapDet.detach();
 
     {
-        if (!frameLock.WaitAtGateUntil(m_captureTimeOut))
+        std::unique_lock<std::mutex> lock(frameLock);
+        auto now = std::chrono::system_clock::now();
+        if (frameCond.wait_until(lock, now + std::chrono::milliseconds(m_captureTimeOut)) == std::cv_status::timeout)
         {
-            LOG_ERR_TIME << "Process: Init capture timeout" << std::endl;
+            std::cerr << "Process: Init capture timeout" << std::endl;
             stopCapture = true;
 
             if (thCapDet.joinable())
@@ -120,48 +124,46 @@ void VideoExample::Process()
     int framesCounter = m_startFrame + 1;
 
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-    trackLock.OpenGate();
+    trackCond.notify_all();
 
+    int currFrame = 0;
     for (; !stopCapture && k != 27; )
     {
         {
-            LOG_TIME << "Process:: lock(frameLock);" << std::endl;
-
-            if (!frameLock.WaitAtGateUntil(m_captureTimeOut))
+            std::unique_lock<std::mutex> lock(frameLock);
+            auto now = std::chrono::system_clock::now();
+            if (frameCond.wait_until(lock, now + std::chrono::milliseconds(m_captureTimeOut)) == std::cv_status::timeout)
             {
                 std::cerr << "Process: Frame capture timeout" << std::endl;
                 break;
             }
         }
-        LOG_TIME << "Process:: if (stopCapture)" << std::endl;
         if (stopCapture)
         {
             break;
         }
 
-        LOG_TIME << "Process:: frameLock.lock();" << std::endl;
-        frameLock.Lock();
-        FrameInfo& frameInfo = m_frameInfo[m_currFrame];
-        frameLock.Unlock();
-        LOG_TIME << "Process:: frameLock.unlock();" << std::endl;
+        frameLock.lock();
+        currFrame = m_currFrame;
+        frameLock.unlock();
 
         if (!writer.isOpened())
         {
-            writer.open(m_outFile, cv::VideoWriter::fourcc('M', 'J', 'P', 'G'), m_fps, frameInfo.m_frame.size(), true);
+            writer.open(m_outFile, cv::VideoWriter::fourcc('M', 'J', 'P', 'G'), m_fps, m_frameInfo[currFrame].m_frame.size(), true);
         }
 
         int64 t1 = cv::getTickCount();
 
-        Tracking(frameInfo.m_frame, frameInfo.m_gray, frameInfo.m_regions);
+        Tracking(m_frameInfo[currFrame].m_frame, m_frameInfo[currFrame].m_gray, m_frameInfo[currFrame].m_regions);
 
         int64 t2 = cv::getTickCount();
 
-        allTime += t2 - t1 + frameInfo.m_dt;
-        int currTime = cvRound(1000 * (t2 - t1 + frameInfo.m_dt) / freq);
+        allTime += t2 - t1 + m_frameInfo[currFrame].m_dt;
+        int currTime = cvRound(1000 * (t2 - t1 + m_frameInfo[currFrame].m_dt) / freq);
 
-        DrawData(frameInfo.m_frame, framesCounter, currTime);
+        DrawData(m_frameInfo[currFrame].m_frame, framesCounter, currTime);
 
-        cv::imshow("Video", frameInfo.m_frame);
+        cv::imshow("Video", m_frameInfo[currFrame].m_frame);
 
         int waitTime = manualMode ? 0 : std::max<int>(1, cvRound(1000 / m_fps - currTime));
         k = cv::waitKey(waitTime);
@@ -172,16 +174,15 @@ void VideoExample::Process()
 
         if (writer.isOpened())
         {
-            writer << frameInfo.m_frame;
+            writer << m_frameInfo[currFrame].m_frame;
         }
 
-        trackLock.OpenGate();
-        LOG_TIME << "Process:: trackCond.notify_all();" << std::endl;
+        trackCond.notify_all();
 
         ++framesCounter;
         if (m_endFrame && framesCounter > m_endFrame)
         {
-            LOG_TIME << "Process: riched last " << m_endFrame << " frame" << std::endl;
+            std::cout << "Process: riched last " << m_endFrame << " frame" << std::endl;
             break;
         }
     }
@@ -192,7 +193,7 @@ void VideoExample::Process()
         thCapDet.join();
     }
 
-    LOG_TIME << "work time = " << (allTime / freq) << std::endl;
+    std::cout << "work time = " << (allTime / freq) << std::endl;
     cv::waitKey(m_finishDelay);
 }
 
@@ -207,8 +208,10 @@ void VideoExample::Process()
 ///
 void VideoExample::CaptureAndDetect(VideoExample* thisPtr,
                                     bool* stopCapture,
-                                    Gate* frameLock,
-                                    Gate* trackLock)
+                                    std::mutex* frameLock,
+                                    std::condition_variable* frameCond,
+                                    std::mutex* trackLock,
+                                    std::condition_variable* trackCond)
 {
     cv::VideoCapture capture;
 
@@ -223,7 +226,7 @@ void VideoExample::CaptureAndDetect(VideoExample* thisPtr,
 
     if (!capture.isOpened())
     {
-        LOG_ERR_TIME << "Can't open " << thisPtr->m_inFile << std::endl;
+        std::cerr << "Can't open " << thisPtr->m_inFile << std::endl;
         return;
     }
 
@@ -231,61 +234,55 @@ void VideoExample::CaptureAndDetect(VideoExample* thisPtr,
 
     thisPtr->m_fps = std::max(1.f, (float)capture.get(cv::CAP_PROP_FPS));
 
-    frameLock->OpenGate();
-    LOG_TIME << "CaptureAndDetect:: frameCond->notify_all();" << std::endl;
+    frameCond->notify_all();
 
+    int currFrame = 0;
     for (; !(*stopCapture);)
     {
         {
-            LOG_TIME << "CaptureAndDetect:: lock(*trackLock);" << std::endl;
-
-            if (!trackLock->WaitAtGateUntil(thisPtr->m_trackingTimeOut))
+            std::unique_lock<std::mutex> lock(*trackLock);
+            auto now = std::chrono::system_clock::now();
+            if (trackCond->wait_until(lock, now + std::chrono::milliseconds(thisPtr->m_trackingTimeOut)) == std::cv_status::timeout)
             {
-                LOG_ERR_TIME << "CaptureAndDetect: Tracking timeout!" << std::endl;
+                std::cerr << "CaptureAndDetect: Tracking timeout!" << std::endl;
                 break;
             }
         }
-        LOG_TIME << "CaptureAndDetect:: frameLock->lock();" << std::endl;
-        frameLock->Lock();
-        FrameInfo& frameInfo = thisPtr->m_frameInfo[(thisPtr->m_currFrame ? 0 : 1)];
-        frameLock->Unlock();
-        LOG_TIME << "CaptureAndDetect:: frameLock->unlock();" << std::endl;
+        frameLock->lock();
+        currFrame = thisPtr->m_currFrame ? 0 : 1;
+        frameLock->unlock();
 
-        capture >> frameInfo.m_frame;
-        if (frameInfo.m_frame.empty())
+        capture >> thisPtr->m_frameInfo[currFrame].m_frame;
+        if (thisPtr->m_frameInfo[currFrame].m_frame.empty())
         {
-            LOG_ERR_TIME << "CaptureAndDetect: frame is empty!" << std::endl;
+            std::cerr << "CaptureAndDetect: frame is empty!" << std::endl;
             break;
         }
-        cv::cvtColor(frameInfo.m_frame, frameInfo.m_gray, cv::COLOR_BGR2GRAY);
+        cv::cvtColor(thisPtr->m_frameInfo[currFrame].m_frame, thisPtr->m_frameInfo[currFrame].m_gray, cv::COLOR_BGR2GRAY);
 
         if (!thisPtr->m_isTrackerInitialized)
         {
-            thisPtr->m_isTrackerInitialized = thisPtr->InitTracker(frameInfo.m_gray);
+            thisPtr->m_isTrackerInitialized = thisPtr->InitTracker(thisPtr->m_frameInfo[currFrame].m_gray);
             if (!thisPtr->m_isTrackerInitialized)
             {
-                LOG_ERR_TIME << "CaptureAndDetect: Tracker initilize error!!!" << std::endl;
+                std::cerr << "CaptureAndDetect: Tracker initilize error!!!" << std::endl;
                 break;
             }
         }
 
         int64 t1 = cv::getTickCount();
-        thisPtr->Detection(frameInfo.m_frame, frameInfo.m_gray, frameInfo.m_regions);
+        thisPtr->Detection(thisPtr->m_frameInfo[currFrame].m_frame, thisPtr->m_frameInfo[currFrame].m_gray, thisPtr->m_frameInfo[currFrame].m_regions);
         int64 t2 = cv::getTickCount();
-        frameInfo.m_dt = t2 - t1;
+        thisPtr->m_frameInfo[currFrame].m_dt = t2 - t1;
 
-        LOG_TIME << "CaptureAndDetect:: frameLock->lock(); 2" << std::endl;
-        frameLock->Lock();
+        frameLock->lock();
         thisPtr->m_currFrame = thisPtr->m_currFrame ? 0 : 1;
-        frameLock->Unlock();
-        LOG_TIME << "CaptureAndDetect:: frameLock->unlock(); 2" << std::endl;
-        frameLock->OpenGate();
-        LOG_TIME << "CaptureAndDetect:: frameCond->notify_all(); 2" << std::endl;
+        frameLock->unlock();
+        frameCond->notify_all();
     }
 
     *stopCapture = true;
-    frameLock->OpenGate();
-    LOG_TIME << "CaptureAndDetect:: frameCond->notify_all();; 3" << std::endl;
+    frameCond->notify_all();
 }
 
 ///
