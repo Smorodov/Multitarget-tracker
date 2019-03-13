@@ -464,7 +464,7 @@ void CTrack::RectUpdate(
                 }
                 else
                 {
-                    m_tracker.release();
+					m_VOTTracker = nullptr;
                     m_outOfTheFrame = true;
                 }
             }
