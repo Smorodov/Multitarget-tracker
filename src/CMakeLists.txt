@@ -52,6 +52,15 @@ endif()
              Tracker/HungarianAlg/HungarianAlg.h
              Tracker/LocalTracker.h
              Tracker/Kalman.h
+
+             Tracker/VOTTracker.hpp
+             Tracker/dat/dat_tracker.cpp
+             Tracker/dat/dat_tracker.hpp
+             Tracker/staple/fhog.cpp
+             Tracker/staple/fhog.h
+             Tracker/staple/sse.hpp
+             Tracker/staple/staple_tracker.cpp
+             Tracker/staple/staple_tracker.hpp
 )
 
   set(graph_source

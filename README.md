@@ -31,11 +31,11 @@ Hungarian algorithm + Kalman filter multitarget tracker implementation.
 2. Foreground segmentation: contours
 3. Matching: Hungrian algorithm or algorithm based on weighted bipartite graphs
 4. Tracking: Linear or Unscented Kalman filter for objects center or for object coordinates and size
-5. Use or not local tracker (LK optical flow) for smooth trajectories
-6. KCF, MIL, MedianFlow, GOTURN, MOSSE or CSRT tracking for lost objects and collision resolving
+5. Use or not local tracker (LK optical flow) to smooth trajectories
+6. Tracking for lost objects and collision resolving: built-in DAT or STAPLE; KCF, MIL, MedianFlow, GOTURN, MOSSE or CSRT from opencv_contrib
 7. Haar face detector from OpenCV
 8. HOG and C4 pedestrian detectors
-9. SSD detector from OpenCV and models from chuanqi305/MobileNet-SSD
+9. MobileNet SSD detector with inference from OpenCV and models from chuanqi305/MobileNet-SSD
 10. YOLO and Tiny YOLO detectors from https://pjreddie.com/darknet/yolo/ (inference from opencv_dnn or from https://github.com/AlexeyAB/darknet )
 11. Simple Abandoned detector
 
@@ -44,8 +44,8 @@ Hungarian algorithm + Kalman filter multitarget tracker implementation.
 2. Install CMake
 3. Install OpenCV (https://github.com/opencv/opencv) and OpenCV contrib (https://github.com/opencv/opencv_contrib) repositories
 4. Configure project CmakeLists.txt, set OpenCV_DIR.
-5. If opencv_contrib don't installed then set disable options USE_OCV_BGFG, USE_OCV_KCF and USE_OCV_UKF
-6. If you want to use native YOLO detector with CUDA + cuDNN then set BUILD_YOLO_LIB=ON
+5. If opencv_contrib don't installed then disable options USE_OCV_BGFG=OFF, USE_OCV_KCF=OFF and USE_OCV_UKF=OFF
+6. If you want to use native darknet YOLO detector with CUDA + cuDNN then set BUILD_YOLO_LIB=ON
 7. Go to the build directory and run make
 
 **Usage:**
@@ -86,6 +86,8 @@ Hungarian algorithm + Kalman filter multitarget tracker implementation.
 * YOLO models: https://pjreddie.com/darknet/yolo/
 * Darknet inference: https://github.com/AlexeyAB/darknet
 * GOTURN models: https://github.com/opencv/opencv_extra/tree/c4219d5eb3105ed8e634278fad312a1a8d2c182d/testdata/tracking
+* DAT tracker: https://github.com/foolwood/DAT
+* STAPLE tracker: https://github.com/xuduo35/STAPLE
 
 #### License
 GNU GPLv3: http://www.gnu.org/licenses/gpl-3.0.txt 
