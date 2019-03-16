@@ -44,14 +44,13 @@ STAPLE_TRACKER::~STAPLE_TRACKER()
 void STAPLE_TRACKER::mexResize(const cv::Mat &im, cv::Mat &output, cv::Size newsz, const char *method) {
     int interpolation = cv::INTER_LINEAR;
 
-    cv::Size sz = im.size();
-
+#if 0
     if(!strcmp(method, "antialias")){
         interpolation = cv::INTER_AREA;
     } else if (!strcmp(method, "linear")){
         interpolation = cv::INTER_LINEAR;
     } else if (!strcmp(method, "auto")){
-        if(newsz.width > sz.width){ // xxx
+        if(newsz.width > im.cols){ // xxx
             interpolation = cv::INTER_LINEAR;
         }else{
             interpolation = cv::INTER_AREA;
@@ -60,8 +59,9 @@ void STAPLE_TRACKER::mexResize(const cv::Mat &im, cv::Mat &output, cv::Size news
         assert(0);
         return;
     }
+#endif
 
-    resize(im, output, newsz, 0, 0, interpolation);
+    cv::resize(im, output, newsz, 0, 0, interpolation);
 }
 
 ///
@@ -384,7 +384,10 @@ void STAPLE_TRACKER::CalculateHann(cv::Size sz, cv::Mat &output)
 ///
 void meshgrid(const cv::Range xr, const cv::Range yr, cv::Mat &outX, cv::Mat &outY)
 {
-    std::vector<int> x, y;
+    std::vector<int> x;
+    x.reserve(xr.end - xr.start + 1);
+    std::vector<int> y;
+    y.reserve(yr.end - yr.start + 1);
 
     for (int i = xr.start; i <= xr.end; i++)
         x.push_back(i);
@@ -422,7 +425,10 @@ void STAPLE_TRACKER::gaussianResponse(cv::Size rect_size, double sigma, cv::Mat 
     // i_mod_range = mod_one(i_range, rect_size(1));
     // j_mod_range = mod_one(j_range, rect_size(2));
 
-    std::vector<int> i_mod_range, j_mod_range;
+    std::vector<int> i_mod_range;
+    i_mod_range.reserve(i_range.end - i_range.start + 1);
+    std::vector<int> j_mod_range;
+    i_mod_range.reserve(j_range.end - j_range.start + 1);
 
     for (int k = i_range.start; k <= i_range.end; k++) {
         int val = (int)(k - 1 + rect_size.width) % (int)rect_size.width;
@@ -437,22 +443,22 @@ void STAPLE_TRACKER::gaussianResponse(cv::Size rect_size, double sigma, cv::Mat 
     // y = zeros(rect_size);
     // y(i_mod_range, j_mod_range) = exp(-(i.^2 + j.^2) / (2 * sigma^2));
 
-    float *OUTPUT = new float[rect_size.width*rect_size.height*2];
+    output = cv::Mat(rect_size.height, rect_size.width, CV_32FC2);
 
-    for (int ii = 0; ii < rect_size.width; ii++)
-        for (int jj = 0; jj < rect_size.height; jj++) {
+    for (int jj = 0; jj < rect_size.height; jj++)
+    {
+        int j_idx = j_mod_range[jj];
+        assert(j_idx < rect_size.height);
+
+        for (int ii = 0; ii < rect_size.width; ii++)
+        {
             int i_idx = i_mod_range[ii];
-            int j_idx = j_mod_range[jj];
+            assert(i_idx < rect_size.width);
 
-            assert((i_idx < rect_size.width) && (j_idx < rect_size.height));
-
-            OUTPUT[j_idx*rect_size.width*2+i_idx*2] = exp(-(i.at<int>(jj, ii)*i.at<int>(jj, ii) + j.at<int>(jj, ii)*j.at<int>(jj, ii)) / (2 * sigma*sigma));
-            OUTPUT[j_idx*rect_size.width*2+i_idx*2+1] = 0;
+            cv::Vec2f val(exp(-(i.at<int>(jj, ii)*i.at<int>(jj, ii) + j.at<int>(jj, ii)*j.at<int>(jj, ii)) / (2 * sigma*sigma)), 0);
+            output.at<cv::Vec2f>(j_idx, i_idx) = val;
         }
-
-    output = cv::Mat(rect_size.height, rect_size.width, CV_32FC2, OUTPUT).clone();
-
-    delete[] OUTPUT;
+    }
 }
 
 ///
@@ -494,8 +500,7 @@ void STAPLE_TRACKER::Initialize(const cv::Mat &im, cv::Rect region)
 
     // gaussian-shaped desired response, centred in (1,1)
     // bandwidth proportional to target size
-    double output_sigma
-            = sqrt(norm_target_sz.width * norm_target_sz.height) * cfg.output_sigma_factor / cfg.hog_cell_size;
+    double output_sigma = sqrt(norm_target_sz.width * norm_target_sz.height) * cfg.output_sigma_factor / cfg.hog_cell_size;
 
     cv::Mat y;
     gaussianResponse(cf_response_size, output_sigma, y);
@@ -507,47 +512,45 @@ void STAPLE_TRACKER::Initialize(const cv::Mat &im, cv::Rect region)
         scale_factor = 1;
         base_target_sz = target_sz; // xxx
         float scale_sigma = sqrt(cfg.num_scales) * cfg.scale_sigma_factor;
-        float *SS = new float[cfg.num_scales*2];
-        float *YSBUF = SS;
 
-        for (int i = 0; i < cfg.num_scales; i++) {
-            SS[i*2] = (i+1) - ceil(cfg.num_scales/2.0);
-            YSBUF[i*2] = exp(-0.5 * (SS[i*2]*SS[i*2]) / (scale_sigma*scale_sigma));
-            YSBUF[i*2+1] = 0.0;
+        cv::Mat ys = cv::Mat(1, cfg.num_scales, CV_32FC2);
+        for (int i = 0; i < cfg.num_scales; i++)
+        {
+            cv::Vec2f val((i + 1) - ceil(cfg.num_scales/2.0f), 0.f);
+            val[0] = exp(-0.5 * (val[0] * val[0]) / (scale_sigma * scale_sigma));
+            ys.at<cv::Vec2f>(i) = val;
+
             // SS = (1:p.num_scales) - ceil(p.num_scales/2);
             // ys = exp(-0.5 * (ss.^2) / scale_sigma^2);
         }
 
-        cv::Mat ys = cv::Mat(1, cfg.num_scales, CV_32FC2, YSBUF).clone();
-        delete[] SS;
-
         cv::dft(ys, ysf, cv::DFT_ROWS);
         //std::cout << ysf << std::endl;
 
-        float *SWBUFF = new float[cfg.num_scales];
-
-        if (cfg.num_scales % 2 == 0) {
-            for (int i = 0; i < cfg.num_scales + 1; ++i) {
+        scale_window = cv::Mat(1, cfg.num_scales, CV_32FC1);
+        if (cfg.num_scales % 2 == 0)
+        {
+            for (int i = 0; i < cfg.num_scales + 1; ++i)
+            {
                 if (i > 0) {
-                    SWBUFF[i - 1] = 0.5*(1 - cos(CV_2PI*i / (cfg.num_scales + 1 - 1)));
+                    scale_window.at<float>(i - 1) = 0.5*(1 - cos(CV_2PI*i / (cfg.num_scales + 1 - 1)));
                 }
             }
-        } else {
+        }
+        else
+        {
             for (int i = 0; i < cfg.num_scales; ++i)
-                SWBUFF[i] = 0.5*(1 - cos(CV_2PI*i / (cfg.num_scales - 1)));
+            {
+                scale_window.at<float>(i) = 0.5*(1 - cos(CV_2PI*i / (cfg.num_scales - 1)));
+            }
         }
 
-        scale_window = cv::Mat(1, cfg.num_scales, CV_32FC1, SWBUFF).clone();
-        delete[] SWBUFF;
 
-        float *SFBUF = new float[cfg.num_scales];
-
-        for (int i = 0; i < cfg.num_scales; i++) {
-            SFBUF[i] = pow(cfg.scale_step, (ceil(cfg.num_scales/2.0)  - (i+1)));
+        scale_factors = cv::Mat(1, cfg.num_scales, CV_32FC1);
+        for (int i = 0; i < cfg.num_scales; i++)
+        {
+            scale_factors.at<float>(i) = pow(cfg.scale_step, (ceil(cfg.num_scales/2.0)  - (i+1)));
         }
-
-        scale_factors = cv::Mat(1, cfg.num_scales, CV_32FC1, SFBUF).clone();
-        delete[] SFBUF;
 
         //std::cout << scale_factors << std::endl;
 
@@ -566,10 +569,9 @@ void STAPLE_TRACKER::Initialize(const cv::Mat &im, cv::Rect region)
 
         //std::cout << scale_model_sz << std::endl;
 
-        cv::Size sz = im.size();
         // find maximum and minimum scales
         min_scale_factor = pow(cfg.scale_step, ceil(log(std::max(5.0/bg_area.width, 5.0/bg_area.height))/log(cfg.scale_step)));
-        max_scale_factor = pow(cfg.scale_step, floor(log(std::min(sz.width/(float)target_sz.width, sz.height/(float)target_sz.height))/log(cfg.scale_step)));
+        max_scale_factor = pow(cfg.scale_step, floor(log(std::min(im.cols/(float)target_sz.width, im.rows/(float)target_sz.height))/log(cfg.scale_step)));
         //min_scale_factor = p.scale_step ^ ceil(log(max(5 ./ bg_area)) / log(p.scale_step));
         //max_scale_factor = p.scale_step ^ floor(log(min([size(im,1) size(im,2)] ./ target_sz)) / log(p.scale_step));
 
@@ -623,20 +625,30 @@ void STAPLE_TRACKER::getFeatureMap(cv::Mat &im_patch, const char *feature_type, 
 
     // out(:,:,1) = single(im_patch)/255 - 0.5;
 
-    cv::Mat grayimgf;
+    float alpha = 1. / 255.0;
+    float betta = 0.5;
 
-    grayimg.convertTo(grayimgf, CV_32FC1);
-    grayimgf /= 255.0;
-    grayimgf -= 0.5;
+    typedef cv::Vec<float, 28> Vecf28;
 
-    for (int i = 0; i < w; i++)
-        for (int j = 0; j < h; j++) {
-            typedef cv::Vec<float, 28> Vecf28;
+    for (int j = 0; j < h; ++j)
+    {
+        Vecf28* pDst = output.ptr<Vecf28>(j);
+        const float* pHann = hann_window.ptr<float>(j);
+        const uchar* pGray = grayimg.ptr<uchar>(j);
 
+        for (int i = 0; i < w; ++i)
+        {
             // apply Hann window
-            output.at<Vecf28>(j, i) = output.at<Vecf28>(j, i) * hann_window.at<float>(j, i);
-            output.at<Vecf28>(j, i)[0] = grayimgf.at<float>(j, i) * hann_window.at<float>(j, i);
+            Vecf28& val = pDst[0];
+
+            val = val * pHann[0];
+            val[0] = (alpha * pGray[0] - betta) * pHann[0];
+
+            ++pDst;
+            ++pHann;
+            ++pGray;
         }
+    }
 }
 
 ///
@@ -646,35 +658,33 @@ void STAPLE_TRACKER::getFeatureMap(cv::Mat &im_patch, const char *feature_type, 
 ///
 void matsplit(const cv::MatND &xt, std::vector<cv::Mat> &xtsplit)
 {
-    cv::Size sz = xt.size();
-    int w = sz.width;
-    int h = sz.height;
+    int w = xt.cols;
+    int h = xt.rows;
     int cn = xt.channels();
 
     assert(cn == 28);
 
-    float *XT = new float[w*h*2];
+    for (int k = 0; k < cn; k++)
+    {
+        cv::Mat dim = cv::Mat(h, w, CV_32FC2);
 
-    for (int k = 0; k < cn; k++) {
-        int count = 0;
+        for (int j = 0; j < h; ++j)
+        {
+            float* pDst = dim.ptr<float>(j);
+            const float* pSrc = xt.ptr<float>(j);
 
-        for (int i = 0; i < h; i++)
-            for (int j = 0; j < w; j++) {
-                typedef cv::Vec<float, 28> Vecf28;
+            for (int i = 0; i < w; ++i)
+            {
+                pDst[0] = pSrc[k];
+                pDst[1] = 0.0f;
 
-                Vecf28 p = xt.at<Vecf28>(i, j); // by rows
-
-                XT[count] = p[k];
-                count++;
-                XT[count] = 0.0;
-                count++;
+                pSrc += cn;
+                pDst += 2;
             }
+        }
 
-        cv::Mat dim = cv::Mat(h, w, CV_32FC2, XT).clone();
         xtsplit.push_back(dim);
     }
-
-    delete[] XT;
 }
 
 ///
@@ -740,13 +750,11 @@ void STAPLE_TRACKER::getSubwindowFloor(const cv::Mat &im, cv::Point_<float> cent
 ///
 void STAPLE_TRACKER::getScaleSubwindow(const cv::Mat &im, cv::Point_<float> centerCoor, cv::Mat &output)
 {
-    float *OUTPUT = NULL;
-    int w = 0;
-    int h = 0;
     int ch = 0;
     int total = 0;
 
-    for (int s = 0; s < cfg.num_scales; s++) {
+    for (int s = 0; s < cfg.num_scales; s++)
+    {
         cv::Size_<float> patch_sz;
 
         patch_sz.width = floor(base_target_sz.width * scale_factor * scale_factors.at<float>(s));
@@ -759,39 +767,42 @@ void STAPLE_TRACKER::getScaleSubwindow(const cv::Mat &im, cv::Point_<float> cent
         cv::MatND temp;
         fhog31(temp, im_patch_resized, cfg.hog_cell_size, 9);
 
-        if (s == 0) {
-            cv::Size sz = temp.size();
-
-            w = sz.width;
-            h = sz.height;
+        if (s == 0)
+        {
             ch = temp.channels();
-            total = w*h*ch;
+            total = temp.cols * temp.rows * ch;
 
-            OUTPUT = new float[cfg.num_scales*total*2](); // xxx
+            output = cv::Mat(total, cfg.num_scales, CV_32FC2);
         }
 
-        cv::Size tempsz = temp.size();
-        int tempw = tempsz.width;
-        int temph = tempsz.height;
+        int tempw = temp.cols;
+        int temph = temp.rows;
         int tempch = temp.channels();
 
         int count = 0;
 
-        // window
-        for (int i = 0; i < tempw; i++)
-            for (int j = 0; j < temph; j++)
-                for (int k = 0; k < tempch; k++) {
-                    int off = j*tempw*ch+i*tempch+k;
+        float scaleWnd = scale_window.at<float>(s);
 
-                    OUTPUT[(count*cfg.num_scales + s)*2 + 0] = ((float *)temp.data)[off] * scale_window.at<float>(s);
-                    OUTPUT[(count*cfg.num_scales + s)*2 + 1] = 0.0;
+        float* outData = (float*)output.data;
+
+        // window
+        for (int j = 0; j < temph; ++j)
+        {
+            const float* tmpData = temp.ptr<float>(j);
+
+            for (int i = 0; i < tempw; ++i)
+            {
+                for (int k = 0; k < tempch; ++k)
+                {
+                    outData[(count * cfg.num_scales + s) * 2 + 0] = tmpData[k] * scaleWnd;
+                    outData[(count * cfg.num_scales + s) * 2 + 1] = 0.0;
+
                     count++;
                 }
+                tmpData += ch;
+            }
+        }
     }
-
-    output = cv::Mat(total, cfg.num_scales, CV_32FC2, OUTPUT).clone();
-
-    delete[] OUTPUT;
 }
 
 ///
@@ -836,46 +847,54 @@ void STAPLE_TRACKER::Train(const cv::Mat &im, bool first)
         std::vector<cv::Mat> new_hf_num;
         std::vector<cv::Mat> new_hf_den;
 
-        cv::Size sz = xt.size();
-        int w = sz.width;
-        int h = sz.height;
-        float area = cf_response_size.width*cf_response_size.height;
+        int w = xt.cols;
+        int h = xt.rows;
+        float invArea = 1.f / (cf_response_size.width * cf_response_size.height);
 
-        float *DIM = new float[w*h*2];
+        for (int ch = 0; ch < xt.channels(); ch++)
+        {
+            cv::Mat dim = cv::Mat(h, w, CV_32FC2);
 
-        for (int ch = 0; ch < xt.channels(); ch++) {
-            for (int i = 0; i < h; i++)
-                for (int j = 0; j < w; j++) {
-                    cv::Vec2f pXTF = xtf[ch].at<cv::Vec2f>(i,j);
-                    cv::Vec2f pYF = yf.at<cv::Vec2f>(i,j);
+            for (int j = 0; j < h; ++j)
+            {
+                const float* pXTF = xtf[ch].ptr<float>(j);
+                const float* pYF = yf.ptr<float>(j);
+                cv::Vec2f* pDst = dim.ptr<cv::Vec2f>(j);
 
-                    DIM[i*w*2+j*2+0] = (pYF[1]*pXTF[1] + pYF[0]*pXTF[0]) / area;
-                    DIM[i*w*2+j*2+1] = (pYF[0]*pXTF[1] - pYF[1]*pXTF[0]) / area;
+                for (int i = 0; i < w; ++i)
+                {
+                    cv::Vec2f val(pYF[1] * pXTF[1] + pYF[0] * pXTF[0], pYF[0] * pXTF[1] - pYF[1] * pXTF[0]);
+                    *pDst = invArea * val;
+
+                    pXTF += 2;
+                    pYF += 2;
+                    ++pDst;
                 }
-
-            cv::Mat dim = cv::Mat(h, w, CV_32FC2, DIM).clone();
+            }
 
             new_hf_num.push_back(dim);
         }
 
-        delete[] DIM;
+        for (int ch = 0; ch < xt.channels(); ch++)
+        {
+            cv::Mat dim = cv::Mat(h, w, CV_32FC1);
 
-        float *DIM1 = new float[w*h];
+            for (int j = 0; j < h; ++j)
+            {
+                const float* pXTF = xtf[ch].ptr<float>(j);
+                float* pDst = dim.ptr<float>(j);
 
-        for (int ch = 0; ch < xt.channels(); ch++) {
-            for (int i = 0; i < h; i++)
-                for (int j = 0; j < w; j++) {
-                    cv::Vec2f pXTF = xtf[ch].at<cv::Vec2f>(i,j);
+                for (int i = 0; i < w; ++i)
+                {
+                    *pDst = invArea * (pXTF[0]*pXTF[0] + pXTF[1]*pXTF[1]);
 
-                    DIM1[i*w+j] = (pXTF[0]*pXTF[0] + pXTF[1]*pXTF[1]) / area;
+                    pXTF += 2;
+                    ++pDst;
                 }
-
-            cv::Mat dim = cv::Mat(h, w, CV_32FC1, DIM1).clone();
+            }
 
             new_hf_den.push_back(dim);
         }
-
-        delete[] DIM1;
 
         if (first) {
             // first frame, train with a single image
@@ -911,35 +930,42 @@ void STAPLE_TRACKER::Train(const cv::Mat &im, bool first)
         cv::Mat new_sf_num;
         cv::Mat new_sf_den;
 
-        cv::Size sz = xsf.size();
-        int w = sz.width;
-        int h = sz.height;
+        int w = xsf.cols;
+        int h = xsf.rows;
 
-        float *NEW_SF_NUM = new float[w*h*2];
+        new_sf_num = cv::Mat(h, w, CV_32FC2);
 
-        for (int i = 0; i < h; i++) // xxx
-            for (int j = 0; j < w; j++) {
-                cv::Vec2f pXSF = xsf.at<cv::Vec2f>(i,j);
-                cv::Vec2f pYSF = ysf.at<cv::Vec2f>(j);
+        for (int j = 0; j < h; ++j) // xxx
+        {
+            float* pDst = new_sf_num.ptr<float>(j);
 
-                NEW_SF_NUM[i*w*2+j*2+0] = (pYSF[1]*pXSF[1] + pYSF[0]*pXSF[0]);
-                NEW_SF_NUM[i*w*2+j*2+1] = (pYSF[1]*pXSF[0] - pYSF[0]*pXSF[1]);
+            const float* pXSF = xsf.ptr<float>(j);
+            const float* pYSF = ysf.ptr<float>(0);
+
+            for (int i = 0; i < w; ++i)
+            {
+                pDst[0] = (pYSF[1] * pXSF[1] + pYSF[0] * pXSF[0]);
+                pDst[1] = (pYSF[1] * pXSF[0] - pYSF[0] * pXSF[1]);
+
+                pXSF += 2;
+                pYSF += 2;
+                pDst += 2;
             }
+        }
 
-        new_sf_num = cv::Mat(h, w, CV_32FC2, NEW_SF_NUM).clone();
-        delete[] NEW_SF_NUM;
+        new_sf_den = cv::Mat(1, w, CV_32FC1, cv::Scalar(0, 0, 0));
+        float* pDst = new_sf_den.ptr<float>(0);
 
-        float *NEW_SF_DEN = new float[w]();
+        for (int j = 0; j < h; ++j)
+        {
+            const float* pSrc = xsf.ptr<float>(j);
 
-        for (int i = 0; i < h; i++)
-            for (int j = 0; j < w; j++) {
-                cv::Vec2f pXSF = xsf.at<cv::Vec2f>(i,j);
-
-                NEW_SF_DEN[j] += (pXSF[0]*pXSF[0] + pXSF[1]*pXSF[1]);
+            for (int i = 0; i < w; ++i)
+            {
+                pDst[i] += (pSrc[0] * pSrc[0] + pSrc[1] * pSrc[1]);
+                pSrc += 2;
             }
-
-        new_sf_den = cv::Mat(1, w, CV_32FC1, NEW_SF_DEN).clone();
-        delete[] NEW_SF_DEN;
+        }
 
         if (first) {
             // first frame, train with a single image
@@ -970,28 +996,23 @@ void STAPLE_TRACKER::Train(const cv::Mat &im, bool first)
 ///
 cv::Mat ensure_real(const cv::Mat &complex)
 {
-    cv::Size sz = complex.size();
-    int w = sz.width;
-    int h = sz.height;
-    int cn = complex.channels();
-    float *REAL = new float[w*h];
+    int w = complex.cols;
+    int h = complex.rows;
 
-    for (int k = 0; k < cn; k++) {
-        int count = 0;
+    cv::Mat real = cv::Mat(h, w, CV_32FC1);
 
-        for (int i = 0; i < h; i++)
-            for (int j = 0; j < w; j++) {
-                cv::Vec2f p = complex.at<cv::Vec2f>(i, j); // by rows
+    for (int j = 0; j < h; ++j)
+    {
+        float* pDst = real.ptr<float>(j);
+        const float* pSrc = complex.ptr<float>(j);
 
-                REAL[count] = p[k];
-                count++;
-            }
-
-        break;
+        for (int i = 0; i < w; ++i)
+        {
+            *pDst = *pSrc;
+            ++pDst;
+            pSrc += 2;
+        }
     }
-
-    cv::Mat real = cv::Mat(h, w, CV_32FC1, REAL).clone();
-    delete[] REAL;
 
     return real;
 }
@@ -1004,20 +1025,22 @@ cv::Mat ensure_real(const cv::Mat &complex)
 ///
 void STAPLE_TRACKER::cropFilterResponse(const cv::Mat &response_cf, cv::Size response_size, cv::Mat& output)
 {
-    cv::Size sz = response_cf.size();
-    int w = sz.width;
-    int h = sz.height;
+    int w = response_cf.cols;
+    int h = response_cf.rows;
 
     // newh and neww must be odd, as we want an exact center
     assert(((response_size.width % 2) == 1) && ((response_size.height % 2) == 1));
 
-    int half_width = floor(response_size.width / 2);
-    int half_height = floor(response_size.height / 2);
+    int half_width = response_size.width / 2;
+    int half_height = response_size.height / 2;
 
     cv::Range i_range(-half_width, response_size.width - (1 + half_width));
     cv::Range j_range(-half_height, response_size.height - (1 + half_height));
 
-    std::vector<int> i_mod_range, j_mod_range;
+    std::vector<int> i_mod_range;
+    i_mod_range.reserve(i_range.end - i_range.start + 1);
+    std::vector<int> j_mod_range;
+    i_mod_range.reserve(j_range.end - j_range.start + 1);
 
     for (int k = i_range.start; k <= i_range.end; k++) {
         int val = (k - 1 + w) % w;
@@ -1029,20 +1052,26 @@ void STAPLE_TRACKER::cropFilterResponse(const cv::Mat &response_cf, cv::Size res
         j_mod_range.push_back(val);
     }
 
-    float *OUTPUT = new float[response_size.width*response_size.height];
+    cv::Mat tmp = cv::Mat(response_size.height, response_size.width, CV_32FC1, cv::Scalar(0, 0, 0));
 
-    for (int i = 0; i < response_size.width; i++)
-        for (int j = 0; j < response_size.height; j++) {
+    for (int j = 0; j < response_size.height; j++)
+    {
+        int j_idx = j_mod_range[j];
+        assert(j_idx < h);
+
+        float* pDst = tmp.ptr<float>(j);
+        const float* pSrc = response_cf.ptr<float>(j_idx);
+
+        for (int i = 0; i < response_size.width; i++)
+        {
             int i_idx = i_mod_range[i];
-            int j_idx = j_mod_range[j];
+            assert(i_idx < w);
 
-            assert((i_idx < w) && (j_idx < h));
-
-            OUTPUT[j*response_size.width+i] = response_cf.at<float>(j_idx,i_idx);
+            *pDst = pSrc[i_idx];
+            ++pDst;
         }
-
-    output = cv::Mat(response_size.height, response_size.width, CV_32FC1, OUTPUT).clone();
-    delete[] OUTPUT;
+    }
+    output = tmp;
 }
 
 ///
@@ -1054,10 +1083,9 @@ void STAPLE_TRACKER::cropFilterResponse(const cv::Mat &response_cf, cv::Size res
 void STAPLE_TRACKER::getColourMap(const cv::Mat &patch, cv::Mat& output)
 {
     // check whether the patch has 3 channels
-    cv::Size sz = patch.size();
-    int h = sz.height;
-    int w = sz.width;
-    //int d = patch.channels();
+    int h = patch.rows;
+    int w = patch.cols;
+    int d = patch.channels();
 
     // figure out which bin each pixel falls into
     int bin_width = 256 / cfg.n_bins;
@@ -1065,54 +1093,70 @@ void STAPLE_TRACKER::getColourMap(const cv::Mat &patch, cv::Mat& output)
     // convert image to d channels array
     //patch_array = reshape(double(patch), w*h, d);
 
-    float probg;
-    float profg;
-    float *P_O = new float[w*h];
+    output = cv::Mat(h, w, CV_32FC1);
 
-    for (int i = 0; i < w; i++)
-        for (int j = 0; j < h; j++) {
-            if (!cfg.grayscale_sequence) {
-                cv::Vec3b p = patch.at<cv::Vec3b>(j,i);
+    if (!cfg.grayscale_sequence)
+    {
+        for (int j = 0; j < h; ++j)
+        {
+            const uchar* pSrc = patch.ptr<uchar>(j);
+            float* pDst = output.ptr<float>(j);
 
-                int b1 = floor(p[0] / bin_width);
-                int b2 = floor(p[1] / bin_width);
-                int b3 = floor(p[2] / bin_width);
+            for (int i = 0; i < w; ++i)
+            {
+                int b1 = pSrc[0] / bin_width;
+                int b2 = pSrc[1] / bin_width;
+                int b3 = pSrc[2] / bin_width;
 
-                float* histd;
-
-                histd = (float*)bg_hist.data;
-                probg = histd[b1*cfg.n_bins*cfg.n_bins + b2*cfg.n_bins + b3];
-
-                histd = (float*)fg_hist.data;
-                profg = histd[b1*cfg.n_bins*cfg.n_bins + b2*cfg.n_bins + b3];
-
-                // xxx
-                P_O[j*w+i] = profg / (profg + probg);
-
-                isnan(P_O[j*w+i]) && (P_O[j*w+i] = 0.0);
-
-                // (TODO) in theory it should be at 0.5 (unseen colors shoud have max entropy)
-                //likelihood_map(isnan(likelihood_map)) = 0;
-            } else {
-                int b = patch.at<uchar>(j,i);
-
-                float* histd;
-
-                histd = (float*)bg_hist.data;
-                probg = histd[b];
+                float* histd = (float*)bg_hist.data;
+                float probg = histd[b1*cfg.n_bins*cfg.n_bins + b2*cfg.n_bins + b3];
 
                 histd = (float*)fg_hist.data;
-                profg = histd[b];
+                float profg = histd[b1*cfg.n_bins*cfg.n_bins + b2*cfg.n_bins + b3];
 
                 // xxx
-                P_O[j*w+i] = profg / (profg + probg);
+                *pDst = profg / (profg + probg);
 
-                isnan(P_O[j*w+i]) && (P_O[j*w+i] = 0.0);
+                isnan(*pDst) && (*pDst = 0.0);
+
+                pSrc += d;
+                ++pDst;
 
                 // (TODO) in theory it should be at 0.5 (unseen colors shoud have max entropy)
                 //likelihood_map(isnan(likelihood_map)) = 0;
             }
         }
+    }
+    else
+    {
+        for (int j = 0; j < h; j++)
+        {
+            const uchar* pSrc = patch.ptr<uchar>(j);
+            float* pDst = output.ptr<float>(j);
+
+            for (int i = 0; i < w; i++)
+            {
+                int b = *pSrc;
+
+                float* histd = (float*)bg_hist.data;
+                float probg = histd[b];
+
+                histd = (float*)fg_hist.data;
+                float profg = histd[b];
+
+                // xxx
+                *pDst = profg / (profg + probg);
+
+                isnan(*pDst) && (*pDst = 0.0);
+
+                pSrc += d;
+                ++pDst;
+
+                // (TODO) in theory it should be at 0.5 (unseen colors shoud have max entropy)
+                //likelihood_map(isnan(likelihood_map)) = 0;
+            }
+        }
+    }
 
     // to which bin each pixel (for all d channels) belongs to
     //bin_indices = floor(patch_array/bin_width) + 1;
@@ -1123,9 +1167,6 @@ void STAPLE_TRACKER::getColourMap(const cv::Mat &patch, cv::Mat& output)
 
     // Object-likelihood map
     //P_O = P_fg ./ (P_fg + P_bg);
-
-    output = cv::Mat(h, w, CV_32FC1, P_O).clone();
-    delete[] P_O;
 }
 
 ///
@@ -1138,33 +1179,34 @@ void STAPLE_TRACKER::getColourMap(const cv::Mat &patch, cv::Mat& output)
 void STAPLE_TRACKER::getCenterLikelihood(const cv::Mat &object_likelihood, cv::Size m, cv::Mat& center_likelihood)
 {
     // CENTER_LIKELIHOOD is the 'colour response'
-    cv::Size sz = object_likelihood.size();
-    int h = sz.height;
-    int w = sz.width;
+    int h = object_likelihood.rows;
+    int w = object_likelihood.cols;
     int n1 = w - m.width + 1;
     int n2 = h - m.height + 1;
-    int area = m.width * m.height;
+    float invArea = 1.f / (m.width * m.height);
 
     cv::Mat temp;
 
     // integral images
     cv::integral(object_likelihood, temp);
 
-    float *CENTER_LIKELIHOOD = new float[n1*n2];
+    center_likelihood = cv::Mat(n2, n1, CV_32FC1);
 
-    for (int i = 0; i < n1; i++)
-        for (int j = 0; j < n2; j++) {
-            CENTER_LIKELIHOOD[j*n1 + i]
-                    = (temp.at<double>(j, i) + temp.at<double>(j+m.height, i+m.width) - temp.at<double>(j, i+m.width) - temp.at<double>(j+m.height, i)) / area;
+    for (int j = 0; j < n2; ++j)
+    {
+        float* pLike = reinterpret_cast<float*>(center_likelihood.ptr(j));
+
+        for (int i = 0; i < n1; ++i)
+        {
+            *pLike = invArea * (temp.at<double>(j, i) + temp.at<double>(j+m.height, i+m.width) - temp.at<double>(j, i+m.width) - temp.at<double>(j+m.height, i));
+            ++pLike;
         }
+    }
 
     // SAT = integralImage(object_likelihood);
     // i = 1:n1;
     // j = 1:n2;
     // center_likelihood = (SAT(i,j) + SAT(i+m(1), j+m(2)) - SAT(i+m(1), j) - SAT(i, j+m(2))) / prod(m);
-
-    center_likelihood = cv::Mat(n2, n1, CV_32FC1, CENTER_LIKELIHOOD).clone();
-    delete[] CENTER_LIKELIHOOD;
 }
 
 ///
@@ -1190,8 +1232,10 @@ void STAPLE_TRACKER::mergeResponses(const cv::Mat &response_cf, const cv::Mat &r
 /// \param im
 /// \return
 ///
-cv::Rect STAPLE_TRACKER::Update(const cv::Mat &im)
+cv::Rect STAPLE_TRACKER::Update(const cv::Mat &im, float& confidence)
 {
+    confidence = 0;
+
     // extract patch of size bg_area and resize to norm_bg_area
     cv::Mat im_patch_cf;
     getSubwindow(im, pos, norm_bg_area, bg_area, im_patch_cf);
@@ -1224,90 +1268,100 @@ cv::Rect STAPLE_TRACKER::Update(const cv::Mat &im)
     }
 
     std::vector<cv::Mat> hf;
-    cv::Size sz = xt_windowed.size();
-    int w = sz.width;
-    int h = sz.height;
+    const int w = xt_windowed.cols;
+    const int h = xt_windowed.rows;
 
     // Correlation between filter and test patch gives the response
     // Solve diagonal system per pixel.
-    if (cfg.den_per_channel) {
-        float *DIM = new float[w*h*2];
+    if (cfg.den_per_channel)
+    {
+        for (int ch = 0; ch < xt_windowed.channels(); ++ch)
+        {
+            cv::Mat dim = cv::Mat(h, w, CV_32FC2);
 
-        for (int ch = 0; ch < xt_windowed.channels(); ch++) {
-            for (int i = 0; i < w; i++)
-                for (int j = 0; j < h; j++) {
-                    cv::Vec2f p = hf_num[ch].at<cv::Vec2f>(j,i);
+            for (int j = 0; j < h; ++j)
+            {
+                const cv::Vec2f* pSrc = hf_num[ch].ptr<cv::Vec2f>(j);
+                const float* pDen = hf_den[ch].ptr<float>(j);
+                cv::Vec2f* pDst = dim.ptr<cv::Vec2f>(j);
 
-                    DIM[j*w*2+i*2+0] = p[0] / (hf_den[ch].at<float>(j,i) + cfg.lambda);
-                    DIM[j*w*2+i*2+1] = p[1] / (hf_den[ch].at<float>(j,i) + cfg.lambda);
+                for (int i = 0; i < w; ++i)
+                {
+                    pDst[i] = pSrc[i] / (pDen[i] + cfg.lambda);
                 }
-
-            cv::Mat dim = cv::Mat(h, w, CV_32FC2, DIM).clone();
-
-            hf.push_back(dim);
-        }
-
-        delete[] DIM;
-    } else {
-        //hf = bsxfun(@rdivide, hf_num, sum(hf_den, 3)+p.lambda);
-
-        float *DIM1 = new float[w*h];
-
-        for (int i = 0; i < w; i++)
-            for (int j = 0; j < h; j++) {
-                float sum=0.0;
-
-                for (int ch = 0; ch < xt_windowed.channels(); ch++) {
-                    sum += hf_den[ch].at<float>(j,i);
-                }
-
-                DIM1[j*w+i] = sum + cfg.lambda;
             }
 
-        float *DIM = new float[w*h*2];
+            hf.push_back(dim);
+        }
+    }
+    else
+    {
+        //hf = bsxfun(@rdivide, hf_num, sum(hf_den, 3)+p.lambda);
 
-        for (int ch = 0; ch < xt_windowed.channels(); ch++) {
-            for (int i = 0; i < w; i++)
-                for (int j = 0; j < h; j++) {
-                    cv::Vec2f p = hf_num[ch].at<cv::Vec2f>(j,i);
+        std::vector<float> DIM1(w * h, cfg.lambda);
 
-                    DIM[j*w*2+i*2+0] = p[0] / DIM1[j*w+i];
-                    DIM[j*w*2+i*2+1] = p[1] / DIM1[j*w+i];
+        for (int ch = 0; ch < xt_windowed.channels(); ++ch)
+        {
+            float* pDim1 = &DIM1[0];
+            for (int j = 0; j < h; ++j)
+            {
+                const float* pDen = hf_den[ch].ptr<float>(j);
+                for (int i = 0; i < w; ++i)
+                {
+                    *pDim1 += pDen[i];
+                    ++pDim1;
                 }
+            }
+        }
 
-            cv::Mat dim = cv::Mat(h, w, CV_32FC2, DIM).clone();
+        for (int ch = 0; ch < xt_windowed.channels(); ++ch)
+        {
+            cv::Mat dim = cv::Mat(h, w, CV_32FC2);
+            const float* pDim1 = &DIM1[0];
+            for (int j = 0; j < h; ++j)
+            {
+                const cv::Vec2f* pSrc = hf_num[ch].ptr<cv::Vec2f>(j);
+                cv::Vec2f* pDst = dim.ptr<cv::Vec2f>(j);
+
+                for (int i = 0; i < w; ++i)
+                {
+                    *pDst = *pSrc / *pDim1;
+                    ++pDim1;
+                    ++pDst;
+                    ++pSrc;
+                }
+            }
 
             hf.push_back(dim);
         }
-
-        delete[] DIM;
-
-        delete[] DIM1;
     }
 
-    float *RESPONSE_CF = new float[w*h*2];
+    cv::Mat response_cff = cv::Mat(h, w, CV_32FC2);
 
-    for (int i = 0; i < w; i++)
-        for (int j = 0; j < h; j++) {
-            float sum=0.0;
-            float sumi=0.0;
+    for (int j = 0; j < h; j++)
+    {
+        cv::Vec2f* pDst = response_cff.ptr<cv::Vec2f>(j);
 
-            for (size_t ch = 0; ch < hf.size(); ch++) {
+        for (int i = 0; i < w; i++)
+        {
+            float sum = 0.0;
+            float sumi = 0.0;
+
+            for (size_t ch = 0; ch < hf.size(); ch++)
+            {
                 cv::Vec2f pHF = hf[ch].at<cv::Vec2f>(j,i);
                 cv::Vec2f pXTF = xtf[ch].at<cv::Vec2f>(j,i);
 
-                sum += (pHF[0]*pXTF[0] + pHF[1]*pXTF[1]);
-                sumi += (pHF[0]*pXTF[1] - pHF[1]*pXTF[0]);
+                sum += (pHF[0] * pXTF[0] + pHF[1] * pXTF[1]);
+                sumi += (pHF[0] * pXTF[1] - pHF[1] * pXTF[0]);
 
                 // assert(norm(imag(x(:))) <= 1e-5 * norm(real(x(:))));
             }
 
-            RESPONSE_CF[j*w*2+i*2+0] = sum;
-            RESPONSE_CF[j*w*2+i*2+1] = sumi;
+            *pDst = cv::Vec2f(sum, sumi);
+            ++pDst;
         }
-
-    cv::Mat response_cff = cv::Mat(h, w, CV_32FC2, RESPONSE_CF).clone();
-    delete[] RESPONSE_CF;
+    }
 
     cv::Mat response_cfi;
     cv::dft(response_cff, response_cfi, cv::DFT_SCALE|cv::DFT_INVERSE);
@@ -1325,9 +1379,9 @@ cv::Rect STAPLE_TRACKER::Update(const cv::Mat &im)
 
     cropFilterResponse(response_cf, newsz, response_cf);
 
-    if (cfg.hog_cell_size > 1) {
+    if (cfg.hog_cell_size > 1)
+    {
         cv::Mat temp;
-
         mexResize(response_cf, temp, norm_delta_area, "auto");
         response_cf = temp; // xxx: low performance
     }
@@ -1345,13 +1399,14 @@ cv::Rect STAPLE_TRACKER::Update(const cv::Mat &im)
     cv::Mat response;
     mergeResponses(response_cf, response_pwp, response);
 
-    double minVal, maxVal;
-    cv::Point minLoc, maxLoc;
+    double maxVal = 0;
+    cv::Point maxLoc;
 
-    cv::minMaxLoc(response, &minVal, &maxVal, &minLoc, &maxLoc);
+    cv::minMaxLoc(response, nullptr, &maxVal, nullptr, &maxLoc);
     //[row, col] = find(response == max(response(:)), 1);
 
-    //std::cout << maxLoc.x << " " << maxLoc.y << std::endl;
+    //std::cout << "maxLoc = " << maxLoc << ", maxVal = " << maxVal << std::endl;
+    confidence = static_cast<float>(maxVal);
 
     float centerx = (1 + norm_delta_area.width) / 2 - 1;
     float centery = (1 + norm_delta_area.height) / 2 - 1;
@@ -1374,7 +1429,8 @@ cv::Rect STAPLE_TRACKER::Update(const cv::Mat &im)
     // rect_position = [pos([2,1]) - target_sz([2,1])/2, target_sz([2,1])];
 
     // SCALE SPACE SEARCH
-    if (cfg.scale_adaptation) {
+    if (cfg.scale_adaptation)
+    {
         cv::Mat im_patch_scale;
 
         getScaleSubwindow(im, pos, im_patch_scale);
@@ -1385,38 +1441,45 @@ cv::Rect STAPLE_TRACKER::Update(const cv::Mat &im)
         // im_patch_scale = getScaleSubwindow(im, pos, base_target_sz, scale_factor * scale_factors, scale_window, scale_model_sz, p.hog_scale_cell_size);
         // xsf = fft(im_patch_scale,[],2);
 
-        cv::Size sz = xsf.size();
-        int w = sz.width;
-        int h = sz.height;
-        float *SCALE_RESPONSEF = new float[w*2]();
+        const int w = xsf.cols;
+        const int h = xsf.rows;
 
-        for (int i = 0; i < w; i++) {
-            for (int j = 0; j < h; j++) {
-                cv::Vec2f pXSF = xsf.at<cv::Vec2f>(j,i);
-                cv::Vec2f pXSFNUM = sf_num.at<cv::Vec2f>(j,i);
+        cv::Mat scale_responsef = cv::Mat(1, w, CV_32FC2, cv::Scalar(0, 0, 0));
 
-                SCALE_RESPONSEF[i*2] += (pXSFNUM[0]*pXSF[0] - pXSFNUM[1]*pXSF[1]) / (sf_den.at<float>(i) + cfg.lambda);
-                SCALE_RESPONSEF[i*2 + 1] += (pXSFNUM[0]*pXSF[1] + pXSFNUM[1]*pXSF[0]) / (sf_den.at<float>(i) + cfg.lambda);
+        for (int j = 0; j < h; ++j)
+        {
+            const float* pXSF = xsf.ptr<float>(j);
+            const float* pXSFNUM = sf_num.ptr<float>(j);
+            const float* pDen = sf_den.ptr<float>(0);
+            float* pscale = scale_responsef.ptr<float>(0);
+
+            for (int i = 0; i < w; ++i)
+            {
+                float invDen = 1.f / (*pDen + cfg.lambda);
+
+                pscale[0] += invDen * (pXSFNUM[0]*pXSF[0] - pXSFNUM[1]*pXSF[1]);
+                pscale[1] += invDen * (pXSFNUM[0]*pXSF[1] + pXSFNUM[1]*pXSF[0]);
+
+                pscale += 2;
+                pXSF += 2;
+                pXSFNUM += 2;
+                ++pDen;
             }
         }
 
-        cv::Mat scale_responsef = cv::Mat(1, w, CV_32FC2, SCALE_RESPONSEF).clone();
-        delete[] SCALE_RESPONSEF;
-
         cv::Mat scale_response;
-
         cv::dft(scale_responsef, scale_response, cv::DFT_SCALE|cv::DFT_INVERSE|cv::DFT_REAL_OUTPUT);
 
         //scale_response = real(ifft(sum(sf_num .* xsf, 1) ./ (sf_den + p.lambda) ));
 
-        double minVal, maxVal;
-        cv::Point minLoc, maxLoc;
+        double maxVal = 0;
+        cv::Point maxLoc;
 
-        cv::minMaxLoc(scale_response, &minVal, &maxVal, &minLoc, &maxLoc);
+        cv::minMaxLoc(scale_response, nullptr, &maxVal, nullptr, &maxLoc);
 
         //recovered_scale = ind2sub(size(scale_response),find(scale_response == max(scale_response(:)), 1));
 
-        int recovered_scale =  maxLoc.x;
+        int recovered_scale = maxLoc.x;
 
         // set the scale
         scale_factor = scale_factor * scale_factors.at<float>(recovered_scale);
