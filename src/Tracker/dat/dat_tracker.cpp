@@ -81,10 +81,13 @@ void DAT_TRACKER::Initialize(const cv::Mat &im, cv::Rect region)
 ///
 /// \brief DAT_TRACKER::tracker_dat_update
 /// \param I
+/// \param confidence
 /// \return
 ///
-cv::Rect DAT_TRACKER::Update(const cv::Mat &im)
+cv::Rect DAT_TRACKER::Update(const cv::Mat &im, float& confidence)
 {
+    confidence = 0;
+
     cv::Mat img_preprocessed;
     cv::resize(im, img_preprocessed, cv::Size(), scale_factor_, scale_factor_);
     cv::Mat img;
@@ -156,7 +159,9 @@ cv::Rect DAT_TRACKER::Update(const cv::Mat &im)
                                                 float(hypotheses[i].y) + float(hypotheses[i].height) / 2.));
         candidate_scores.push_back(vote_scores[i] * dist_scores[i]);
     }
-    int best_candidate = max_element(candidate_scores.begin(), candidate_scores.end()) - candidate_scores.begin();
+    auto maxEl = std::max_element(candidate_scores.begin(), candidate_scores.end());
+    int best_candidate = maxEl - candidate_scores.begin();
+    confidence = *maxEl;
 
     target_pos = candidate_centers[best_candidate];
 

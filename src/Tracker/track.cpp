@@ -470,16 +470,20 @@ void CTrack::RectUpdate(
             }
             if (!inited && m_VOTTracker)
             {
+                constexpr float confThresh = 0.3f;
                 cv::Mat mat = currFrame.getMat(cv::ACCESS_READ);
-                cv::Rect newRect = m_VOTTracker->Update(mat);
-                m_VOTTracker->Train(mat, false);
+                float confidence = 0;
+                cv::Rect newRect = m_VOTTracker->Update(mat, confidence);
+                if (confidence > confThresh)
+                {
+                    m_VOTTracker->Train(mat, false);
 
-                m_predictionRect = m_kalman->Update(newRect, true);
+                    m_predictionRect = m_kalman->Update(newRect, true);
+                    recalcPrediction = false;
 
-                recalcPrediction = false;
-
-                m_boundidgRect = cv::Rect();
-                m_lastRegion.m_points.clear();
+                    m_boundidgRect = cv::Rect();
+                    m_lastRegion.m_points.clear();
+                }
             }
         }
         else
