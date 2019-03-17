@@ -1,8 +1,6 @@
 #include <cstring>
 #include <iostream>
 
-using namespace std;
-
 #include "fhog.h"
 #undef MIN
 
