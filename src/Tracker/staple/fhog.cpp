@@ -303,7 +303,7 @@ void hog( float *M, float *O, float *H, int h, int w, int binSize,
     //float *N, *R; const int hb=h/binSize, wb=w/binSize, nb=hb*wb;
     float *N, *R; const int hb=h/binSize, wb=w/binSize;
     // compute unnormalized gradient histograms
-    R = (float*) wrCalloc(wb*hb*nOrients,sizeof(float));
+    R = (float*) wrCalloc(wb*hb*nOrients+2,sizeof(float));
     gradHist( M, O, R, h, w, binSize, nOrients, softBin, full );
     // compute block normalization values
     N = hogNormMatrix( R, nOrients, hb, wb, binSize );
@@ -319,7 +319,7 @@ void fhog( float *M, float *O, float *H, int h, int w, int binSize,
     const int hb=h/binSize, wb=w/binSize, nb=hb*wb, nbo=nb*nOrients;
     float *N, *R1, *R2; int o, x;
     // compute unnormalized constrast sensitive histograms
-    R1 = (float*) wrCalloc(wb*hb*nOrients*2,sizeof(float));
+    R1 = (float*) wrCalloc(wb*hb*nOrients*2 + 2,sizeof(float));
     gradHist( M, O, R1, h, w, binSize, nOrients*2, softBin, true );
     // compute unnormalized contrast insensitive histograms
     R2 = (float*) wrCalloc(wb*hb*nOrients,sizeof(float));
