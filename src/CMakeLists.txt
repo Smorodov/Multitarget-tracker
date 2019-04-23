@@ -56,12 +56,20 @@ endif()
              Tracker/VOTTracker.hpp
              Tracker/dat/dat_tracker.cpp
              Tracker/dat/dat_tracker.hpp
+)
+
+if (${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm") 
+
+else (${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm")
+    set(tracker_sources ${tracker_sources}
              Tracker/staple/fhog.cpp
              Tracker/staple/fhog.h
              Tracker/staple/sse.hpp
              Tracker/staple/staple_tracker.cpp
              Tracker/staple/staple_tracker.hpp
-)
+    )
+    add_definitions(-DUSE_STAPLE_TRACKER)
+endif(${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm")
 
   set(graph_source
              Tracker/graph/tokenise.cpp

@@ -1,7 +1,9 @@
 #include "track.h"
 
 #include "dat/dat_tracker.hpp"
+#ifdef USE_STAPLE_TRACKER
 #include "staple/staple_tracker.hpp"
+#endif
 
 ///
 /// \brief CTrack
@@ -687,10 +689,14 @@ void CTrack::CreateExternalTracker()
             m_tracker.release();
         }
 #endif
+#ifdef USE_STAPLE_TRACKER
         if (!m_VOTTracker)
         {
             m_VOTTracker = std::unique_ptr<STAPLE_TRACKER>(new STAPLE_TRACKER());
         }
+#else
+		std::cerr << "Project was compiled without STAPLE tracking!" << std::endl;
+#endif
         break;
     }
 }
