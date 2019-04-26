@@ -58,9 +58,9 @@ endif()
              Tracker/dat/dat_tracker.hpp
 )
 
-if (${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm") 
+if (${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm|ARM|aarch64|AARCH64") 
 
-else (${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm")
+else()
     set(tracker_sources ${tracker_sources}
              Tracker/staple/fhog.cpp
              Tracker/staple/fhog.h
@@ -69,7 +69,7 @@ else (${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm")
              Tracker/staple/staple_tracker.hpp
     )
     add_definitions(-DUSE_STAPLE_TRACKER)
-endif(${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm")
+endif()
 
   set(graph_source
              Tracker/graph/tokenise.cpp
