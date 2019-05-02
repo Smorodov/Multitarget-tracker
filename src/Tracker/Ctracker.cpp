@@ -40,7 +40,7 @@ void CTracker::Update(
     {
         if (m_settings.m_useLocalTracking)
         {
-            m_localTracker.Update(tracks, m_prevFrame, grayFrame);
+            m_localTracker.Update(m_tracks, m_prevFrame, grayFrame);
         }
     }
 
@@ -61,12 +61,12 @@ void CTracker::UpdateTrackingState(
         float fps
         )
 {
-    const size_t N = tracks.size();	// Tracking objects
+    const size_t N = m_tracks.size();	// Tracking objects
     const size_t M = regions.size();	// Detections or regions
 
     assignments_t assignment(N, -1); // Assignments regions -> tracks
 
-    if (!tracks.empty())
+    if (!m_tracks.empty())
     {
         // Distance matrix between all tracks to all regions
         distMatrix_t costMatrix(N * M);
@@ -92,23 +92,23 @@ void CTracker::UpdateTrackingState(
                 if (costMatrix[i + assignment[i] * N] > m_settings.m_distThres)
                 {
                     assignment[i] = -1;
-                    tracks[i]->m_skippedFrames++;
+                    m_tracks[i]->m_skippedFrames++;
                 }
             }
             else
             {
                 // If track have no assigned detect, then increment skipped frames counter.
-                tracks[i]->m_skippedFrames++;
+                m_tracks[i]->m_skippedFrames++;
             }
         }
 
         // If track didn't get detects long time, remove it.
-        for (int i = 0; i < static_cast<int>(tracks.size()); i++)
+        for (int i = 0; i < static_cast<int>(m_tracks.size()); i++)
         {
-            if (tracks[i]->m_skippedFrames > m_settings.m_maximumAllowedSkippedFrames ||
-                    tracks[i]->IsStaticTimeout(cvRound(fps * (m_settings.m_maxStaticTime - m_settings.m_minStaticTime))))
+            if (m_tracks[i]->m_skippedFrames > m_settings.m_maximumAllowedSkippedFrames ||
+                    m_tracks[i]->IsStaticTimeout(cvRound(fps * (m_settings.m_maxStaticTime - m_settings.m_minStaticTime))))
             {
-                tracks.erase(tracks.begin() + i);
+                m_tracks.erase(m_tracks.begin() + i);
                 assignment.erase(assignment.begin() + i);
                 i--;
             }
@@ -120,7 +120,7 @@ void CTracker::UpdateTrackingState(
     {
         if (find(assignment.begin(), assignment.end(), i) == assignment.end())
         {
-            tracks.push_back(std::make_unique<CTrack>(regions[i],
+            m_tracks.push_back(std::make_unique<CTrack>(regions[i],
                                                       m_settings.m_kalmanType,
                                                       m_settings.m_dt,
                                                       m_settings.m_accelNoiseMag,
@@ -138,8 +138,8 @@ void CTracker::UpdateTrackingState(
         // If track updated less than one time, than filter state is not correct.
         if (assignment[i] != -1) // If we have assigned detect, then update using its coordinates,
         {
-            tracks[i]->m_skippedFrames = 0;
-            tracks[i]->Update(
+            m_tracks[i]->m_skippedFrames = 0;
+            m_tracks[i]->Update(
                         regions[assignment[i]], true,
                     m_settings.m_maxTraceLength,
                     m_prevFrame, grayFrame,
@@ -147,7 +147,7 @@ void CTracker::UpdateTrackingState(
         }
         else				     // if not continue using predictions
         {
-            tracks[i]->Update(CRegion(), false, m_settings.m_maxTraceLength, m_prevFrame, grayFrame, 0);
+            m_tracks[i]->Update(CRegion(), false, m_settings.m_maxTraceLength, m_prevFrame, grayFrame, 0);
         }
     }
 }
@@ -161,16 +161,16 @@ void CTracker::UpdateTrackingState(
 ///
 void CTracker::CreateDistaceMatrix(const regions_t& regions, distMatrix_t& costMatrix, track_t maxPossibleCost, track_t& maxCost)
 {
-    const size_t N = tracks.size();	// Tracking objects
+    const size_t N = m_tracks.size();	// Tracking objects
     maxCost = 0;
     switch (m_settings.m_distType)
     {
     case tracking::DistCenters:
-        for (size_t i = 0; i < tracks.size(); i++)
+        for (size_t i = 0; i < m_tracks.size(); i++)
         {
             for (size_t j = 0; j < regions.size(); j++)
             {
-                auto dist = tracks[i]->CheckType(regions[j].m_type) ? tracks[i]->CalcDist((regions[j].m_rect.tl() + regions[j].m_rect.br()) / 2) : maxPossibleCost;
+                auto dist = m_tracks[i]->CheckType(regions[j].m_type) ? m_tracks[i]->CalcDist((regions[j].m_rect.tl() + regions[j].m_rect.br()) / 2) : maxPossibleCost;
                 costMatrix[i + j * N] = dist;
                 if (dist > maxCost)
                 {
@@ -181,11 +181,11 @@ void CTracker::CreateDistaceMatrix(const regions_t& regions, distMatrix_t& costM
         break;
 
     case tracking::DistRects:
-        for (size_t i = 0; i < tracks.size(); i++)
+        for (size_t i = 0; i < m_tracks.size(); i++)
         {
             for (size_t j = 0; j < regions.size(); j++)
             {
-                auto dist = tracks[i]->CheckType(regions[j].m_type) ? tracks[i]->CalcDist(regions[j].m_rect) : maxPossibleCost;
+                auto dist = m_tracks[i]->CheckType(regions[j].m_type) ? m_tracks[i]->CalcDist(regions[j].m_rect) : maxPossibleCost;
                 costMatrix[i + j * N] = dist;
                 if (dist > maxCost)
                 {
@@ -196,11 +196,11 @@ void CTracker::CreateDistaceMatrix(const regions_t& regions, distMatrix_t& costM
         break;
 
     case tracking::DistJaccard:
-        for (size_t i = 0; i < tracks.size(); i++)
+        for (size_t i = 0; i < m_tracks.size(); i++)
         {
             for (size_t j = 0; j < regions.size(); j++)
             {
-                auto dist = tracks[i]->CheckType(regions[j].m_type) ? tracks[i]->CalcDistJaccard(regions[j].m_rect) : 1;
+                auto dist = m_tracks[i]->CheckType(regions[j].m_type) ? m_tracks[i]->CalcDistJaccard(regions[j].m_rect) : 1;
                 costMatrix[i + j * N] = dist;
                 if (dist > maxCost)
                 {

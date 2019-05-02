@@ -88,7 +88,6 @@ public:
     CTracker(const TrackerSettings& settings);
 	~CTracker(void);
 
-    tracks_t tracks;
     void Update(const regions_t& regions, cv::UMat grayFrame, float fps);
 
     bool GrayFrameToTrack() const
@@ -99,8 +98,30 @@ public:
         return !needColor;
     }
 
+	size_t GetTracksCount() const
+	{
+		return m_tracks.size();
+	}
+	std::vector<TrackingObject> GetTracks() const
+	{
+		std::vector<TrackingObject> tracks;
+		if (!m_tracks.empty())
+		{
+			tracks.reserve(m_tracks.size());
+			for (const auto& track : m_tracks)
+			{
+				tracks.emplace_back(track->GetLastRect(), track->m_trackID, track->m_trace,
+					track->IsStatic(), track->IsOutOfTheFrame(),
+					track->m_lastRegion.m_type, track->m_lastRegion.m_confidence);
+			}
+		}
+		return tracks;
+	}
+
 private:
     TrackerSettings m_settings;
+
+	tracks_t m_tracks;
 
     size_t m_nextTrackID;
 

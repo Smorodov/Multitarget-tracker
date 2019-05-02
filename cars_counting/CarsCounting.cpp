@@ -76,8 +76,6 @@ void CarsCounting::Process()
 
     m_fps = std::max(1.f, (float)capture.get(cv::CAP_PROP_FPS));
 
-    m_fps = std::max(1.f, (float)capture.get(cv::CAP_PROP_FPS));
-
     cv::Mat colorFrame;
     cv::UMat grayFrame;
     for (;;)
@@ -171,13 +169,11 @@ bool CarsCounting::GrayProcessing() const
 /// \param resizeCoeff
 /// \param track
 /// \param drawTrajectory
-/// \param isStatic
 ///
 void CarsCounting::DrawTrack(cv::Mat frame,
                              int resizeCoeff,
-                             const CTrack& track,
-                             bool drawTrajectory,
-                             bool isStatic
+                             const TrackingObject& track,
+                             bool drawTrajectory
         )
 {
     auto ResizeRect = [&](const cv::Rect& r) -> cv::Rect
@@ -189,26 +185,26 @@ void CarsCounting::DrawTrack(cv::Mat frame,
         return cv::Point(resizeCoeff * pt.x, resizeCoeff * pt.y);
     };
 
-    if (isStatic)
+    if (track.m_isStatic)
     {
 #if (CV_VERSION_MAJOR >= 4)
-        cv::rectangle(frame, ResizeRect(track.GetLastRect()), cv::Scalar(255, 0, 255), 2, cv::LINE_AA);
+        cv::rectangle(frame, ResizeRect(track.m_rect), cv::Scalar(255, 0, 255), 2, cv::LINE_AA);
 #else
-		cv::rectangle(frame, ResizeRect(track.GetLastRect()), cv::Scalar(255, 0, 255), 2, CV_AA);
+		cv::rectangle(frame, ResizeRect(track.m_rect), cv::Scalar(255, 0, 255), 2, CV_AA);
 #endif
     }
     else
     {
 #if (CV_VERSION_MAJOR >= 4)
-        cv::rectangle(frame, ResizeRect(track.GetLastRect()), cv::Scalar(0, 255, 0), 1, cv::LINE_AA);
+        cv::rectangle(frame, ResizeRect(track.m_rect), cv::Scalar(0, 255, 0), 1, cv::LINE_AA);
 #else
-		cv::rectangle(frame, ResizeRect(track.GetLastRect()), cv::Scalar(0, 255, 0), 1, CV_AA);
+		cv::rectangle(frame, ResizeRect(track.m_rect), cv::Scalar(0, 255, 0), 1, CV_AA);
 #endif
     }
 
     if (drawTrajectory)
     {
-        cv::Scalar cl = m_colors[track.m_trackID % m_colors.size()];
+        cv::Scalar cl = m_colors[track.m_ID % m_colors.size()];
 
         for (size_t j = 0; j < track.m_trace.size() - 1; ++j)
         {
@@ -232,17 +228,18 @@ void CarsCounting::DrawTrack(cv::Mat frame,
 
     if (m_useLocalTracking)
     {
-        cv::Scalar cl = m_colors[track.m_trackID % m_colors.size()];
+        cv::Scalar cl = m_colors[track.m_ID % m_colors.size()];
 
-        for (auto pt : track.m_lastRegion.m_points)
+        for (auto pt : track.m_points)
         {
 #if (CV_VERSION_MAJOR >= 4)
-            cv::circle(frame, cv::Point(cvRound(pt.x), cvRound(pt.y)), 1, cl, -1, cv::LINE_AA);
+            cv::circle(frame, pt, 1, cl, -1, cv::LINE_AA);
 #else
-			cv::circle(frame, cv::Point(cvRound(pt.x), cvRound(pt.y)), 1, cl, -1, CV_AA);
+			cv::circle(frame, pt, 1, cl, -1, CV_AA);
 #endif
         }
     }
+
 }
 
 ///
@@ -306,29 +303,31 @@ bool CarsCounting::InitTracker(cv::UMat frame)
 ///
 void CarsCounting::DrawData(cv::Mat frame, int framesCounter, int currTime)
 {
+	auto tracks = m_tracker->GetTracks();
+
     if (m_showLogs)
     {
-        std::cout << "Frame " << framesCounter << ": tracks = " << m_tracker->tracks.size() << ", time = " << currTime << std::endl;
+        std::cout << "Frame " << framesCounter << ": tracks = " << tracks.size() << ", time = " << currTime << std::endl;
     }
 
     std::set<size_t> currIntersections;
-
-    for (const auto& track : m_tracker->tracks)
+	
+    for (const auto& track : tracks)
     {
-        if (track->IsStatic())
+        if (track.m_isStatic)
         {
-            DrawTrack(frame, 1, *track, true, true);
+            DrawTrack(frame, 1, track, true);
         }
         else
         {
-            if (track->IsRobust(cvRound(m_fps / 4),          // Minimal trajectory size
+            if (track.IsRobust(cvRound(m_fps / 4),          // Minimal trajectory size
                                 0.7f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
                                 cv::Size2f(0.1f, 8.0f))      // Min and max ratio: width / height
                     )
             {
-                DrawTrack(frame, 1, *track, true);
+                DrawTrack(frame, 1, track, true);
 
-                CheckLinesIntersection(*track, static_cast<float>(frame.cols), static_cast<float>(frame.rows), currIntersections);
+                CheckLinesIntersection(track, static_cast<float>(frame.cols), static_cast<float>(frame.rows), currIntersections);
             }
         }
     }
@@ -396,7 +395,7 @@ bool CarsCounting::RemoveLine(unsigned int lineUid)
 /// \brief CarsCounting::CheckLinesIntersection
 /// \param track
 ///
-void CarsCounting::CheckLinesIntersection(const CTrack& track, float xMax, float yMax, std::set<size_t>& currIntersections)
+void CarsCounting::CheckLinesIntersection(const TrackingObject& track, float xMax, float yMax, std::set<size_t>& currIntersections)
 {
     auto Pti2f = [&](cv::Point pt) -> cv::Point2f
     {
@@ -405,11 +404,11 @@ void CarsCounting::CheckLinesIntersection(const CTrack& track, float xMax, float
 
     for (auto& rl : m_lines)
     {
-        if (m_lastIntersections.find(track.m_trackID) == m_lastIntersections.end())
+        if (m_lastIntersections.find(track.m_ID) == m_lastIntersections.end())
         {
             if (rl.IsIntersect(Pti2f(track.m_trace[track.m_trace.size() - 3]), Pti2f(track.m_trace[track.m_trace.size() - 1])))
             {
-                currIntersections.insert(track.m_trackID);
+                currIntersections.insert(track.m_ID);
             }
         }
     }
