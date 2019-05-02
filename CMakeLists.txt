@@ -36,6 +36,11 @@ if (BUILD_CARS_COUNTING)
     add_subdirectory(cars_counting)
 endif(BUILD_CARS_COUNTING)
 
+option(BUILD_ASYNC_DETECTOR "Should compiled async example with low fps Detector?" OFF)
+if (BUILD_ASYNC_DETECTOR)
+    add_subdirectory(async_detector)
+endif(BUILD_ASYNC_DETECTOR)
+
 option(BUILD_YOLO_LIB "Should compiled standalone yolo_lib with original darknet?" OFF)
 if (BUILD_YOLO_LIB)
     add_subdirectory(src/Detector/darknet)

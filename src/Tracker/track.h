@@ -162,6 +162,60 @@ private:
 
 // --------------------------------------------------------------------------
 ///
+/// \brief The TrackingObject class
+///
+struct TrackingObject
+{
+	cv::Rect m_rect;
+	Trace m_trace;
+	size_t m_ID = 0;
+	bool m_isStatic = false;
+	bool m_outOfTheFrame = false;
+	std::string m_type;
+	float m_confidence;
+	std::vector<cv::Point> m_points;
+
+
+	///
+	TrackingObject(const cv::Rect& rect, size_t ID, const Trace& trace,
+		bool isStatic, bool outOfTheFrame,
+		const std::string& type, float confidence)
+		:
+		m_rect(rect), m_ID(ID), m_isStatic(isStatic), m_outOfTheFrame(outOfTheFrame), m_type(type), m_confidence(confidence)
+	{
+		for (size_t i = 0; i < trace.size(); ++i)
+		{
+			m_trace.push_back(trace[i]);
+		}
+	}
+
+	///
+	bool IsRobust(int minTraceSize, float minRawRatio, cv::Size2f sizeRatio) const
+	{
+		bool res = m_trace.size() > static_cast<size_t>(minTraceSize);
+		res &= m_trace.GetRawCount(m_trace.size() - 1) / static_cast<float>(m_trace.size()) > minRawRatio;
+		if (sizeRatio.width + sizeRatio.height > 0)
+		{
+			float sr = m_rect.width / static_cast<float>(m_rect.height);
+			if (sizeRatio.width > 0)
+			{
+				res &= (sr > sizeRatio.width);
+			}
+			if (sizeRatio.height > 0)
+			{
+				res &= (sr < sizeRatio.height);
+			}
+		}
+		if (m_outOfTheFrame)
+		{
+			res = false;
+		}
+		return res;
+	}
+};
+
+// --------------------------------------------------------------------------
+///
 /// \brief The CTrack class
 ///
 class CTrack
@@ -201,9 +255,9 @@ public:
 
     void Update(const CRegion& region, bool dataCorrect, size_t max_trace_length, cv::UMat prevFrame, cv::UMat currFrame, int trajLen);
 
-    bool IsRobust(int minTraceSize, float minRawRatio, cv::Size2f sizeRatio) const;
     bool IsStatic() const;
     bool IsStaticTimeout(int framesTime) const;
+	bool IsOutOfTheFrame() const;
 
     Trace m_trace;
     size_t m_trackID;

@@ -6,10 +6,6 @@
 #include <iostream>
 #include <vector>
 #include <map>
-#include <thread>
-#include <mutex>
-#include <chrono>
-#include <condition_variable>
 
 // ----------------------------------------------------------------------
 
@@ -250,16 +246,12 @@ protected:
 
     virtual bool InitTracker(cv::UMat frame);
 
-    void Detection(cv::Mat frame, cv::UMat grayFrame, regions_t& regions);
-    void Tracking(cv::Mat frame, cv::UMat grayFrame, const regions_t& regions);
-
     virtual void DrawData(cv::Mat frame, int framesCounter, int currTime);
 
     void DrawTrack(cv::Mat frame,
                    int resizeCoeff,
-                   const CTrack& track,
-                   bool drawTrajectory = true,
-                   bool isStatic = false);
+                   const TrackingObject& track,
+                   bool drawTrajectory = true);
 
 private:
 
@@ -275,6 +267,6 @@ private:
 
     // Road lines
     std::deque<RoadLine> m_lines;
-    void CheckLinesIntersection(const CTrack& track, float xMax, float yMax, std::set<size_t>& currIntersections);
+    void CheckLinesIntersection(const TrackingObject& track, float xMax, float yMax, std::set<size_t>& currIntersections);
     std::set<size_t> m_lastIntersections;
 };

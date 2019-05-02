@@ -150,36 +150,6 @@ void CTrack::Update(
 }
 
 ///
-/// \brief IsRobust
-/// \param minTraceSize
-/// \param minRawRatio
-/// \param sizeRatio
-/// \return
-///
-bool CTrack::IsRobust(int minTraceSize, float minRawRatio, cv::Size2f sizeRatio) const
-{
-    bool res = m_trace.size() > static_cast<size_t>(minTraceSize);
-    res &= m_trace.GetRawCount(m_trace.size() - 1) / static_cast<float>(m_trace.size()) > minRawRatio;
-    if (sizeRatio.width + sizeRatio.height > 0)
-    {
-        float sr = m_lastRegion.m_rect.width / static_cast<float>(m_lastRegion.m_rect.height);
-        if (sizeRatio.width > 0)
-        {
-            res &= (sr > sizeRatio.width);
-        }
-        if (sizeRatio.height > 0)
-        {
-            res &= (sr < sizeRatio.height);
-        }
-    }
-    if (m_outOfTheFrame)
-    {
-        res = false;
-    }
-    return res;
-}
-
-///
 /// \brief CTrack::IsStatic
 /// \return
 ///
@@ -196,6 +166,15 @@ bool CTrack::IsStatic() const
 bool CTrack::IsStaticTimeout(int framesTime) const
 {
     return (m_staticFrames > framesTime);
+}
+
+///
+/// \brief CTrack::IsOutOfTheFrame
+/// \return
+///
+bool CTrack::IsOutOfTheFrame() const
+{
+	return m_outOfTheFrame;
 }
 
 ///
