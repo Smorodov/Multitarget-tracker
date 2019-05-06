@@ -189,7 +189,12 @@ void AsyncDetector::DrawData(FrameInfo* frameInfo, int framesCounter, int currTi
 {
     if (m_showLogs)
     {
-        std::cout << "Frame " << framesCounter << ": tracks = " << frameInfo->m_tracks.size() << ", time = " << currTime << std::endl;
+		std::cout << "Frame " << framesCounter << ": ";
+		if (frameInfo->m_inDetector > 0)
+		{
+			std::cout << "detects = " << frameInfo->m_regions.size() << ", ";
+		}
+		std::cout << "tracks = " << frameInfo->m_tracks.size() << ", time = " << currTime << std::endl;
     }
 
 
