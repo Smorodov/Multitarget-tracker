@@ -46,7 +46,9 @@ Hungarian algorithm + Kalman filter multitarget tracker implementation.
 4. Configure project CmakeLists.txt, set OpenCV_DIR.
 5. If opencv_contrib don't installed then disable options USE_OCV_BGFG=OFF, USE_OCV_KCF=OFF and USE_OCV_UKF=OFF
 6. If you want to use native darknet YOLO detector with CUDA + cuDNN then set BUILD_YOLO_LIB=ON
-7. Go to the build directory and run make
+7. For building example with low fps detector (now native darknet YOLO detector) and Tracker worked on each frame: BUILD_ASYNC_DETECTOR=ON
+8. For building example with line crossing detection (cars counting): BUILD_CARS_COUNTING=ON
+9. Go to the build directory and run make
 
 **Usage:**
 
