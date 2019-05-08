@@ -58,7 +58,7 @@ private:
 
 	FramesQueue m_framesQue;
 
-	void DrawData(FrameInfo* frameInfo, int framesCounter, int currTime);
+	void DrawData(frame_ptr frameInfo, int framesCounter, int currTime);
 
     void DrawTrack(cv::Mat frame, int resizeCoeff, const TrackingObject& track, bool drawTrajectory = true);
 

@@ -119,17 +119,18 @@ protected:
 
 
 struct FrameInfo;
+typedef std::shared_ptr<FrameInfo> frame_ptr;
 ///
 /// A threadsafe-queue with Frames
 ///
-class FramesQueue : public SafeQueue<FrameInfo>
+class FramesQueue : public SafeQueue<frame_ptr>
 {
 public:
     ///
     /// \brief AddNewFrame
     /// \param frameInfo
     ///
-    void AddNewFrame(FrameInfo& frameInfo)
+    void AddNewFrame(frame_ptr frameInfo)
     {
         //QUE_LOG << "AddNewFrame start: " << frameInfo.m_dt << std::endl;
         enqueue(frameInfo);
@@ -143,7 +144,7 @@ public:
     {
         QUE_LOG << "m_que (" << m_que.size() << "): ";
         size_t i = 0;
-        for (queue_t::iterator it = m_que.begin(); it != m_que.end(); ++it)
+        for (auto it : m_que)
         {
             if (it->m_inDetector && it->m_inTracker)
             {
@@ -170,18 +171,18 @@ public:
     /// \brief GetLastUndetectedFrame
     /// \return
     ///
-    FrameInfo& GetLastUndetectedFrame()
+    frame_ptr GetLastUndetectedFrame()
     {
         //QUE_LOG << "GetLastUndetectedFrame start" << std::endl;
 
         std::unique_lock<std::mutex> lock(m_mutex);
-        while (m_que.empty() || m_que.back().m_inDetector)
+        while (m_que.empty() || m_que.back()->m_inDetector)
         {
             m_cond.wait(lock);
             //PrintQue();
         }
-        FrameInfo& frameInfo = m_que.back();
-        frameInfo.m_inDetector = 1;
+        frame_ptr frameInfo = m_que.back();
+        frameInfo->m_inDetector = 1;
 
         //QUE_LOG << "GetLastUndetectedFrame end: " << frameInfo.m_dt << std::endl;
 
@@ -197,7 +198,7 @@ public:
         queue_t::iterator res_it = m_que.end();
         for (queue_t::iterator it = m_que.begin(); it != m_que.end(); ++it)
         {
-            if (it->m_inDetector != 1 && it->m_inTracker == 0)
+            if ((*it)->m_inDetector != 1 && (*it)->m_inTracker == 0)
             {
                 res_it = it;
                 break;
@@ -210,7 +211,7 @@ public:
     /// \brief GetFirstDetectedFrame
     /// \return
     ///
-    FrameInfo& GetFirstDetectedFrame()
+    frame_ptr GetFirstDetectedFrame()
     {
         //QUE_LOG << "GetFirstDetectedFrame start" << std::endl;
 
@@ -222,8 +223,8 @@ public:
             it = SearchUntracked();
             //PrintQue();
         }
-        FrameInfo& frameInfo = *it;
-		frameInfo.m_inTracker = 1;
+        frame_ptr frameInfo = *it;
+		frameInfo->m_inTracker = 1;
 
         //QUE_LOG << "GetFirstDetectedFrame end: " << frameInfo.m_dt << std::endl;
         return frameInfo;
@@ -233,17 +234,17 @@ public:
     /// \brief GetFirstProcessedFrame
     /// \return
     ///
-    FrameInfo GetFirstProcessedFrame()
+    frame_ptr GetFirstProcessedFrame()
     {
         //QUE_LOG << "GetFirstProcessedFrame start" << std::endl;
 
         std::unique_lock<std::mutex> lock(m_mutex);
-        while (m_que.empty() || m_que.front().m_inTracker != 2)
+        while (m_que.empty() || m_que.front()->m_inTracker != 2)
         {
             m_cond.wait(lock);
             //PrintQue();
         }
-        FrameInfo frameInfo = m_que.front();
+        frame_ptr frameInfo = m_que.front();
         m_que.pop_front();
 
         //QUE_LOG << "GetFirstProcessedFrame end: " << frameInfo.m_dt << std::endl;

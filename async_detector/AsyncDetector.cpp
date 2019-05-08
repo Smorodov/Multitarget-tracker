@@ -61,31 +61,31 @@ void AsyncDetector::Process()
 
     int framesCounter = m_startFrame + 1;
 
-	FrameInfo frames[2];
+	frame_ptr frames[2];
 	size_t frameInd = 0;
     for (;;)
     {
         // Show frame after detecting and tracking
 		frames[frameInd] = m_framesQue.GetFirstProcessedFrame();
-        FrameInfo& processedFrame = frames[frameInd];
+        frame_ptr processedFrame = frames[frameInd];
 
         int64 t2 = cv::getTickCount();
 
-        allTime += t2 - processedFrame.m_dt;
-        int currTime = cvRound(1000 * (t2 - processedFrame.m_dt) / freq);
+        allTime += t2 - processedFrame->m_dt;
+        int currTime = cvRound(1000 * (t2 - processedFrame->m_dt) / freq);
 
-        DrawData(&processedFrame, framesCounter, currTime);
+        DrawData(processedFrame, framesCounter, currTime);
 
         if (!writer.isOpened())
         {
-            writer.open(m_outFile, cv::VideoWriter::fourcc('H', 'F', 'Y', 'U'), m_fps, processedFrame.m_frame.size(), true);
+            writer.open(m_outFile, cv::VideoWriter::fourcc('H', 'F', 'Y', 'U'), m_fps, processedFrame->m_frame.size(), true);
         }
         if (writer.isOpened())
         {
-            writer << processedFrame.m_frame;
+            writer << processedFrame->m_frame;
         }
 
-        cv::imshow("Video", processedFrame.m_frame);
+        cv::imshow("Video", processedFrame->m_frame);
 
         int waitTime = std::max<int>(1, cvRound(1000 / m_fps - currTime));
         k = cv::waitKey(waitTime);
@@ -185,11 +185,16 @@ void AsyncDetector::DrawTrack(cv::Mat frame,
 /// \brief AsyncDetector::DrawData
 /// \param frameinfo
 ///
-void AsyncDetector::DrawData(FrameInfo* frameInfo, int framesCounter, int currTime)
+void AsyncDetector::DrawData(frame_ptr frameInfo, int framesCounter, int currTime)
 {
     if (m_showLogs)
     {
-        std::cout << "Frame " << framesCounter << ": tracks = " << frameInfo->m_tracks.size() << ", time = " << currTime << std::endl;
+		std::cout << "Frame " << framesCounter << ": ";
+		if (frameInfo->m_inDetector > 0)
+		{
+			std::cout << "detects = " << frameInfo->m_regions.size() << ", ";
+		}
+		std::cout << "tracks = " << frameInfo->m_tracks.size() << ", time = " << currTime << std::endl;
     }
 
 
@@ -310,20 +315,20 @@ void AsyncDetector::CaptureThread(std::string fileName, int startFrame, float* f
     // Capture frame
     for (; !(*stopFlag);)
     {
-        FrameInfo frameInfo;
-        frameInfo.m_dt = cv::getTickCount();;
-        capture >> frameInfo.m_frame;
-        if (frameInfo.m_frame.empty())
+        frame_ptr frameInfo(new FrameInfo());
+        frameInfo->m_dt = cv::getTickCount();;
+        capture >> frameInfo->m_frame;
+        if (frameInfo->m_frame.empty())
         {
             std::cerr << "Frame is empty!" << std::endl;
             *stopFlag = true;
             break;
         }
-		if (frameInfo.m_clFrame.empty())
+		if (frameInfo->m_clFrame.empty())
 		{
-			frameInfo.m_clFrame = frameInfo.m_frame.getUMat(cv::ACCESS_READ);
+			frameInfo->m_clFrame = frameInfo->m_frame.getUMat(cv::ACCESS_READ);
 		}
-        cv::cvtColor(frameInfo.m_frame, frameInfo.m_gray, cv::COLOR_BGR2GRAY);
+        cv::cvtColor(frameInfo->m_frame, frameInfo->m_gray, cv::COLOR_BGR2GRAY);
 
         framesQue->AddNewFrame(frameInfo);
 
@@ -351,16 +356,16 @@ void AsyncDetector::DetectThread(const config_t& config, cv::UMat firstGray, Fra
 
     for (; !(*stopFlag);)
     {
-        FrameInfo& frameInfo = framesQue->GetLastUndetectedFrame();
+        frame_ptr frameInfo = framesQue->GetLastUndetectedFrame();
 
-        detector->Detect(frameInfo.m_clFrame);
-        //std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        detector->Detect(frameInfo->m_clFrame);
+        //std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
         const regions_t& regions = detector->GetDetects();
-        frameInfo.m_regions.assign(regions.begin(), regions.end());
+        frameInfo->m_regions.assign(regions.begin(), regions.end());
 
-        frameInfo.m_inDetector = 2;
-        framesQue->Signal(frameInfo.m_dt);
+        frameInfo->m_inDetector = 2;
+        framesQue->Signal(frameInfo->m_dt);
     }
 }
 
@@ -374,18 +379,18 @@ void AsyncDetector::TrackingThread(const TrackerSettings& settings, FramesQueue*
 
     for (; !(*stopFlag);)
     {
-        FrameInfo& frameInfo = framesQue->GetFirstDetectedFrame();
+        frame_ptr frameInfo = framesQue->GetFirstDetectedFrame();
         if (tracker->GrayFrameToTrack())
         {
-            tracker->Update(frameInfo.m_regions, frameInfo.m_gray, frameInfo.m_fps);
+            tracker->Update(frameInfo->m_regions, frameInfo->m_gray, frameInfo->m_fps);
         }
         else
         {
-            tracker->Update(frameInfo.m_regions, frameInfo.m_clFrame, frameInfo.m_fps);
+            tracker->Update(frameInfo->m_regions, frameInfo->m_clFrame, frameInfo->m_fps);
         }
 
-        frameInfo.m_tracks = tracker->GetTracks();
-        frameInfo.m_inTracker = 2;
-        framesQue->Signal(frameInfo.m_dt);
+        frameInfo->m_tracks = tracker->GetTracks();
+        frameInfo->m_inTracker = 2;
+        framesQue->Signal(frameInfo->m_dt);
     }
 }
