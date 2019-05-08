@@ -43,5 +43,7 @@ int main(int argc, char** argv)
     slow_detector.Process();
 
     cv::destroyAllWindows();
+
+	std::cout << "Correct exit" << std::endl;
     return 0;
 }
