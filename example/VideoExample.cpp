@@ -90,7 +90,6 @@ void VideoExample::Process()
 
     Gate trackLock;
     std::thread thCapDet(CaptureAndDetect, this, &stopCapture, &frameLock, &trackLock);
-    thCapDet.detach();
 
     {
         if (!frameLock.WaitAtGateUntil(m_captureTimeOut))
