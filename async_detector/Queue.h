@@ -262,5 +262,11 @@ public:
         //QUE_LOG << "Signal end: " << ts << std::endl;
     }
 
+    void SetBreak(bool val)
+    {
+        m_break = val;
+    }
+
 private:
+    bool m_break = false;
 };

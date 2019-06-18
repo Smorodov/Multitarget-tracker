@@ -51,7 +51,6 @@ void AsyncDetector::Process()
     bool stopFlag = false;
 
     std::thread thCapture(CaptureThread, m_inFile, m_startFrame, &m_fps, &m_framesQue, &stopFlag);
-    thCapture.detach();
 
     cv::namedWindow("Video", cv::WINDOW_NORMAL | cv::WINDOW_KEEPRATIO);
 
@@ -308,9 +307,7 @@ void AsyncDetector::CaptureThread(std::string fileName, int startFrame, float* f
     cv::cvtColor(firstFrame, firstGray, cv::COLOR_BGR2GRAY);
 
     std::thread thDetection(DetectThread, detectorConfig, firstGray, framesQue, stopFlag);
-    thDetection.detach();
     std::thread thTracking(TrackingThread, trackerSettings, framesQue, stopFlag);
-    thTracking.detach();
 
     // Capture frame
     for (; !(*stopFlag);)
@@ -322,6 +319,7 @@ void AsyncDetector::CaptureThread(std::string fileName, int startFrame, float* f
         {
             std::cerr << "Frame is empty!" << std::endl;
             *stopFlag = true;
+            framesQue->SetBreak(true);
             break;
         }
 		if (frameInfo->m_clFrame.empty())
@@ -335,13 +333,13 @@ void AsyncDetector::CaptureThread(std::string fileName, int startFrame, float* f
         std::this_thread::sleep_for(std::chrono::milliseconds(1000 / cvRound(*fps)));
     }
 
-    if (thDetection.joinable())
-    {
-        thDetection.join();
-    }
     if (thTracking.joinable())
     {
         thTracking.join();
+    }
+    if (thDetection.joinable())
+    {
+        thDetection.join();
     }
 }
 
