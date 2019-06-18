@@ -91,18 +91,16 @@ void VideoExample::Process()
     Gate trackLock;
     std::thread thCapDet(CaptureAndDetect, this, &stopCapture, &frameLock, &trackLock);
 
+    if (!frameLock.WaitAtGateUntil(m_captureTimeOut))
     {
-        if (!frameLock.WaitAtGateUntil(m_captureTimeOut))
-        {
-            LOG_ERR_TIME << "Process: Init capture timeout" << std::endl;
-            stopCapture = true;
+        LOG_ERR_TIME << "Process: Init capture timeout" << std::endl;
+        stopCapture = true;
 
-            if (thCapDet.joinable())
-            {
-                thCapDet.join();
-            }
-            return;
+        if (thCapDet.joinable())
+        {
+            thCapDet.join();
         }
+        return;
     }
 
     cv::VideoWriter writer;
@@ -123,14 +121,12 @@ void VideoExample::Process()
 
     for (; !stopCapture && k != 27; )
     {
-        {
-            LOG_TIME << "Process:: lock(frameLock);" << std::endl;
+        LOG_TIME << "Process:: lock(frameLock);" << std::endl;
 
-            if (!frameLock.WaitAtGateUntil(m_captureTimeOut))
-            {
-                std::cerr << "Process: Frame capture timeout" << std::endl;
-                break;
-            }
+        if (!frameLock.WaitAtGateUntil(m_captureTimeOut))
+        {
+            std::cerr << "Process: Frame capture timeout" << std::endl;
+            break;
         }
         LOG_TIME << "Process:: if (stopCapture)" << std::endl;
         if (stopCapture)

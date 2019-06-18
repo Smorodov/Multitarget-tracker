@@ -51,7 +51,7 @@ struct TrajectoryPoint
     {
     }
 
-    bool m_hasRaw;
+    bool m_hasRaw = false;
     Point_t m_prediction;
     Point_t m_raw;
 };
@@ -185,7 +185,15 @@ struct TrackingObject
 	{
 		for (size_t i = 0; i < trace.size(); ++i)
 		{
-			m_trace.push_back(trace[i]);
+            auto tp = trace.at(i);
+            if (tp.m_hasRaw)
+            {
+                m_trace.push_back(tp.m_prediction, tp.m_raw);
+            }
+            else
+            {
+                m_trace.push_back(tp.m_prediction);
+            }
 		}
 	}
 
