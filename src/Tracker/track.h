@@ -267,21 +267,33 @@ public:
     bool IsStaticTimeout(int framesTime) const;
 	bool IsOutOfTheFrame() const;
 
+    cv::Rect GetLastRect() const;
+
+    const Point_t& AveragePoint() const;
+    Point_t& AveragePoint();
+    const CRegion& LastRegion() const;
+    const std::vector<cv::Point2f>& GetPoints() const;
+    void SetPoints(const std::vector<cv::Point2f>& points);
+    const cv::Rect& BoundidgRect() const;
+    cv::Rect& BoundidgRect();
+    size_t SkippedFrames() const;
+    size_t& SkippedFrames();
+
+    TrackingObject ConstructObject() const;
+
+private:
     Trace m_trace;
-    size_t m_trackID;
-    size_t m_skippedFrames;
+    size_t m_trackID = 0;
+    size_t m_skippedFrames = 0;
     CRegion m_lastRegion;
     Point_t m_averagePoint;   ///< Average point after LocalTracking
     cv::Rect m_boundidgRect;  ///< Bounding rect after LocalTracking
 
-    cv::Rect GetLastRect() const;
-
-private:
     Point_t m_predictionPoint;
     cv::Rect m_predictionRect;
-    TKalmanFilter* m_kalman;
-    bool m_filterObjectSize;
-    bool m_outOfTheFrame;
+    std::unique_ptr<TKalmanFilter> m_kalman;
+    bool m_filterObjectSize = false;
+    bool m_outOfTheFrame = false;
 
     tracking::LostTrackType m_externalTrackerForLost;
 #ifdef USE_OCV_KCF

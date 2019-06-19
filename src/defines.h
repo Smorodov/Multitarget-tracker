@@ -45,7 +45,7 @@ public:
     std::vector<cv::Point2f> m_points;
 
     std::string m_type;
-    float m_confidence;
+    float m_confidence = -1;
 };
 
 typedef std::vector<CRegion> regions_t;
@@ -55,6 +55,8 @@ typedef std::vector<CRegion> regions_t;
 ///
 namespace tracking
 {
+///
+/// \brief The Detectors enum
 ///
 enum Detectors
 {

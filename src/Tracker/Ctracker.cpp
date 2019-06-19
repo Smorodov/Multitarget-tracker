@@ -92,20 +92,20 @@ void CTracker::UpdateTrackingState(
                 if (costMatrix[i + assignment[i] * N] > m_settings.m_distThres)
                 {
                     assignment[i] = -1;
-                    m_tracks[i]->m_skippedFrames++;
+                    m_tracks[i]->SkippedFrames()++;
                 }
             }
             else
             {
                 // If track have no assigned detect, then increment skipped frames counter.
-                m_tracks[i]->m_skippedFrames++;
+                m_tracks[i]->SkippedFrames()++;
             }
         }
 
         // If track didn't get detects long time, remove it.
         for (int i = 0; i < static_cast<int>(m_tracks.size()); i++)
         {
-            if (m_tracks[i]->m_skippedFrames > m_settings.m_maximumAllowedSkippedFrames ||
+            if (m_tracks[i]->SkippedFrames() > m_settings.m_maximumAllowedSkippedFrames ||
                     m_tracks[i]->IsStaticTimeout(cvRound(fps * (m_settings.m_maxStaticTime - m_settings.m_minStaticTime))))
             {
                 m_tracks.erase(m_tracks.begin() + i);
@@ -138,7 +138,7 @@ void CTracker::UpdateTrackingState(
         // If track updated less than one time, than filter state is not correct.
         if (assignment[i] != -1) // If we have assigned detect, then update using its coordinates,
         {
-            m_tracks[i]->m_skippedFrames = 0;
+            m_tracks[i]->SkippedFrames() = 0;
             m_tracks[i]->Update(
                         regions[assignment[i]], true,
                     m_settings.m_maxTraceLength,

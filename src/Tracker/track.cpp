@@ -36,11 +36,11 @@ CTrack::CTrack(
 {
     if (filterObjectSize)
     {
-        m_kalman = new TKalmanFilter(kalmanType, region.m_rect, deltaTime, accelNoiseMag);
+        m_kalman = std::make_unique<TKalmanFilter>(kalmanType, region.m_rect, deltaTime, accelNoiseMag);
     }
     else
     {
-        m_kalman = new TKalmanFilter(kalmanType, m_predictionPoint, deltaTime, accelNoiseMag);
+        m_kalman = std::make_unique<TKalmanFilter>(kalmanType, m_predictionPoint, deltaTime, accelNoiseMag);
     }
     m_trace.push_back(m_predictionPoint, m_predictionPoint);
 }
@@ -257,6 +257,96 @@ cv::Rect CTrack::GetLastRect() const
                     m_predictionRect.width,
                     m_predictionRect.height);
     }
+}
+
+///
+/// \brief CTrack::AveragePoint
+/// \return
+///
+const Point_t& CTrack::AveragePoint() const
+{
+    return m_averagePoint;
+}
+
+///
+/// \brief CTrack::AveragePoint
+/// \return
+///
+Point_t& CTrack::AveragePoint()
+{
+    return m_averagePoint;
+}
+
+///
+/// \brief CTrack::LastRegion
+/// \return
+///
+const CRegion& CTrack::LastRegion() const
+{
+    return m_lastRegion;
+}
+
+///
+/// \brief CTrack::GetPoints
+/// \return
+///
+const std::vector<cv::Point2f>& CTrack::GetPoints() const
+{
+    return m_lastRegion.m_points;
+}
+
+///
+/// \brief CTrack::SetPoints
+/// \return
+///
+void CTrack::SetPoints(const std::vector<cv::Point2f>& points)
+{
+    m_lastRegion.m_points = points;
+}
+
+///
+/// \brief CTrack::BoundidgRect
+/// \return
+///
+const cv::Rect& CTrack::BoundidgRect() const
+{
+    return m_boundidgRect;
+}
+
+///
+/// \brief CTrack::BoundidgRect
+/// \return
+///
+cv::Rect& CTrack::BoundidgRect()
+{
+    return m_boundidgRect;
+}
+
+///
+/// \brief CTrack::ConstructObject
+/// \return
+///
+TrackingObject CTrack::ConstructObject() const
+{
+    return TrackingObject(GetLastRect(), m_trackID, m_trace, IsStatic(), IsOutOfTheFrame(), m_lastRegion.m_type, m_lastRegion.m_confidence);
+}
+
+///
+/// \brief CTrack::SkippedFrames
+/// \return
+///
+size_t CTrack::SkippedFrames() const
+{
+    return m_skippedFrames;
+}
+
+///
+/// \brief CTrack::SkippedFrames
+/// \return
+///
+size_t& CTrack::SkippedFrames()
+{
+    return m_skippedFrames;
 }
 
 ///

@@ -90,6 +90,10 @@ public:
 
     void Update(const regions_t& regions, cv::UMat grayFrame, float fps);
 
+    ///
+    /// \brief GrayFrameToTrack
+    /// \return
+    ///
     bool GrayFrameToTrack() const
     {
 		bool needColor = (m_settings.m_lostTrackType == tracking::LostTrackType::TrackGOTURN) ||
@@ -98,10 +102,18 @@ public:
         return !needColor;
     }
 
+    ///
+    /// \brief GetTracksCount
+    /// \return
+    ///
 	size_t GetTracksCount() const
 	{
 		return m_tracks.size();
 	}
+    ///
+    /// \brief GetTracks
+    /// \return
+    ///
 	std::vector<TrackingObject> GetTracks() const
 	{
 		std::vector<TrackingObject> tracks;
@@ -110,9 +122,7 @@ public:
 			tracks.reserve(m_tracks.size());
 			for (const auto& track : m_tracks)
 			{
-				tracks.emplace_back(track->GetLastRect(), track->m_trackID, track->m_trace,
-					track->IsStatic(), track->IsOutOfTheFrame(),
-					track->m_lastRegion.m_type, track->m_lastRegion.m_confidence);
+                tracks.push_back(track->ConstructObject());
 			}
 		}
 		return tracks;
