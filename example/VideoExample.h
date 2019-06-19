@@ -181,7 +181,7 @@ protected:
         settings.m_distType = tracking::DistCenters;
         settings.m_kalmanType = tracking::KalmanLinear;
         settings.m_filterGoal = tracking::FilterRect;
-        settings.m_lostTrackType = tracking::TrackKCF;    // Use KCF tracker for collisions resolving
+        settings.m_lostTrackType = tracking::TrackSTAPLE;       // Use visual objects tracker for collisions resolving
         settings.m_matchType = tracking::MatchHungrian;
         settings.m_dt = 0.4f;                             // Delta time for Kalman filter
         settings.m_accelNoiseMag = 0.5f;                  // Accel noise magnitude for Kalman filter
@@ -285,7 +285,7 @@ protected:
         settings.m_distType = tracking::DistJaccard;
         settings.m_kalmanType = tracking::KalmanUnscented;
         settings.m_filterGoal = tracking::FilterRect;
-        settings.m_lostTrackType = tracking::TrackKCF;    // Use KCF tracker for collisions resolving
+        settings.m_lostTrackType = tracking::TrackSTAPLE;       // Use visual objects tracker for collisions resolving
         settings.m_matchType = tracking::MatchHungrian;
         settings.m_dt = 0.3f;                             // Delta time for Kalman filter
         settings.m_accelNoiseMag = 0.1f;                  // Accel noise magnitude for Kalman filter
@@ -372,7 +372,7 @@ protected:
         settings.m_distType = tracking::DistRects;
         settings.m_kalmanType = tracking::KalmanLinear;
         settings.m_filterGoal = tracking::FilterRect;
-        settings.m_lostTrackType = tracking::TrackKCF;    // Use KCF tracker for collisions resolving
+        settings.m_lostTrackType = tracking::TrackSTAPLE;       // Use visual objects tracker for collisions resolving
         settings.m_matchType = tracking::MatchHungrian;
         settings.m_dt = 0.3f;                             // Delta time for Kalman filter
         settings.m_accelNoiseMag = 0.1f;                  // Accel noise magnitude for Kalman filter
@@ -459,7 +459,7 @@ protected:
         settings.m_distType = tracking::DistRects;
         settings.m_kalmanType = tracking::KalmanLinear;
         settings.m_filterGoal = tracking::FilterRect;
-        settings.m_lostTrackType = tracking::TrackKCF;       // Use KCF tracker for collisions resolving
+        settings.m_lostTrackType = tracking::TrackSTAPLE;       // Use visual objects tracker for collisions resolving
         settings.m_matchType = tracking::MatchHungrian;
         settings.m_dt = 0.3f;                                // Delta time for Kalman filter
         settings.m_accelNoiseMag = 0.1f;                     // Accel noise magnitude for Kalman filter
@@ -583,7 +583,7 @@ protected:
         settings.m_distType = tracking::DistRects;
         settings.m_kalmanType = tracking::KalmanLinear;
         settings.m_filterGoal = tracking::FilterRect;
-        settings.m_lostTrackType = tracking::TrackKCF;       // Use KCF tracker for collisions resolving
+        settings.m_lostTrackType = tracking::TrackSTAPLE;       // Use visual objects tracker for collisions resolving
         settings.m_matchType = tracking::MatchHungrian;
         settings.m_dt = 0.3f;                                // Delta time for Kalman filter
         settings.m_accelNoiseMag = 0.2f;                     // Accel noise magnitude for Kalman filter
@@ -693,7 +693,7 @@ protected:
 		settings.m_distType = tracking::DistRects;
 		settings.m_kalmanType = tracking::KalmanLinear;
 		settings.m_filterGoal = tracking::FilterRect;
-		settings.m_lostTrackType = tracking::TrackKCF;       // Use KCF tracker for collisions resolving
+		settings.m_lostTrackType = tracking::TrackSTAPLE;       // Use visual objects tracker for collisions resolving
 		settings.m_matchType = tracking::MatchHungrian;
 		settings.m_dt = 0.3f;                                // Delta time for Kalman filter
 		settings.m_accelNoiseMag = 0.2f;                     // Accel noise magnitude for Kalman filter
