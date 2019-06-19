@@ -28,10 +28,8 @@ void LocalTracker::Update(
     points[0].reserve(8 * tracks.size());
     for (auto& track : tracks)
     {
-        for (const auto& pt : track->m_lastRegion.m_points)
-        {
-            points[0].push_back(pt);
-        }
+        auto pts = track->GetPoints();
+        points[0].insert(points[0].end(), std::begin(pts), std::end(pts));
     }
     if (points[0].empty())
     {
@@ -52,57 +50,29 @@ void LocalTracker::Update(
     size_t i = 0;
     for (auto& track : tracks)
     {
-        track->m_averagePoint = Point_t(0, 0);
-        track->m_boundidgRect = cv::Rect(0, 0, 0, 0);
+        Point_t averagePoint(0, 0);
+        cv::Rect br(0, 0, 0, 0);
 
-        for (auto it = track->m_lastRegion.m_points.begin(); it != track->m_lastRegion.m_points.end();)
+        const size_t count = track->GetPoints().size();
+        std::vector<cv::Point2f> pts;
+        pts.reserve(count);
+
+        for (size_t j = 0; j < count; ++j)
         {
             if (status[i])
             {
-                *it = points[1][i];
-                track->m_averagePoint += *it;
-
-                ++it;
+                pts.push_back(points[1][i]);
+                averagePoint += points[1][i];
             }
-            else
-            {
-                it = track->m_lastRegion.m_points.erase(it);
-            }
-
             ++i;
         }
 
-        if (!track->m_lastRegion.m_points.empty())
+        if (!pts.empty())
         {
-            track->m_averagePoint /= static_cast<track_t>(track->m_lastRegion.m_points.size());
-
-            cv::Rect br = cv::boundingRect(track->m_lastRegion.m_points);
-#if 0
-			br.x -= subPixWinSize.width;
-			br.width += 2 * subPixWinSize.width;
-			if (br.x < 0)
-			{
-				br.width += br.x;
-				br.x = 0;
-			}
-            if (br.x + br.width >= currFrame.cols)
-			{
-                br.x = currFrame.cols - br.width - 1;
-			}
-
-			br.y -= subPixWinSize.height;
-			br.height += 2 * subPixWinSize.height;
-			if (br.y < 0)
-			{
-				br.height += br.y;
-				br.y = 0;
-			}
-            if (br.y + br.height >= currFrame.rows)
-			{
-                br.y = currFrame.rows - br.height - 1;
-			}
-#endif
-            track->m_boundidgRect = br;
+            averagePoint /= static_cast<track_t>(pts.size());
+            br = cv::boundingRect(pts);
         }
+        track->BoundidgRect() = br;
+        track->AveragePoint() = averagePoint;
     }
 }
