@@ -2,14 +2,12 @@
 
 ///
 /// \brief FaceDetector::FaceDetector
-/// \param collectPoints
 /// \param gray
 ///
 FaceDetector::FaceDetector(
-	bool collectPoints,
     cv::UMat& gray
 	)
-    : BaseDetector(collectPoints, gray)
+    : BaseDetector(gray)
 {
 }
 
@@ -57,13 +55,5 @@ void FaceDetector::Detect(cv::UMat& gray)
     for (auto rect : faceRects)
     {
         m_regions.push_back(rect);
-    }
-
-    if (m_collectPoints)
-    {
-        for (auto& region : m_regions)
-        {
-            CollectPoints(region);
-        }
     }
 }

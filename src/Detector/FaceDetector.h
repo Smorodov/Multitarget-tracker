@@ -8,7 +8,7 @@
 class FaceDetector : public BaseDetector
 {
 public:
-    FaceDetector(bool collectPoints, cv::UMat& gray);
+    FaceDetector(cv::UMat& gray);
     ~FaceDetector(void);
 
     bool Init(const config_t& config);

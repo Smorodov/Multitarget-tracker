@@ -9,7 +9,7 @@
 class MotionDetector : public BaseDetector
 {
 public:
-    MotionDetector(BackgroundSubtract::BGFG_ALGS algType, bool collectPoints, cv::UMat& gray);
+    MotionDetector(BackgroundSubtract::BGFG_ALGS algType, cv::UMat& gray);
     ~MotionDetector(void);
 
     bool Init(const config_t& config);
@@ -26,4 +26,5 @@ private:
     cv::UMat m_fg;
 
     BackgroundSubtract::BGFG_ALGS m_algType;
+    bool m_useRotatedRect = false;
 };

@@ -240,7 +240,6 @@ protected:
 
     bool m_showLogs = false;
     float m_fps = 0;
-    bool m_useLocalTracking = false;
 
     virtual bool GrayProcessing() const;
 

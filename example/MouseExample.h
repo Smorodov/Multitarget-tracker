@@ -42,10 +42,7 @@ void MouseTracking(cv::CommandLineParser parser)
     cv::Point2f pointXY;
     cv::setMouseCallback("Video", mv_MouseCallback, (void*)&pointXY);
 
-    bool useLocalTracking = false;
-
     TrackerSettings settings;
-    settings.m_useLocalTracking = useLocalTracking;
     settings.m_distType = tracking::DistCenters;
     settings.m_kalmanType = tracking::KalmanLinear;
     settings.m_filterGoal = tracking::FilterCenter;

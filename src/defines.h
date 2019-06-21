@@ -30,22 +30,48 @@ public:
     }
 
     CRegion(const cv::Rect& rect)
-        : m_rect(rect)
+        : m_brect(rect)
     {
+        B2RRect();
+    }
 
+    CRegion(const cv::RotatedRect& rrect)
+        : m_rrect(rrect)
+    {
+        R2BRect();
     }
 
     CRegion(const cv::Rect& rect, const std::string& type, float confidence)
-        : m_rect(rect), m_type(type), m_confidence(confidence)
+        : m_brect(rect), m_type(type), m_confidence(confidence)
     {
-
+        B2RRect();
     }
 
-    cv::Rect m_rect;
-    std::vector<cv::Point2f> m_points;
+    cv::RotatedRect m_rrect;
+    cv::Rect m_brect;
 
     std::string m_type;
     float m_confidence = -1;
+
+private:
+    ///
+    /// \brief R2BRect
+    /// \return
+    ///
+    cv::Rect R2BRect()
+    {
+        m_brect = m_rrect.boundingRect();
+        return m_brect;
+    }
+    ///
+    /// \brief B2RRect
+    /// \return
+    ///
+    cv::RotatedRect B2RRect()
+    {
+        m_rrect = cv::RotatedRect(m_brect.tl(), cv::Point2f(static_cast<float>(m_brect.x + m_brect.width), static_cast<float>(m_brect.y)), m_brect.br());
+        return m_rrect;
+    }
 };
 
 typedef std::vector<CRegion> regions_t;

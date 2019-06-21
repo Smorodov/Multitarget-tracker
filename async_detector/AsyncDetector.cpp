@@ -62,7 +62,7 @@ void AsyncDetector::Process()
 
 	frame_ptr frames[2];
 	size_t frameInd = 0;
-    for (;;)
+    for (; !stopFlag;)
     {
         // Show frame after detecting and tracking
 		frames[frameInd] = m_framesQue.GetFirstProcessedFrame();
@@ -105,6 +105,7 @@ void AsyncDetector::Process()
 
     std::cout << "Stopping threads..." << std::endl;
     stopFlag = true;
+    m_framesQue.SetBreak(true);
 
     if (thCapture.joinable())
     {
@@ -141,17 +142,17 @@ void AsyncDetector::DrawTrack(cv::Mat frame,
     if (track.m_isStatic)
     {
 #if (CV_VERSION_MAJOR >= 4)
-        cv::rectangle(frame, ResizeRect(track.m_rect), cv::Scalar(255, 0, 255), 2, cv::LINE_AA);
+        cv::rectangle(frame, ResizeRect(track.m_rrect.boundingRect()), cv::Scalar(255, 0, 255), 2, cv::LINE_AA);
 #else
-        cv::rectangle(frame, ResizeRect(track.m_rect), cv::Scalar(255, 0, 255), 2, CV_AA);
+        cv::rectangle(frame, ResizeRect(track.m_rrect.boundingRect()), cv::Scalar(255, 0, 255), 2, CV_AA);
 #endif
     }
     else
     {
 #if (CV_VERSION_MAJOR >= 4)
-        cv::rectangle(frame, ResizeRect(track.m_rect), cv::Scalar(0, 255, 0), 1, cv::LINE_AA);
+        cv::rectangle(frame, ResizeRect(track.m_rrect.boundingRect()), cv::Scalar(0, 255, 0), 1, cv::LINE_AA);
 #else
-        cv::rectangle(frame, ResizeRect(track.m_rect), cv::Scalar(0, 255, 0), 1, CV_AA);
+        cv::rectangle(frame, ResizeRect(track.m_rrect.boundingRect()), cv::Scalar(0, 255, 0), 1, CV_AA);
 #endif
     }
 
@@ -218,12 +219,13 @@ void AsyncDetector::DrawData(frame_ptr frameInfo, int framesCounter, int currTim
 				int baseLine = 0;
 				cv::Size labelSize = cv::getTextSize(label, cv::FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
 
+                cv::Rect brect = track.m_rrect.boundingRect();
 #if (CV_VERSION_MAJOR >= 4)
-				cv::rectangle(frameInfo->m_frame, cv::Rect(cv::Point(track.m_rect.x, track.m_rect.y - labelSize.height), cv::Size(labelSize.width, labelSize.height + baseLine)), cv::Scalar(255, 255, 255), cv::FILLED);
+                cv::rectangle(frameInfo->m_frame, cv::Rect(cv::Point(brect.x, brect.y - labelSize.height), cv::Size(labelSize.width, labelSize.height + baseLine)), cv::Scalar(255, 255, 255), cv::FILLED);
 #else
-				cv::rectangle(frameInfo->m_frame, cv::Rect(cv::Point(track.m_rect.x, track.m_rect.y - labelSize.height), cv::Size(labelSize.width, labelSize.height + baseLine)), cv::Scalar(255, 255, 255), CV_FILLED);
+                cv::rectangle(frameInfo->m_frame, cv::Rect(cv::Point(brect.x, brect.y - labelSize.height), cv::Size(labelSize.width, labelSize.height + baseLine)), cv::Scalar(255, 255, 255), CV_FILLED);
 #endif
-				cv::putText(frameInfo->m_frame, label, cv::Point(track.m_rect.x, track.m_rect.y), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 0, 0));
+                cv::putText(frameInfo->m_frame, label, brect.tl(), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 0, 0));
             }
         }
     }
@@ -276,7 +278,6 @@ void AsyncDetector::CaptureThread(std::string fileName, int startFrame, float* f
     const int minStaticTime = 5;
 
     TrackerSettings trackerSettings;
-    trackerSettings.m_useLocalTracking = false;
     trackerSettings.m_distType = tracking::DistCenters;
     trackerSettings.m_kalmanType = tracking::KalmanLinear;
     trackerSettings.m_filterGoal = tracking::FilterRect;
@@ -333,14 +334,17 @@ void AsyncDetector::CaptureThread(std::string fileName, int startFrame, float* f
         std::this_thread::sleep_for(std::chrono::milliseconds(1000 / cvRound(*fps)));
     }
 
+    framesQue->SetBreak(true);
     if (thTracking.joinable())
     {
         thTracking.join();
     }
+    framesQue->SetBreak(true);
     if (thDetection.joinable())
     {
         thDetection.join();
     }
+    framesQue->SetBreak(true);
 }
 
 ///
@@ -349,21 +353,23 @@ void AsyncDetector::CaptureThread(std::string fileName, int startFrame, float* f
 ///
 void AsyncDetector::DetectThread(const config_t& config, cv::UMat firstGray, FramesQueue* framesQue, bool* stopFlag)
 {
-    std::unique_ptr<BaseDetector> detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Yolo_Darknet, config, false, firstGray));
+    std::unique_ptr<BaseDetector> detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Yolo_Darknet, config, firstGray));
     detector->SetMinObjectSize(cv::Size(firstGray.cols / 50, firstGray.cols / 50));
 
     for (; !(*stopFlag);)
     {
         frame_ptr frameInfo = framesQue->GetLastUndetectedFrame();
+        if (frameInfo)
+        {
+            detector->Detect(frameInfo->m_clFrame);
+            //std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
-        detector->Detect(frameInfo->m_clFrame);
-        //std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            const regions_t& regions = detector->GetDetects();
+            frameInfo->m_regions.assign(regions.begin(), regions.end());
 
-        const regions_t& regions = detector->GetDetects();
-        frameInfo->m_regions.assign(regions.begin(), regions.end());
-
-        frameInfo->m_inDetector = 2;
-        framesQue->Signal(frameInfo->m_dt);
+            frameInfo->m_inDetector = 2;
+            framesQue->Signal(frameInfo->m_dt);
+        }
     }
 }
 
@@ -378,17 +384,20 @@ void AsyncDetector::TrackingThread(const TrackerSettings& settings, FramesQueue*
     for (; !(*stopFlag);)
     {
         frame_ptr frameInfo = framesQue->GetFirstDetectedFrame();
-        if (tracker->GrayFrameToTrack())
+        if (frameInfo)
         {
-            tracker->Update(frameInfo->m_regions, frameInfo->m_gray, frameInfo->m_fps);
-        }
-        else
-        {
-            tracker->Update(frameInfo->m_regions, frameInfo->m_clFrame, frameInfo->m_fps);
-        }
+            if (tracker->GrayFrameToTrack())
+            {
+                tracker->Update(frameInfo->m_regions, frameInfo->m_gray, frameInfo->m_fps);
+            }
+            else
+            {
+                tracker->Update(frameInfo->m_regions, frameInfo->m_clFrame, frameInfo->m_fps);
+            }
 
-        frameInfo->m_tracks = tracker->GetTracks();
-        frameInfo->m_inTracker = 2;
-        framesQue->Signal(frameInfo->m_dt);
+            frameInfo->m_tracks = tracker->GetTracks();
+            frameInfo->m_inTracker = 2;
+            framesQue->Signal(frameInfo->m_dt);
+        }
     }
 }

@@ -3,16 +3,14 @@
 ///
 /// \brief MotionDetector::MotionDetector
 /// \param algType
-/// \param collectPoints
 /// \param gray
 ///
 MotionDetector::MotionDetector(
 	BackgroundSubtract::BGFG_ALGS algType,
-	bool collectPoints,
     cv::UMat& gray
 	)
     :
-      BaseDetector(collectPoints, gray),
+      BaseDetector(gray),
       m_algType(algType)
 {
 	m_fg = gray.clone();
@@ -33,6 +31,11 @@ MotionDetector::~MotionDetector(void)
 ///
 bool MotionDetector::Init(const config_t& config)
 {
+    auto conf = config.find("useRotatedRect");
+    if (conf != config.end())
+    {
+        m_useRotatedRect = std::stoi(conf->second) != 0;
+    }
     return m_backgroundSubst->Init(config);
 }
 
@@ -53,39 +56,20 @@ void MotionDetector::DetectContour()
 	{
 		for (size_t i = 0; i < contours.size(); i++)
 		{
-			cv::Rect r = cv::boundingRect(contours[i]);
+            cv::Rect br = cv::boundingRect(contours[i]);
 
-			if (r.width >= m_minObjectSize.width &&
-				r.height >= m_minObjectSize.height)
+            if (br.width >= m_minObjectSize.width &&
+                br.height >= m_minObjectSize.height)
 			{
-				CRegion region(r);
-				cv::Point2f center(r.x + 0.5f * r.width, r.y + 0.5f * r.height);
-
-				if (m_collectPoints)
-				{
-                    const int yStep = 5;
-                    const int xStep = 5;
-
-					for (int y = r.y; y < r.y + r.height; y += yStep)
-					{
-						cv::Point2f pt(0, static_cast<float>(y));
-						for (int x = r.x; x < r.x + r.width; x += xStep)
-						{
-							pt.x = static_cast<float>(x);
-							if (cv::pointPolygonTest(contours[i], pt, false) > 0)
-							{
-								region.m_points.push_back(pt);
-							}
-						}
-					}
-
-					if (region.m_points.empty())
-					{
-						region.m_points.push_back(center);
-					}
-				}
-
-				m_regions.push_back(region);
+                if (m_useRotatedRect)
+                {
+                    cv::RotatedRect rr = cv::minAreaRect(contours[i]);
+                    m_regions.push_back(CRegion(rr));
+                }
+                else
+                {
+                    m_regions.push_back(CRegion(br));
+                }
 			}
 		}
 	}

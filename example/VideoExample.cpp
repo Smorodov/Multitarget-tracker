@@ -44,7 +44,6 @@ VideoExample::VideoExample(const cv::CommandLineParser& parser)
     :
       m_showLogs(true),
       m_fps(25),
-      m_useLocalTracking(false),
       m_captureTimeOut(60000),
       m_trackingTimeOut(60000),
       m_isTrackerInitialized(false),
@@ -343,30 +342,17 @@ void VideoExample::DrawTrack(cv::Mat frame,
                              bool drawTrajectory
         )
 {
-    auto ResizeRect = [&](const cv::Rect& r) -> cv::Rect
-    {
-        return cv::Rect(resizeCoeff * r.x, resizeCoeff * r.y, resizeCoeff * r.width, resizeCoeff * r.height);
-    };
-    auto ResizePoint = [&](const cv::Point& pt) -> cv::Point
+    auto ResizePoint = [resizeCoeff](const cv::Point& pt) -> cv::Point
     {
         return cv::Point(resizeCoeff * pt.x, resizeCoeff * pt.y);
     };
 
-    if (track.m_isStatic)
+    cv::Scalar color = track.m_isStatic ? cv::Scalar(255, 0, 255) : cv::Scalar(0, 255, 0);
+    cv::Point2f rectPoints[4];
+    track.m_rrect.points(rectPoints);
+    for (int i = 0; i < 4; ++i)
     {
-#if (CV_VERSION_MAJOR >= 4)
-        cv::rectangle(frame, ResizeRect(track.m_rect), cv::Scalar(255, 0, 255), 2, cv::LINE_AA);
-#else
-		cv::rectangle(frame, ResizeRect(track.m_rect), cv::Scalar(255, 0, 255), 2, CV_AA);
-#endif
-    }
-    else
-    {
-#if (CV_VERSION_MAJOR >= 4)
-        cv::rectangle(frame, ResizeRect(track.m_rect), cv::Scalar(0, 255, 0), 1, cv::LINE_AA);
-#else
-		cv::rectangle(frame, ResizeRect(track.m_rect), cv::Scalar(0, 255, 0), 1, CV_AA);
-#endif
+        cv::line(frame, ResizePoint(rectPoints[i]), ResizePoint(rectPoints[(i+1) % 4]), color);
     }
 
     if (drawTrajectory)
@@ -390,19 +376,6 @@ void VideoExample::DrawTrack(cv::Mat frame,
 				cv::circle(frame, ResizePoint(pt2.m_prediction), 4, cl, 1, CV_AA);
 #endif
             }
-        }
-    }
-    if (m_useLocalTracking)
-    {
-        cv::Scalar cl = m_colors[track.m_ID % m_colors.size()];
-
-        for (auto pt : track.m_points)
-        {
-#if (CV_VERSION_MAJOR >= 4)
-            cv::circle(frame, pt, 1, cl, -1, cv::LINE_AA);
-#else
-			cv::circle(frame, pt, 1, cl, -1, CV_AA);
-#endif
         }
     }
 }

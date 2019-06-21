@@ -4,15 +4,13 @@
 
 ///
 /// \brief YoloDetector::YoloDetector
-/// \param collectPoints
 /// \param gray
 ///
 YoloOCVDetector::YoloOCVDetector(
-	bool collectPoints,
     cv::UMat& colorFrame
 	)
     :
-      BaseDetector(collectPoints, colorFrame),
+      BaseDetector(colorFrame),
       m_WHRatio(InWidth / (float)InHeight),
       m_inScaleFactor(0.003921f),
       m_meanVal(0),
@@ -182,18 +180,10 @@ void YoloOCVDetector::Detect(cv::UMat& colorFrame)
     }
 
     nms3<CRegion>(tmpRegions, m_regions, 0.4f,
-         [](const CRegion& reg) -> cv::Rect { return reg.m_rect; },
+         [](const CRegion& reg) -> cv::Rect { return reg.m_brect; },
     [](const CRegion& reg) -> float { return reg.m_confidence; },
     [](const CRegion& reg) -> std::string { return reg.m_type; },
     0, 0.f);
-
-    if (m_collectPoints)
-    {
-        for (auto& region : m_regions)
-        {
-            CollectPoints(region);
-        }
-    }
 }
 
 ///

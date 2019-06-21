@@ -16,7 +16,7 @@
 class YoloOCVDetector : public BaseDetector
 {
 public:
-    YoloOCVDetector(bool collectPoints, cv::UMat& colorFrame);
+    YoloOCVDetector(cv::UMat& colorFrame);
     ~YoloOCVDetector(void);
 
     bool Init(const config_t& config);
