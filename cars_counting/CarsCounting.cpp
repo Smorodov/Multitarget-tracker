@@ -8,7 +8,6 @@ CarsCounting::CarsCounting(const cv::CommandLineParser& parser)
     :
       m_showLogs(true),
       m_fps(25),
-      m_useLocalTracking(false),
       m_isTrackerInitialized(false),
       m_startFrame(0),
       m_endFrame(0),
@@ -188,17 +187,17 @@ void CarsCounting::DrawTrack(cv::Mat frame,
     if (track.m_isStatic)
     {
 #if (CV_VERSION_MAJOR >= 4)
-        cv::rectangle(frame, ResizeRect(track.m_rect), cv::Scalar(255, 0, 255), 2, cv::LINE_AA);
+        cv::rectangle(frame, ResizeRect(track.m_rrect.boundingRect()), cv::Scalar(255, 0, 255), 2, cv::LINE_AA);
 #else
-		cv::rectangle(frame, ResizeRect(track.m_rect), cv::Scalar(255, 0, 255), 2, CV_AA);
+        cv::rectangle(frame, ResizeRect(track.m_rrect.boundingRect()), cv::Scalar(255, 0, 255), 2, CV_AA);
 #endif
     }
     else
     {
 #if (CV_VERSION_MAJOR >= 4)
-        cv::rectangle(frame, ResizeRect(track.m_rect), cv::Scalar(0, 255, 0), 1, cv::LINE_AA);
+        cv::rectangle(frame, ResizeRect(track.m_rrect.boundingRect()), cv::Scalar(0, 255, 0), 1, cv::LINE_AA);
 #else
-		cv::rectangle(frame, ResizeRect(track.m_rect), cv::Scalar(0, 255, 0), 1, CV_AA);
+        cv::rectangle(frame, ResizeRect(track.m_rrect.boundingRect()), cv::Scalar(0, 255, 0), 1, CV_AA);
 #endif
     }
 
@@ -225,21 +224,6 @@ void CarsCounting::DrawTrack(cv::Mat frame,
             }
         }
     }
-
-    if (m_useLocalTracking)
-    {
-        cv::Scalar cl = m_colors[track.m_ID % m_colors.size()];
-
-        for (auto pt : track.m_points)
-        {
-#if (CV_VERSION_MAJOR >= 4)
-            cv::circle(frame, pt, 1, cl, -1, cv::LINE_AA);
-#else
-			cv::circle(frame, pt, 1, cl, -1, CV_AA);
-#endif
-        }
-    }
-
 }
 
 ///
@@ -257,7 +241,7 @@ bool CarsCounting::InitTracker(cv::UMat frame)
     config["history"] = std::to_string(cvRound(10 * minStaticTime * m_fps));
     config["varThreshold"] = "16";
     config["detectShadows"] = "1";
-    m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Motion_MOG2, config, m_useLocalTracking, frame));
+    m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Motion_MOG2, config, frame));
 #else
     config["minPixelStability"] = "15";
     config["maxPixelStability"] = "900";
@@ -268,7 +252,6 @@ bool CarsCounting::InitTracker(cv::UMat frame)
     m_detector->SetMinObjectSize(cv::Size(m_minObjWidth, m_minObjWidth));
 
     TrackerSettings settings;
-    settings.m_useLocalTracking = m_useLocalTracking;
     settings.m_distType = tracking::DistCenters;
     settings.m_kalmanType = tracking::KalmanLinear;
     settings.m_filterGoal = tracking::FilterRect;

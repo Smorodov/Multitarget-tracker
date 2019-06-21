@@ -15,7 +15,7 @@ public:
         C4
     };
 
-    PedestrianDetector(bool collectPoints, cv::UMat& gray);
+    PedestrianDetector(cv::UMat& gray);
     ~PedestrianDetector(void);
 
     bool Init(const config_t& config);

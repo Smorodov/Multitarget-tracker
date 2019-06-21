@@ -28,15 +28,15 @@ CTrack::CTrack(
       m_trackID(trackID),
       m_skippedFrames(0),
       m_lastRegion(region),
-      m_predictionPoint((region.m_rect.tl() + region.m_rect.br()) / 2),
-      m_predictionRect(region.m_rect),
+      m_predictionPoint(region.m_rrect.center),
+      m_predictionRect(region.m_rrect),
       m_filterObjectSize(filterObjectSize),
       m_outOfTheFrame(false),
       m_externalTrackerForLost(externalTrackerForLost)
 {
     if (filterObjectSize)
     {
-        m_kalman = std::make_unique<TKalmanFilter>(kalmanType, region.m_rect, deltaTime, accelNoiseMag);
+        m_kalman = std::make_unique<TKalmanFilter>(kalmanType, region.m_brect, deltaTime, accelNoiseMag);
     }
     else
     {
@@ -57,17 +57,18 @@ track_t CTrack::CalcDist(const Point_t& pt) const
 }
 
 ///
-/// \brief CalcDist
-/// \param r
+/// \brief CTrack::CalcDist
+/// \param reg
 /// \return
 ///
-track_t CTrack::CalcDist(const cv::Rect& r) const
+track_t CTrack::CalcDist(const CRegion& reg) const
 {
-    std::array<track_t, 4> diff;
-    diff[0] = m_predictionPoint.x - m_lastRegion.m_rect.width / 2.f - r.x;
-    diff[1] = m_predictionPoint.y - m_lastRegion.m_rect.height / 2.f - r.y;
-    diff[2] = static_cast<track_t>(m_lastRegion.m_rect.width - r.width);
-    diff[3] = static_cast<track_t>(m_lastRegion.m_rect.height - r.height);
+    std::array<track_t, 5> diff;
+    diff[0] = reg.m_rrect.center.x - m_lastRegion.m_rrect.center.x;
+    diff[1] = reg.m_rrect.center.y - m_lastRegion.m_rrect.center.y;
+    diff[2] = static_cast<track_t>(m_lastRegion.m_rrect.size.width - reg.m_rrect.size.width);
+    diff[3] = static_cast<track_t>(m_lastRegion.m_rrect.size.height - reg.m_rrect.size.height);
+    diff[4] = static_cast<track_t>(m_lastRegion.m_rrect.angle - reg.m_rrect.angle);
 
     track_t dist = 0;
     for (size_t i = 0; i < diff.size(); ++i)
@@ -78,16 +79,14 @@ track_t CTrack::CalcDist(const cv::Rect& r) const
 }
 
 ///
-/// \brief CalcOverlap
-/// \param r
+/// \brief CTrack::CalcDistJaccard
+/// \param reg
 /// \return
 ///
-track_t CTrack::CalcDistJaccard(const cv::Rect& r) const
+track_t CTrack::CalcDistJaccard(const CRegion& reg) const
 {
-    cv::Rect rr(GetLastRect());
-
-	track_t intArea = static_cast<track_t>((r & rr).area());
-	track_t unionArea = static_cast<track_t>(r.area() + rr.area() - intArea);
+    track_t intArea = static_cast<track_t>((reg.m_brect & m_lastRegion.m_brect).area());
+    track_t unionArea = static_cast<track_t>(reg.m_brect.area() + m_lastRegion.m_brect.area() - intArea);
 
     return 1 - intArea / unionArea;
 }
@@ -103,13 +102,13 @@ bool CTrack::CheckType(const std::string& type) const
 }
 
 ///
-/// \brief Update
-/// \param pt
+/// \brief CTrack::Update
 /// \param region
 /// \param dataCorrect
 /// \param max_trace_length
 /// \param prevFrame
 /// \param currFrame
+/// \param trajLen
 ///
 void CTrack::Update(
         const CRegion& region,
@@ -120,21 +119,21 @@ void CTrack::Update(
         int trajLen
         )
 {
-    cv::Point pt((region.m_rect.tl() + region.m_rect.br()) / 2);
-
     if (m_filterObjectSize) // Kalman filter for object coordinates and size
     {
         RectUpdate(region, dataCorrect, prevFrame, currFrame);
     }
     else // Kalman filter only for object center
     {
-        PointUpdate(pt, region.m_rect.size(), dataCorrect, currFrame.size());
+        PointUpdate(region.m_rrect.center, region.m_rrect.size, dataCorrect, currFrame.size());
     }
 
     if (dataCorrect)
     {
+        //std::cout << m_lastRegion.m_brect << " - " << region.m_brect << std::endl;
+
         m_lastRegion = region;
-        m_trace.push_back(m_predictionPoint, pt);
+        m_trace.push_back(m_predictionPoint, region.m_rrect.center);
 
         CheckStatic(trajLen, currFrame, region);
     }
@@ -204,7 +203,7 @@ bool CTrack::CheckStatic(int trajLen, cv::UMat currFrame, const CRegion& region)
             if (!m_isStatic)
             {
                 m_staticFrame = currFrame.clone();
-                m_staticRect = region.m_rect;
+                m_staticRect = region.m_brect;
 #if 0
                 cv::namedWindow("m_staticFrame", cv::WINDOW_NORMAL);
                 cv::Mat img = m_staticFrame.getMat(cv::ACCESS_READ).clone();
@@ -243,7 +242,7 @@ bool CTrack::CheckStatic(int trajLen, cv::UMat currFrame, const CRegion& region)
 /// \brief GetLastRect
 /// \return
 ///
-cv::Rect CTrack::GetLastRect() const
+cv::RotatedRect CTrack::GetLastRect() const
 {
     if (m_filterObjectSize)
     {
@@ -251,30 +250,8 @@ cv::Rect CTrack::GetLastRect() const
     }
     else
     {
-        return cv::Rect(
-                    static_cast<int>(m_predictionPoint.x - m_lastRegion.m_rect.width / 2),
-                    static_cast<int>(m_predictionPoint.y - m_lastRegion.m_rect.height / 2),
-                    m_predictionRect.width,
-                    m_predictionRect.height);
+        return cv::RotatedRect(cv::Point2f(m_predictionPoint.x, m_predictionPoint.y), m_predictionRect.size, m_predictionRect.angle);
     }
-}
-
-///
-/// \brief CTrack::AveragePoint
-/// \return
-///
-const Point_t& CTrack::AveragePoint() const
-{
-    return m_averagePoint;
-}
-
-///
-/// \brief CTrack::AveragePoint
-/// \return
-///
-Point_t& CTrack::AveragePoint()
-{
-    return m_averagePoint;
 }
 
 ///
@@ -284,42 +261,6 @@ Point_t& CTrack::AveragePoint()
 const CRegion& CTrack::LastRegion() const
 {
     return m_lastRegion;
-}
-
-///
-/// \brief CTrack::GetPoints
-/// \return
-///
-const std::vector<cv::Point2f>& CTrack::GetPoints() const
-{
-    return m_lastRegion.m_points;
-}
-
-///
-/// \brief CTrack::SetPoints
-/// \return
-///
-void CTrack::SetPoints(const std::vector<cv::Point2f>& points)
-{
-    m_lastRegion.m_points = points;
-}
-
-///
-/// \brief CTrack::BoundidgRect
-/// \return
-///
-const cv::Rect& CTrack::BoundidgRect() const
-{
-    return m_boundidgRect;
-}
-
-///
-/// \brief CTrack::BoundidgRect
-/// \return
-///
-cv::Rect& CTrack::BoundidgRect()
-{
-    return m_boundidgRect;
 }
 
 ///
@@ -367,16 +308,19 @@ void CTrack::RectUpdate(
 
     bool recalcPrediction = true;
 
-    auto Clamp = [](int& v, int& size, int hi) -> bool
+    auto Clamp = [](int& v, int& size, int hi) -> int
     {
+        int res = 0;
+
         if (size < 2)
         {
             size = 2;
         }
         if (v < 0)
         {
+            res = v;
             v = 0;
-            return true;
+            return res;
         }
         else if (v + size > hi - 1)
         {
@@ -386,9 +330,18 @@ void CTrack::RectUpdate(
                 size += v;
                 v = 0;
             }
-            return true;
+            res = v;
+            return res;
         }
-        return false;
+        return res;
+    };
+
+    auto UpdateRRect = [&](cv::Rect prevRect, cv::Rect newRect)
+    {
+        m_predictionRect.center.x += newRect.x - prevRect.x;
+        m_predictionRect.center.y += newRect.y - prevRect.y;
+        m_predictionRect.size.width *= newRect.width / static_cast<float>(prevRect.width);
+        m_predictionRect.size.height *= newRect.height / static_cast<float>(prevRect.height);
     };
 
     switch (m_externalTrackerForLost)
@@ -405,7 +358,9 @@ void CTrack::RectUpdate(
 #ifdef USE_OCV_KCF
         if (!dataCorrect)
         {
-            cv::Size roiSize(std::max(2 * m_predictionRect.width, currFrame.cols / 4), std::max(2 * m_predictionRect.height, currFrame.rows / 4));
+            cv::Rect brect = m_predictionRect.boundingRect();
+
+            cv::Size roiSize(std::max(2 * brect.width, currFrame.cols / 4), std::max(2 * brect.height, currFrame.rows / 4));
             if (roiSize.width > currFrame.cols)
             {
                 roiSize.width = currFrame.cols;
@@ -414,7 +369,7 @@ void CTrack::RectUpdate(
             {
                 roiSize.height = currFrame.rows;
             }
-            cv::Point roiTL(m_predictionRect.x + m_predictionRect.width / 2 - roiSize.width / 2, m_predictionRect.y + m_predictionRect.height / 2 - roiSize.height / 2);
+            cv::Point roiTL(brect.x + brect.width / 2 - roiSize.width / 2, brect.y + brect.height / 2 - roiSize.height / 2);
             cv::Rect roiRect(roiTL, roiSize);
             Clamp(roiRect.x, roiRect.width, currFrame.cols);
             Clamp(roiRect.y, roiRect.height, currFrame.rows);
@@ -424,12 +379,12 @@ void CTrack::RectUpdate(
             {
                 CreateExternalTracker();
 
-                cv::Rect2d lastRect(m_predictionRect.x - roiRect.x, m_predictionRect.y - roiRect.y, m_predictionRect.width, m_predictionRect.height);
+                cv::Rect2d lastRect(brect.x - roiRect.x, brect.y - roiRect.y, brect.width, brect.height);
                 if (m_staticFrame.empty())
                 {
                     int dx = 1;//m_predictionRect.width / 8;
                     int dy = 1;//m_predictionRect.height / 8;
-                    lastRect = cv::Rect2d(m_predictionRect.x - roiRect.x - dx, m_predictionRect.y - roiRect.y - dy, m_predictionRect.width + 2 * dx, m_predictionRect.height + 2 * dy);
+                    lastRect = cv::Rect2d(brect.x - roiRect.x - dx, brect.y - roiRect.y - dy, brect.width + 2 * dx, brect.height + 2 * dy);
                 }
                 else
                 {
@@ -476,12 +431,9 @@ void CTrack::RectUpdate(
 
                 cv::Rect prect(cvRound(newRect.x) + roiRect.x, cvRound(newRect.y) + roiRect.y, cvRound(newRect.width), cvRound(newRect.height));
 
-                m_predictionRect = m_kalman->Update(prect, true);
+                UpdateRRect(brect, m_kalman->Update(prect, true));
 
                 recalcPrediction = false;
-
-                m_boundidgRect = cv::Rect();
-                m_lastRegion.m_points.clear();
             }
         }
         else
@@ -501,11 +453,12 @@ void CTrack::RectUpdate(
         if (!dataCorrect)
         {
             bool inited = false;
+            cv::Rect brect = m_predictionRect.boundingRect();
             if (!m_VOTTracker)
             {
                 CreateExternalTracker();
 
-                cv::Rect2d lastRect(m_predictionRect.x, m_predictionRect.y, m_predictionRect.width, m_predictionRect.height);
+                cv::Rect2d lastRect(brect.x, brect.y, brect.width, brect.height);
                 if (!m_staticFrame.empty())
                 {
                     lastRect = cv::Rect2d(m_staticRect.x, m_staticRect.y, m_staticRect.width, m_staticRect.height);
@@ -549,11 +502,9 @@ void CTrack::RectUpdate(
                 {
                     m_VOTTracker->Train(mat, false);
 
-                    m_predictionRect = m_kalman->Update(newRect, true);
-                    recalcPrediction = false;
+                    UpdateRRect(brect, m_kalman->Update(newRect, true));
 
-                    m_boundidgRect = cv::Rect();
-                    m_lastRegion.m_points.clear();
+                    recalcPrediction = false;
                 }
             }
         }
@@ -569,40 +520,18 @@ void CTrack::RectUpdate(
 
     if (recalcPrediction)
     {
-        if (m_boundidgRect.area() > 0)
-        {
-            if (dataCorrect)
-            {
-                cv::Rect prect(
-                            (m_boundidgRect.x + region.m_rect.x) / 2,
-                            (m_boundidgRect.y + region.m_rect.y) / 2,
-                            (m_boundidgRect.width + region.m_rect.width) / 2,
-                            (m_boundidgRect.height + region.m_rect.height) / 2);
-
-                m_predictionRect = m_kalman->Update(prect, dataCorrect);
-            }
-            else
-            {
-                cv::Rect prect(
-                            (m_boundidgRect.x + m_predictionRect.x) / 2,
-                            (m_boundidgRect.y + m_predictionRect.y) / 2,
-                            (m_boundidgRect.width + m_predictionRect.width) / 2,
-                            (m_boundidgRect.height + m_predictionRect.height) / 2);
-
-                m_predictionRect = m_kalman->Update(prect, true);
-            }
-        }
-        else
-        {
-            m_predictionRect = m_kalman->Update(region.m_rect, dataCorrect);
-        }
+        UpdateRRect(m_predictionRect.boundingRect(), m_kalman->Update(region.m_brect, dataCorrect));
     }
 
-    m_outOfTheFrame = false;
-    m_outOfTheFrame |= Clamp(m_predictionRect.x, m_predictionRect.width, currFrame.cols);
-    m_outOfTheFrame |= Clamp(m_predictionRect.y, m_predictionRect.height, currFrame.rows);
+    cv::Rect brect = m_predictionRect.boundingRect();
+    int dx = Clamp(brect.x, brect.width, currFrame.cols);
+    int dy = Clamp(brect.y, brect.height, currFrame.rows);
+    m_predictionRect.center.x += dx;
+    m_predictionRect.center.y += dy;
 
-    m_predictionPoint = (m_predictionRect.tl() + m_predictionRect.br()) / 2;
+    m_outOfTheFrame = (dx != 0) || (dy != 0);
+
+    m_predictionPoint = m_predictionRect.center;
 }
 
 ///
@@ -784,27 +713,14 @@ void CTrack::PointUpdate(
 {
     m_kalman->GetPointPrediction();
 
-    if (m_averagePoint.x + m_averagePoint.y > 0)
-    {
-        if (dataCorrect)
-        {
-            m_predictionPoint = m_kalman->Update((pt + m_averagePoint) / 2, dataCorrect);
-        }
-        else
-        {
-            m_predictionPoint = m_kalman->Update((m_predictionPoint + m_averagePoint) / 2, true);
-        }
-    }
-    else
-    {
-        m_predictionPoint = m_kalman->Update(pt, dataCorrect);
-    }
+    m_predictionPoint = m_kalman->Update(pt, dataCorrect);
+
     if (dataCorrect)
     {
         const int a1 = 1;
         const int a2 = 9;
-        m_predictionRect.width = (a1 * newObjSize.width + a2 * m_predictionRect.width) / (a1 + a2);
-        m_predictionRect.height = (a1 * newObjSize.height + a2 * m_predictionRect.height) / (a1 + a2);
+        m_predictionRect.size.width = (a1 * newObjSize.width + a2 * m_predictionRect.size.width) / (a1 + a2);
+        m_predictionRect.size.height = (a1 * newObjSize.height + a2 * m_predictionRect.size.height) / (a1 + a2);
     }
 
     auto Clamp = [](track_t& v, int hi) -> bool

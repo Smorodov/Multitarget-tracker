@@ -166,7 +166,7 @@ private:
 ///
 struct TrackingObject
 {
-	cv::Rect m_rect;
+    cv::RotatedRect m_rrect;
 	Trace m_trace;
 	size_t m_ID = 0;
 	bool m_isStatic = false;
@@ -177,11 +177,11 @@ struct TrackingObject
 
 
 	///
-	TrackingObject(const cv::Rect& rect, size_t ID, const Trace& trace,
+    TrackingObject(const cv::RotatedRect& rrect, size_t ID, const Trace& trace,
 		bool isStatic, bool outOfTheFrame,
 		const std::string& type, float confidence)
 		:
-		m_rect(rect), m_ID(ID), m_isStatic(isStatic), m_outOfTheFrame(outOfTheFrame), m_type(type), m_confidence(confidence)
+        m_rrect(rrect), m_ID(ID), m_isStatic(isStatic), m_outOfTheFrame(outOfTheFrame), m_type(type), m_confidence(confidence)
 	{
 		for (size_t i = 0; i < trace.size(); ++i)
 		{
@@ -204,7 +204,7 @@ struct TrackingObject
 		res &= m_trace.GetRawCount(m_trace.size() - 1) / static_cast<float>(m_trace.size()) > minRawRatio;
 		if (sizeRatio.width + sizeRatio.height > 0)
 		{
-			float sr = m_rect.width / static_cast<float>(m_rect.height);
+            float sr = m_rrect.size.width / m_rrect.size.height;
 			if (sizeRatio.width > 0)
 			{
 				res &= (sr > sizeRatio.width);
@@ -246,18 +246,18 @@ public:
     track_t CalcDist(const Point_t& pt) const;
     ///
     /// \brief CalcDist
-    /// Euclidean distance in pixels between object rectangles on two N and N+1 frames
+    /// Euclidean distance in pixels between object contours on two N and N+1 frames
     /// \param r
     /// \return
     ///
-    track_t CalcDist(const cv::Rect& r) const;
+    track_t CalcDist(const CRegion& reg) const;
     ///
     /// \brief CalcDistJaccard
-    /// Jaccard distance from 0 to 1 between object rectangles on two N and N+1 frames
+    /// Jaccard distance from 0 to 1 between object bounding rectangles on two N and N+1 frames
     /// \param r
     /// \return
     ///
-    track_t CalcDistJaccard(const cv::Rect& r) const;
+    track_t CalcDistJaccard(const CRegion& reg) const;
 
     bool CheckType(const std::string& type) const;
 
@@ -267,15 +267,11 @@ public:
     bool IsStaticTimeout(int framesTime) const;
 	bool IsOutOfTheFrame() const;
 
-    cv::Rect GetLastRect() const;
+    cv::RotatedRect GetLastRect() const;
 
     const Point_t& AveragePoint() const;
     Point_t& AveragePoint();
     const CRegion& LastRegion() const;
-    const std::vector<cv::Point2f>& GetPoints() const;
-    void SetPoints(const std::vector<cv::Point2f>& points);
-    const cv::Rect& BoundidgRect() const;
-    cv::Rect& BoundidgRect();
     size_t SkippedFrames() const;
     size_t& SkippedFrames();
 
@@ -286,11 +282,9 @@ private:
     size_t m_trackID = 0;
     size_t m_skippedFrames = 0;
     CRegion m_lastRegion;
-    Point_t m_averagePoint;   ///< Average point after LocalTracking
-    cv::Rect m_boundidgRect;  ///< Bounding rect after LocalTracking
 
     Point_t m_predictionPoint;
-    cv::Rect m_predictionRect;
+    cv::RotatedRect m_predictionRect;
     std::unique_ptr<TKalmanFilter> m_kalman;
     bool m_filterObjectSize = false;
     bool m_outOfTheFrame = false;

@@ -36,14 +36,6 @@ void CTracker::Update(
         float fps
         )
 {
-    if (m_prevFrame.size() == grayFrame.size())
-    {
-        if (m_settings.m_useLocalTracking)
-        {
-            m_localTracker.Update(m_tracks, m_prevFrame, grayFrame);
-        }
-    }
-
     UpdateTrackingState(regions, grayFrame, fps);
 
     grayFrame.copyTo(m_prevFrame);
@@ -170,7 +162,7 @@ void CTracker::CreateDistaceMatrix(const regions_t& regions, distMatrix_t& costM
         {
             for (size_t j = 0; j < regions.size(); j++)
             {
-                auto dist = m_tracks[i]->CheckType(regions[j].m_type) ? m_tracks[i]->CalcDist((regions[j].m_rect.tl() + regions[j].m_rect.br()) / 2) : maxPossibleCost;
+                auto dist = m_tracks[i]->CheckType(regions[j].m_type) ? m_tracks[i]->CalcDist(regions[j].m_rrect.center) : maxPossibleCost;
                 costMatrix[i + j * N] = dist;
                 if (dist > maxCost)
                 {
@@ -185,7 +177,7 @@ void CTracker::CreateDistaceMatrix(const regions_t& regions, distMatrix_t& costM
         {
             for (size_t j = 0; j < regions.size(); j++)
             {
-                auto dist = m_tracks[i]->CheckType(regions[j].m_type) ? m_tracks[i]->CalcDist(regions[j].m_rect) : maxPossibleCost;
+                auto dist = m_tracks[i]->CheckType(regions[j].m_type) ? m_tracks[i]->CalcDist(regions[j]) : maxPossibleCost;
                 costMatrix[i + j * N] = dist;
                 if (dist > maxCost)
                 {
@@ -200,7 +192,7 @@ void CTracker::CreateDistaceMatrix(const regions_t& regions, distMatrix_t& costM
         {
             for (size_t j = 0; j < regions.size(); j++)
             {
-                auto dist = m_tracks[i]->CheckType(regions[j].m_type) ? m_tracks[i]->CalcDistJaccard(regions[j].m_rect) : 1;
+                auto dist = m_tracks[i]->CheckType(regions[j].m_type) ? m_tracks[i]->CalcDistJaccard(regions[j]) : 1;
                 costMatrix[i + j * N] = dist;
                 if (dist > maxCost)
                 {

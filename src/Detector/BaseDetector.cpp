@@ -11,14 +11,12 @@
 ///
 /// \brief CreateDetector
 /// \param detectorType
-/// \param collectPoints
 /// \param gray
 /// \return
 ///
 BaseDetector* CreateDetector(
         tracking::Detectors detectorType,
         const config_t& config,
-        bool collectPoints,
         cv::UMat& gray
         )
 {
@@ -27,53 +25,53 @@ BaseDetector* CreateDetector(
     switch (detectorType)
     {
     case tracking::Motion_VIBE:
-        detector = new MotionDetector(BackgroundSubtract::BGFG_ALGS::ALG_VIBE, collectPoints, gray);
+        detector = new MotionDetector(BackgroundSubtract::BGFG_ALGS::ALG_VIBE, gray);
         break;
 
     case tracking::Motion_MOG:
-        detector = new MotionDetector(BackgroundSubtract::BGFG_ALGS::ALG_MOG, collectPoints, gray);
+        detector = new MotionDetector(BackgroundSubtract::BGFG_ALGS::ALG_MOG, gray);
         break;
 
     case tracking::Motion_GMG:
-        detector = new MotionDetector(BackgroundSubtract::BGFG_ALGS::ALG_GMG, collectPoints, gray);
+        detector = new MotionDetector(BackgroundSubtract::BGFG_ALGS::ALG_GMG, gray);
         break;
 
     case tracking::Motion_CNT:
-        detector = new MotionDetector(BackgroundSubtract::BGFG_ALGS::ALG_CNT, collectPoints, gray);
+        detector = new MotionDetector(BackgroundSubtract::BGFG_ALGS::ALG_CNT, gray);
         break;
 
     case tracking::Motion_SuBSENSE:
-        detector = new MotionDetector(BackgroundSubtract::BGFG_ALGS::ALG_SuBSENSE, collectPoints, gray);
+        detector = new MotionDetector(BackgroundSubtract::BGFG_ALGS::ALG_SuBSENSE, gray);
         break;
 
     case tracking::Motion_LOBSTER:
-        detector = new MotionDetector(BackgroundSubtract::BGFG_ALGS::ALG_LOBSTER, collectPoints, gray);
+        detector = new MotionDetector(BackgroundSubtract::BGFG_ALGS::ALG_LOBSTER, gray);
         break;
 
     case tracking::Motion_MOG2:
-        detector = new MotionDetector(BackgroundSubtract::BGFG_ALGS::ALG_MOG2, collectPoints, gray);
+        detector = new MotionDetector(BackgroundSubtract::BGFG_ALGS::ALG_MOG2, gray);
         break;
 
     case tracking::Face_HAAR:
-        detector = new FaceDetector(collectPoints, gray);
+        detector = new FaceDetector(gray);
         break;
 
     case tracking::Pedestrian_HOG:
     case tracking::Pedestrian_C4:
-        detector = new PedestrianDetector(collectPoints, gray);
+        detector = new PedestrianDetector(gray);
         break;
 
     case tracking::SSD_MobileNet:
-        detector = new SSDMobileNetDetector(collectPoints, gray);
+        detector = new SSDMobileNetDetector(gray);
         break;
 
     case tracking::Yolo_OCV:
-        detector = new YoloOCVDetector(collectPoints, gray);
+        detector = new YoloOCVDetector(gray);
         break;
 
 	case tracking::Yolo_Darknet:
 #ifdef BUILD_YOLO_LIB
-		detector = new YoloDarknetDetector(collectPoints, gray);
+        detector = new YoloDarknetDetector(gray);
 #else
 		std::cerr << "Darknet inference engine was not configured in CMake" << std::endl;
 #endif

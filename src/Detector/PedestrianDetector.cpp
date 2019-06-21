@@ -3,15 +3,13 @@
 
 ///
 /// \brief PedestrianDetector::PedestrianDetector
-/// \param collectPoints
 /// \param gray
 ///
 PedestrianDetector::PedestrianDetector(
-	bool collectPoints,
     cv::UMat& gray
 	)
     :
-      BaseDetector(collectPoints, gray),
+      BaseDetector(gray),
       m_scannerC4(HUMAN_height, HUMAN_width, HUMAN_xdiv, HUMAN_ydiv, 256, 0.8)
 {
 }
@@ -103,13 +101,5 @@ void PedestrianDetector::Detect(cv::UMat& gray)
         rect.height = cvRound(rect.height * 0.8f);
 
         m_regions.push_back(rect);
-    }
-
-    if (m_collectPoints)
-    {
-        for (auto& region : m_regions)
-        {
-            CollectPoints(region);
-        }
     }
 }

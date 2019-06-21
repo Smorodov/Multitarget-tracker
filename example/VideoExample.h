@@ -88,7 +88,6 @@ protected:
 
     bool m_showLogs;
     float m_fps;
-    bool m_useLocalTracking;
 
     int m_captureTimeOut;
     int m_trackingTimeOut;
@@ -155,8 +154,6 @@ protected:
     ///
     bool InitTracker(cv::UMat frame)
     {
-        m_useLocalTracking = false;
-
         m_minObjWidth = frame.cols / 50;
 
         const int minStaticTime = 5;
@@ -166,22 +163,23 @@ protected:
         config["history"] = std::to_string(cvRound(10 * minStaticTime * m_fps));
         config["varThreshold"] = "16";
         config["detectShadows"] = "1";
-        m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Motion_MOG2, config, m_useLocalTracking, frame));
+        config["useRotatedRect"] = "0";
+        m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Motion_MOG2, config, frame));
 #else
         config["minPixelStability"] = "15";
         config["maxPixelStability"] = "900";
         config["useHistory"] = "1";
         config["isParallel"] = "1";
-        m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Motion_CNT, config, m_useLocalTracking, frame));
+        config["useRotatedRect"] = "0";
+        m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Motion_CNT, config, frame));
 #endif
         m_detector->SetMinObjectSize(cv::Size(m_minObjWidth, m_minObjWidth));
 
         TrackerSettings settings;
-        settings.m_useLocalTracking = m_useLocalTracking;
         settings.m_distType = tracking::DistCenters;
         settings.m_kalmanType = tracking::KalmanLinear;
         settings.m_filterGoal = tracking::FilterRect;
-        settings.m_lostTrackType = tracking::TrackSTAPLE;       // Use visual objects tracker for collisions resolving
+        settings.m_lostTrackType = tracking::TrackCSRT;       // Use visual objects tracker for collisions resolving
         settings.m_matchType = tracking::MatchHungrian;
         settings.m_dt = 0.4f;                             // Delta time for Kalman filter
         settings.m_accelNoiseMag = 0.5f;                  // Accel noise magnitude for Kalman filter
@@ -273,7 +271,7 @@ protected:
 
         config_t config;
         config["cascadeFileName"] = pathToModel + "haarcascade_frontalface_alt2.xml";
-        m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Face_HAAR, config, m_useLocalTracking, frame));
+        m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Face_HAAR, config, frame));
         if (!m_detector.get())
         {
             return false;
@@ -281,11 +279,10 @@ protected:
         m_detector->SetMinObjectSize(cv::Size(frame.cols / 20, frame.rows / 20));
 
         TrackerSettings settings;
-        settings.m_useLocalTracking = m_useLocalTracking;
         settings.m_distType = tracking::DistJaccard;
         settings.m_kalmanType = tracking::KalmanUnscented;
         settings.m_filterGoal = tracking::FilterRect;
-        settings.m_lostTrackType = tracking::TrackSTAPLE;       // Use visual objects tracker for collisions resolving
+        settings.m_lostTrackType = tracking::TrackCSRT;       // Use visual objects tracker for collisions resolving
         settings.m_matchType = tracking::MatchHungrian;
         settings.m_dt = 0.3f;                             // Delta time for Kalman filter
         settings.m_accelNoiseMag = 0.1f;                  // Accel noise magnitude for Kalman filter
@@ -359,7 +356,7 @@ protected:
         config["detectorType"] = (detectorType == tracking::Pedestrian_HOG) ? "HOG" : "C4";
         config["cascadeFileName1"] = pathToModel + "combined.txt.model";
         config["cascadeFileName2"] = pathToModel + "combined.txt.model_";
-        m_detector = std::unique_ptr<BaseDetector>(CreateDetector(detectorType, config, m_useLocalTracking, frame));
+        m_detector = std::unique_ptr<BaseDetector>(CreateDetector(detectorType, config, frame));
         if (!m_detector.get())
         {
             return false;
@@ -368,11 +365,10 @@ protected:
 
 
         TrackerSettings settings;
-        settings.m_useLocalTracking = m_useLocalTracking;
         settings.m_distType = tracking::DistRects;
         settings.m_kalmanType = tracking::KalmanLinear;
         settings.m_filterGoal = tracking::FilterRect;
-        settings.m_lostTrackType = tracking::TrackSTAPLE;       // Use visual objects tracker for collisions resolving
+        settings.m_lostTrackType = tracking::TrackCSRT;       // Use visual objects tracker for collisions resolving
         settings.m_matchType = tracking::MatchHungrian;
         settings.m_dt = 0.3f;                             // Delta time for Kalman filter
         settings.m_accelNoiseMag = 0.1f;                  // Accel noise magnitude for Kalman filter
@@ -447,7 +443,7 @@ protected:
         config["dnnTarget"] = "DNN_TARGET_CPU";
         config["dnnBackend"] = "DNN_BACKEND_INFERENCE_ENGINE";
 
-        m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::SSD_MobileNet, config, m_useLocalTracking, frame));
+        m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::SSD_MobileNet, config, frame));
         if (!m_detector.get())
         {
             return false;
@@ -455,11 +451,10 @@ protected:
         m_detector->SetMinObjectSize(cv::Size(frame.cols / 20, frame.rows / 20));
 
         TrackerSettings settings;
-        settings.m_useLocalTracking = m_useLocalTracking;
         settings.m_distType = tracking::DistRects;
         settings.m_kalmanType = tracking::KalmanLinear;
         settings.m_filterGoal = tracking::FilterRect;
-        settings.m_lostTrackType = tracking::TrackSTAPLE;       // Use visual objects tracker for collisions resolving
+        settings.m_lostTrackType = tracking::TrackCSRT;       // Use visual objects tracker for collisions resolving
         settings.m_matchType = tracking::MatchHungrian;
         settings.m_dt = 0.3f;                                // Delta time for Kalman filter
         settings.m_accelNoiseMag = 0.1f;                     // Accel noise magnitude for Kalman filter
@@ -498,12 +493,13 @@ protected:
                 int baseLine = 0;
                 cv::Size labelSize = cv::getTextSize(label, cv::FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
 
+                cv::Rect brect = track.m_rrect.boundingRect();
 #if (CV_VERSION_MAJOR >= 4)
-                cv::rectangle(frame, cv::Rect(cv::Point(track.m_rect.x, track.m_rect.y - labelSize.height), cv::Size(labelSize.width, labelSize.height + baseLine)), cv::Scalar(255, 255, 255), cv::FILLED);
+                cv::rectangle(frame, cv::Rect(cv::Point(brect.x, brect.y - labelSize.height), cv::Size(labelSize.width, labelSize.height + baseLine)), cv::Scalar(255, 255, 255), cv::FILLED);
 #else
-				cv::rectangle(frame, cv::Rect(cv::Point(track.m_rect.x, track.m_rect.y - labelSize.height), cv::Size(labelSize.width, labelSize.height + baseLine)), cv::Scalar(255, 255, 255), CV_FILLED);
+                cv::rectangle(frame, cv::Rect(cv::Point(brect.x, brect.y - labelSize.height), cv::Size(labelSize.width, labelSize.height + baseLine)), cv::Scalar(255, 255, 255), CV_FILLED);
 #endif
-                cv::putText(frame, label, cv::Point(track.m_rect.x, track.m_rect.y), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 0, 0));
+                cv::putText(frame, label, brect.tl(), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 0, 0));
             }
         }
 
@@ -541,8 +537,6 @@ protected:
     ///
     bool InitTracker(cv::UMat frame)
     {
-        m_useLocalTracking = false;
-
         config_t config;
         const int yoloTest = 0;
 
@@ -571,7 +565,7 @@ protected:
         config["dnnTarget"] = "DNN_TARGET_CPU";
         config["dnnBackend"] = "DNN_BACKEND_INFERENCE_ENGINE";
 
-        m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Yolo_OCV, config, m_useLocalTracking, frame));
+        m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Yolo_OCV, config, frame));
         if (!m_detector.get())
         {
             return false;
@@ -579,11 +573,10 @@ protected:
         m_detector->SetMinObjectSize(cv::Size(frame.cols / 40, frame.rows / 40));
 
         TrackerSettings settings;
-        settings.m_useLocalTracking = m_useLocalTracking;
         settings.m_distType = tracking::DistRects;
         settings.m_kalmanType = tracking::KalmanLinear;
         settings.m_filterGoal = tracking::FilterRect;
-        settings.m_lostTrackType = tracking::TrackSTAPLE;       // Use visual objects tracker for collisions resolving
+        settings.m_lostTrackType = tracking::TrackCSRT;       // Use visual objects tracker for collisions resolving
         settings.m_matchType = tracking::MatchHungrian;
         settings.m_dt = 0.3f;                                // Delta time for Kalman filter
         settings.m_accelNoiseMag = 0.2f;                     // Accel noise magnitude for Kalman filter
@@ -621,12 +614,14 @@ protected:
                 std::string label = track.m_type + ": " + std::to_string(track.m_confidence);
                 int baseLine = 0;
                 cv::Size labelSize = cv::getTextSize(label, cv::FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
+
+                cv::Rect brect = track.m_rrect.boundingRect();
 #if (CV_VERSION_MAJOR >= 4)
-                cv::rectangle(frame, cv::Rect(cv::Point(track.m_rect.x, track.m_rect.y - labelSize.height), cv::Size(labelSize.width, labelSize.height + baseLine)), cv::Scalar(255, 255, 255), cv::FILLED);
+                cv::rectangle(frame, cv::Rect(cv::Point(brect.x, brect.y - labelSize.height), cv::Size(labelSize.width, labelSize.height + baseLine)), cv::Scalar(255, 255, 255), cv::FILLED);
 #else
-				cv::rectangle(frame, cv::Rect(cv::Point(track.m_rect.x, track.m_rect.y - labelSize.height), cv::Size(labelSize.width, labelSize.height + baseLine)), cv::Scalar(255, 255, 255), CV_FILLED);
+                cv::rectangle(frame, cv::Rect(cv::Point(brect.x, brect.y - labelSize.height), cv::Size(labelSize.width, labelSize.height + baseLine)), cv::Scalar(255, 255, 255), CV_FILLED);
 #endif
-                cv::putText(frame, label, cv::Point(track.m_rect.x, track.m_rect.y), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 0, 0));
+                cv::putText(frame, label, brect.tl(), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 0, 0));
             }
         }
 
@@ -665,8 +660,6 @@ protected:
 	///
 	bool InitTracker(cv::UMat frame)
 	{
-		m_useLocalTracking = false;
-
 		config_t config;
 
 #ifdef _WIN32
@@ -681,7 +674,7 @@ protected:
 		config["confidenceThreshold"] = "0.1";
 		config["maxCropRatio"] = "2.0";
 
-		m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Yolo_Darknet, config, m_useLocalTracking, frame));
+        m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Yolo_Darknet, config, frame));
 		if (!m_detector.get())
 		{
 			return false;
@@ -689,11 +682,10 @@ protected:
 		m_detector->SetMinObjectSize(cv::Size(frame.cols / 40, frame.rows / 40));
 
 		TrackerSettings settings;
-		settings.m_useLocalTracking = m_useLocalTracking;
 		settings.m_distType = tracking::DistRects;
 		settings.m_kalmanType = tracking::KalmanLinear;
 		settings.m_filterGoal = tracking::FilterRect;
-		settings.m_lostTrackType = tracking::TrackSTAPLE;       // Use visual objects tracker for collisions resolving
+        settings.m_lostTrackType = tracking::TrackCSRT;       // Use visual objects tracker for collisions resolving
 		settings.m_matchType = tracking::MatchHungrian;
 		settings.m_dt = 0.3f;                                // Delta time for Kalman filter
 		settings.m_accelNoiseMag = 0.2f;                     // Accel noise magnitude for Kalman filter
@@ -731,13 +723,14 @@ protected:
 				std::string label = track.m_type + ": " + std::to_string(track.m_confidence);
 				int baseLine = 0;
 				cv::Size labelSize = cv::getTextSize(label, cv::FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
-				auto rect(track.m_rect);
+
+                cv::Rect brect = track.m_rrect.boundingRect();
 #if (CV_VERSION_MAJOR >= 4)
-				cv::rectangle(frame, cv::Rect(cv::Point(rect.x, rect.y - labelSize.height), cv::Size(labelSize.width, labelSize.height + baseLine)), cv::Scalar(255, 255, 255), cv::FILLED);
+                cv::rectangle(frame, cv::Rect(cv::Point(brect.x, brect.y - labelSize.height), cv::Size(labelSize.width, labelSize.height + baseLine)), cv::Scalar(255, 255, 255), cv::FILLED);
 #else
-				cv::rectangle(frame, cv::Rect(cv::Point(rect.x, rect.y - labelSize.height), cv::Size(labelSize.width, labelSize.height + baseLine)), cv::Scalar(255, 255, 255), CV_FILLED);
+                cv::rectangle(frame, cv::Rect(cv::Point(brect.x, brect.y - labelSize.height), cv::Size(labelSize.width, labelSize.height + baseLine)), cv::Scalar(255, 255, 255), CV_FILLED);
 #endif
-				cv::putText(frame, label, cv::Point(rect.x, rect.y), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 0, 0));
+                cv::putText(frame, label, brect.tl(), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 0, 0));
 			}
 		}
 

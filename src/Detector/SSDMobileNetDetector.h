@@ -15,7 +15,7 @@
 class SSDMobileNetDetector : public BaseDetector
 {
 public:
-    SSDMobileNetDetector(bool collectPoints, cv::UMat& colorFrame);
+    SSDMobileNetDetector(cv::UMat& colorFrame);
     ~SSDMobileNetDetector(void);
 
     bool Init(const config_t& config);

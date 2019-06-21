@@ -2,14 +2,12 @@
 
 ///
 /// \brief YoloDarknetDetector::YoloDarknetDetector
-/// \param collectPoints
 /// \param gray
 ///
 YoloDarknetDetector::YoloDarknetDetector(
-	bool collectPoints,
     cv::UMat& colorFrame
 	)
-    : BaseDetector(collectPoints, colorFrame)
+    : BaseDetector(colorFrame)
 {
     m_classNames = { "background",
                      "aeroplane", "bicycle", "bird", "boat",

@@ -44,13 +44,11 @@ endif()
              Tracker/Ctracker.cpp
              Tracker/track.cpp
              Tracker/HungarianAlg/HungarianAlg.cpp
-             Tracker/LocalTracker.cpp
              Tracker/Kalman.cpp
 
              Tracker/Ctracker.h
              Tracker/track.h
              Tracker/HungarianAlg/HungarianAlg.h
-             Tracker/LocalTracker.h
              Tracker/Kalman.h
 
              Tracker/VOTTracker.hpp

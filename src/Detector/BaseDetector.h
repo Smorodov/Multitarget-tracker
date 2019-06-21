@@ -11,11 +11,9 @@ class BaseDetector
 public:
     ///
     /// \brief BaseDetector
-    /// \param collectPoints
     /// \param frame
     ///
-    BaseDetector(bool collectPoints, cv::UMat& frame)
-        : m_collectPoints(collectPoints)
+    BaseDetector(cv::UMat& frame)
     {
         m_minObjectSize.width = std::max(5, frame.cols / 100);
         m_minObjectSize.height = m_minObjectSize.width;
@@ -58,32 +56,6 @@ public:
     }
 
     ///
-    /// \brief CollectPoints
-    /// \param region
-    ///
-    virtual void CollectPoints(CRegion& region)
-    {
-        const int yStep = 5;
-        const int xStep = 5;
-
-        for (int y = region.m_rect.y, yStop = region.m_rect.y + region.m_rect.height; y < yStop; y += yStep)
-        {
-            for (int x = region.m_rect.x, xStop = region.m_rect.x + region.m_rect.width; x < xStop; x += xStep)
-            {
-                if (region.m_rect.contains(cv::Point(x, y)))
-                {
-                    region.m_points.emplace_back(static_cast<float>(x), static_cast<float>(y));
-                }
-            }
-        }
-
-        if (region.m_points.empty())
-        {
-            region.m_points.emplace_back(region.m_rect.x + 0.5f * region.m_rect.width, region.m_rect.y + 0.5f * region.m_rect.height);
-        }
-    }
-
-    ///
     /// \brief CalcMotionMap
     /// \param frame
     ///
@@ -98,13 +70,9 @@ public:
         for (const auto& region : m_regions)
         {
 #if (CV_VERSION_MAJOR < 4)
-            cv::ellipse(foreground,
-                        cv::RotatedRect((region.m_rect.tl() + region.m_rect.br()) / 2, region.m_rect.size(), 0),
-                                        cv::Scalar(255, 255, 255), CV_FILLED);
+            cv::ellipse(foreground, region.m_rrect, cv::Scalar(255, 255, 255), CV_FILLED);
 #else
-            cv::ellipse(foreground,
-                        cv::RotatedRect((region.m_rect.tl() + region.m_rect.br()) / 2, region.m_rect.size(), 0),
-                                        cv::Scalar(255, 255, 255), cv::FILLED);
+            cv::ellipse(foreground, region.m_rrect, cv::Scalar(255, 255, 255), cv::FILLED);
 #endif
         }
 
@@ -137,8 +105,6 @@ protected:
 
     cv::Size m_minObjectSize;
 
-    bool m_collectPoints;
-
     cv::Mat m_motionMap;
 };
 
@@ -146,8 +112,7 @@ protected:
 ///
 /// \brief CreateDetector
 /// \param detectorType
-/// \param collectPoints
 /// \param gray
 /// \return
 ///
-BaseDetector* CreateDetector(tracking::Detectors detectorType, const config_t& config, bool collectPoints, cv::UMat& gray);
+BaseDetector* CreateDetector(tracking::Detectors detectorType, const config_t& config, cv::UMat& gray);

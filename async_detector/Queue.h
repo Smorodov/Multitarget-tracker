@@ -132,9 +132,9 @@ public:
     ///
     void AddNewFrame(frame_ptr frameInfo)
     {
-        //QUE_LOG << "AddNewFrame start: " << frameInfo.m_dt << std::endl;
+        //QUE_LOG << "AddNewFrame start: " << frameInfo->m_dt << std::endl;
         enqueue(frameInfo);
-        //QUE_LOG << "AddNewFrame end: " << frameInfo.m_dt << std::endl;
+        //QUE_LOG << "AddNewFrame end: " << frameInfo->m_dt << std::endl;
     }
 
     ///
@@ -178,15 +178,24 @@ public:
         std::unique_lock<std::mutex> lock(m_mutex);
         while (m_que.empty() || m_que.back()->m_inDetector)
         {
+            if (m_break)
+            {
+                break;
+            }
+
             m_cond.wait(lock);
             //PrintQue();
         }
-        frame_ptr frameInfo = m_que.back();
-        frameInfo->m_inDetector = 1;
+        if (!m_break)
+        {
+            frame_ptr frameInfo = m_que.back();
+            frameInfo->m_inDetector = 1;
 
-        //QUE_LOG << "GetLastUndetectedFrame end: " << frameInfo.m_dt << std::endl;
+            //QUE_LOG << "GetLastUndetectedFrame end: " << frameInfo->m_dt << std::endl;
 
-        return frameInfo;
+            return frameInfo;
+        }
+        return nullptr;
     }
 
     ///
@@ -219,15 +228,24 @@ public:
         queue_t::iterator it = SearchUntracked();
         while (it == m_que.end())
         {
+            if (m_break)
+            {
+                break;
+            }
+
             m_cond.wait(lock);
             it = SearchUntracked();
             //PrintQue();
         }
-        frame_ptr frameInfo = *it;
-		frameInfo->m_inTracker = 1;
+        if (!m_break)
+        {
+            frame_ptr frameInfo = *it;
+            frameInfo->m_inTracker = 1;
 
-        //QUE_LOG << "GetFirstDetectedFrame end: " << frameInfo.m_dt << std::endl;
-        return frameInfo;
+            //QUE_LOG << "GetFirstDetectedFrame end: " << frameInfo->m_dt << std::endl;
+            return frameInfo;
+        }
+        return nullptr;
     }
 
     ///
@@ -241,15 +259,24 @@ public:
         std::unique_lock<std::mutex> lock(m_mutex);
         while (m_que.empty() || m_que.front()->m_inTracker != 2)
         {
+            if (m_break)
+            {
+                break;
+            }
+
             m_cond.wait(lock);
             //PrintQue();
         }
-        frame_ptr frameInfo = m_que.front();
-        m_que.pop_front();
+        if (!m_break)
+        {
+            frame_ptr frameInfo = m_que.front();
+            m_que.pop_front();
 
-        //QUE_LOG << "GetFirstProcessedFrame end: " << frameInfo.m_dt << std::endl;
+            //QUE_LOG << "GetFirstProcessedFrame end: " << frameInfo->m_dt << std::endl;
 
-        return frameInfo;
+            return frameInfo;
+        }
+        return nullptr;
     }
 
     ///
@@ -264,7 +291,10 @@ public:
 
     void SetBreak(bool val)
     {
+        //QUE_LOG << "SetBreak start:" << val << std::endl;
         m_break = val;
+        Signal(0);
+        //QUE_LOG << "SetBreak end:" << val << std::endl;
     }
 
 private:

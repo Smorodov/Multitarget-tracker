@@ -7,7 +7,6 @@
 
 #include "defines.h"
 #include "track.h"
-#include "LocalTracker.h"
 #include "HungarianAlg/HungarianAlg.h"
 
 // ----------------------------------------------------------------------
@@ -17,14 +16,6 @@
 ///
 struct TrackerSettings
 {
-    ///
-    /// \brief m_useLocalTracking
-    /// Use local tracking for regions between two frames
-    /// It was coined for tracking small and slow objects: key points on objects tracking with LK optical flow
-    /// The most applications don't need this parameter
-    ///
-    bool m_useLocalTracking = false;
-
     tracking::DistType m_distType = tracking::DistCenters;
     tracking::KalmanType m_kalmanType = tracking::KalmanLinear;
     tracking::FilterGoal m_filterGoal = tracking::FilterCenter;
@@ -134,8 +125,6 @@ private:
 	tracks_t m_tracks;
 
     size_t m_nextTrackID;
-
-    LocalTracker m_localTracker;
 
     cv::UMat m_prevFrame;
 
