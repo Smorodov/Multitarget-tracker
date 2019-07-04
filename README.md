@@ -1,8 +1,52 @@
 ![travis ci:](https://travis-ci.org/Smorodov/Multitarget-tracker.svg?branch=master)
 
-# Multitarget-tracker
+# Multitarget (multiple objects) tracker
 
-Hungarian algorithm + Kalman filter multitarget tracker implementation.
+1. Objects detector can be created with function [CreateDetector](https://github.com/Smorodov/Multitarget-tracker/blob/master/src/Detector/BaseDetector.cpp#L17) with different values of the detectorType:
+1.1. Based on background substraction: built-in Vibe (tracking::Motion_VIBE), SuBSENSE (tracking::Motion_SuBSENSE) and LOBSTER (tracking::Motion_LOBSTER); MOG2 (tracking::Motion_MOG2) from [opencv](https://github.com/opencv/opencv/blob/master/modules/video/include/opencv2/video/background_segm.hpp); MOG (tracking::Motion_MOG), GMG (tracking::Motion_GMG) and CNT (tracking::Motion_CNT) from [opencv_contrib](https://github.com/opencv/opencv_contrib/tree/master/modules/bgsegm). For foreground segmentation used contours from OpenCV with result as cv::RotatedRect
+1.2. Haar face detector from OpenCV (tracking::Face_HAAR)
+1.3. HOG pedestrian detector from OpenCV (tracking::Pedestrian_HOG) and C4 pedestrian detector from [sturkmen72](https://github.com/sturkmen72/C4-Real-time-pedestrian-detection)  (tracking::Pedestrian_C4)
+1.4. MobileNet SSD detector (tracking::SSD_MobileNet) with opencv_dnn inference and pretrained models from [chuanqi305](https://github.com/chuanqi305/MobileNet-SSD)
+1.5. YOLO detector (tracking::Yolo_OCV) with opencv_dnn inference and pretrained models from [pjreddie](https://pjreddie.com/darknet/yolo/)
+1.6. YOLO detector (tracking::Yolo_Darknet) with darknet inference from [AlexeyAB](https://github.com/AlexeyAB/darknet) and pretrained models from [pjreddie](https://pjreddie.com/darknet/yolo/)
+1.7. You can to use custom detector with bounding or rotated rectangle as output.
+
+2. Matching or solve an [assignment problem](https://github.com/Smorodov/Multitarget-tracker/blob/master/src/Tracker/Ctracker.h#L23):
+2.1. Hungrian algorithm (tracking::MatchHungrian) with cubic time O(N^3) where N is objects count
+2.2. Algorithm based on weighted bipartite graphs (tracking::MatchBipart) from [rdmpage](https://github.com/rdmpage/maximum-weighted-bipartite-matching) with time O(M * N^2) where N is objects count and M is connections count between detections on frame and tracking objects. It can be faster than Hungrian algorithm
+2.3. [Distance](https://github.com/Smorodov/Multitarget-tracker/blob/master/src/Tracker/Ctracker.h#L19) from detections and objects: euclidean distance in pixels between centers (tracking::DistCenters), euclidean distance in pixels between rectangles (tracking::DistRects), Jaccard or IoU distance from 0 to 1 (tracking::DistJaccard)
+
+3. [Smoothing trajectories and predict missed objects](https://github.com/Smorodov/Multitarget-tracker/blob/master/src/Tracker/Ctracker.h#L20):
+3.1. Linear Kalman filter from OpenCV (tracking::KalmanLinear)
+3.2. Unscented Kalman filter from OpenCV (tracking::KalmanUnscented)
+3.3. [Kalman goal](https://github.com/Smorodov/Multitarget-tracker/blob/master/src/Tracker/Ctracker.h#L21) is only coordinates (tracking::FilterCenter) or coordinates and size (tracking::FilterRect)
+3.4. Simple [Abandoned detector](https://github.com/Smorodov/Multitarget-tracker/blob/master/src/Tracker/Ctracker.h#L59)
+3.5. [Line intersection](https://github.com/Smorodov/Multitarget-tracker/blob/master/cars_counting/CarsCounting.cpp#L381) counting
+
+4. [Advanced visual search](https://github.com/Smorodov/Multitarget-tracker/blob/master/src/Tracker/Ctracker.h#L22) for objects if they have not been detected:
+4.1. No search (tracking::TrackNone)
+4.2. built-in DAT (tracking::TrackDAT) from [foolwood](https://github.com/foolwood/DAT) or STAPLE (tracking::TrackSTAPLE) from [xuduo35](https://github.com/xuduo35/STAPLE); KCF (tracking::TrackSTAPLE), MIL (tracking::TrackSTAPLE), MedianFlow (tracking::TrackSTAPLE), GOTURN (tracking::TrackSTAPLE), MOSSE (tracking::TrackSTAPLE) or CSRT (tracking::TrackSTAPLE) from [opencv_contrib](https://github.com/opencv/opencv_contrib/tree/master/modules/tracking)
+With this option the tracking can work match slower but more accuracy.
+
+5. Pipeline
+5.1. Syncronous [pipeline](https://github.com/Smorodov/Multitarget-tracker/tree/master/cars_counting):
+- get frame from capture device;
+- decoding;
+- objects detection (1);
+- tracking (2-4);
+- show result.
+This pipeline is good if all algorithms are fast and works faster than time between two frames (40 ms for device with 25 fps). Or it can be used if we have only 1 core for all (no parallelization).
+5.2. Pipeline with [2 threads](https://github.com/Smorodov/Multitarget-tracker/blob/master/example/VideoExample.h#L77):
+- 1th thread takes frame t and makes capture, decoding and objects detection;
+- 2th thread takes frame t-1, results from first thread and makes tracking and results presentation (this is the Main read).
+So we have a latency on 1 frame but on two free CPU cores we can increase performance on 2 times.
+5.3. Fully [acynchronous pipeline](https://github.com/Smorodov/Multitarget-tracker/tree/master/async_detector) can be used if the objects detector works with low fps and we have a free 2 CPU cores. In this case we use 4 threads:
+- 1th main thread is not busy and used for GUI and result presentation;
+- 2th thread makes capture and decoding, puts frames in threadsafe queue;
+- 3th thread is used for objects detection on the newest frame from the queue;
+- 4th thread is used for objects tracking: waits the frame with detection from 3th tread and used advanced visual search (4) in intermediate frames from queue until it ges a frame with detections.
+This pipeline can used with slow but accuracy DNN and track objects in intermediate frame in realtime without latency.
+
 
 #### Demo Videos
 
@@ -25,19 +69,6 @@ Hungarian algorithm + Kalman filter multitarget tracker implementation.
 * Simple Abandoned detector:
 
 [![Simple Abandoned detector:](https://img.youtube.com/vi/fpkHRsFzspA/0.jpg)](https://www.youtube.com/watch?v=fpkHRsFzspA)
-
-#### Parameters
-1. Background substraction: built-in Vibe, SuBSENSE and LOBSTER; MOG2 from opencv; MOG, GMG and CNT from opencv_contrib
-2. Foreground segmentation: contours
-3. Matching: Hungrian algorithm or algorithm based on weighted bipartite graphs
-4. Tracking: Linear or Unscented Kalman filter for objects center or for object coordinates and size
-5. Use or not local tracker (LK optical flow) to smooth trajectories
-6. Tracking for lost objects and collision resolving: built-in DAT or STAPLE; KCF, MIL, MedianFlow, GOTURN, MOSSE or CSRT from opencv_contrib
-7. Haar face detector from OpenCV
-8. HOG and C4 pedestrian detectors
-9. MobileNet SSD detector with inference from OpenCV and models from chuanqi305/MobileNet-SSD
-10. YOLO and Tiny YOLO detectors from https://pjreddie.com/darknet/yolo/ (inference from opencv_dnn or from https://github.com/AlexeyAB/darknet )
-11. Simple Abandoned detector
 
 #### Build
 1. Download project sources
