@@ -3,6 +3,7 @@
 #include "dat/dat_tracker.hpp"
 #ifdef USE_STAPLE_TRACKER
 #include "staple/staple_tracker.hpp"
+#include "ldes/ldes_tracker.h"
 #endif
 
 ///
@@ -450,6 +451,7 @@ void CTrack::RectUpdate(
 
     case tracking::TrackDAT:
     case tracking::TrackSTAPLE:
+	case tracking::TrackLDES:
         if (!dataCorrect)
         {
             bool inited = false;
@@ -696,6 +698,23 @@ void CTrack::CreateExternalTracker()
 		std::cerr << "Project was compiled without STAPLE tracking!" << std::endl;
 #endif
         break;
+
+	case tracking::TrackLDES:
+#ifdef USE_OCV_KCF
+		if (m_tracker && !m_tracker.empty())
+		{
+			m_tracker.release();
+		}
+#endif
+#ifdef USE_STAPLE_TRACKER
+		if (!m_VOTTracker)
+		{
+			m_VOTTracker = std::unique_ptr<LDESTracker>(new LDESTracker());
+		}
+#else
+		std::cerr << "Project was compiled without STAPLE tracking!" << std::endl;
+#endif
+		break;
     }
 }
 
