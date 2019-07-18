@@ -167,7 +167,7 @@ void gradHist( float *M, float *O, float *H, int h, int w,
 {
     const int hb=h/bin, wb=w/bin, h0=hb*bin, w0=wb*bin, nb=wb*hb;
     const float s=(float)bin, sInv=1/s, sInv2=1/s/s;
-    float *H0, *H1, *M0, *M1; int x, y; int *O0, *O1; float xb, init;
+    float *H0, *H1, *M0, *M1; int x, y; int *O0, *O1; float xb = 0, init = 0;
     O0=(int*)alMalloc(h*sizeof(int),16); M0=(float*) alMalloc(h*sizeof(float),16);
     O1=(int*)alMalloc(h*sizeof(int),16); M1=(float*) alMalloc(h*sizeof(float),16);
     // main loop
@@ -200,10 +200,15 @@ void gradHist( float *M, float *O, float *H, int h, int w,
         } else {
             // interpolate using trilinear interpolation
             float ms[4], xyd, yb, xd, yd; __m128 _m, _m0, _m1;
-            bool hasLf, hasRt; int xb0, yb0;
-            if( x==0 ) { init=(0+.5f)*sInv-0.5f; xb=init; }
-            hasLf = xb>=0; xb0 = hasLf?(int)xb:-1; hasRt = xb0 < wb-1;
-            xd=xb-xb0; xb+=sInv; yb=init; y=0;
+			if (x == 0) { init = (0 + .5f)*sInv - 0.5f; xb = init; }
+            bool hasLf = xb>=0;
+			int xb0 = hasLf?(int)xb:-1;
+			bool hasRt = xb0 < wb-1;
+            xd=xb-xb0;
+			xb+=sInv;
+			yb=init;
+			y=0;
+			int yb0 = -1;
             // macros for code conciseness
 #define GHinit yd=yb-yb0; yb+=sInv; H0=H+xb0*hb+yb0; xyd=xd*yd; \
     ms[0]=1-xd-yd+xyd; ms[1]=yd-xyd; ms[2]=xd-xyd; ms[3]=xyd;
@@ -447,13 +452,13 @@ float* crop_H(float *H,int* h_height,int* h_width,int depth,int dh,int dw) {
     return crop_H;
 }
 
-float* fhog(float *M,float* O,int height,int width,int channel,int *h,int *w,int *d,int binSize, int nOrients, float clip, bool crop) {
+float* fhog(float *M,float* O,int height,int width,int /*channel*/,int *h,int *w,int *d,int binSize, int nOrients, float clip, bool crop) {
     *h = height/binSize;
     *w = width/binSize;
     *d = nOrients*3+5;
 
     float* H = new float[(*h)*(*w)*(*d)];
-    memset(H,0.0f,(*h)*(*w)*(*d)*sizeof(float));
+    memset(H,0,(*h)*(*w)*(*d)*sizeof(float));
 
     fhog( M, O, H, height, width, binSize, nOrients, -1, clip );
 

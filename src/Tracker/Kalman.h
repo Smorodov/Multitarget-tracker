@@ -105,9 +105,9 @@ void get_lin_regress_params(
         m3_y += in_data[i].y;
         m4_y += i * in_data[i].y;
     }
-    T det_1 = 1. / (el_count * m2 - sqr(m1));
+    T det_1 = 1 / (el_count * m2 - sqr(m1));
 
-    m1 *= -1.;
+    m1 *= -1;
 
     kx = det_1 * (m1 * m3_x + el_count * m4_x);
     bx = det_1 * (m2 * m3_x + m1 * m4_x);

@@ -136,9 +136,9 @@ void TKalmanFilter::CreateLinear(cv::Rect_<track_t> rect0, Point_t rectv0)
 
     cv::setIdentity(m_linearKalman->measurementMatrix);
 
-    track_t n1 = pow(m_deltaTime, 4.) / 4.;
-    track_t n2 = pow(m_deltaTime, 3.) / 2.;
-    track_t n3 = pow(m_deltaTime, 2.);
+    track_t n1 = pow(m_deltaTime, 4.f) / 4.f;
+    track_t n2 = pow(m_deltaTime, 3.f) / 2.f;
+    track_t n3 = pow(m_deltaTime, 2.f);
     m_linearKalman->processNoiseCov = (cv::Mat_<track_t>(8, 8) <<
                                        n1, 0,  0,  0,  n2, 0,  0,  0,
                                        0,  n1, 0,  0,  0,  n2, 0,  0,
@@ -622,7 +622,7 @@ cv::Rect TKalmanFilter::Update(cv::Rect rect, bool dataCorrect)
             Point_t averageSize(0, 0);
             for (const auto& r : m_initialRects)
             {
-                initialPoints.emplace_back(r.x, r.y);
+                initialPoints.emplace_back(static_cast<track_t>(r.x), static_cast<track_t>(r.y));
                 averageSize.x += r.width;
                 averageSize.y += r.height;
             }

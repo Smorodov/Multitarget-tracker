@@ -295,11 +295,6 @@ void DAT_TRACKER::getNMSRects(cv::Mat prob_map, cv::Size obj_sz, double scale,
     int height = prob_map.rows;
     int width = prob_map.cols;
     cv::Size rect_sz(floor(obj_sz.width * scale), floor(obj_sz.height * scale));
-    int o_x, o_y;
-    if (include_inner) {
-        o_x = round(std::max(1.0, rect_sz.width*0.2));
-        o_y = round(std::max(1.0, rect_sz.height*0.2));
-    }
 
     int stepx = std::max(1, int(round(rect_sz.width * (1.0 - overlap))));
     int stepy = std::max(1, int(round(rect_sz.height * (1.0 - overlap))));
@@ -332,6 +327,8 @@ void DAT_TRACKER::getNMSRects(cv::Mat prob_map, cv::Size obj_sz, double scale,
         boxes.push_back(cv::Rect(p_x[i], p_y[i], p_r[i] - p_x[i], p_b[i] - p_y[i]));
 
     std::vector<cv::Rect> boxes_inner;
+	int o_x = round(std::max(1.0, rect_sz.width*0.2));
+	int o_y = round(std::max(1.0, rect_sz.height*0.2));
     if (include_inner) {
         for (int i = 0; i < n; ++i)
             boxes_inner.push_back(cv::Rect(p_x[i] + o_x, p_y[i] + o_y, p_r[i] - p_x[i] - 2 * o_x, p_b[i] - p_y[i] - 2 * o_y));
