@@ -84,7 +84,7 @@ void DAT_TRACKER::Initialize(const cv::Mat &im, cv::Rect region)
 /// \param confidence
 /// \return
 ///
-cv::Rect DAT_TRACKER::Update(const cv::Mat &im, float& confidence)
+cv::RotatedRect DAT_TRACKER::Update(const cv::Mat &im, float& confidence)
 {
     confidence = 0;
 
@@ -263,7 +263,9 @@ cv::Rect DAT_TRACKER::Update(const cv::Mat &im, float& confidence)
 
     // Adapt image scale factor
     scale_factor_ = std::min(1.0, round(10.0 * double(cfg.img_scale_target_diagonal) / cv::norm(cv::Point(target_sz_original.width, target_sz_original.height))) / 10.0);
-    return location;
+    
+	return cv::RotatedRect(cv::Point2f(location.x + 0.5f * location.width, location.y + 0.5f * location.height),
+		cv::Size2f(location.width, location.height), 0.f);
 }
 
 ///

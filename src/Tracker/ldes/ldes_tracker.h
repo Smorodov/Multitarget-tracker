@@ -14,7 +14,7 @@ public:
 	~LDESTracker();
 
 	void Initialize(const cv::Mat &im, cv::Rect region);
-	cv::Rect Update(const cv::Mat &im, float& confidence);
+	cv::RotatedRect Update(const cv::Mat &im, float& confidence);
 	void Train(const cv::Mat &/*im*/, bool /*first*/)
 	{
 	}

@@ -1232,7 +1232,7 @@ void STAPLE_TRACKER::mergeResponses(const cv::Mat &response_cf, const cv::Mat &r
 /// \param confidence
 /// \return
 ///
-cv::Rect STAPLE_TRACKER::Update(const cv::Mat &im, float& confidence)
+cv::RotatedRect STAPLE_TRACKER::Update(const cv::Mat &im, float& confidence)
 {
     confidence = 0;
 
@@ -1515,5 +1515,6 @@ cv::Rect STAPLE_TRACKER::Update(const cv::Mat &im, float& confidence)
         area_resize_factor = sqrt(cfg.fixed_area / (float)(bg_area.width * bg_area.height));
     }
 
-    return location;
+    return cv::RotatedRect(cv::Point2f(location.x + 0.5f * location.width, location.y + 0.5f * location.height),
+		cv::Size2f(location.width, location.height), 0.f);
 }

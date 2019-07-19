@@ -499,12 +499,20 @@ void CTrack::RectUpdate(
                 constexpr float confThresh = 0.3f;
                 cv::Mat mat = currFrame.getMat(cv::ACCESS_READ);
                 float confidence = 0;
-                cv::Rect newRect = m_VOTTracker->Update(mat, confidence);
+                cv::RotatedRect newRect = m_VOTTracker->Update(mat, confidence);
                 if (confidence > confThresh)
                 {
                     m_VOTTracker->Train(mat, false);
 
-                    UpdateRRect(brect, m_kalman->Update(newRect, true));
+					if (newRect.angle > 0.5f)
+					{
+						m_predictionRect = newRect;
+						m_kalman->Update(newRect.boundingRect(), true);
+					}
+					else
+					{
+						UpdateRRect(brect, m_kalman->Update(newRect.boundingRect(), true));
+					}
 
                     recalcPrediction = false;
                 }

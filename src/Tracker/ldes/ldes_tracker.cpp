@@ -331,7 +331,7 @@ void LDESTracker::estimateScale(cv::Mat& z, cv::Mat& x)
 *Update BGD(Block Gradient Descend, original AAAI Paper MATLAB Code)
 *If BGD, more precise but slower
 */
-cv::Rect LDESTracker::Update(const cv::Mat &im, float& confidence)
+cv::RotatedRect LDESTracker::Update(const cv::Mat &im, float& confidence)
 {
 	float tmp_scale = 1.0, tmp_scale2 = 1.0;
 	float mscore = 0.0;
@@ -363,7 +363,8 @@ cv::Rect LDESTracker::Update(const cv::Mat &im, float& confidence)
 	}
 	conf = mscore;
 	confidence = conf;
-	return cur_roi;
+	return cv::RotatedRect(cv::Point2f(cur_roi.x + 0.5f * cur_roi.width, cur_roi.y + 0.5f * cur_roi.height),
+		cv::Size2f(cur_roi.width, cur_roi.height), cur_rot_degree);
 }
 
 ///
