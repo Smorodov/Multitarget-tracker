@@ -152,7 +152,7 @@ enum LostTrackType
     TrackMOSSE,
     TrackCSRT,
     TrackDAT,
-    TrackSTAPLE,
-	TrackLDES
+    TrackSTAPLE
+	//TrackLDES
 };
 }

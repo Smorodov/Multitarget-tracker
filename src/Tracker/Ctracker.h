@@ -89,8 +89,8 @@ public:
     {
 		bool needColor = (m_settings.m_lostTrackType == tracking::LostTrackType::TrackGOTURN) ||
 			(m_settings.m_lostTrackType == tracking::LostTrackType::TrackDAT) ||
-			(m_settings.m_lostTrackType == tracking::LostTrackType::TrackSTAPLE) ||
-			(m_settings.m_lostTrackType == tracking::LostTrackType::TrackLDES);
+			(m_settings.m_lostTrackType == tracking::LostTrackType::TrackSTAPLE);
+			//(m_settings.m_lostTrackType == tracking::LostTrackType::TrackLDES);
         return !needColor;
     }
 
