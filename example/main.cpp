@@ -98,7 +98,8 @@ int main(int argc, char** argv)
         break;
     }
 
-
+#ifndef SILENT_WORK
     cv::destroyAllWindows();
+#endif
     return 0;
 }

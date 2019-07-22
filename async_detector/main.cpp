@@ -42,7 +42,9 @@ int main(int argc, char** argv)
     AsyncDetector slow_detector(parser);
     slow_detector.Process();
 
+#ifndef SILENT_WORK
     cv::destroyAllWindows();
+#endif
 
 	std::cout << "Correct exit" << std::endl;
     return 0;

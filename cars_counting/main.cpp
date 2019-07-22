@@ -45,6 +45,9 @@ int main(int argc, char** argv)
 
     cars_counting.Process();
 
+#ifndef SILENT_WORK
     cv::destroyAllWindows();
+#endif
+
     return 0;
 }

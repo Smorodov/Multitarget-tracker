@@ -43,8 +43,6 @@ AsyncDetector::~AsyncDetector()
 ///
 void AsyncDetector::Process()
 {
-    int k = 0;
-
     double freq = cv::getTickFrequency();
     int64 allTime = 0;
 
@@ -55,6 +53,7 @@ void AsyncDetector::Process()
 #ifndef SILENT_WORK
     cv::namedWindow("Video", cv::WINDOW_NORMAL | cv::WINDOW_KEEPRATIO);
     cv::waitKey(1);
+	int k = 0;
 #endif
 
 	cv::VideoWriter writer;
@@ -203,7 +202,6 @@ void AsyncDetector::DrawData(frame_ptr frameInfo, int framesCounter, int currTim
 		}
 		std::cout << "tracks = " << frameInfo->m_tracks.size() << ", time = " << currTime << std::endl;
     }
-
 
     for (const auto& track : frameInfo->m_tracks)
     {

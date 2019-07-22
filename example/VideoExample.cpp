@@ -106,6 +106,7 @@ void VideoExample::Process()
 
 #ifndef SILENT_WORK
     cv::namedWindow("Video", cv::WINDOW_NORMAL | cv::WINDOW_KEEPRATIO);
+	bool manualMode = false;
 #endif
 
     int k = 0;
@@ -114,7 +115,6 @@ void VideoExample::Process()
 
     int64 allTime = 0;
 
-    bool manualMode = false;
     int framesCounter = m_startFrame + 1;
 
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
