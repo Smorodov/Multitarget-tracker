@@ -104,7 +104,9 @@ void VideoExample::Process()
 
     cv::VideoWriter writer;
 
+#ifndef SILENT_WORK
     cv::namedWindow("Video", cv::WINDOW_NORMAL | cv::WINDOW_KEEPRATIO);
+#endif
 
     int k = 0;
 
@@ -155,6 +157,7 @@ void VideoExample::Process()
 
         DrawData(frameInfo.m_frame, framesCounter, currTime);
 
+#ifndef SILENT_WORK
         cv::imshow("Video", frameInfo.m_frame);
 
         int waitTime = manualMode ? 0 : std::max<int>(1, cvRound(1000 / m_fps - currTime));
@@ -163,6 +166,9 @@ void VideoExample::Process()
         {
             manualMode = !manualMode;
         }
+#else
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+#endif
 
         if (writer.isOpened())
         {
@@ -187,7 +193,9 @@ void VideoExample::Process()
     }
 
     LOG_TIME << "work time = " << (allTime / freq) << std::endl;
+#ifndef SILENT_WORK
     cv::waitKey(m_finishDelay);
+#endif
 }
 
 ///

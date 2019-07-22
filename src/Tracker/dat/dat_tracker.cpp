@@ -183,15 +183,18 @@ cv::RotatedRect DAT_TRACKER::Update(const cv::Mat &im, float& confidence)
     }
 
     // Localization visualization
-    if (cfg.show_figures) {
+    if (cfg.show_figures)
+	{
         cv::Mat pm_search_color;
         pm_search.convertTo(pm_search_color,CV_8UC1,255);
         applyColorMap(pm_search_color, pm_search_color, cv::COLORMAP_JET);
         for (size_t i = 0; i < hypotheses.size(); ++i){
             cv::rectangle(pm_search_color, hypotheses[i], cv::Scalar(0, 255, 255 * (i != best_candidate)), 2);
         }
+#ifndef SILENT_WORK
         cv::imshow("Search Window", pm_search_color);
         cv::waitKey(1);
+#endif
     }
 
     // Appearance update

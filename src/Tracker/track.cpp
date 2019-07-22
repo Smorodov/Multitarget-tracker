@@ -206,6 +206,7 @@ bool CTrack::CheckStatic(int trajLen, cv::UMat currFrame, const CRegion& region)
                 m_staticFrame = currFrame.clone();
                 m_staticRect = region.m_brect;
 #if 0
+#ifndef SILENT_WORK
                 cv::namedWindow("m_staticFrame", cv::WINDOW_NORMAL);
                 cv::Mat img = m_staticFrame.getMat(cv::ACCESS_READ).clone();
                 cv::rectangle(img, m_staticRect, cv::Scalar(255, 0, 255), 1);
@@ -222,6 +223,7 @@ bool CTrack::CheckStatic(int trajLen, cv::UMat currFrame, const CRegion& region)
                 cv::imshow("m_staticFrame", img);
                 std::cout << "m_staticRect = " << m_staticRect << std::endl;
                 cv::waitKey(1);
+#endif
 #endif
             }
 
@@ -407,9 +409,11 @@ void CTrack::RectUpdate(
                         m_tracker->init(cv::UMat(m_staticFrame, roiRect), lastRect);
                     }
 #if 0
+#ifndef SILENT_WORK
                     cv::Mat tmp = cv::UMat(prevFrame, roiRect).getMat(cv::ACCESS_READ).clone();
                     cv::rectangle(tmp, lastRect, cv::Scalar(255, 255, 255), 2);
                     cv::imshow("init", tmp);
+#endif
 #endif
 
                     inited = true;
@@ -425,9 +429,11 @@ void CTrack::RectUpdate(
             if (!inited && !m_tracker.empty() && m_tracker->update(cv::UMat(currFrame, roiRect), newRect))
             {
 #if 0
+#ifndef SILENT_WORK
                 cv::Mat tmp2 = cv::UMat(currFrame, roiRect).getMat(cv::ACCESS_READ).clone();
                 cv::rectangle(tmp2, newRect, cv::Scalar(255, 255, 255), 2);
                 cv::imshow("track", tmp2);
+#endif
 #endif
 
                 cv::Rect prect(cvRound(newRect.x) + roiRect.x, cvRound(newRect.y) + roiRect.y, cvRound(newRect.width), cvRound(newRect.height));

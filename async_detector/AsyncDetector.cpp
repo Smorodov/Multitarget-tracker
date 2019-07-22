@@ -52,11 +52,12 @@ void AsyncDetector::Process()
 
     std::thread thCapture(CaptureThread, m_inFile, m_startFrame, &m_fps, &m_framesQue, &stopFlag);
 
+#ifndef SILENT_WORK
     cv::namedWindow("Video", cv::WINDOW_NORMAL | cv::WINDOW_KEEPRATIO);
-
-    cv::VideoWriter writer;
-
     cv::waitKey(1);
+#endif
+
+	cv::VideoWriter writer;
 
     int framesCounter = m_startFrame + 1;
 
@@ -84,6 +85,7 @@ void AsyncDetector::Process()
             writer << processedFrame->m_frame;
         }
 
+#ifndef SILENT_WORK
         cv::imshow("Video", processedFrame->m_frame);
 
         int waitTime = std::max<int>(1, cvRound(1000 / m_fps - currTime));
@@ -92,6 +94,9 @@ void AsyncDetector::Process()
         {
             break;
         }
+#else
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+#endif
 
         ++framesCounter;
         if (m_endFrame && framesCounter > m_endFrame)
@@ -113,7 +118,9 @@ void AsyncDetector::Process()
     }
 
     std::cout << "work time = " << (allTime / freq) << std::endl;
-    cv::waitKey(m_finishDelay);
+#ifndef SILENT_WORK
+	cv::waitKey(m_finishDelay);
+#endif
 }
 
 ///

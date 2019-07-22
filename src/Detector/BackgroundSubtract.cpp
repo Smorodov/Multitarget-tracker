@@ -292,12 +292,16 @@ void BackgroundSubtract::Subtract(const cv::UMat& image, cv::UMat& foreground)
         break;
     }
 
+#ifndef SILENT_WORK
     //cv::imshow("before", foreground);
+#endif
 
     cv::medianBlur(foreground, foreground, 3);
 
     cv::Mat dilateElement = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3), cv::Point(-1, -1));
     cv::dilate(foreground, foreground, dilateElement, cv::Point(-1, -1), 2);
 
+#ifndef SILENT_WORK
     //cv::imshow("after", foreground);
+#endif
 }

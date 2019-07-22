@@ -26,6 +26,11 @@ set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
 
 FIND_PACKAGE(OpenCV REQUIRED)
 
+option(SILENT_WORK "Remove all imshow and waitKey functions?" OFF)
+if (SILENT_WORK)
+    add_definitions(-DSILENT_WORK)
+endif(SILENT_WORK)
+
 option(BUILD_EXAMPLES "Should compiled examples (motion detection, pedestrians, faces, DNNs etc)?" ON)
 if (BUILD_EXAMPLES)
     add_subdirectory(example)
