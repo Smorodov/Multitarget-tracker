@@ -46,7 +46,9 @@ void CarsCounting::Process()
 {
     cv::VideoWriter writer;
 
+#ifndef SILENT_WORK
     cv::namedWindow("Video", cv::WINDOW_NORMAL | cv::WINDOW_KEEPRATIO);
+#endif
 
     int k = 0;
 
@@ -123,6 +125,7 @@ void CarsCounting::Process()
 
         DrawData(colorFrame, framesCounter, currTime);
 
+#ifndef SILENT_WORK
         cv::imshow("Video", colorFrame);
 
         int waitTime = manualMode ? 0 : std::max<int>(1, cvRound(1000 / m_fps - currTime));
@@ -135,6 +138,9 @@ void CarsCounting::Process()
         {
             break;
         }
+#else
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+#endif
 
         if (writer.isOpened())
         {
@@ -150,7 +156,9 @@ void CarsCounting::Process()
     }
 
     std::cout << "work time = " << (allTime / freq) << std::endl;
-    cv::waitKey(m_finishDelay);
+#ifndef SILENT_WORK
+	cv::waitKey(m_finishDelay);
+#endif
 }
 
 ///

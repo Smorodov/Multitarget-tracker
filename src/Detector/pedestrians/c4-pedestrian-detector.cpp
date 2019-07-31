@@ -127,13 +127,13 @@ void LoadCascade(std::string cascade1, std::string cascade2, DetectionScanner& d
 
 void DetectionScanner::LoadDetector(std::vector<NodeDetector::NodeType>& types,std::vector<int>& upper_bounds,std::vector<std::string>& filenames)
 {
-    unsigned int depth = types.size();
+    size_t depth = types.size();
     assert(depth>0 && depth==upper_bounds.size() && depth==filenames.size());
     if(cascade)
         delete cascade;
     cascade = new CascadeDetector;
     assert(xdiv>0 && ydiv>0);
-    for(unsigned int i=0; i<depth; i++)
+    for(size_t i=0; i<depth; i++)
         cascade->AddNode(types[i],(xdiv-EXT)*(ydiv-EXT)*baseflength,upper_bounds[i],filenames[i].c_str());
 
     hist.Create(1,baseflength*(xdiv-EXT)*(ydiv-EXT));

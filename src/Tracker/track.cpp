@@ -3,6 +3,7 @@
 #include "dat/dat_tracker.hpp"
 #ifdef USE_STAPLE_TRACKER
 #include "staple/staple_tracker.hpp"
+#include "ldes/ldes_tracker.h"
 #endif
 
 ///
@@ -205,6 +206,7 @@ bool CTrack::CheckStatic(int trajLen, cv::UMat currFrame, const CRegion& region)
                 m_staticFrame = currFrame.clone();
                 m_staticRect = region.m_brect;
 #if 0
+#ifndef SILENT_WORK
                 cv::namedWindow("m_staticFrame", cv::WINDOW_NORMAL);
                 cv::Mat img = m_staticFrame.getMat(cv::ACCESS_READ).clone();
                 cv::rectangle(img, m_staticRect, cv::Scalar(255, 0, 255), 1);
@@ -221,6 +223,7 @@ bool CTrack::CheckStatic(int trajLen, cv::UMat currFrame, const CRegion& region)
                 cv::imshow("m_staticFrame", img);
                 std::cout << "m_staticRect = " << m_staticRect << std::endl;
                 cv::waitKey(1);
+#endif
 #endif
             }
 
@@ -406,9 +409,11 @@ void CTrack::RectUpdate(
                         m_tracker->init(cv::UMat(m_staticFrame, roiRect), lastRect);
                     }
 #if 0
+#ifndef SILENT_WORK
                     cv::Mat tmp = cv::UMat(prevFrame, roiRect).getMat(cv::ACCESS_READ).clone();
                     cv::rectangle(tmp, lastRect, cv::Scalar(255, 255, 255), 2);
                     cv::imshow("init", tmp);
+#endif
 #endif
 
                     inited = true;
@@ -424,9 +429,11 @@ void CTrack::RectUpdate(
             if (!inited && !m_tracker.empty() && m_tracker->update(cv::UMat(currFrame, roiRect), newRect))
             {
 #if 0
+#ifndef SILENT_WORK
                 cv::Mat tmp2 = cv::UMat(currFrame, roiRect).getMat(cv::ACCESS_READ).clone();
                 cv::rectangle(tmp2, newRect, cv::Scalar(255, 255, 255), 2);
                 cv::imshow("track", tmp2);
+#endif
 #endif
 
                 cv::Rect prect(cvRound(newRect.x) + roiRect.x, cvRound(newRect.y) + roiRect.y, cvRound(newRect.width), cvRound(newRect.height));
@@ -450,6 +457,7 @@ void CTrack::RectUpdate(
 
     case tracking::TrackDAT:
     case tracking::TrackSTAPLE:
+    case tracking::TrackLDES:
         if (!dataCorrect)
         {
             bool inited = false;
@@ -497,12 +505,20 @@ void CTrack::RectUpdate(
                 constexpr float confThresh = 0.3f;
                 cv::Mat mat = currFrame.getMat(cv::ACCESS_READ);
                 float confidence = 0;
-                cv::Rect newRect = m_VOTTracker->Update(mat, confidence);
+                cv::RotatedRect newRect = m_VOTTracker->Update(mat, confidence);
                 if (confidence > confThresh)
                 {
                     m_VOTTracker->Train(mat, false);
 
-                    UpdateRRect(brect, m_kalman->Update(newRect, true));
+					if (newRect.angle > 0.5f)
+					{
+						m_predictionRect = newRect;
+						m_kalman->Update(newRect.boundingRect(), true);
+					}
+					else
+					{
+						UpdateRRect(brect, m_kalman->Update(newRect.boundingRect(), true));
+					}
 
                     recalcPrediction = false;
                 }
@@ -696,6 +712,24 @@ void CTrack::CreateExternalTracker()
 		std::cerr << "Project was compiled without STAPLE tracking!" << std::endl;
 #endif
         break;
+#if 1
+	case tracking::TrackLDES:
+#ifdef USE_OCV_KCF
+		if (m_tracker && !m_tracker.empty())
+		{
+			m_tracker.release();
+		}
+#endif
+#ifdef USE_STAPLE_TRACKER
+		if (!m_VOTTracker)
+		{
+			m_VOTTracker = std::unique_ptr<LDESTracker>(new LDESTracker());
+		}
+#else
+		std::cerr << "Project was compiled without STAPLE tracking!" << std::endl;
+#endif
+		break;
+#endif
     }
 }
 

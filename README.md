@@ -42,7 +42,7 @@
 
 4.1. No search (tracking::TrackNone)
 
-4.2. built-in DAT (tracking::TrackDAT) from [foolwood](https://github.com/foolwood/DAT) or STAPLE (tracking::TrackSTAPLE) from [xuduo35](https://github.com/xuduo35/STAPLE); KCF (tracking::TrackSTAPLE), MIL (tracking::TrackSTAPLE), MedianFlow (tracking::TrackSTAPLE), GOTURN (tracking::TrackSTAPLE), MOSSE (tracking::TrackSTAPLE) or CSRT (tracking::TrackSTAPLE) from [opencv_contrib](https://github.com/opencv/opencv_contrib/tree/master/modules/tracking)
+4.2. Built-in DAT (tracking::TrackDAT) from [foolwood](https://github.com/foolwood/DAT), STAPLE (tracking::TrackSTAPLE) from [xuduo35](https://github.com/xuduo35/STAPLE) or LDES (tracking::TrackLDES) from [yfji](https://github.com/yfji/LDESCpp); KCF (tracking::TrackSTAPLE), MIL (tracking::TrackSTAPLE), MedianFlow (tracking::TrackSTAPLE), GOTURN (tracking::TrackSTAPLE), MOSSE (tracking::TrackSTAPLE) or CSRT (tracking::TrackSTAPLE) from [opencv_contrib](https://github.com/opencv/opencv_contrib/tree/master/modules/tracking)
 
 With this option the tracking can work match slower but more accuracy.
 
@@ -145,6 +145,7 @@ This pipeline can used with slow but accuracy DNN and track objects in intermedi
 * GOTURN models: https://github.com/opencv/opencv_extra/tree/c4219d5eb3105ed8e634278fad312a1a8d2c182d/testdata/tracking
 * DAT tracker: https://github.com/foolwood/DAT
 * STAPLE tracker: https://github.com/xuduo35/STAPLE
+* LDES tracker: https://github.com/yfji/LDESCpp
 
 #### License
 GNU GPLv3: http://www.gnu.org/licenses/gpl-3.0.txt 

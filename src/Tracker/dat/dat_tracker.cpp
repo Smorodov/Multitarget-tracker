@@ -84,7 +84,7 @@ void DAT_TRACKER::Initialize(const cv::Mat &im, cv::Rect region)
 /// \param confidence
 /// \return
 ///
-cv::Rect DAT_TRACKER::Update(const cv::Mat &im, float& confidence)
+cv::RotatedRect DAT_TRACKER::Update(const cv::Mat &im, float& confidence)
 {
     confidence = 0;
 
@@ -183,15 +183,18 @@ cv::Rect DAT_TRACKER::Update(const cv::Mat &im, float& confidence)
     }
 
     // Localization visualization
-    if (cfg.show_figures) {
+    if (cfg.show_figures)
+	{
         cv::Mat pm_search_color;
         pm_search.convertTo(pm_search_color,CV_8UC1,255);
         applyColorMap(pm_search_color, pm_search_color, cv::COLORMAP_JET);
         for (size_t i = 0; i < hypotheses.size(); ++i){
             cv::rectangle(pm_search_color, hypotheses[i], cv::Scalar(0, 255, 255 * (i != best_candidate)), 2);
         }
+#ifndef SILENT_WORK
         cv::imshow("Search Window", pm_search_color);
         cv::waitKey(1);
+#endif
     }
 
     // Appearance update
@@ -263,7 +266,9 @@ cv::Rect DAT_TRACKER::Update(const cv::Mat &im, float& confidence)
 
     // Adapt image scale factor
     scale_factor_ = std::min(1.0, round(10.0 * double(cfg.img_scale_target_diagonal) / cv::norm(cv::Point(target_sz_original.width, target_sz_original.height))) / 10.0);
-    return location;
+    
+	return cv::RotatedRect(cv::Point2f(location.x + 0.5f * location.width, location.y + 0.5f * location.height),
+		cv::Size2f(location.width, location.height), 0.f);
 }
 
 ///
@@ -295,11 +300,6 @@ void DAT_TRACKER::getNMSRects(cv::Mat prob_map, cv::Size obj_sz, double scale,
     int height = prob_map.rows;
     int width = prob_map.cols;
     cv::Size rect_sz(floor(obj_sz.width * scale), floor(obj_sz.height * scale));
-    int o_x, o_y;
-    if (include_inner) {
-        o_x = round(std::max(1.0, rect_sz.width*0.2));
-        o_y = round(std::max(1.0, rect_sz.height*0.2));
-    }
 
     int stepx = std::max(1, int(round(rect_sz.width * (1.0 - overlap))));
     int stepy = std::max(1, int(round(rect_sz.height * (1.0 - overlap))));
@@ -332,6 +332,8 @@ void DAT_TRACKER::getNMSRects(cv::Mat prob_map, cv::Size obj_sz, double scale,
         boxes.push_back(cv::Rect(p_x[i], p_y[i], p_r[i] - p_x[i], p_b[i] - p_y[i]));
 
     std::vector<cv::Rect> boxes_inner;
+	int o_x = round(std::max(1.0, rect_sz.width*0.2));
+	int o_y = round(std::max(1.0, rect_sz.height*0.2));
     if (include_inner) {
         for (int i = 0; i < n; ++i)
             boxes_inner.push_back(cv::Rect(p_x[i] + o_x, p_y[i] + o_y, p_r[i] - p_x[i] - 2 * o_x, p_b[i] - p_y[i] - 2 * o_y));

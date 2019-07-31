@@ -65,6 +65,17 @@ else()
              Tracker/staple/sse.hpp
              Tracker/staple/staple_tracker.cpp
              Tracker/staple/staple_tracker.hpp
+
+             Tracker/ldes/correlation.cpp
+             Tracker/ldes/correlation.h
+             Tracker/ldes/fft_functions.cpp
+             Tracker/ldes/fft_functions.h
+             Tracker/ldes/fhog.cpp
+             Tracker/ldes/fhog.hpp
+             Tracker/ldes/hann.cpp
+             Tracker/ldes/hann.h
+             Tracker/ldes/ldes_tracker.cpp
+             Tracker/ldes/ldes_tracker.h
     )
     add_definitions(-DUSE_STAPLE_TRACKER)
 endif()
