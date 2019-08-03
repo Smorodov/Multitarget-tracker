@@ -245,15 +245,15 @@ bool CarsCounting::InitTracker(cv::UMat frame)
 
     config_t config;
 #if 1
-    config["history"] = std::to_string(cvRound(10 * minStaticTime * m_fps));
-    config["varThreshold"] = "16";
-    config["detectShadows"] = "1";
+    config.emplace("history", std::to_string(cvRound(10 * minStaticTime * m_fps)));
+    config.emplace("varThreshold", "16");
+    config.emplace("detectShadows", "1");
     m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Motion_MOG2, config, frame));
 #else
-    config["minPixelStability"] = "15";
-    config["maxPixelStability"] = "900";
-    config["useHistory"] = "1";
-    config["isParallel"] = "1";
+    config.emplace("minPixelStability", "15");
+    config.emplace("maxPixelStability", "900");
+    config.emplace("useHistory", "1");
+    config.emplace("isParallel", "1");
     m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Motion_CNT, config, m_useLocalTracking, frame));
 #endif
     m_detector->SetMinObjectSize(cv::Size(m_minObjWidth, m_minObjWidth));

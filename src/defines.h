@@ -16,7 +16,7 @@ typedef cv::Point_<track_t> Point_t;
 ///
 /// \brief config_t
 ///
-typedef std::map<std::string, std::string> config_t;
+typedef std::multimap<std::string, std::string> config_t;
 
 ///
 /// \brief The CRegion class

@@ -30,4 +30,5 @@ private:
     float m_confidenceThreshold = 0.5f;
     float m_maxCropRatio = 3.0f;
 	std::vector<std::string> m_classNames;
+	std::set<std::string> m_classesWhiteList;
 };

@@ -33,17 +33,17 @@ protected:
 
         config_t config;
 #if 1
-        config["history"] = std::to_string(cvRound(10 * minStaticTime * m_fps));
-        config["varThreshold"] = "16";
-        config["detectShadows"] = "1";
-        config["useRotatedRect"] = "0";
+        config.emplace("history", std::to_string(cvRound(10 * minStaticTime * m_fps)));
+        config.emplace("varThreshold", "16");
+        config.emplace("detectShadows", "1");
+        config.emplace("useRotatedRect", "0");
         m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Motion_MOG2, config, frame));
 #else
-        config["minPixelStability"] = "15";
-        config["maxPixelStability"] = "900";
-        config["useHistory"] = "1";
-        config["isParallel"] = "1";
-        config["useRotatedRect"] = "0";
+        config.emplace("minPixelStability", "15");
+        config.emplace("maxPixelStability", "900");
+        config.emplace("useHistory", "1");
+        config.emplace("isParallel", "1");
+        config.emplace("useRotatedRect", "0");
         m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Motion_CNT, config, frame));
 #endif
         m_detector->SetMinObjectSize(cv::Size(m_minObjWidth, m_minObjWidth));
@@ -146,7 +146,7 @@ protected:
 #endif
 
         config_t config;
-        config["cascadeFileName"] = pathToModel + "haarcascade_frontalface_alt2.xml";
+        config.emplace("cascadeFileName", pathToModel + "haarcascade_frontalface_alt2.xml");
         m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Face_HAAR, config, frame));
         if (!m_detector.get())
         {
@@ -232,9 +232,9 @@ protected:
 #endif
 
         config_t config;
-        config["detectorType"] = (detectorType == tracking::Pedestrian_HOG) ? "HOG" : "C4";
-        config["cascadeFileName1"] = pathToModel + "combined.txt.model";
-        config["cascadeFileName2"] = pathToModel + "combined.txt.model_";
+        config.emplace("detectorType", (detectorType == tracking::Pedestrian_HOG) ? "HOG" : "C4");
+        config.emplace("cascadeFileName1", pathToModel + "combined.txt.model");
+        config.emplace("cascadeFileName2", pathToModel + "combined.txt.model_");
         m_detector = std::unique_ptr<BaseDetector>(CreateDetector(detectorType, config, frame));
         if (!m_detector.get())
         {
@@ -318,12 +318,12 @@ protected:
 		std::string pathToModel = "../data/";
 #endif
         config_t config;
-        config["modelConfiguration"] = pathToModel + "MobileNetSSD_deploy.prototxt";
-        config["modelBinary"] = pathToModel + "MobileNetSSD_deploy.caffemodel";
-        config["confidenceThreshold"] = "0.5";
-        config["maxCropRatio"] = "3.0";
-        config["dnnTarget"] = "DNN_TARGET_CPU";
-        config["dnnBackend"] = "DNN_BACKEND_INFERENCE_ENGINE";
+        config.emplace("modelConfiguration", pathToModel + "MobileNetSSD_deploy.prototxt");
+        config.emplace("modelBinary", pathToModel + "MobileNetSSD_deploy.caffemodel");
+        config.emplace("confidenceThreshold", "0.5");
+        config.emplace("maxCropRatio", "3.0");
+        config.emplace("dnnTarget", "DNN_TARGET_CPU");
+        config.emplace("dnnBackend", "DNN_BACKEND_INFERENCE_ENGINE");
 
         m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::SSD_MobileNet, config, frame));
         if (!m_detector.get())
@@ -434,21 +434,21 @@ protected:
         switch (yoloTest)
         {
         case 0:
-            config["modelConfiguration"] = pathToModel + "tiny-yolo.cfg";
-            config["modelBinary"] = pathToModel + "tiny-yolo.weights";
+            config.emplace("modelConfiguration", pathToModel + "tiny-yolo.cfg");
+            config.emplace("modelBinary", pathToModel + "tiny-yolo.weights");
             break;
 
         case 1:
-            config["modelConfiguration"] = pathToModel + "yolov3-tiny.cfg";
-            config["modelBinary"] = pathToModel + "yolov3-tiny.weights";
-            config["classNames"] = pathToModel + "coco.names";
+            config.emplace("modelConfiguration", pathToModel + "yolov3-tiny.cfg");
+            config.emplace("modelBinary", pathToModel + "yolov3-tiny.weights");
+            config.emplace("classNames", pathToModel + "coco.names");
             break;
         }
 
-        config["confidenceThreshold"] = "0.1";
-        config["maxCropRatio"] = "2.0";
-        config["dnnTarget"] = "DNN_TARGET_CPU";
-        config["dnnBackend"] = "DNN_BACKEND_INFERENCE_ENGINE";
+        config.emplace("confidenceThreshold", "0.1");
+        config.emplace("maxCropRatio", "2.0");
+        config.emplace("dnnTarget", "DNN_TARGET_CPU");
+        config.emplace("dnnBackend", "DNN_BACKEND_INFERENCE_ENGINE");
 
         m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Yolo_OCV, config, frame));
         if (!m_detector.get())
@@ -556,11 +556,11 @@ protected:
 		std::string pathToModel = "../data/";
 #endif
 
-		config["modelConfiguration"] = pathToModel + "yolov3-tiny.cfg";
-		config["modelBinary"] = pathToModel + "yolov3-tiny.weights";
-		config["classNames"] = pathToModel + "coco.names";
-		config["confidenceThreshold"] = "0.1";
-		config["maxCropRatio"] = "2.0";
+		config.emplace("modelConfiguration", pathToModel + "yolov3-tiny.cfg");
+		config.emplace("modelBinary", pathToModel + "yolov3-tiny.weights");
+		config.emplace("classNames", pathToModel + "coco.names");
+		config.emplace("confidenceThreshold", "0.1");
+		config.emplace("maxCropRatio", "2.0");
 
         m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Yolo_Darknet, config, frame));
 		if (!m_detector.get())
