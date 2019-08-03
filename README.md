@@ -48,7 +48,7 @@ With this option the tracking can work match slower but more accuracy.
 
 #### 5. Pipeline
 
-5.1. Syncronous [pipeline](https://github.com/Smorodov/Multitarget-tracker/tree/master/cars_counting):
+5.1. Syncronous [pipeline - SyncProcess](https://github.com/Smorodov/Multitarget-tracker/blob/master/example/VideoExample.h#L77):
 - get frame from capture device;
 - decoding;
 - objects detection (1);
@@ -57,7 +57,7 @@ With this option the tracking can work match slower but more accuracy.
 
 This pipeline is good if all algorithms are fast and works faster than time between two frames (40 ms for device with 25 fps). Or it can be used if we have only 1 core for all (no parallelization).
 
-5.2. Pipeline with [2 threads](https://github.com/Smorodov/Multitarget-tracker/blob/master/example/VideoExample.h#L77):
+5.2. Pipeline with [2 threads - AsyncProcess](https://github.com/Smorodov/Multitarget-tracker/blob/master/example/VideoExample.h#L77):
 - 1th thread takes frame t and makes capture, decoding and objects detection;
 - 2th thread takes frame t-1, results from first thread and makes tracking and results presentation (this is the Main read).
 
