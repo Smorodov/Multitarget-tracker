@@ -120,6 +120,8 @@ void VideoExample::SyncProcess()
     capture.set(cv::CAP_PROP_POS_FRAMES, m_startFrame);
     m_fps = std::max(1.f, (float)capture.get(cv::CAP_PROP_FPS));
 
+	int64 startLoopTime = cv::getTickCount();
+
     for (; k != 27; )
     {
         capture >> frame;
@@ -185,7 +187,9 @@ void VideoExample::SyncProcess()
         }
     }
 
-    std::cout << "work time = " << (allTime / freq) << std::endl;
+	int64 stopLoopTime = cv::getTickCount();
+
+    std::cout << "algorithms time = " << (allTime / freq) << ", work time = " << ((stopLoopTime - startLoopTime) / freq) << std::endl;
 #ifndef SILENT_WORK
     cv::waitKey(m_finishDelay);
 #endif
@@ -230,6 +234,8 @@ void VideoExample::AsyncProcess()
         return;
     }
     trackLock.OpenGate();
+
+	int64 startLoopTime = cv::getTickCount();
 
     for (; !stopCapture && k != 27; )
     {
@@ -310,7 +316,10 @@ void VideoExample::AsyncProcess()
         thCapDet.join();
     }
 
-    std::cout << "work time = " << (allTime / freq) << std::endl;
+	int64 stopLoopTime = cv::getTickCount();
+
+	std::cout << "algorithms time = " << (allTime / freq) << ", work time = " << ((stopLoopTime - startLoopTime) / freq) << std::endl;
+
 #ifndef SILENT_WORK
     cv::waitKey(m_finishDelay);
 #endif
