@@ -99,11 +99,6 @@ void CarsCounting::Process()
             }
         }
 
-        if (!m_outFile.empty() && !writer.isOpened())
-        {
-            writer.open(m_outFile, cv::VideoWriter::fourcc('H', 'F', 'Y', 'U'), m_fps, colorFrame.size(), true);
-        }
-
         int64 t1 = cv::getTickCount();
 
         cv::UMat clFrame;
@@ -142,6 +137,10 @@ void CarsCounting::Process()
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 #endif
 
+		if (!m_outFile.empty() && !writer.isOpened())
+		{
+			writer.open(m_outFile, cv::VideoWriter::fourcc('H', 'F', 'Y', 'U'), m_fps, colorFrame.size(), true);
+		}
         if (writer.isOpened())
         {
             writer << colorFrame;

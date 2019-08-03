@@ -94,26 +94,19 @@ protected:
     /// Get the "front"-element
     /// If the queue is empty, wait till a element is avaiable
     ///
-    T dequeue(void)
+    void dequeue(T& val)
     {
         std::unique_lock<std::mutex> lock(m_mutex);
-        while (m_que.empty())
-        {
-            // release lock as long as the wait and reaquire it afterwards
-            m_cond.wait(lock);
-        }
-        T val = m_que.front();
+		m_cond.wait(lock, [this] { return !m_que.empty(); });
+        val = m_que.front();
         m_que.pop();
-
-        return val;
     }
 
     ///
     size_t size()
     {
-        std::unique_lock<std::mutex> lock(m_mutex);
-        size_t res = m_que.size();
-        return res;
+        std::lock_guard<std::mutex> lock(m_mutex);
+        return m_que.size();
     }
 };
 
