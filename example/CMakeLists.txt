@@ -10,6 +10,7 @@ set(SOURCES
 set(HEADERS
              MouseExample.h
              VideoExample.h
+             examples.h
 )
 
 # ----------------------------------------------------------------------------

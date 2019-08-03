@@ -75,7 +75,7 @@ void AsyncDetector::Process()
 
         DrawData(processedFrame, framesCounter, currTime);
 
-        if (!writer.isOpened())
+        if (!m_outFile.empty() && !writer.isOpened())
         {
             writer.open(m_outFile, cv::VideoWriter::fourcc('H', 'F', 'Y', 'U'), m_fps, processedFrame->m_frame.size(), true);
         }
@@ -273,11 +273,13 @@ void AsyncDetector::CaptureThread(std::string fileName, int startFrame, float* f
     std::string pathToModel = "../data/";
 #endif
 
-    detectorConfig["modelConfiguration"] = pathToModel + "yolov3-tiny.cfg";
-    detectorConfig["modelBinary"] = pathToModel + "yolov3-tiny.weights";
-    detectorConfig["classNames"] = pathToModel + "coco.names";
-    detectorConfig["confidenceThreshold"] = "0.1";
-    detectorConfig["maxCropRatio"] = "2.0";
+    detectorConfig.emplace("modelConfiguration", pathToModel + "yolov3-tiny.cfg");
+    detectorConfig.emplace("modelBinary", pathToModel + "yolov3-tiny.weights");
+    detectorConfig.emplace("classNames", pathToModel + "coco.names");
+    detectorConfig.emplace("confidenceThreshold", "0.1");
+    detectorConfig.emplace("maxCropRatio", "2.0");
+	
+	//detectorConfig.emplace("white_list", "person"); // Uncommit for only pedestrians detection
 
     // Tracker
     const int minStaticTime = 5;

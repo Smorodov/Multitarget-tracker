@@ -48,7 +48,7 @@ With this option the tracking can work match slower but more accuracy.
 
 #### 5. Pipeline
 
-5.1. Syncronous [pipeline](https://github.com/Smorodov/Multitarget-tracker/tree/master/cars_counting):
+5.1. Syncronous [pipeline - SyncProcess](https://github.com/Smorodov/Multitarget-tracker/blob/master/example/VideoExample.h#L77):
 - get frame from capture device;
 - decoding;
 - objects detection (1);
@@ -57,7 +57,7 @@ With this option the tracking can work match slower but more accuracy.
 
 This pipeline is good if all algorithms are fast and works faster than time between two frames (40 ms for device with 25 fps). Or it can be used if we have only 1 core for all (no parallelization).
 
-5.2. Pipeline with [2 threads](https://github.com/Smorodov/Multitarget-tracker/blob/master/example/VideoExample.h#L77):
+5.2. Pipeline with [2 threads - AsyncProcess](https://github.com/Smorodov/Multitarget-tracker/blob/master/example/VideoExample.h#L77):
 - 1th thread takes frame t and makes capture, decoding and objects detection;
 - 2th thread takes frame t-1, results from first thread and makes tracking and results presentation (this is the Main read).
 
@@ -108,7 +108,7 @@ This pipeline can used with slow but accuracy DNN and track objects in intermedi
 **Usage:**
 
            Usage:
-             ./MultitargetTracker <path to movie file> [--example]=<number of example 0..6> [--start_frame]=<start a video from this position> [--end_frame]=<play a video to this position> [--end_delay]=<delay in milliseconds after video ending> [--out]=<name of result video file> [--show_logs]=<show logs> [--gpu]=<use OpenCL>
+             ./MultitargetTracker <path to movie file> [--example]=<number of example 0..6> [--start_frame]=<start a video from this position> [--end_frame]=<play a video to this position> [--end_delay]=<delay in milliseconds after video ending> [--out]=<name of result video file> [--show_logs]=<show logs> [--gpu]=<use OpenCL> [--async]=<async pipeline>
              ./MultitargetTracker ../data/atrium.avi -e=1 -o=../data/atrium_motion.avi
            Press:
            * 'm' key for change mode: play|pause. When video is paused you can press any key for get next frame.
@@ -130,6 +130,9 @@ This pipeline can used with slow but accuracy DNN and track objects in intermedi
               -sl=1 or --show_logs=0
            8. [Optional] Use built-in OpenCL
               -g=1 or --gpu=0
+           9. [Optional] Use 2 threads for processing pipeline
+              -a=1 or --async=0
+
 
 #### Thirdparty libraries
 * OpenCV (and contrib): https://github.com/opencv/opencv and https://github.com/opencv/opencv_contrib

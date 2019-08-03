@@ -69,6 +69,13 @@ bool YoloDarknetDetector::Init(const config_t& config)
         }
     }
 
+	m_classesWhiteList.clear();
+	auto whiteRange = config.equal_range("white_list");
+	for (auto it = whiteRange.first; it != whiteRange.second; ++it)
+	{
+		m_classesWhiteList.insert(it->second);
+	}
+
 	bool correct = m_detector.get() != nullptr;
     return correct;
 }
@@ -90,6 +97,9 @@ void YoloDarknetDetector::Detect(cv::UMat& colorFrame)
 #endif
 	for (const bbox_t& bbox : detects)
 	{
-		m_regions.emplace_back(cv::Rect(bbox.x, bbox.y, bbox.w, bbox.h), m_classNames[bbox.obj_id], bbox.prob);
+		if (m_classesWhiteList.empty() || m_classesWhiteList.find(m_classNames[bbox.obj_id]) != std::end(m_classesWhiteList))
+		{
+			m_regions.emplace_back(cv::Rect(bbox.x, bbox.y, bbox.w, bbox.h), m_classNames[bbox.obj_id], bbox.prob);
+		}
 	}
 }
