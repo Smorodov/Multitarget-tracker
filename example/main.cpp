@@ -1,5 +1,5 @@
 #include "MouseExample.h"
-#include "VideoExample.h"
+#include "examples.h"
 
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/ocl.hpp>
