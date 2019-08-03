@@ -99,7 +99,7 @@ void CarsCounting::Process()
             }
         }
 
-        if (!writer.isOpened())
+        if (!m_outFile.empty() && !writer.isOpened())
         {
             writer.open(m_outFile, cv::VideoWriter::fourcc('H', 'F', 'Y', 'U'), m_fps, colorFrame.size(), true);
         }

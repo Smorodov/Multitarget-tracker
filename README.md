@@ -108,7 +108,7 @@ This pipeline can used with slow but accuracy DNN and track objects in intermedi
 **Usage:**
 
            Usage:
-             ./MultitargetTracker <path to movie file> [--example]=<number of example 0..6> [--start_frame]=<start a video from this position> [--end_frame]=<play a video to this position> [--end_delay]=<delay in milliseconds after video ending> [--out]=<name of result video file> [--show_logs]=<show logs> [--gpu]=<use OpenCL>
+             ./MultitargetTracker <path to movie file> [--example]=<number of example 0..6> [--start_frame]=<start a video from this position> [--end_frame]=<play a video to this position> [--end_delay]=<delay in milliseconds after video ending> [--out]=<name of result video file> [--show_logs]=<show logs> [--gpu]=<use OpenCL> [--async]=<async pipeline>
              ./MultitargetTracker ../data/atrium.avi -e=1 -o=../data/atrium_motion.avi
            Press:
            * 'm' key for change mode: play|pause. When video is paused you can press any key for get next frame.
@@ -130,6 +130,9 @@ This pipeline can used with slow but accuracy DNN and track objects in intermedi
               -sl=1 or --show_logs=0
            8. [Optional] Use built-in OpenCL
               -g=1 or --gpu=0
+           9. [Optional] Use 2 threads for processing pipeline
+              -a=1 or --async=0
+
 
 #### Thirdparty libraries
 * OpenCV (and contrib): https://github.com/opencv/opencv and https://github.com/opencv/opencv_contrib

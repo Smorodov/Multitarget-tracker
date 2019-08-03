@@ -47,23 +47,14 @@ struct Gate
     void WaitAtGate()
     {
         std::unique_lock<std::mutex> lock(m_mutex);
-#if 1
-        m_cond.wait(lock);
-#else
-        m_cond.wait( lock, [this]{ return m_gateOpen; } );
-#endif
+        m_cond.wait(lock, [this]{ return m_gateOpen; });
         m_gateOpen = false;
     }
 
     bool WaitAtGateUntil(int timeOut)
     {
         std::unique_lock<std::mutex> lock(m_mutex);
-        auto now = std::chrono::system_clock::now();
-#if 1
-        bool res = m_cond.wait_until(lock, now + std::chrono::milliseconds(timeOut)) != std::cv_status::timeout;
-#else
-        bool res = m_cond.wait_until(lock, now + std::chrono::milliseconds(timeOut), [this]{ return m_gateOpen; });
-#endif
+        bool res = m_cond.wait_for(lock, std::chrono::milliseconds(timeOut), [this]{ return m_gateOpen; });
         m_gateOpen = false;
         return res;
     }
@@ -80,7 +71,8 @@ public:
     VideoExample(const cv::CommandLineParser& parser);
     virtual ~VideoExample();
 
-    void Process();
+    void AsyncProcess();
+    void SyncProcess();
 
 protected:
     std::unique_ptr<BaseDetector> m_detector;
@@ -92,10 +84,7 @@ protected:
     int m_captureTimeOut;
     int m_trackingTimeOut;
 
-    static void CaptureAndDetect(VideoExample* thisPtr,
-                                 bool* stopCapture,
-                                 Gate* frameLock,
-                                 Gate* trackLock);
+    static void CaptureAndDetect(VideoExample* thisPtr, bool* stopCapture, Gate* frameLock, Gate* trackLock);
 
     virtual bool GrayProcessing() const;
 
@@ -150,7 +139,8 @@ public:
 protected:
     ///
     /// \brief InitTracker
-    /// \param grayFrame
+    /// \param frame
+    /// \return
     ///
     bool InitTracker(cv::UMat frame)
     {
@@ -179,7 +169,7 @@ protected:
         settings.m_distType = tracking::DistCenters;
         settings.m_kalmanType = tracking::KalmanLinear;
         settings.m_filterGoal = tracking::FilterRect;
-        settings.m_lostTrackType = tracking::TrackCSRT;       // Use visual objects tracker for collisions resolving
+        settings.m_lostTrackType = tracking::TrackKCF;       // Use visual objects tracker for collisions resolving
         settings.m_matchType = tracking::MatchHungrian;
         settings.m_dt = 0.4f;                             // Delta time for Kalman filter
         settings.m_accelNoiseMag = 0.5f;                  // Accel noise magnitude for Kalman filter
@@ -207,6 +197,8 @@ protected:
     ///
     /// \brief DrawData
     /// \param frame
+    /// \param framesCounter
+    /// \param currTime
     ///
     void DrawData(cv::Mat frame, int framesCounter, int currTime)
     {
@@ -259,7 +251,8 @@ public:
 protected:
     ///
     /// \brief InitTracker
-    /// \param grayFrame
+    /// \param frame
+    /// \return
     ///
     bool InitTracker(cv::UMat frame)
     {
@@ -298,6 +291,8 @@ protected:
     ///
     /// \brief DrawData
     /// \param frame
+    /// \param framesCounter
+    /// \param currTime
     ///
     void DrawData(cv::Mat frame, int framesCounter, int currTime)
     {
@@ -340,7 +335,8 @@ public:
 protected:
     ///
     /// \brief InitTracker
-    /// \param grayFrame
+    /// \param frame
+    /// \return
     ///
     bool InitTracker(cv::UMat frame)
     {
@@ -384,6 +380,8 @@ protected:
     ///
     /// \brief DrawData
     /// \param frame
+    /// \param framesCounter
+    /// \param currTime
     ///
     void DrawData(cv::Mat frame, int framesCounter, int currTime)
     {
@@ -426,7 +424,8 @@ public:
 protected:
     ///
     /// \brief InitTracker
-    /// \param grayFrame
+    /// \param frame
+    /// \return
     ///
     bool InitTracker(cv::UMat frame)
     {
@@ -470,6 +469,8 @@ protected:
     ///
     /// \brief DrawData
     /// \param frame
+    /// \param framesCounter
+    /// \param currTime
     ///
     void DrawData(cv::Mat frame, int framesCounter, int currTime)
     {
@@ -533,7 +534,8 @@ public:
 protected:
     ///
     /// \brief InitTracker
-    /// \param grayFrame
+    /// \param frame
+    /// \return
     ///
     bool InitTracker(cv::UMat frame)
     {
@@ -592,6 +594,8 @@ protected:
     ///
     /// \brief DrawData
     /// \param frame
+    /// \param framesCounter
+    /// \param currTime
     ///
     void DrawData(cv::Mat frame, int framesCounter, int currTime)
     {
@@ -654,10 +658,11 @@ public:
 	}
 
 protected:
-	///
-	/// \brief InitTracker
-	/// \param grayFrame
-	///
+    ///
+    /// \brief InitTracker
+    /// \param frame
+    /// \return
+    ///
 	bool InitTracker(cv::UMat frame)
 	{
 		config_t config;
@@ -698,10 +703,12 @@ protected:
 		return true;
 	}
 
-	///
-	/// \brief DrawData
-	/// \param frame
-	///
+    ///
+    /// \brief DrawData
+    /// \param frame
+    /// \param framesCounter
+    /// \param currTime
+    ///
 	void DrawData(cv::Mat frame, int framesCounter, int currTime)
 	{
 		auto tracks = m_tracker->GetTracks();

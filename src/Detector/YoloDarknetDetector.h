@@ -27,7 +27,7 @@ public:
 private:
 	std::unique_ptr<Detector> m_detector;
 
-	float m_confidenceThreshold;
-	float m_maxCropRatio;
+    float m_confidenceThreshold = 0.5f;
+    float m_maxCropRatio = 3.0f;
 	std::vector<std::string> m_classNames;
 };

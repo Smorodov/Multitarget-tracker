@@ -75,7 +75,7 @@ void AsyncDetector::Process()
 
         DrawData(processedFrame, framesCounter, currTime);
 
-        if (!writer.isOpened())
+        if (!m_outFile.empty() && !writer.isOpened())
         {
             writer.open(m_outFile, cv::VideoWriter::fourcc('H', 'F', 'Y', 'U'), m_fps, processedFrame->m_frame.size(), true);
         }
