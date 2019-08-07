@@ -70,6 +70,7 @@ public:
 
     void AsyncProcess();
     void SyncProcess();
+    void FutureProcess();
 
 protected:
     std::unique_ptr<BaseDetector> m_detector;
