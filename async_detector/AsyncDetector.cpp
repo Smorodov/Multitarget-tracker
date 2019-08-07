@@ -288,7 +288,7 @@ void AsyncDetector::CaptureThread(std::string fileName, int startFrame, float* f
     trackerSettings.m_distType = tracking::DistCenters;
     trackerSettings.m_kalmanType = tracking::KalmanLinear;
     trackerSettings.m_filterGoal = tracking::FilterRect;
-    trackerSettings.m_lostTrackType = tracking::TrackSTAPLE; // Use KCF tracker for collisions resolving
+    trackerSettings.m_lostTrackType = tracking::TrackKCF; // Use KCF tracker for collisions resolving
     trackerSettings.m_matchType = tracking::MatchHungrian;
     trackerSettings.m_dt = 0.5f;                             // Delta time for Kalman filter
     trackerSettings.m_accelNoiseMag = 0.5f;                  // Accel noise magnitude for Kalman filter

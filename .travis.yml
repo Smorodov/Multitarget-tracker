@@ -12,9 +12,9 @@ matrix:
           sources:
             - ubuntu-toolchain-r-test
           packages:
-            - g++-4.9
+            - g++-7
       env:
-         - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
+         - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
 
 before_install:
   - eval "${MATRIX_EVAL}"
@@ -31,16 +31,16 @@ install:
   - sudo apt-get install -y --allow-unauthenticated python-dev python-numpy libtbb2 libtbb-dev libjpeg-dev libpng-dev libtiff-dev libjasper-dev libdc1394-22-dev
 
   # Download v3.0.0 .zip file and extract.
-  - curl -sL https://github.com/Itseez/opencv/archive/3.4.1.zip > opencv.zip
+  - curl -sL https://github.com/Itseez/opencv/archive/3.4.7.zip > opencv.zip
   - unzip opencv.zip
-  - cd opencv-3.4.1
+  - cd opencv-3.4.7
   
   # Create a new 'build' folder.
   - mkdir build
   - cd build
   
   # Set build instructions for Ubuntu distro.
-  - cmake -D CMAKE_BUILD_TYPE=RELEASE -D CMAKE_INSTALL_PREFIX=/usr/local -D WITH_TBB=ON -D BUILD_NEW_PYTHON_SUPPORT=OFF -D WITH_V4L=ON -D INSTALL_C_EXAMPLES=OFF -D INSTALL_PYTHON_EXAMPLES=OFF -D BUILD_TESTS=OFF -D BUILD_PERF_TESTS=OFF -D BUILD_EXAMPLES=OFF -D WITH_QT=OFF -D WITH_OPENGL=OFF ..
+  - cmake -D CMAKE_BUILD_TYPE=RELEASE -D CMAKE_INSTALL_PREFIX=/usr/local -D WITH_TBB=ON -D BUILD_NEW_PYTHON_SUPPORT=OFF -D WITH_V4L=ON -D INSTALL_C_EXAMPLES=OFF -D INSTALL_PYTHON_EXAMPLES=OFF -D BUILD_TESTS=OFF -D BUILD_PERF_TESTS=OFF -D BUILD_EXAMPLES=OFF -D WITH_QT=OFF -D WITH_OPENGL=OFF -D CPU_BASELINE=AVX2 -D CPU_DISPATCH=AVX2 ..
   
   # Run 'make' with four threads.
   - make -j4
