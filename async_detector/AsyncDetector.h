@@ -26,8 +26,8 @@ struct FrameInfo
 	int64 m_dt = 0;
 	float m_fps = 0;
 
-	int m_inDetector = 0; // 0 - not in Detector, 1 - detector start processing, 2 - objects was detected
-	int m_inTracker = 0; // 0 - not in Tracker, 1 - objects was tracked
+    int m_inDetector = 0; // 0 - not in Detector, 1 - detector started processing, 2 - objects was detected
+    int m_inTracker = 0;  // 0 - not in Tracker, 1 - tracker started processing, 2 - objects was tracked
 };
 
 #include "Queue.h"

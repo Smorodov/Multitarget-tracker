@@ -47,6 +47,7 @@ VideoExample::VideoExample(const cv::CommandLineParser& parser)
       m_captureTimeOut(60000),
       m_trackingTimeOut(60000),
       m_isTrackerInitialized(false),
+      m_fourcc(cv::VideoWriter::fourcc('M', 'J', 'P', 'G')),
       m_startFrame(0),
       m_endFrame(0),
       m_finishDelay(0),
@@ -104,21 +105,11 @@ void VideoExample::SyncProcess()
     int framesCounter = m_startFrame + 1;
 
     cv::VideoCapture capture;
-    if (m_inFile.size() == 1)
-    {
-        capture.open(atoi(m_inFile.c_str()));
-    }
-    else
-    {
-        capture.open(m_inFile);
-    }
-    if (!capture.isOpened())
+    if (!OpenCapture(capture))
     {
         LOG_ERR_TIME << "Can't open " << m_inFile << std::endl;
         return;
     }
-    capture.set(cv::CAP_PROP_POS_FRAMES, m_startFrame);
-    m_fps = std::max(1.f, (float)capture.get(cv::CAP_PROP_FPS));
 
 	int64 startLoopTime = cv::getTickCount();
 
@@ -167,17 +158,7 @@ void VideoExample::SyncProcess()
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
 #endif
 
-        if (!m_outFile.empty())
-        {
-            if (!writer.isOpened())
-            {
-                writer.open(m_outFile, cv::VideoWriter::fourcc('M', 'J', 'P', 'G'), m_fps, frame.size(), true);
-            }
-            if (writer.isOpened())
-            {
-                writer << frame;
-            }
-        }
+        WriteFrame(writer, frame);
 
         ++framesCounter;
         if (m_endFrame && framesCounter > m_endFrame)
@@ -222,7 +203,7 @@ void VideoExample::AsyncProcess()
 
     int framesCounter = m_startFrame + 1;
 
-    if (!frameLock.WaitAtGateUntil(2000))
+    if (!frameLock.WaitAtGateFor(2000))
     {
         LOG_ERR_TIME << "Process: Init capture timeout" << std::endl;
         stopCapture = true;
@@ -241,7 +222,7 @@ void VideoExample::AsyncProcess()
     {
         LOG_TIME << "Process:: lock(frameLock);" << std::endl;
 
-        if (!frameLock.WaitAtGateUntil(m_captureTimeOut))
+        if (!frameLock.WaitAtGateFor(m_captureTimeOut))
         {
             std::cerr << "Process: Frame capture timeout" << std::endl;
             break;
@@ -284,17 +265,7 @@ void VideoExample::AsyncProcess()
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 #endif
 
-        if (!m_outFile.empty())
-        {
-            if (!writer.isOpened())
-            {
-                writer.open(m_outFile, cv::VideoWriter::fourcc('M', 'J', 'P', 'G'), m_fps, frameInfo.m_frame.size(), true);
-            }
-            if (writer.isOpened())
-            {
-                writer << frameInfo.m_frame;
-            }
-        }
+        WriteFrame(writer, frameInfo.m_frame);
 
         trackLock.OpenGate();
         LOG_TIME << "Process:: trackCond.notify_all();" << std::endl;
@@ -338,26 +309,12 @@ void VideoExample::CaptureAndDetect(VideoExample* thisPtr,
                                     Gate* trackLock)
 {
     cv::VideoCapture capture;
-
-    if (thisPtr->m_inFile.size() == 1)
-    {
-        capture.open(atoi(thisPtr->m_inFile.c_str()));
-    }
-    else
-    {
-        capture.open(thisPtr->m_inFile);
-    }
-
-    if (!capture.isOpened())
+    if (!thisPtr->OpenCapture(capture))
     {
         LOG_ERR_TIME << "Can't open " << thisPtr->m_inFile << std::endl;
         *stopCapture = true;
         return;
     }
-
-    capture.set(cv::CAP_PROP_POS_FRAMES, thisPtr->m_startFrame);
-
-    thisPtr->m_fps = std::max(1.f, (float)capture.get(cv::CAP_PROP_FPS));
 
     frameLock->OpenGate();
     LOG_TIME << "CaptureAndDetect:: frameCond->notify_all();" << std::endl;
@@ -367,7 +324,7 @@ void VideoExample::CaptureAndDetect(VideoExample* thisPtr,
         {
             LOG_TIME << "CaptureAndDetect:: lock(*trackLock);" << std::endl;
 
-            if (!trackLock->WaitAtGateUntil(thisPtr->m_trackingTimeOut))
+            if (!trackLock->WaitAtGateFor(thisPtr->m_trackingTimeOut))
             {
                 LOG_ERR_TIME << "CaptureAndDetect: Tracking timeout!" << std::endl;
                 break;
@@ -512,4 +469,52 @@ void VideoExample::DrawTrack(cv::Mat frame,
             }
         }
     }
+}
+
+///
+/// \brief VideoExample::OpenCapture
+/// \param capture
+/// \return
+///
+bool VideoExample::OpenCapture(cv::VideoCapture& capture)
+{
+    if (m_inFile.size() == 1)
+    {
+        capture.open(atoi(m_inFile.c_str()));
+    }
+    else
+    {
+        capture.open(m_inFile);
+    }
+    if (capture.isOpened())
+    {
+        capture.set(cv::CAP_PROP_POS_FRAMES, m_startFrame);
+
+        m_fps = std::max(1.f, (float)capture.get(cv::CAP_PROP_FPS));
+        return true;
+    }
+    return true;
+}
+
+///
+/// \brief VideoExample::WriteFrame
+/// \param writer
+/// \param frame
+/// \return
+///
+bool VideoExample::WriteFrame(cv::VideoWriter& writer, const cv::Mat& frame)
+{
+    if (!m_outFile.empty())
+    {
+        if (!writer.isOpened())
+        {
+            writer.open(m_outFile, m_fourcc, m_fps, frame.size(), true);
+        }
+        if (writer.isOpened())
+        {
+            writer << frame;
+            return true;
+        }
+    }
+    return false;
 }
