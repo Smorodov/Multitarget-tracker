@@ -123,10 +123,16 @@ public:
     /// \brief AddNewFrame
     /// \param frameInfo
     ///
-    void AddNewFrame(frame_ptr frameInfo)
+    void AddNewFrame(frame_ptr frameInfo, size_t maxQueueSize)
     {
         //QUE_LOG << "AddNewFrame start: " << frameInfo->m_dt << std::endl;
-        enqueue(frameInfo);
+		std::lock_guard<std::mutex> lock(m_mutex);
+
+		if (maxQueueSize > 0 || m_que.size() < maxQueueSize)
+		{
+			m_que.push_back(frameInfo);
+		}
+		m_cond.notify_all();
         //QUE_LOG << "AddNewFrame end: " << frameInfo->m_dt << std::endl;
     }
 
