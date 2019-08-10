@@ -46,6 +46,9 @@ include_directories(${OpenCV_INCLUDE_DIRS})
 include_directories(${CUDA_INCLUDE_DIRS})
 include_directories(${CUDNN_INCLUDE_DIR})
 
+include_directories(${PROJECT_SOURCE_DIR}/include)
+include_directories(${PROJECT_SOURCE_DIR}/3rdparty/stb/include)
+
 if (MSVC)
     if("${CMAKE_SIZEOF_VOID_P}" STREQUAL "4")
         set(BIT_SYSTEM x32)
@@ -63,22 +66,16 @@ else()
     set(LIB_PTHREAD pthread)
 endif()
 
-file(GLOB DARKNET_SOURCE_FILES *.c)
-set(DARKNET_SOURCE_FILES ${DARKNET_SOURCE_FILES} yolo_v2_class.cpp http_stream.cpp)
+file(GLOB DARKNET_SOURCE_FILES src/*.c)
+set(DARKNET_SOURCE_FILES ${DARKNET_SOURCE_FILES} src/yolo_v2_class.cpp src/http_stream.cpp src/image_opencv.cpp)
 
-file(GLOB DARKNET_HEADER_FILES *.h)
-set(DARKNET_HEADER_FILES ${DARKNET_HEADER_FILES} yolo_v2_class.hpp)
+file(GLOB DARKNET_HEADER_FILES src/*.h)
+set(DARKNET_HEADER_FILES ${DARKNET_HEADER_FILES} include/darknet.h include/yolo_v2_class.hpp)
 
-if (CMAKE_COMPILER_IS_GNUCXX)
-    # message("${DARKNET_HEADER_FILES}")
-    list(REMOVE_ITEM DARKNET_HEADER_FILES ${PROJECT_SOURCE_DIR}/unistd.h)
-    # message("${DARKNET_HEADER_FILES}")
-endif()
-
-file(GLOB DARKNET_CUDA_FILES *.cu)
+file(GLOB DARKNET_CUDA_FILES src/*.cu)
 
 add_definitions(-DYOLO_DETECTOR_EXPORTS)
-add_definitions(-DYOLODLL_EXPORTS)
+add_definitions(-DLIB_EXPORTS)
 add_definitions(-DGPU)
 add_definitions(-DCUDNN)
 # add_definitions(-DOPENCV)
@@ -95,9 +92,9 @@ cuda_add_library(${libname} SHARED
 
 set(YOLO_LIBS
     ${OpenCV_LIBS}
-    #${CUDA_LIBRARIES}
+    ${CUDA_LIBRARIES}
     ${CUDA_CUDART_LIBRARY}
-    #${CUDA_CUDA_LIBRARY}
+    ${CUDA_CUDA_LIBRARY}
     ${CUDA_cublas_LIBRARY}
     ${CUDA_curand_LIBRARY}
     ${CUDNN_LIBRARY}
