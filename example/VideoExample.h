@@ -7,6 +7,7 @@
 #include <mutex>
 #include <chrono>
 #include <condition_variable>
+#include <atomic>
 
 #include "BaseDetector.h"
 #include "Ctracker.h"
@@ -71,6 +72,7 @@ public:
     void AsyncProcess();
     void SyncProcess();
     void FutureProcess();
+    //void QueueProcess();
 
 protected:
     std::unique_ptr<BaseDetector> m_detector;
@@ -82,7 +84,7 @@ protected:
     int m_captureTimeOut = 60000;
     int m_trackingTimeOut = 60000;
 
-    static void CaptureAndDetect(VideoExample* thisPtr, bool* stopCapture, Gate* frameLock, Gate* trackLock);
+    static void CaptureAndDetect(VideoExample* thisPtr, std::atomic<bool>& stopCapture, Gate* frameLock, Gate* trackLock);
 
     virtual bool GrayProcessing() const;
 

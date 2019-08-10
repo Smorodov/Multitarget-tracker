@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <mutex>
 #include <condition_variable>
+#include <atomic>
 
 ///
 /// \brief currTime
@@ -39,11 +40,13 @@ public:
         , m_cond()
     {
     }
+    SafeQueue(const SafeQueue&) = delete;
+    SafeQueue(SafeQueue&&) = delete;
+    SafeQueue& operator=(const SafeQueue&) = delete;
+    SafeQueue& operator=(SafeQueue&&) = delete;
 
     ///
-    virtual ~SafeQueue(void)
-    {
-    }
+    virtual ~SafeQueue(void) = default;
 
 protected:
     typedef std::list<T> queue_t;
@@ -119,6 +122,13 @@ typedef std::shared_ptr<FrameInfo> frame_ptr;
 class FramesQueue : public SafeQueue<frame_ptr>
 {
 public:
+    ///
+    /// \brief FramesQueue
+    ///
+    FramesQueue()
+        : m_break(false)
+    {}
+
     ///
     /// \brief AddNewFrame
     /// \param frameInfo
@@ -297,5 +307,5 @@ public:
     }
 
 private:
-    bool m_break = false;
+    std::atomic<bool> m_break;
 };
