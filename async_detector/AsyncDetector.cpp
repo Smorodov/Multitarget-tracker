@@ -336,7 +336,7 @@ void AsyncDetector::CaptureThread(std::string fileName, int startFrame, float* f
 		}
         cv::cvtColor(frameInfo->m_frame, frameInfo->m_gray, cv::COLOR_BGR2GRAY);
 
-        framesQue->AddNewFrame(frameInfo);
+        framesQue->AddNewFrame(frameInfo, 15);
 
         std::this_thread::sleep_for(std::chrono::milliseconds(1000 / cvRound(*fps)));
     }

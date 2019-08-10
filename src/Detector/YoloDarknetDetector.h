@@ -3,7 +3,7 @@
 #include "BaseDetector.h"
 
 #define OPENCV
-#include "darknet/yolo_v2_class.hpp"
+#include "darknet/include/yolo_v2_class.hpp"
 #undef OPENCV
 // You only look once (YOLO)-Detector (https://arxiv.org/abs/1612.08242) to detect objects
 // Models can be downloaded here: https://pjreddie.com/darknet/yolo/
