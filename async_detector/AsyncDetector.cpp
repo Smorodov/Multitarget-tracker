@@ -87,7 +87,7 @@ void AsyncDetector::Process()
 #ifndef SILENT_WORK
         cv::imshow("Video", processedFrame->m_frame);
 
-        int waitTime = std::max<int>(1, cvRound(1000 / m_fps - currTime));
+		int waitTime = 1;// std::max<int>(1, cvRound(1000 / m_fps - currTime));
         k = cv::waitKey(waitTime);
         if (k == 27)
         {

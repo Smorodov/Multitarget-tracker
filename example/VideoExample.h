@@ -71,8 +71,6 @@ public:
 
     void AsyncProcess();
     void SyncProcess();
-    void FutureProcess();
-    //void QueueProcess();
 
 protected:
     std::unique_ptr<BaseDetector> m_detector;

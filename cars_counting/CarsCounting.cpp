@@ -123,7 +123,7 @@ void CarsCounting::Process()
 #ifndef SILENT_WORK
         cv::imshow("Video", colorFrame);
 
-        int waitTime = manualMode ? 0 : std::max<int>(1, cvRound(1000 / m_fps - currTime));
+		int waitTime = manualMode ? 0 : 1;// std::max<int>(1, cvRound(1000 / m_fps - currTime));
         k = cv::waitKey(waitTime);
         if (k == 'm' || k == 'M')
         {
