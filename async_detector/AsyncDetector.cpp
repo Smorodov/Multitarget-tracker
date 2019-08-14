@@ -220,7 +220,7 @@ void AsyncDetector::DrawData(frame_ptr frameInfo, int framesCounter, int currTim
 
                 DrawTrack(frameInfo->m_frame, 1, track, true);
 
-				std::string label = track.m_type + ": " + std::to_string(track.m_confidence);
+				std::string label = track.m_type;// +": " + std::to_string(track.m_confidence);
 				int baseLine = 0;
 				cv::Size labelSize = cv::getTextSize(label, cv::FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
 
@@ -273,13 +273,26 @@ void AsyncDetector::CaptureThread(std::string fileName, int startFrame, float* f
     std::string pathToModel = "../data/";
 #endif
 
-    detectorConfig.emplace("modelConfiguration", pathToModel + "yolov3-tiny.cfg");
-    detectorConfig.emplace("modelBinary", pathToModel + "yolov3-tiny.weights");
+#if 0
+	detectorConfig.emplace("modelConfiguration", pathToModel + "yolov3-tiny.cfg");
+	detectorConfig.emplace("modelBinary", pathToModel + "yolov3-tiny.weights");
+#else
+	detectorConfig.emplace("modelConfiguration", pathToModel + "yolov3.cfg");
+	detectorConfig.emplace("modelBinary", pathToModel + "yolov3.weights");
+#endif
     detectorConfig.emplace("classNames", pathToModel + "coco.names");
     detectorConfig.emplace("confidenceThreshold", "0.1");
     detectorConfig.emplace("maxCropRatio", "2.0");
 	
 	//detectorConfig.emplace("white_list", "person"); // Uncommit for only pedestrians detection
+	detectorConfig.emplace("white_list", "person");
+	detectorConfig.emplace("white_list", "car");
+	detectorConfig.emplace("white_list", "bicycle");
+	detectorConfig.emplace("white_list", "motorbike");
+	detectorConfig.emplace("white_list", "bus");
+	detectorConfig.emplace("white_list", "truck");
+	detectorConfig.emplace("white_list", "traffic light");
+	detectorConfig.emplace("white_list", "stop sign");
 
     // Tracker
     const int minStaticTime = 5;

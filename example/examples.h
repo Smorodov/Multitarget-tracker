@@ -555,12 +555,25 @@ protected:
 #else
 		std::string pathToModel = "../data/";
 #endif
-
+#if 0
 		config.emplace("modelConfiguration", pathToModel + "yolov3-tiny.cfg");
 		config.emplace("modelBinary", pathToModel + "yolov3-tiny.weights");
+#else
+		config.emplace("modelConfiguration", pathToModel + "yolov3.cfg");
+		config.emplace("modelBinary", pathToModel + "yolov3.weights");
+#endif
 		config.emplace("classNames", pathToModel + "coco.names");
 		config.emplace("confidenceThreshold", "0.1");
 		config.emplace("maxCropRatio", "2.0");
+
+		config.emplace("white_list", "person");
+		config.emplace("white_list", "car");
+		config.emplace("white_list", "bicycle");
+		config.emplace("white_list", "motorbike");
+		config.emplace("white_list", "bus");
+		config.emplace("white_list", "truck");
+		config.emplace("white_list", "traffic light");
+		config.emplace("white_list", "stop sign");
 
         m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Yolo_Darknet, config, frame));
 		if (!m_detector.get())
