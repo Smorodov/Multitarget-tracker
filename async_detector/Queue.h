@@ -138,12 +138,13 @@ public:
         //QUE_LOG << "AddNewFrame start: " << frameInfo->m_dt << std::endl;
 		std::lock_guard<std::mutex> lock(m_mutex);
 
-		if (maxQueueSize > 0 || m_que.size() < maxQueueSize)
+		if (!maxQueueSize || (maxQueueSize > 0 && m_que.size() < maxQueueSize))
 		{
 			m_que.push_back(frameInfo);
 		}
+		//QUE_LOG << "AddNewFrame end: " << frameInfo->m_dt << ", queue size " << m_que.size() << std::endl;
+
 		m_cond.notify_all();
-        //QUE_LOG << "AddNewFrame end: " << frameInfo->m_dt << std::endl;
     }
 
     ///

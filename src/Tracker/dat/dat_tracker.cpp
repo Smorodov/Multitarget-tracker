@@ -192,8 +192,8 @@ cv::RotatedRect DAT_TRACKER::Update(const cv::Mat &im, float& confidence)
             cv::rectangle(pm_search_color, hypotheses[i], cv::Scalar(0, 255, 255 * (i != best_candidate)), 2);
         }
 #ifndef SILENT_WORK
-        cv::imshow("Search Window", pm_search_color);
-        cv::waitKey(1);
+        //cv::imshow("Search Window", pm_search_color);
+        //cv::waitKey(1);
 #endif
     }
 
