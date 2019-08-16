@@ -264,11 +264,9 @@ void STAPLE_TRACKER::updateHistModel(bool new_model, cv::Mat &patch, double lear
     bg_mask(pad1_rect) = false;
 
     ////////////////////////////////////////////////////////////////////////
-    cv::Size pad_offset2;
-
+    
     // we constrained the difference to be mod2, so we do not have to round here
-    pad_offset2.width = (bg_area.width - fg_area.width) / 2;
-    pad_offset2.height = (bg_area.height - fg_area.height) / 2;
+	cv::Size pad_offset2((bg_area.width - fg_area.width) / 2, (bg_area.height - fg_area.height) / 2);
 
     // difference between bg_area and fg_area has to be even
     if (
@@ -286,11 +284,37 @@ void STAPLE_TRACKER::updateHistModel(bool new_model, cv::Mat &patch, double lear
     pad_offset2.width = fmax(pad_offset2.width, 1);
     pad_offset2.height = fmax(pad_offset2.height, 1);
 
-    //std::cout << "pad_offset2 " << pad_offset2 << std::endl;
-
     cv::Mat fg_mask(bg_area, CV_8UC1, cv::Scalar(0)); // init fg_mask
 
     // xxx: fg_mask(pad_offset2(1)+1:end-pad_offset2(1), pad_offset2(2)+1:end-pad_offset2(2)) = true;
+
+	auto Clamp = [](int& v, int& size, int hi) -> int
+	{
+		int res = 0;
+
+		if (size < 2)
+		{
+			size = 2;
+		}
+		if (v < 0)
+		{
+			res = v;
+			v = 0;
+			return res;
+		}
+		else if (v + size > hi - 1)
+		{
+			v = hi - 1 - size;
+			if (v < 0)
+			{
+				size += v;
+				v = 0;
+			}
+			res = v;
+			return res;
+		}
+		return res;
+	};
 
     cv::Rect pad2_rect(
                 pad_offset2.width,
@@ -299,7 +323,10 @@ void STAPLE_TRACKER::updateHistModel(bool new_model, cv::Mat &patch, double lear
                 bg_area.height - 2 * pad_offset2.height
                 );
 
-    fg_mask(pad2_rect) = true;
+	if (!Clamp(pad2_rect.x, pad2_rect.width, fg_mask.cols) && !Clamp(pad2_rect.y, pad2_rect.height, fg_mask.rows))
+	{
+		fg_mask(pad2_rect) = true;
+	}
     ////////////////////////////////////////////////////////////////////////
 
     cv::Mat fg_mask_new;

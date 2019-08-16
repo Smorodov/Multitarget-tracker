@@ -39,8 +39,8 @@ int main(int argc, char** argv)
     cv::ocl::setUseOpenCL(useOCL);
     std::cout << (cv::ocl::useOpenCL() ? "OpenCL is enabled" : "OpenCL not used") << std::endl;
 
-    AsyncDetector slow_detector(parser);
-    slow_detector.Process();
+    AsyncDetector asyncDetector(parser);
+	asyncDetector.Process();
 
 #ifndef SILENT_WORK
     cv::destroyAllWindows();
