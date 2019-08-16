@@ -212,7 +212,7 @@ void AsyncDetector::DrawData(frame_ptr frameInfo, int framesCounter, int currTim
         else
         {
             if (track.IsRobust(5,          // Minimal trajectory size
-                               -1.f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
+                               0.3f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
                                cv::Size2f(0.1f, 8.0f))      // Min and max ratio: width / height
                     )
             {
