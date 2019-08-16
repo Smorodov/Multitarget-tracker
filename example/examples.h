@@ -21,19 +21,17 @@ public:
 
 protected:
     ///
-    /// \brief InitTracker
+    /// \brief InitDetector
     /// \param frame
     /// \return
     ///
-    bool InitTracker(cv::UMat frame)
+    bool InitDetector(cv::UMat frame)
     {
         m_minObjWidth = frame.cols / 50;
 
-        const int minStaticTime = 5;
-
         config_t config;
 #if 1
-        config.emplace("history", std::to_string(cvRound(10 * minStaticTime * m_fps)));
+        config.emplace("history", std::to_string(cvRound(10 * m_minStaticTime * m_fps)));
         config.emplace("varThreshold", "16");
         config.emplace("detectShadows", "1");
         config.emplace("useRotatedRect", "0");
@@ -46,8 +44,21 @@ protected:
         config.emplace("useRotatedRect", "0");
         m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Motion_CNT, config, frame));
 #endif
-        m_detector->SetMinObjectSize(cv::Size(m_minObjWidth, m_minObjWidth));
 
+        if (m_detector.get())
+        {
+            m_detector->SetMinObjectSize(cv::Size(m_minObjWidth, m_minObjWidth));
+            return true;
+        }
+        return false;
+    }
+    ///
+    /// \brief InitTracker
+    /// \param frame
+    /// \return
+    ///
+    bool InitTracker(cv::UMat frame)
+    {
         TrackerSettings settings;
         settings.m_distType = tracking::DistCenters;
         settings.m_kalmanType = tracking::KalmanLinear;
@@ -61,7 +72,7 @@ protected:
         settings.m_useAbandonedDetection = false;
         if (settings.m_useAbandonedDetection)
         {
-            settings.m_minStaticTime = minStaticTime;
+            settings.m_minStaticTime = m_minStaticTime;
             settings.m_maxStaticTime = 60;
             settings.m_maximumAllowedSkippedFrames = cvRound(settings.m_minStaticTime * m_fps); // Maximum allowed skipped frames
             settings.m_maxTraceLength = 2 * settings.m_maximumAllowedSkippedFrames;        // Maximum trace length
@@ -114,7 +125,8 @@ protected:
     }
 
 private:
-    int m_minObjWidth;
+    int m_minObjWidth = 8;
+    int m_minStaticTime = 5;
 };
 
 // ----------------------------------------------------------------------
@@ -133,27 +145,35 @@ public:
 
 protected:
     ///
+    /// \brief InitDetector
+    /// \param frame
+    /// \return
+    ///
+    bool InitDetector(cv::UMat frame)
+    {
+#ifdef _WIN32
+        std::string pathToModel = "../../data/";
+#else
+        std::string pathToModel = "../data/";
+#endif
+
+        config_t config;
+        config.emplace("cascadeFileName", pathToModel + "haarcascade_frontalface_alt2.xml");
+        m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Face_HAAR, config, frame));
+        if (m_detector.get())
+        {
+            m_detector->SetMinObjectSize(cv::Size(frame.cols / 20, frame.rows / 20));
+            return true;
+        }
+        return false;
+    }
+    ///
     /// \brief InitTracker
     /// \param frame
     /// \return
     ///
     bool InitTracker(cv::UMat frame)
     {
-#ifdef _WIN32
-		std::string pathToModel = "../../data/";
-#else
-		std::string pathToModel = "../data/";
-#endif
-
-        config_t config;
-        config.emplace("cascadeFileName", pathToModel + "haarcascade_frontalface_alt2.xml");
-        m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Face_HAAR, config, frame));
-        if (!m_detector.get())
-        {
-            return false;
-        }
-        m_detector->SetMinObjectSize(cv::Size(frame.cols / 20, frame.rows / 20));
-
         TrackerSettings settings;
         settings.m_distType = tracking::DistJaccard;
         settings.m_kalmanType = tracking::KalmanUnscented;
@@ -217,18 +237,18 @@ public:
 
 protected:
     ///
-    /// \brief InitTracker
+    /// \brief InitDetector
     /// \param frame
     /// \return
     ///
-    bool InitTracker(cv::UMat frame)
+    bool InitDetector(cv::UMat frame)
     {
         tracking::Detectors detectorType = tracking::Detectors::Pedestrian_C4; // tracking::Detectors::Pedestrian_HOG;
 
 #ifdef _WIN32
-		std::string pathToModel = "../../data/";
+        std::string pathToModel = "../../data/";
 #else
-		std::string pathToModel = "../data/";
+        std::string pathToModel = "../data/";
 #endif
 
         config_t config;
@@ -236,13 +256,20 @@ protected:
         config.emplace("cascadeFileName1", pathToModel + "combined.txt.model");
         config.emplace("cascadeFileName2", pathToModel + "combined.txt.model_");
         m_detector = std::unique_ptr<BaseDetector>(CreateDetector(detectorType, config, frame));
-        if (!m_detector.get())
+        if (m_detector.get())
         {
-            return false;
+            m_detector->SetMinObjectSize(cv::Size(frame.cols / 20, frame.rows / 20));
+            return true;
         }
-        m_detector->SetMinObjectSize(cv::Size(frame.cols / 20, frame.rows / 20));
-
-
+        return false;
+    }
+    ///
+    /// \brief InitTracker
+    /// \param frame
+    /// \return
+    ///
+    bool InitTracker(cv::UMat frame)
+    {
         TrackerSettings settings;
         settings.m_distType = tracking::DistRects;
         settings.m_kalmanType = tracking::KalmanLinear;
@@ -306,16 +333,16 @@ public:
 
 protected:
     ///
-    /// \brief InitTracker
+    /// \brief InitDetector(
     /// \param frame
     /// \return
     ///
-    bool InitTracker(cv::UMat frame)
+    bool InitDetector(cv::UMat frame)
     {
 #ifdef _WIN32
-		std::string pathToModel = "../../data/";
+        std::string pathToModel = "../../data/";
 #else
-		std::string pathToModel = "../data/";
+        std::string pathToModel = "../data/";
 #endif
         config_t config;
         config.emplace("modelConfiguration", pathToModel + "MobileNetSSD_deploy.prototxt");
@@ -326,12 +353,20 @@ protected:
         config.emplace("dnnBackend", "DNN_BACKEND_INFERENCE_ENGINE");
 
         m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::SSD_MobileNet, config, frame));
-        if (!m_detector.get())
+        if (m_detector.get())
         {
-            return false;
+            m_detector->SetMinObjectSize(cv::Size(frame.cols / 20, frame.rows / 20));
+            return true;
         }
-        m_detector->SetMinObjectSize(cv::Size(frame.cols / 20, frame.rows / 20));
-
+        return false;
+    }
+    ///
+    /// \brief InitTracker
+    /// \param frame
+    /// \return
+    ///
+    bool InitTracker(cv::UMat frame)
+    {
         TrackerSettings settings;
         settings.m_distType = tracking::DistRects;
         settings.m_kalmanType = tracking::KalmanLinear;
@@ -416,19 +451,19 @@ public:
 
 protected:
     ///
-    /// \brief InitTracker
+    /// \brief InitDetector(
     /// \param frame
     /// \return
     ///
-    bool InitTracker(cv::UMat frame)
+    bool InitDetector(cv::UMat frame)
     {
         config_t config;
         const int yoloTest = 0;
 
 #ifdef _WIN32
-		std::string pathToModel = "../../data/";
+        std::string pathToModel = "../../data/";
 #else
-		std::string pathToModel = "../data/";
+        std::string pathToModel = "../data/";
 #endif
 
         switch (yoloTest)
@@ -451,12 +486,20 @@ protected:
         config.emplace("dnnBackend", "DNN_BACKEND_INFERENCE_ENGINE");
 
         m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Yolo_OCV, config, frame));
-        if (!m_detector.get())
+        if (m_detector.get())
         {
-            return false;
+            m_detector->SetMinObjectSize(cv::Size(frame.cols / 40, frame.rows / 40));
+            return true;
         }
-        m_detector->SetMinObjectSize(cv::Size(frame.cols / 40, frame.rows / 40));
-
+        return false;
+    }
+    ///
+    /// \brief InitTracker
+    /// \param frame
+    /// \return
+    ///
+    bool InitTracker(cv::UMat frame)
+    {
         TrackerSettings settings;
         settings.m_distType = tracking::DistRects;
         settings.m_kalmanType = tracking::KalmanLinear;
@@ -542,46 +585,54 @@ public:
 
 protected:
     ///
+    /// \brief InitDetector
+    /// \param frame
+    /// \return
+    ///
+    bool InitDetector(cv::UMat frame)
+    {
+        config_t config;
+
+#ifdef _WIN32
+        std::string pathToModel = "../../data/";
+#else
+        std::string pathToModel = "../data/";
+#endif
+#if 0
+        config.emplace("modelConfiguration", pathToModel + "yolov3-tiny.cfg");
+        config.emplace("modelBinary", pathToModel + "yolov3-tiny.weights");
+#else
+        config.emplace("modelConfiguration", pathToModel + "yolov3.cfg");
+        config.emplace("modelBinary", pathToModel + "yolov3.weights");
+#endif
+        config.emplace("classNames", pathToModel + "coco.names");
+        config.emplace("confidenceThreshold", "0.1");
+        config.emplace("maxCropRatio", "2.0");
+
+        config.emplace("white_list", "person");
+        config.emplace("white_list", "car");
+        config.emplace("white_list", "bicycle");
+        config.emplace("white_list", "motorbike");
+        config.emplace("white_list", "bus");
+        config.emplace("white_list", "truck");
+        config.emplace("white_list", "traffic light");
+        config.emplace("white_list", "stop sign");
+
+        m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Yolo_Darknet, config, frame));
+        if (m_detector.get())
+        {
+            m_detector->SetMinObjectSize(cv::Size(frame.cols / 40, frame.rows / 40));
+            return true;
+        }
+        return false;
+    }
+    ///
     /// \brief InitTracker
     /// \param frame
     /// \return
     ///
-	bool InitTracker(cv::UMat frame)
+    bool InitTracker(cv::UMat frame)
 	{
-		config_t config;
-
-#ifdef _WIN32
-		std::string pathToModel = "../../data/";
-#else
-		std::string pathToModel = "../data/";
-#endif
-#if 0
-		config.emplace("modelConfiguration", pathToModel + "yolov3-tiny.cfg");
-		config.emplace("modelBinary", pathToModel + "yolov3-tiny.weights");
-#else
-		config.emplace("modelConfiguration", pathToModel + "yolov3.cfg");
-		config.emplace("modelBinary", pathToModel + "yolov3.weights");
-#endif
-		config.emplace("classNames", pathToModel + "coco.names");
-		config.emplace("confidenceThreshold", "0.1");
-		config.emplace("maxCropRatio", "2.0");
-
-		config.emplace("white_list", "person");
-		config.emplace("white_list", "car");
-		config.emplace("white_list", "bicycle");
-		config.emplace("white_list", "motorbike");
-		config.emplace("white_list", "bus");
-		config.emplace("white_list", "truck");
-		config.emplace("white_list", "traffic light");
-		config.emplace("white_list", "stop sign");
-
-        m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Yolo_Darknet, config, frame));
-		if (!m_detector.get())
-		{
-			return false;
-		}
-		m_detector->SetMinObjectSize(cv::Size(frame.cols / 40, frame.rows / 40));
-
 		TrackerSettings settings;
 		settings.m_distType = tracking::DistRects;
 		settings.m_kalmanType = tracking::KalmanLinear;
