@@ -94,6 +94,11 @@ This pipeline can used with slow but accuracy DNN and track objects in intermedi
 
 [![Simple Abandoned detector:](https://img.youtube.com/vi/fpkHRsFzspA/0.jpg)](https://www.youtube.com/watch?v=fpkHRsFzspA)
 
+#### Tested Platforms
+1. Ubuntu Linux 18.04 with x86 processors
+2. Ubuntu Linux 18.04 with Nvidia Jetson Nano (YOLO + darknet on GPU works!)
+3. Windows 10 (x64 and x32 builds)
+
 #### Build
 1. Download project sources
 2. Install CMake
