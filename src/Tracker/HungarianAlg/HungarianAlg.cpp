@@ -546,11 +546,11 @@ void AssignmentProblemSolver::assignmentsuboptimal1(assignments_t& assignment, t
 
 					if (singleValidationFound)
 					{
-						for (size_t row = 0; row < nOfRows; row++)
-							if ((nOfValidObservations[row] > 1) && distMatrix[row + nOfRows*col] != std::numeric_limits<track_t>::max())
+						for (size_t nestedRow = 0; nestedRow < nOfRows; nestedRow++)
+							if ((nOfValidObservations[nestedRow] > 1) && distMatrix[nestedRow + nOfRows*col] != std::numeric_limits<track_t>::max())
 							{
-								distMatrix[row + nOfRows*col] = std::numeric_limits<track_t>::max();
-								nOfValidObservations[row] -= 1;
+								distMatrix[nestedRow + nOfRows*col] = std::numeric_limits<track_t>::max();
+								nOfValidObservations[nestedRow] -= 1;
 								nOfValidTracks[col] -= 1;
 								repeatSteps = true;
 							}
