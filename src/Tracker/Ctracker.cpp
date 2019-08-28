@@ -27,29 +27,29 @@ CTracker::~CTracker(void)
 ///
 /// \brief CTracker::Update
 /// \param regions
-/// \param grayFrame
+/// \param currFrame
 /// \param fps
 ///
 void CTracker::Update(
         const regions_t& regions,
-        cv::UMat grayFrame,
+        cv::UMat currFrame,
         float fps
         )
 {
-    UpdateTrackingState(regions, grayFrame, fps);
+    UpdateTrackingState(regions, currFrame, fps);
 
-    grayFrame.copyTo(m_prevFrame);
+    currFrame.copyTo(m_prevFrame);
 }
 
 ///
 /// \brief CTracker::UpdateTrackingState
 /// \param regions
-/// \param grayFrame
+/// \param currFrame
 /// \param fps
 ///
 void CTracker::UpdateTrackingState(
         const regions_t& regions,
-        cv::UMat grayFrame,
+        cv::UMat currFrame,
         float fps
         )
 {
@@ -62,9 +62,9 @@ void CTracker::UpdateTrackingState(
     {
         // Distance matrix between all tracks to all regions
         distMatrix_t costMatrix(N * M);
-        const track_t maxPossibleCost = static_cast<track_t>(grayFrame.cols * grayFrame.rows);
+        const track_t maxPossibleCost = static_cast<track_t>(currFrame.cols * currFrame.rows);
         track_t maxCost = 0;
-        CreateDistaceMatrix(regions, costMatrix, maxPossibleCost, maxCost);
+        CreateDistaceMatrix(regions, costMatrix, maxPossibleCost, maxCost, currFrame);
 
         // Solving assignment problem (tracks and predictions of Kalman filter)
         if (m_settings.m_matchType == tracking::MatchHungrian)
@@ -134,12 +134,12 @@ void CTracker::UpdateTrackingState(
             m_tracks[i]->Update(
                         regions[assignment[i]], true,
                     m_settings.m_maxTraceLength,
-                    m_prevFrame, grayFrame,
+                    m_prevFrame, currFrame,
                     m_settings.m_useAbandonedDetection ? cvRound(m_settings.m_minStaticTime * fps) : 0);
         }
         else				     // if not continue using predictions
         {
-            m_tracks[i]->Update(CRegion(), false, m_settings.m_maxTraceLength, m_prevFrame, grayFrame, 0);
+            m_tracks[i]->Update(CRegion(), false, m_settings.m_maxTraceLength, m_prevFrame, currFrame, 0);
         }
     }
 }
@@ -151,57 +151,57 @@ void CTracker::UpdateTrackingState(
 /// \param maxPossibleCost
 /// \param maxCost
 ///
-void CTracker::CreateDistaceMatrix(const regions_t& regions, distMatrix_t& costMatrix, track_t maxPossibleCost, track_t& maxCost)
+void CTracker::CreateDistaceMatrix(const regions_t& regions, distMatrix_t& costMatrix, track_t maxPossibleCost, track_t& maxCost, cv::UMat currFrame)
 {
     const size_t N = m_tracks.size();	// Tracking objects
     maxCost = 0;
-    switch (m_settings.m_distType)
-    {
-    case tracking::DistCenters:
-        for (size_t i = 0; i < m_tracks.size(); i++)
-        {
-            for (size_t j = 0; j < regions.size(); j++)
-            {
-                auto dist = m_tracks[i]->CheckType(regions[j].m_type) ? m_tracks[i]->CalcDist(regions[j].m_rrect.center) : maxPossibleCost;
-                costMatrix[i + j * N] = dist;
-                if (dist > maxCost)
-                {
-                    maxCost = dist;
-                }
-            }
-        }
-        break;
 
-    case tracking::DistRects:
-        for (size_t i = 0; i < m_tracks.size(); i++)
-        {
-            for (size_t j = 0; j < regions.size(); j++)
-            {
-                auto dist = m_tracks[i]->CheckType(regions[j].m_type) ? m_tracks[i]->CalcDist(regions[j]) : maxPossibleCost;
-                costMatrix[i + j * N] = dist;
-                if (dist > maxCost)
-                {
-                    maxCost = dist;
-                }
-            }
-        }
-        break;
+	for (size_t i = 0; i < m_tracks.size(); i++)
+	{
+		const auto& track = m_tracks[i];
 
-    case tracking::DistJaccard:
-        for (size_t i = 0; i < m_tracks.size(); i++)
-        {
-            for (size_t j = 0; j < regions.size(); j++)
-            {
-                auto dist = m_tracks[i]->CheckType(regions[j].m_type) ? m_tracks[i]->CalcDistJaccard(regions[j]) : 1;
-                costMatrix[i + j * N] = dist;
-                if (dist > maxCost)
-                {
-                    maxCost = dist;
-                }
-            }
-        }
-        break;
-    }
+		for (size_t j = 0; j < regions.size(); j++)
+		{
+			auto dist = maxPossibleCost;
+			if (m_tracks[i]->CheckType(regions[j].m_type))
+			{
+				dist = 0;
+				size_t ind = 0;
+				if (m_settings.m_distType[ind] > 0.0f && ind == tracking::DistCenters)
+				{
+					dist += m_settings.m_distType[ind] * track->CalcDistCenter(regions[j]);
+				}
+				++ind;
+				if (m_settings.m_distType[ind] > 0.0f && ind == tracking::DistRects)
+				{
+					dist += m_settings.m_distType[ind] * track->CalcDistRect(regions[j]);
+				}
+				++ind;
+				if (m_settings.m_distType[ind] > 0.0f && ind == tracking::DistJaccard)
+				{
+					dist += m_settings.m_distType[ind] * track->CalcDistJaccard(regions[j]);
+				}
+				++ind;
+				if (m_settings.m_distType[ind] > 0.0f && ind == tracking::DistHist)
+				{
+					dist += m_settings.m_distType[ind] * track->CalcDistHist(regions[j], currFrame);
+				}
+				++ind;
+				if (m_settings.m_distType[ind] > 0.0f && ind == tracking::DistHOG)
+				{
+					dist += m_settings.m_distType[ind] * track->CalcDistHOG(regions[j]);
+				}
+				++ind;
+				assert(ind == tracking::DistsCount);
+			}
+
+			costMatrix[i + j * N] = dist;
+			if (dist > maxCost)
+			{
+				maxCost = dist;
+			}
+		}
+	}
 }
 
 ///

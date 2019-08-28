@@ -4,6 +4,7 @@
 #include <memory>
 #include <array>
 #include <deque>
+#include <numeric>
 
 #include "defines.h"
 #include "track.h"
@@ -16,11 +17,13 @@
 ///
 struct TrackerSettings
 {
-    tracking::DistType m_distType = tracking::DistCenters;
+    //tracking::DistType m_distType = tracking::DistCenters;
     tracking::KalmanType m_kalmanType = tracking::KalmanLinear;
     tracking::FilterGoal m_filterGoal = tracking::FilterCenter;
     tracking::LostTrackType m_lostTrackType = tracking::TrackKCF;
     tracking::MatchType m_matchType = tracking::MatchHungrian;
+
+	std::array<track_t, tracking::DistsCount> m_distType;
 
     ///
     /// \brief m_dt
@@ -38,7 +41,7 @@ struct TrackerSettings
     /// \brief m_distThres
     /// Distance threshold for Assignment problem for tracking::DistCenters or for tracking::DistRects (for tracking::DistJaccard it need from 0 to 1)
     ///
-    track_t m_distThres = 50;
+    track_t m_distThres = 0.5f;
 
     ///
     /// \brief m_maximumAllowedSkippedFrames
@@ -68,6 +71,40 @@ struct TrackerSettings
     /// After this time (in seconds) the abandoned object will be removed
     ///
     int m_maxStaticTime = 25;
+
+	///
+	TrackerSettings()
+	{
+		m_distType[tracking::DistCenters] = 0.0f;
+		m_distType[tracking::DistRects] = 0.0f;
+		m_distType[tracking::DistJaccard] = 0.5f;
+		m_distType[tracking::DistHist] = 0.5f;
+		m_distType[tracking::DistHOG] = 0.0f;
+
+		assert(CheckDistance());
+	}
+
+	///
+	bool CheckDistance() const
+	{
+		track_t sum = std::accumulate(m_distType.begin(), m_distType.end(), 0.0f);
+		track_t maxOne = std::max(1.0f, std::fabs(sum));
+		return std::fabs(sum - 1.0f) <= std::numeric_limits<track_t>::epsilon() * maxOne;
+	}
+
+	///
+	bool SetDistances(std::array<track_t, tracking::DistsCount> distType)
+	{
+		bool res = true;
+		auto oldDists = m_distType;
+		m_distType = distType;
+		if (!CheckDistance())
+		{
+			m_distType = oldDists;
+			res = false;
+		}
+		return res;
+	}
 };
 
 ///
@@ -77,9 +114,14 @@ class CTracker
 {
 public:
     CTracker(const TrackerSettings& settings);
+	CTracker(const CTracker&) = delete;
+	CTracker(CTracker&&) = delete;
+	CTracker& operator=(const CTracker&) = delete;
+	CTracker& operator=(CTracker&&) = delete;
+	
 	~CTracker(void);
 
-    void Update(const regions_t& regions, cv::UMat grayFrame, float fps);
+    void Update(const regions_t& regions, cv::UMat currFrame, float fps);
 
     ///
     /// \brief GrayFrameToTrack
@@ -129,10 +171,10 @@ private:
 
     cv::UMat m_prevFrame;
 
-    void CreateDistaceMatrix(const regions_t& regions, distMatrix_t& costMatrix, track_t maxPossibleCost, track_t& maxCost);
+    void CreateDistaceMatrix(const regions_t& regions, distMatrix_t& costMatrix, track_t maxPossibleCost, track_t& maxCost, cv::UMat currFrame);
 
     void SolveHungrian(const distMatrix_t& costMatrix, size_t N, size_t M, assignments_t& assignment);
     void SolveBipartiteGraphs(const distMatrix_t& costMatrix, size_t N, size_t M, assignments_t& assignment, track_t maxCost);
 
-    void UpdateTrackingState(const regions_t& regions, cv::UMat grayFrame, float fps);
+    void UpdateTrackingState(const regions_t& regions, cv::UMat currFrame, float fps);
 };

@@ -241,8 +241,6 @@ protected:
     bool m_showLogs = false;
     float m_fps = 0;
 
-    virtual bool GrayProcessing() const;
-
     virtual bool InitTracker(cv::UMat frame);
 
     virtual void DrawData(cv::Mat frame, int framesCounter, int currTime);

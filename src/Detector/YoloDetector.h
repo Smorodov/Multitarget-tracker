@@ -23,6 +23,11 @@ public:
 
     void Detect(cv::UMat& colorFrame);
 
+	bool CanGrayProcessing() const
+	{
+		return false;
+	}
+
 private:
     cv::dnn::Net m_net;
 

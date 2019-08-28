@@ -240,24 +240,39 @@ public:
     ///
     /// \brief CalcDist
     /// Euclidean distance in pixels between objects centres on two N and N+1 frames
-    /// \param pt
+    /// \param reg
     /// \return
     ///
-    track_t CalcDist(const Point_t& pt) const;
+    track_t CalcDistCenter(const CRegion& reg) const;
     ///
     /// \brief CalcDist
     /// Euclidean distance in pixels between object contours on two N and N+1 frames
-    /// \param r
+    /// \param reg
     /// \return
     ///
-    track_t CalcDist(const CRegion& reg) const;
+    track_t CalcDistRect(const CRegion& reg) const;
     ///
     /// \brief CalcDistJaccard
     /// Jaccard distance from 0 to 1 between object bounding rectangles on two N and N+1 frames
-    /// \param r
+    /// \param reg
     /// \return
     ///
     track_t CalcDistJaccard(const CRegion& reg) const;
+	///
+	/// \brief CalcDistJaccard
+	/// Distance from 0 to 1 between objects histogramms on two N and N+1 frames
+	/// \param reg
+	/// \param currFrame
+	/// \return
+	///
+	track_t CalcDistHist(const CRegion& reg, cv::UMat currFrame) const;
+	///
+	/// \brief CalcDistHOG
+	/// Euclidean distance from 0 to 1 between HOG descriptors on two N and N+1 frames
+	/// \param reg
+	/// \return
+	///
+	track_t CalcDistHOG(const CRegion& reg) const;
 
     bool CheckType(const std::string& type) const;
 
@@ -297,7 +312,7 @@ private:
 
     void RectUpdate(const CRegion& region, bool dataCorrect, cv::UMat prevFrame, cv::UMat currFrame);
 
-    void CreateExternalTracker();
+    void CreateExternalTracker(int channels);
 
     void PointUpdate(const Point_t& pt, const cv::Size& newObjSize, bool dataCorrect, const cv::Size& frameSize);
 

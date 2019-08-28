@@ -78,7 +78,23 @@ void CarsCounting::Process()
     m_fps = std::max(1.f, (float)capture.get(cv::CAP_PROP_FPS));
 
     cv::Mat colorFrame;
-    cv::UMat grayFrame;
+	capture >> colorFrame;
+	if (colorFrame.empty())
+	{
+		std::cerr << "Frame is empty!" << std::endl;
+		return;
+	}
+	if (!m_isTrackerInitialized)
+	{
+		cv::UMat uframe = colorFrame.getUMat(cv::ACCESS_READ);
+		m_isTrackerInitialized = InitTracker(uframe);
+		if (!m_isTrackerInitialized)
+		{
+			std::cerr << "Tracker initialize error!!!" << std::endl;
+			return;
+		}
+	}
+
     for (;;)
     {
         capture >> colorFrame;
@@ -87,31 +103,24 @@ void CarsCounting::Process()
             std::cerr << "Frame is empty!" << std::endl;
             break;
         }
-        cv::cvtColor(colorFrame, grayFrame, cv::COLOR_BGR2GRAY);
-
-        if (!m_isTrackerInitialized)
-        {
-            m_isTrackerInitialized = InitTracker(grayFrame);
-            if (!m_isTrackerInitialized)
-            {
-                std::cerr << "Tracker initilize error!!!" << std::endl;
-                break;
-            }
-        }
 
         int64 t1 = cv::getTickCount();
 
-        cv::UMat clFrame;
-        if (!GrayProcessing() || !m_tracker->GrayFrameToTrack())
+        cv::UMat uframe;
+        if (!m_detector->CanGrayProcessing() || !m_tracker->GrayFrameToTrack())
         {
-            clFrame = colorFrame.getUMat(cv::ACCESS_READ);
+            uframe = colorFrame.getUMat(cv::ACCESS_READ);
         }
+		else
+		{
+			cv::cvtColor(colorFrame, uframe, cv::COLOR_BGR2GRAY);
+		}
 
-        m_detector->Detect(GrayProcessing() ? grayFrame : clFrame);
+        m_detector->Detect(uframe);
 
         const regions_t& regions = m_detector->GetDetects();
 
-        m_tracker->Update(regions, m_tracker->GrayFrameToTrack() ? grayFrame : clFrame, m_fps);
+        m_tracker->Update(regions, uframe, m_fps);
 
         int64 t2 = cv::getTickCount();
 
@@ -158,15 +167,6 @@ void CarsCounting::Process()
 #ifndef SILENT_WORK
 	cv::waitKey(m_finishDelay);
 #endif
-}
-
-///
-/// \brief CarsCounting::GrayProcessing
-/// \return
-///
-bool CarsCounting::GrayProcessing() const
-{
-    return true;
 }
 
 ///
@@ -259,7 +259,7 @@ bool CarsCounting::InitTracker(cv::UMat frame)
     m_detector->SetMinObjectSize(cv::Size(m_minObjWidth, m_minObjWidth));
 
     TrackerSettings settings;
-    settings.m_distType = tracking::DistCenters;
+	settings.SetDistances({ 1.0f, 0.0f, 0.0f, 0.0f, 0.0f });
     settings.m_kalmanType = tracking::KalmanLinear;
     settings.m_filterGoal = tracking::FilterRect;
     settings.m_lostTrackType = tracking::TrackCSRT; // Use KCF tracker for collisions resolving

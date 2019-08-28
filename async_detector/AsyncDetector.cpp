@@ -298,7 +298,7 @@ void AsyncDetector::CaptureThread(std::string fileName, int startFrame, float* f
     const int minStaticTime = 5;
 
     TrackerSettings trackerSettings;
-    trackerSettings.m_distType = tracking::DistCenters;
+	trackerSettings.SetDistances({ 1.0f, 0.0f, 0.0f, 0.0f, 0.0f });
     trackerSettings.m_kalmanType = tracking::KalmanLinear;
     trackerSettings.m_filterGoal = tracking::FilterRect;
     trackerSettings.m_lostTrackType = tracking::TrackKCF; // Use KCF tracker for collisions resolving
@@ -323,11 +323,9 @@ void AsyncDetector::CaptureThread(std::string fileName, int startFrame, float* f
 
     // Capture the first frame
     cv::Mat firstFrame;
-    cv::UMat firstGray;
     capture >> firstFrame;
-    cv::cvtColor(firstFrame, firstGray, cv::COLOR_BGR2GRAY);
 
-    std::thread thDetection(DetectThread, detectorConfig, firstGray, framesQue, stopFlag);
+    std::thread thDetection(DetectThread, detectorConfig, firstFrame, framesQue, stopFlag);
     std::thread thTracking(TrackingThread, trackerSettings, framesQue, stopFlag);
 
     // Capture frame
@@ -347,7 +345,6 @@ void AsyncDetector::CaptureThread(std::string fileName, int startFrame, float* f
 		{
 			frameInfo->m_clFrame = frameInfo->m_frame.getUMat(cv::ACCESS_READ);
 		}
-        cv::cvtColor(frameInfo->m_frame, frameInfo->m_gray, cv::COLOR_BGR2GRAY);
 
         framesQue->AddNewFrame(frameInfo, 15);
 
@@ -371,10 +368,11 @@ void AsyncDetector::CaptureThread(std::string fileName, int startFrame, float* f
 /// \brief AsyncDetector::DetectThread
 /// \param
 ///
-void AsyncDetector::DetectThread(const config_t& config, cv::UMat firstGray, FramesQueue* framesQue, bool* stopFlag)
+void AsyncDetector::DetectThread(const config_t& config, cv::Mat firstFrame, FramesQueue* framesQue, bool* stopFlag)
 {
-    std::unique_ptr<BaseDetector> detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Yolo_Darknet, config, firstGray));
-    detector->SetMinObjectSize(cv::Size(firstGray.cols / 50, firstGray.cols / 50));
+	cv::UMat ufirst = firstFrame.getUMat(cv::ACCESS_READ);
+    std::unique_ptr<BaseDetector> detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Yolo_Darknet, config, ufirst));
+    detector->SetMinObjectSize(cv::Size(firstFrame.cols / 50, firstFrame.cols / 50));
 
     for (; !(*stopFlag);)
     {
@@ -406,14 +404,7 @@ void AsyncDetector::TrackingThread(const TrackerSettings& settings, FramesQueue*
         frame_ptr frameInfo = framesQue->GetFirstDetectedFrame();
         if (frameInfo)
         {
-            if (tracker->GrayFrameToTrack())
-            {
-                tracker->Update(frameInfo->m_regions, frameInfo->m_gray, frameInfo->m_fps);
-            }
-            else
-            {
-                tracker->Update(frameInfo->m_regions, frameInfo->m_clFrame, frameInfo->m_fps);
-            }
+            tracker->Update(frameInfo->m_regions, frameInfo->m_clFrame, frameInfo->m_fps);
 
             frameInfo->m_tracks = tracker->GetTracks();
             frameInfo->m_inTracker = 2;

@@ -20,7 +20,6 @@ struct FrameInfo
 {
 	cv::Mat m_frame;
     cv::UMat m_clFrame;
-	cv::UMat m_gray;
 	regions_t m_regions;
 	std::vector<TrackingObject> m_tracks;
 	int64 m_dt = 0;
@@ -63,6 +62,6 @@ private:
     void DrawTrack(cv::Mat frame, int resizeCoeff, const TrackingObject& track, bool drawTrajectory = true);
 
     static void CaptureThread(std::string fileName, int startFrame, float* fps, FramesQueue* framesQue, bool* stopFlag);
-    static void DetectThread(const config_t& config, cv::UMat firstGray, FramesQueue* framesQue, bool* stopFlag);
+    static void DetectThread(const config_t& config, cv::Mat firstFrame, FramesQueue* framesQue, bool* stopFlag);
 	static void TrackingThread(const TrackerSettings& settings, FramesQueue* framesQue, bool* stopFlag);
 };

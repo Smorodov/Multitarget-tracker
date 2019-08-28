@@ -52,7 +52,6 @@ void VideoExample::SyncProcess()
 #endif
 
     cv::Mat frame;
-    cv::UMat gray;
 
     double freq = cv::getTickFrequency();
     int64 allTime = 0;
@@ -75,32 +74,35 @@ void VideoExample::SyncProcess()
         {
             break;
         }
-        cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
 
-        if (!m_isDetectorInitialized)
-        {
-            m_isDetectorInitialized = InitDetector(gray);
-            if (!m_isDetectorInitialized)
-            {
-                std::cerr << "CaptureAndDetect: Detector initilize error!!!" << std::endl;
-                break;
-            }
-        }
-        if (!m_isTrackerInitialized)
-        {
-            m_isTrackerInitialized = InitTracker(gray);
-            if (!m_isTrackerInitialized)
-            {
-                std::cerr << "CaptureAndDetect: Tracker initilize error!!!" << std::endl;
-                break;
-            }
-        }
+		if (!m_isDetectorInitialized || !m_isTrackerInitialized)
+		{
+			cv::UMat ufirst = frame.getUMat(cv::ACCESS_READ);
+			if (!m_isDetectorInitialized)
+			{
+				m_isDetectorInitialized = InitDetector(ufirst);
+				if (!m_isDetectorInitialized)
+				{
+					std::cerr << "CaptureAndDetect: Detector initialize error!!!" << std::endl;
+					break;
+				}
+			}
+			if (!m_isTrackerInitialized)
+			{
+				m_isTrackerInitialized = InitTracker(ufirst);
+				if (!m_isTrackerInitialized)
+				{
+					std::cerr << "CaptureAndDetect: Tracker initialize error!!!" << std::endl;
+					break;
+				}
+			}
+		}
 
         int64 t1 = cv::getTickCount();
 
         regions_t regions;
-        Detection(frame, gray, regions);
-        Tracking(frame, gray, regions);
+        Detection(frame, regions);
+        Tracking(frame, regions);
 
         int64 t2 = cv::getTickCount();
 
@@ -181,10 +183,11 @@ void VideoExample::AsyncProcess()
 
         if (!m_isTrackerInitialized)
         {
-            m_isTrackerInitialized = InitTracker(frameInfo.m_gray);
+			cv::UMat ufirst = frameInfo.m_frame.getUMat(cv::ACCESS_READ);
+            m_isTrackerInitialized = InitTracker(ufirst);
             if (!m_isTrackerInitialized)
             {
-                std::cerr << "CaptureAndDetect: Tracker initilize error!!!" << std::endl;
+                std::cerr << "CaptureAndDetect: Tracker initialize error!!!" << std::endl;
                 frameInfo.m_cond.notify_one();
                 break;
             }
@@ -192,7 +195,7 @@ void VideoExample::AsyncProcess()
 
         int64 t1 = cv::getTickCount();
 
-        Tracking(frameInfo.m_frame, frameInfo.m_gray, frameInfo.m_regions);
+        Tracking(frameInfo.m_frame, frameInfo.m_regions);
 
         int64 t2 = cv::getTickCount();
 
@@ -291,21 +294,21 @@ void VideoExample::CaptureAndDetect(VideoExample* thisPtr, std::atomic<bool>& st
             frameInfo.m_cond.notify_one();
             break;
         }
-        cv::cvtColor(frameInfo.m_frame, frameInfo.m_gray, cv::COLOR_BGR2GRAY);
 
         if (!thisPtr->m_isDetectorInitialized)
         {
-            thisPtr->m_isDetectorInitialized = thisPtr->InitDetector(frameInfo.m_gray);
+			cv::UMat ufirst = frameInfo.m_frame.getUMat(cv::ACCESS_READ);
+            thisPtr->m_isDetectorInitialized = thisPtr->InitDetector(ufirst);
             if (!thisPtr->m_isDetectorInitialized)
             {
-                std::cerr << "CaptureAndDetect: Detector initilize error!!!" << std::endl;
+                std::cerr << "CaptureAndDetect: Detector initialize error!!!" << std::endl;
                 frameInfo.m_cond.notify_one();
                 break;
             }
         }
 
         int64 t1 = cv::getTickCount();
-        thisPtr->Detection(frameInfo.m_frame, frameInfo.m_gray, frameInfo.m_regions);
+        thisPtr->Detection(frameInfo.m_frame, frameInfo.m_regions);
         int64 t2 = cv::getTickCount();
         frameInfo.m_dt = t2 - t1;
 
@@ -321,29 +324,23 @@ void VideoExample::CaptureAndDetect(VideoExample* thisPtr, std::atomic<bool>& st
 }
 
 ///
-/// \brief VideoExample::GrayProcessing
-/// \return
-///
-bool VideoExample::GrayProcessing() const
-{
-    return true;
-}
-
-///
 /// \brief VideoExample::Detection
 /// \param frame
-/// \param grayFrame
 /// \param regions
 ///
-void VideoExample::Detection(cv::Mat frame, cv::UMat grayFrame, regions_t& regions)
+void VideoExample::Detection(cv::Mat frame, regions_t& regions)
 {
-    cv::UMat clFrame;
-    if (!GrayProcessing() || !m_tracker->GrayFrameToTrack())
+    cv::UMat uframe;
+    if (!m_detector->CanGrayProcessing())
     {
-        clFrame = frame.getUMat(cv::ACCESS_READ);
+        uframe = frame.getUMat(cv::ACCESS_READ);
     }
+	else
+	{
+		cv::cvtColor(frame, uframe, cv::COLOR_BGR2GRAY);
+	}
 
-    m_detector->Detect(GrayProcessing() ? grayFrame : clFrame);
+    m_detector->Detect(uframe);
 
     const regions_t& regs = m_detector->GetDetects();
 
@@ -353,18 +350,21 @@ void VideoExample::Detection(cv::Mat frame, cv::UMat grayFrame, regions_t& regio
 ///
 /// \brief VideoExample::Tracking
 /// \param frame
-/// \param grayFrame
 /// \param regions
 ///
-void VideoExample::Tracking(cv::Mat frame, cv::UMat grayFrame, const regions_t& regions)
+void VideoExample::Tracking(cv::Mat frame, const regions_t& regions)
 {
-    cv::UMat clFrame;
-    if (!GrayProcessing() || !m_tracker->GrayFrameToTrack())
-    {
-        clFrame = frame.getUMat(cv::ACCESS_READ);
-    }
+ 	cv::UMat uframe;
+	if (!m_tracker->GrayFrameToTrack())
+	{
+		uframe = frame.getUMat(cv::ACCESS_READ);
+	}
+	else
+	{
+		cv::cvtColor(frame, uframe, cv::COLOR_BGR2GRAY);
+	}
 
-    m_tracker->Update(regions, m_tracker->GrayFrameToTrack() ? grayFrame : clFrame, m_fps);
+    m_tracker->Update(regions, uframe, m_fps);
 }
 
 ///

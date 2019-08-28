@@ -47,22 +47,22 @@ CTrack::CTrack(
 }
 
 ///
-/// \brief CalcDist
-/// \param pt
+/// \brief CTrack::CalcDistCenter
+/// \param reg
 /// \return
 ///
-track_t CTrack::CalcDist(const Point_t& pt) const
+track_t CTrack::CalcDistCenter(const CRegion& reg) const
 {
-    Point_t diff = m_predictionPoint - pt;
+    Point_t diff = m_predictionPoint - reg.m_rrect.center;
     return sqrtf(sqr(diff.x) + sqr(diff.y));
 }
 
 ///
-/// \brief CTrack::CalcDist
+/// \brief CTrack::CalcDistRect
 /// \param reg
 /// \return
 ///
-track_t CTrack::CalcDist(const CRegion& reg) const
+track_t CTrack::CalcDistRect(const CRegion& reg) const
 {
     std::array<track_t, 5> diff;
     diff[0] = reg.m_rrect.center.x - m_lastRegion.m_rrect.center.x;
@@ -90,6 +90,32 @@ track_t CTrack::CalcDistJaccard(const CRegion& reg) const
     track_t unionArea = static_cast<track_t>(reg.m_brect.area() + m_lastRegion.m_brect.area() - intArea);
 
     return 1 - intArea / unionArea;
+}
+
+///
+/// \brief CTrack::CalcDistHist
+/// \param reg
+/// \return
+///
+track_t CTrack::CalcDistHist(const CRegion& reg, cv::UMat currFrame) const
+{
+	track_t intArea = static_cast<track_t>((reg.m_brect & m_lastRegion.m_brect).area());
+	track_t unionArea = static_cast<track_t>(reg.m_brect.area() + m_lastRegion.m_brect.area() - intArea);
+
+	return 1 - intArea / unionArea;
+}
+
+///
+/// \brief CTrack::CalcDistHOG
+/// \param reg
+/// \return
+///
+track_t CTrack::CalcDistHOG(const CRegion& reg) const
+{
+	track_t intArea = static_cast<track_t>((reg.m_brect & m_lastRegion.m_brect).area());
+	track_t unionArea = static_cast<track_t>(reg.m_brect.area() + m_lastRegion.m_brect.area() - intArea);
+
+	return 1 - intArea / unionArea;
 }
 
 ///
@@ -380,7 +406,7 @@ void CTrack::RectUpdate(
             bool inited = false;
             if (!m_tracker || m_tracker.empty())
             {
-                CreateExternalTracker();
+                CreateExternalTracker(currFrame.channels());
 
                 cv::Rect2d lastRect(brect.x - roiRect.x, brect.y - roiRect.y, brect.width, brect.height);
                 if (m_staticFrame.empty())
@@ -464,7 +490,7 @@ void CTrack::RectUpdate(
             cv::Rect brect = m_predictionRect.boundingRect();
             if (!m_VOTTracker)
             {
-                CreateExternalTracker();
+                CreateExternalTracker(currFrame.channels());
 
                 cv::Rect2d lastRect(brect.x, brect.y, brect.width, brect.height);
                 if (!m_staticFrame.empty())
@@ -553,7 +579,7 @@ void CTrack::RectUpdate(
 ///
 /// \brief CreateExternalTracker
 ///
-void CTrack::CreateExternalTracker()
+void CTrack::CreateExternalTracker(int channels)
 {
     switch (m_externalTrackerForLost)
     {
@@ -575,9 +601,18 @@ void CTrack::CreateExternalTracker()
         if (!m_tracker || m_tracker.empty())
         {
             cv::TrackerKCF::Params params;
-            params.compressed_size = 1;
-            params.desc_pca = cv::TrackerKCF::GRAY;
-            params.desc_npca = cv::TrackerKCF::GRAY;
+			if (channels == 1)
+			{
+				params.compressed_size = 1;
+				params.desc_pca = cv::TrackerKCF::GRAY;
+				params.desc_npca = cv::TrackerKCF::GRAY;
+			}
+			else
+			{
+				params.compressed_size = 3;
+				params.desc_pca = cv::TrackerKCF::CN;
+				params.desc_npca = cv::TrackerKCF::CN;
+			}
             params.resize = true;
             params.detect_thresh = 0.7f;
 #if (((CV_VERSION_MAJOR == 3) && (CV_VERSION_MINOR >= 3)) || (CV_VERSION_MAJOR > 3))

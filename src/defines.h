@@ -106,9 +106,12 @@ enum Detectors
 ///
 enum DistType
 {
-    DistCenters = 0,
-    DistRects = 1,
-    DistJaccard = 2
+    DistCenters,   // Euclidean distance between centers, pixels
+    DistRects,     // Euclidean distance between bounding rectangles, pixels
+    DistJaccard,   // Intersection over Union, IoU, [0, 1]
+	DistHist,      // Bhatacharia distance between histograms, [0, 1]
+	DistHOG,       // Euclidean distance between HOG descriptors, [0, 1]
+	DistsCount
 };
 
 ///
@@ -116,8 +119,8 @@ enum DistType
 ///
 enum FilterGoal
 {
-    FilterCenter = 0,
-    FilterRect = 1
+    FilterCenter,
+    FilterRect
 };
 
 ///
@@ -125,8 +128,8 @@ enum FilterGoal
 ///
 enum KalmanType
 {
-    KalmanLinear = 0,
-    KalmanUnscented = 1,
+    KalmanLinear,
+    KalmanUnscented,
     KalmanAugmentedUnscented
 };
 
@@ -135,8 +138,8 @@ enum KalmanType
 ///
 enum MatchType
 {
-    MatchHungrian = 0,
-    MatchBipart = 1
+    MatchHungrian,
+    MatchBipart
 };
 
 ///
@@ -144,8 +147,8 @@ enum MatchType
 ///
 enum LostTrackType
 {
-    TrackNone = 0,
-    TrackKCF = 1,
+    TrackNone,
+    TrackKCF,
     TrackMIL,
     TrackMedianFlow,
     TrackGOTURN,
