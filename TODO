@@ -10,3 +10,15 @@ Deep SORT:
 2. https://github.com/bitzy/DeepSort
 3. https://github.com/oylz/DS
 
+BGFG:
+1. Original Vibe
+2. Integration with new https://github.com/andrewssobral/bgslibrary
+
+Metrics between regions and tracking objects:
+1. Histograms
+2. HOG
+3. Caching results of hist and HOG
+4. Complex metric
+
+New runtime:
+1. Integration with deepstream sdk 4.0
