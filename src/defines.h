@@ -53,6 +53,8 @@ public:
     std::string m_type;
     float m_confidence = -1;
 
+	mutable cv::Mat m_hist;
+
 private:
     ///
     /// \brief R2BRect

@@ -15,10 +15,7 @@ BGFG:
 2. Integration with new https://github.com/andrewssobral/bgslibrary
 
 Metrics between regions and tracking objects:
-1. Histograms
-2. HOG
-3. Caching results of hist and HOG
-4. Complex metric
+1. HOG
 
 New runtime:
 1. Integration with deepstream sdk 4.0

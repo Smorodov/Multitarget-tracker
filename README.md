@@ -2,7 +2,7 @@
 
 # Multitarget (multiple objects) tracker
 
-#### 1. Objects detector can be created with function [CreateDetector](https://github.com/Smorodov/Multitarget-tracker/blob/master/src/Detector/BaseDetector.cpp#L17) with different values of the detectorType:
+#### 1. Objects detector can be created with function [CreateDetector](https://github.com/Smorodov/Multitarget-tracker/blob/master/src/Detector/BaseDetector.cpp) with different values of the detectorType:
 
 1.1. Based on background substraction: built-in Vibe (tracking::Motion_VIBE), SuBSENSE (tracking::Motion_SuBSENSE) and LOBSTER (tracking::Motion_LOBSTER); MOG2 (tracking::Motion_MOG2) from [opencv](https://github.com/opencv/opencv/blob/master/modules/video/include/opencv2/video/background_segm.hpp); MOG (tracking::Motion_MOG), GMG (tracking::Motion_GMG) and CNT (tracking::Motion_CNT) from [opencv_contrib](https://github.com/opencv/opencv_contrib/tree/master/modules/bgsegm). For foreground segmentation used contours from OpenCV with result as cv::RotatedRect
 
@@ -18,27 +18,27 @@
 
 1.7. You can to use custom detector with bounding or rotated rectangle as output.
 
-#### 2. Matching or solve an [assignment problem](https://github.com/Smorodov/Multitarget-tracker/blob/master/src/Tracker/Ctracker.h#L23):
+#### 2. Matching or solve an [assignment problem](https://github.com/Smorodov/Multitarget-tracker/blob/master/src/Tracker/Ctracker.h):
 
 2.1. Hungrian algorithm (tracking::MatchHungrian) with cubic time O(N^3) where N is objects count
 
 2.2. Algorithm based on weighted bipartite graphs (tracking::MatchBipart) from [rdmpage](https://github.com/rdmpage/maximum-weighted-bipartite-matching) with time O(M * N^2) where N is objects count and M is connections count between detections on frame and tracking objects. It can be faster than Hungrian algorithm
 
-2.3. [Distance](https://github.com/Smorodov/Multitarget-tracker/blob/master/src/Tracker/Ctracker.h#L19) from detections and objects: euclidean distance in pixels between centers (tracking::DistCenters), euclidean distance in pixels between rectangles (tracking::DistRects), Jaccard or IoU distance from 0 to 1 (tracking::DistJaccard)
+2.3. [Distance](https://github.com/Smorodov/Multitarget-tracker/blob/master/src/Tracker/Ctracker.h) from detections and objects: euclidean distance in pixels between centers (tracking::DistCenters), euclidean distance in pixels between rectangles (tracking::DistRects), Jaccard or IoU distance from 0 to 1 (tracking::DistJaccard)
 
-#### 3. [Smoothing trajectories and predict missed objects](https://github.com/Smorodov/Multitarget-tracker/blob/master/src/Tracker/Ctracker.h#L20):
+#### 3. [Smoothing trajectories and predict missed objects](https://github.com/Smorodov/Multitarget-tracker/blob/master/src/Tracker/Ctracker.h):
 
 3.1. Linear Kalman filter from OpenCV (tracking::KalmanLinear)
 
 3.2. Unscented Kalman filter from OpenCV (tracking::KalmanUnscented)
 
-3.3. [Kalman goal](https://github.com/Smorodov/Multitarget-tracker/blob/master/src/Tracker/Ctracker.h#L21) is only coordinates (tracking::FilterCenter) or coordinates and size (tracking::FilterRect)
+3.3. [Kalman goal](https://github.com/Smorodov/Multitarget-tracker/blob/master/src/Tracker/Ctracker.h) is only coordinates (tracking::FilterCenter) or coordinates and size (tracking::FilterRect)
 
-3.4. Simple [Abandoned detector](https://github.com/Smorodov/Multitarget-tracker/blob/master/src/Tracker/Ctracker.h#L59)
+3.4. Simple [Abandoned detector](https://github.com/Smorodov/Multitarget-tracker/blob/master/src/Tracker/Ctracker.h)
 
-3.5. [Line intersection](https://github.com/Smorodov/Multitarget-tracker/blob/master/cars_counting/CarsCounting.cpp#L381) counting
+3.5. [Line intersection](https://github.com/Smorodov/Multitarget-tracker/blob/master/cars_counting/CarsCounting.cpp) counting
 
-#### 4. [Advanced visual search](https://github.com/Smorodov/Multitarget-tracker/blob/master/src/Tracker/Ctracker.h#L22) for objects if they have not been detected:
+#### 4. [Advanced visual search](https://github.com/Smorodov/Multitarget-tracker/blob/master/src/Tracker/Ctracker.h) for objects if they have not been detected:
 
 4.1. No search (tracking::TrackNone)
 
@@ -48,7 +48,7 @@ With this option the tracking can work match slower but more accuracy.
 
 #### 5. Pipeline
 
-5.1. Syncronous [pipeline - SyncProcess](https://github.com/Smorodov/Multitarget-tracker/blob/master/example/VideoExample.h#L77):
+5.1. Syncronous [pipeline - SyncProcess](https://github.com/Smorodov/Multitarget-tracker/blob/master/example/VideoExample.h):
 - get frame from capture device;
 - decoding;
 - objects detection (1);
@@ -57,7 +57,7 @@ With this option the tracking can work match slower but more accuracy.
 
 This pipeline is good if all algorithms are fast and works faster than time between two frames (40 ms for device with 25 fps). Or it can be used if we have only 1 core for all (no parallelization).
 
-5.2. Pipeline with [2 threads - AsyncProcess](https://github.com/Smorodov/Multitarget-tracker/blob/master/example/VideoExample.h#L77):
+5.2. Pipeline with [2 threads - AsyncProcess](https://github.com/Smorodov/Multitarget-tracker/blob/master/example/VideoExample.h):
 - 1th thread takes frame t and makes capture, decoding and objects detection;
 - 2th thread takes frame t-1, results from first thread and makes tracking and results presentation (this is the Main read).
 

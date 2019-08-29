@@ -99,10 +99,33 @@ track_t CTrack::CalcDistJaccard(const CRegion& reg) const
 ///
 track_t CTrack::CalcDistHist(const CRegion& reg, cv::UMat currFrame) const
 {
-	track_t intArea = static_cast<track_t>((reg.m_brect & m_lastRegion.m_brect).area());
-	track_t unionArea = static_cast<track_t>(reg.m_brect.area() + m_lastRegion.m_brect.area() - intArea);
+	track_t res = 1;
 
-	return 1 - intArea / unionArea;
+	if (reg.m_hist.empty())
+	{
+		int bins = 64;
+		std::vector<int> histSize;
+		std::vector<float> ranges;
+		std::vector<int> channels;
+
+		for (int i = 0, stop = currFrame.channels(); i < stop; ++i)
+		{
+			histSize.push_back(bins);
+			ranges.push_back(0);
+			ranges.push_back(255);
+			channels.push_back(i);
+		}
+
+		std::vector<cv::UMat> regROI = { currFrame(reg.m_brect) };
+		cv::calcHist(regROI, channels, cv::Mat(), reg.m_hist, histSize, ranges, false);
+		cv::normalize(reg.m_hist, reg.m_hist, 0, 1, cv::NORM_MINMAX, -1, cv::Mat());
+	}
+	if (!reg.m_hist.empty() && !m_lastRegion.m_hist.empty())
+	{
+		res = static_cast<track_t>(cv::compareHist(reg.m_hist, m_lastRegion.m_hist, CV_COMP_BHATTACHARYYA));
+	}
+
+	return res;
 }
 
 ///
@@ -112,10 +135,7 @@ track_t CTrack::CalcDistHist(const CRegion& reg, cv::UMat currFrame) const
 ///
 track_t CTrack::CalcDistHOG(const CRegion& reg) const
 {
-	track_t intArea = static_cast<track_t>((reg.m_brect & m_lastRegion.m_brect).area());
-	track_t unionArea = static_cast<track_t>(reg.m_brect.area() + m_lastRegion.m_brect.area() - intArea);
-
-	return 1 - intArea / unionArea;
+	return 1;
 }
 
 ///
@@ -130,7 +150,7 @@ bool CTrack::CheckType(const std::string& type) const
 
 ///
 /// \brief CTrack::Update
-/// \param region
+/// \*param region
 /// \param dataCorrect
 /// \param max_trace_length
 /// \param prevFrame
