@@ -355,7 +355,7 @@ void VideoExample::Detection(cv::Mat frame, regions_t& regions)
 void VideoExample::Tracking(cv::Mat frame, const regions_t& regions)
 {
  	cv::UMat uframe;
-	if (!m_tracker->GrayFrameToTrack())
+	if (m_tracker->CanColorFrameToTrack())
 	{
 		uframe = frame.getUMat(cv::ACCESS_READ);
 	}

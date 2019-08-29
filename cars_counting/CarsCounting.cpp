@@ -107,7 +107,7 @@ void CarsCounting::Process()
         int64 t1 = cv::getTickCount();
 
         cv::UMat uframe;
-        if (!m_detector->CanGrayProcessing() || !m_tracker->GrayFrameToTrack())
+        if (!m_detector->CanGrayProcessing() || m_tracker->CanColorFrameToTrack())
         {
             uframe = colorFrame.getUMat(cv::ACCESS_READ);
         }

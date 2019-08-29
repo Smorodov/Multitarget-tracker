@@ -124,10 +124,10 @@ public:
     void Update(const regions_t& regions, cv::UMat currFrame, float fps);
 
     ///
-    /// \brief GrayFrameToTrack
+    /// \brief CanGrayFrameToTrack
     /// \return
     ///
-    bool GrayFrameToTrack() const
+    bool CanGrayFrameToTrack() const
     {
 		bool needColor = (m_settings.m_lostTrackType == tracking::LostTrackType::TrackGOTURN) ||
 			(m_settings.m_lostTrackType == tracking::LostTrackType::TrackDAT) ||
@@ -135,6 +135,15 @@ public:
             (m_settings.m_lostTrackType == tracking::LostTrackType::TrackLDES);
         return !needColor;
     }
+
+	///
+	/// \brief CanColorFrameToTrack
+	/// \return
+	///
+	bool CanColorFrameToTrack() const
+	{
+		return true;
+	}
 
     ///
     /// \brief GetTracksCount
