@@ -22,6 +22,11 @@ public:
 
     void Detect(cv::UMat& gray);
 
+	bool CanGrayProcessing() const
+	{
+		return true;
+	}
+
 private:
     DetectorTypes m_detectorType;
 

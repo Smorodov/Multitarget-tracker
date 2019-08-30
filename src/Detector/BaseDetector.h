@@ -37,6 +37,11 @@ public:
     ///
     virtual void Detect(cv::UMat& frame) = 0;
 
+	///
+	/// \brief CanGrayProcessing
+	///
+	virtual bool CanGrayProcessing() const = 0;
+
     ///
     /// \brief SetMinObjectSize
     /// \param minObjectSize

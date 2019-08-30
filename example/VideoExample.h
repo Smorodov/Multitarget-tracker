@@ -41,13 +41,11 @@ protected:
 
     static void CaptureAndDetect(VideoExample* thisPtr, std::atomic<bool>& stopCapture);
 
-    virtual bool GrayProcessing() const;
-
     virtual bool InitDetector(cv::UMat frame) = 0;
     virtual bool InitTracker(cv::UMat frame) = 0;
 
-    void Detection(cv::Mat frame, cv::UMat grayFrame, regions_t& regions);
-    void Tracking(cv::Mat frame, cv::UMat grayFrame, const regions_t& regions);
+    void Detection(cv::Mat frame, regions_t& regions);
+    void Tracking(cv::Mat frame, const regions_t& regions);
 
     virtual void DrawData(cv::Mat frame, int framesCounter, int currTime) = 0;
 
@@ -67,7 +65,6 @@ private:
     struct FrameInfo
     {
         cv::Mat m_frame;
-        cv::UMat m_gray;
         regions_t m_regions;
         int64 m_dt = 0;
 

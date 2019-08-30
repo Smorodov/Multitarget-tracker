@@ -16,6 +16,11 @@ public:
 
     void Detect(cv::UMat& gray);
 
+	bool CanGrayProcessing() const
+	{
+		return true;
+	}
+
 	void CalcMotionMap(cv::Mat frame);
 
 private:

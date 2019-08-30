@@ -24,6 +24,11 @@ public:
 
 	void Detect(cv::UMat& colorFrame);
 
+	bool CanGrayProcessing() const
+	{
+		return false;
+	}
+
 private:
 	std::unique_ptr<Detector> m_detector;
 
