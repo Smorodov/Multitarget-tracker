@@ -123,9 +123,9 @@ void CTracker::UpdateTrackingState(
     }
 
     // Update Kalman Filters state
-    const ptrdiff_t stop_i = static_cast<int>(assignment.size());
+    const ptrdiff_t stop_i = static_cast<ptrdiff_t>(assignment.size());
 #pragma omp parallel for
-    for (int i = 0; i < stop_i; ++i)
+    for (ptrdiff_t i = 0; i < stop_i; ++i)
     {
         // If track updated less than one time, than filter state is not correct.
         if (assignment[i] != -1) // If we have assigned detect, then update using its coordinates,
@@ -156,11 +156,13 @@ void CTracker::CreateDistaceMatrix(const regions_t& regions, distMatrix_t& costM
     const size_t N = m_tracks.size();	// Tracking objects
     maxCost = 0;
 
-	for (size_t i = 0; i < m_tracks.size(); i++)
+	const ptrdiff_t stop_i = static_cast<ptrdiff_t>(m_tracks.size());
+//#pragma omp parallel for
+	for (ptrdiff_t i = 0; i < stop_i; ++i)
 	{
 		const auto& track = m_tracks[i];
 
-		for (size_t j = 0; j < regions.size(); j++)
+		for (size_t j = 0; j < regions.size(); ++j)
 		{
 			auto dist = maxPossibleCost;
 			if (m_tracks[i]->CheckType(regions[j].m_type))
