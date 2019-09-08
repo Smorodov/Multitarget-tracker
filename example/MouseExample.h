@@ -47,7 +47,7 @@ void MouseTracking(cv::CommandLineParser parser)
 	cv::setMouseCallback("Video", mv_MouseCallback, (void*)&pointXY);
 
 	TrackerSettings settings;
-	settings.SetDistances({ 1.0f, 0.0f, 0.0f, 0.0f, 0.0f });
+	settings.SetDistance(tracking::DistCenters);
 	settings.m_kalmanType = tracking::KalmanLinear;
 	settings.m_filterGoal = tracking::FilterCenter;
 	settings.m_lostTrackType = tracking::TrackNone;
