@@ -105,6 +105,14 @@ struct TrackerSettings
 		}
 		return res;
 	}
+
+	///
+	bool SetDistance(tracking::DistType distType)
+	{
+		std::fill(m_distType.begin(), m_distType.end(), 0.0f);
+		m_distType[distType] = 1.f;
+		return true;
+	}
 };
 
 ///

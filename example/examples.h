@@ -60,14 +60,14 @@ protected:
     bool InitTracker(cv::UMat frame)
     {
         TrackerSettings settings;
-		settings.SetDistances({ 0.0f, 0.0f, 1.0f, 0.0f, 0.0f });
+		settings.SetDistance(tracking::DistCenters);
         settings.m_kalmanType = tracking::KalmanLinear;
         settings.m_filterGoal = tracking::FilterRect;
         settings.m_lostTrackType = tracking::TrackKCF;       // Use visual objects tracker for collisions resolving
         settings.m_matchType = tracking::MatchHungrian;
         settings.m_dt = 0.4f;                             // Delta time for Kalman filter
         settings.m_accelNoiseMag = 0.5f;                  // Accel noise magnitude for Kalman filter
-		settings.m_distThres = 0.6f; // frame.rows / 10.f;         // Distance threshold between region and object on two frames
+		settings.m_distThres = frame.rows / 10.f;         // Distance threshold between region and object on two frames
 
         settings.m_useAbandonedDetection = false;
         if (settings.m_useAbandonedDetection)
@@ -175,7 +175,7 @@ protected:
     bool InitTracker(cv::UMat frame)
     {
         TrackerSettings settings;
-		settings.SetDistances({ 0.0f, 0.0f, 1.0f, 0.0f, 0.0f });
+		settings.SetDistance(tracking::DistJaccard);
         settings.m_kalmanType = tracking::KalmanUnscented;
         settings.m_filterGoal = tracking::FilterRect;
         settings.m_lostTrackType = tracking::TrackCSRT;       // Use visual objects tracker for collisions resolving
@@ -271,7 +271,7 @@ protected:
     bool InitTracker(cv::UMat frame)
     {
         TrackerSettings settings;
-		settings.SetDistances({ 0.0f, 1.0f, 0.0f, 0.0f, 0.0f });
+		settings.SetDistance(tracking::DistRects);
         settings.m_kalmanType = tracking::KalmanLinear;
         settings.m_filterGoal = tracking::FilterRect;
         settings.m_lostTrackType = tracking::TrackCSRT;       // Use visual objects tracker for collisions resolving
@@ -368,7 +368,7 @@ protected:
     bool InitTracker(cv::UMat frame)
     {
         TrackerSettings settings;
-		settings.SetDistances({ 0.0f, 1.0f, 0.0f, 0.0f, 0.0f });
+		settings.SetDistance(tracking::DistRects);
         settings.m_kalmanType = tracking::KalmanLinear;
         settings.m_filterGoal = tracking::FilterRect;
         settings.m_lostTrackType = tracking::TrackCSRT;       // Use visual objects tracker for collisions resolving
@@ -492,7 +492,7 @@ protected:
     bool InitTracker(cv::UMat frame)
     {
         TrackerSettings settings;
-		settings.SetDistances({ 0.0f, 1.0f, 0.0f, 0.0f, 0.0f });
+		settings.SetDistance(tracking::DistRects);
         settings.m_kalmanType = tracking::KalmanLinear;
         settings.m_filterGoal = tracking::FilterRect;
         settings.m_lostTrackType = tracking::TrackCSRT;       // Use visual objects tracker for collisions resolving
@@ -616,7 +616,7 @@ protected:
     bool InitTracker(cv::UMat frame)
 	{
 		TrackerSettings settings;
-		settings.SetDistances({ 0.0f, 1.0f, 0.0f, 0.0f, 0.0f });
+		settings.SetDistance(tracking::DistRects);
 		settings.m_kalmanType = tracking::KalmanLinear;
 		settings.m_filterGoal = tracking::FilterRect;
         settings.m_lostTrackType = tracking::TrackKCF;       // Use visual objects tracker for collisions resolving

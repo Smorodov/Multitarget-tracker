@@ -259,7 +259,7 @@ bool CarsCounting::InitTracker(cv::UMat frame)
     m_detector->SetMinObjectSize(cv::Size(m_minObjWidth, m_minObjWidth));
 
     TrackerSettings settings;
-	settings.SetDistances({ 1.0f, 0.0f, 0.0f, 0.0f, 0.0f });
+	settings.SetDistance(tracking::DistCenters);
     settings.m_kalmanType = tracking::KalmanLinear;
     settings.m_filterGoal = tracking::FilterRect;
     settings.m_lostTrackType = tracking::TrackCSRT; // Use KCF tracker for collisions resolving

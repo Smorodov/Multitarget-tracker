@@ -298,7 +298,7 @@ void AsyncDetector::CaptureThread(std::string fileName, int startFrame, float* f
     const int minStaticTime = 5;
 
     TrackerSettings trackerSettings;
-	trackerSettings.SetDistances({ 1.0f, 0.0f, 0.0f, 0.0f, 0.0f });
+	trackerSettings.SetDistance(tracking::DistCenters);
     trackerSettings.m_kalmanType = tracking::KalmanLinear;
     trackerSettings.m_filterGoal = tracking::FilterRect;
     trackerSettings.m_lostTrackType = tracking::TrackKCF; // Use KCF tracker for collisions resolving
