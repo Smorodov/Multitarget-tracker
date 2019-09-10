@@ -156,9 +156,7 @@ void CTracker::CreateDistaceMatrix(const regions_t& regions, distMatrix_t& costM
     const size_t N = m_tracks.size();	// Tracking objects
     maxCost = 0;
 
-	const ptrdiff_t stop_i = static_cast<ptrdiff_t>(m_tracks.size());
-//#pragma omp parallel for
-	for (ptrdiff_t i = 0; i < stop_i; ++i)
+	for (size_t i = 0; i < m_tracks.size(); ++i)
 	{
 		const auto& track = m_tracks[i];
 
