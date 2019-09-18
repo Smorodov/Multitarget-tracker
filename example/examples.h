@@ -172,7 +172,7 @@ protected:
     /// \param frame
     /// \return
     ///
-    bool InitTracker(cv::UMat frame)
+    bool InitTracker(cv::UMat /*frame*/)
     {
         TrackerSettings settings;
 		settings.SetDistance(tracking::DistJaccard);
