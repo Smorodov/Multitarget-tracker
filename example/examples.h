@@ -172,7 +172,7 @@ protected:
     /// \param frame
     /// \return
     ///
-    bool InitTracker(cv::UMat frame)
+    bool InitTracker(cv::UMat /*frame*/)
     {
         TrackerSettings settings;
 		settings.SetDistance(tracking::DistJaccard);
@@ -588,8 +588,8 @@ protected:
         config.emplace("modelBinary", pathToModel + "yolov3.weights");
 #endif
         config.emplace("classNames", pathToModel + "coco.names");
-        config.emplace("confidenceThreshold", "0.1");
-        config.emplace("maxCropRatio", "2.0");
+        config.emplace("confidenceThreshold", "0.6");
+        config.emplace("maxCropRatio", "3.0");
 
         config.emplace("white_list", "person");
         config.emplace("white_list", "car");
@@ -597,8 +597,8 @@ protected:
         config.emplace("white_list", "motorbike");
         config.emplace("white_list", "bus");
         config.emplace("white_list", "truck");
-        config.emplace("white_list", "traffic light");
-        config.emplace("white_list", "stop sign");
+        //config.emplace("white_list", "traffic light");
+        //config.emplace("white_list", "stop sign");
 
         m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Yolo_Darknet, config, frame));
         if (m_detector.get())
@@ -608,6 +608,7 @@ protected:
         }
         return false;
     }
+
     ///
     /// \brief InitTracker
     /// \param frame
@@ -616,10 +617,10 @@ protected:
     bool InitTracker(cv::UMat frame)
 	{
 		TrackerSettings settings;
-		settings.SetDistance(tracking::DistRects);
+        settings.SetDistance(tracking::DistCenters);
 		settings.m_kalmanType = tracking::KalmanLinear;
-		settings.m_filterGoal = tracking::FilterRect;
-        settings.m_lostTrackType = tracking::TrackKCF;       // Use visual objects tracker for collisions resolving
+        settings.m_filterGoal = tracking::FilterRect;
+        settings.m_lostTrackType = tracking::TrackNone;       // Use visual objects tracker for collisions resolving
 		settings.m_matchType = tracking::MatchHungrian;
 		settings.m_dt = 0.3f;                                // Delta time for Kalman filter
 		settings.m_accelNoiseMag = 0.2f;                     // Accel noise magnitude for Kalman filter
@@ -649,8 +650,8 @@ protected:
 
 		for (const auto& track : tracks)
 		{
-			if (track.IsRobust(1,                           // Minimal trajectory size
-				0.1f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
+            if (track.IsRobust(2,                           // Minimal trajectory size
+                0.5f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
 				cv::Size2f(0.1f, 8.0f))      // Min and max ratio: width / height
 				)
 			{
@@ -670,7 +671,7 @@ protected:
 			}
 		}
 
-		m_detector->CalcMotionMap(frame);
+        //m_detector->CalcMotionMap(frame);
 	}
 };
 

@@ -6,6 +6,7 @@
 #include <thread>
 #include <mutex>
 #include <chrono>
+#include <atomic>
 #include <condition_variable>
 
 #include "BaseDetector.h"
@@ -24,9 +25,15 @@ struct FrameInfo
 	std::vector<TrackingObject> m_tracks;
 	int64 m_dt = 0;
 	float m_fps = 0;
+	size_t m_frameInd = 0;
 
-    int m_inDetector = 0; // 0 - not in Detector, 1 - detector started processing, 2 - objects was detected
-    int m_inTracker = 0;  // 0 - not in Tracker, 1 - tracker started processing, 2 - objects was tracked
+    std::atomic<int> m_inDetector; // 0 - not in Detector, 1 - detector started processing, 2 - objects was detected
+    std::atomic<int> m_inTracker;  // 0 - not in Tracker, 1 - tracker started processing, 2 - objects was tracked
+
+    FrameInfo(size_t frameInd)
+        : m_frameInd(frameInd), m_inDetector(0), m_inTracker(0)
+    {
+    }
 };
 
 #include "Queue.h"

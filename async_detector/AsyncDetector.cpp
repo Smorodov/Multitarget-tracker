@@ -53,20 +53,21 @@ void AsyncDetector::Process()
 #ifndef SILENT_WORK
     cv::namedWindow("Video", cv::WINDOW_NORMAL | cv::WINDOW_KEEPRATIO);
     cv::waitKey(1);
-	int k = 0;
 #endif
 
 	cv::VideoWriter writer;
 
     int framesCounter = m_startFrame + 1;
 
-	frame_ptr frames[2];
-	size_t frameInd = 0;
     for (; !stopFlag;)
     {
         // Show frame after detecting and tracking
-		frames[frameInd] = m_framesQue.GetFirstProcessedFrame();
-        frame_ptr processedFrame = frames[frameInd];
+        frame_ptr processedFrame = m_framesQue.GetFirstProcessedFrame();
+        if (!processedFrame)
+        {
+            stopFlag = true;
+            break;
+        }
 
         int64 t2 = cv::getTickCount();
 
@@ -88,7 +89,7 @@ void AsyncDetector::Process()
         cv::imshow("Video", processedFrame->m_frame);
 
 		int waitTime = 1;// std::max<int>(1, cvRound(1000 / m_fps - currTime));
-        k = cv::waitKey(waitTime);
+        int k = cv::waitKey(waitTime);
         if (k == 27)
         {
             break;
@@ -103,8 +104,6 @@ void AsyncDetector::Process()
             std::cout << "Process: riched last " << m_endFrame << " frame" << std::endl;
             break;
         }
-
-		frameInd = !frameInd;
     }
 
     std::cout << "Stopping threads..." << std::endl;
@@ -196,9 +195,10 @@ void AsyncDetector::DrawData(frame_ptr frameInfo, int framesCounter, int currTim
     if (m_showLogs)
     {
 		std::cout << "Frame " << framesCounter << ": ";
-		if (frameInfo->m_inDetector > 0)
+        int id = frameInfo->m_inDetector.load();
+        if (id > 0)
 		{
-			std::cout << "detects = " << frameInfo->m_regions.size() << ", ";
+            std::cout << "(" << id << ") detects = " << frameInfo->m_regions.size() << ", ";
 		}
 		std::cout << "tracks = " << frameInfo->m_tracks.size() << ", time = " << currTime << std::endl;
     }
@@ -211,7 +211,7 @@ void AsyncDetector::DrawData(frame_ptr frameInfo, int framesCounter, int currTim
         }
         else
         {
-            if (track.IsRobust(5,          // Minimal trajectory size
+            if (track.IsRobust(1,          // Minimal trajectory size
                                0.3f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
                                cv::Size2f(0.1f, 8.0f))      // Min and max ratio: width / height
                     )
@@ -281,18 +281,20 @@ void AsyncDetector::CaptureThread(std::string fileName, int startFrame, float* f
 	detectorConfig.emplace("modelBinary", pathToModel + "yolov3.weights");
 #endif
     detectorConfig.emplace("classNames", pathToModel + "coco.names");
-    detectorConfig.emplace("confidenceThreshold", "0.1");
-    detectorConfig.emplace("maxCropRatio", "2.0");
+    detectorConfig.emplace("confidenceThreshold", "0.3");
+    detectorConfig.emplace("maxCropRatio", "3.0");
 	
-	//detectorConfig.emplace("white_list", "person"); // Uncommit for only pedestrians detection
+#if 1
+    //detectorConfig.emplace("white_list", "person"); // Uncommit for only pedestrians detection
 	detectorConfig.emplace("white_list", "person");
 	detectorConfig.emplace("white_list", "car");
 	detectorConfig.emplace("white_list", "bicycle");
 	detectorConfig.emplace("white_list", "motorbike");
 	detectorConfig.emplace("white_list", "bus");
 	detectorConfig.emplace("white_list", "truck");
-	detectorConfig.emplace("white_list", "traffic light");
-	detectorConfig.emplace("white_list", "stop sign");
+    //detectorConfig.emplace("white_list", "traffic light");
+    //detectorConfig.emplace("white_list", "stop sign");
+#endif
 
     // Tracker
     const int minStaticTime = 5;
@@ -301,10 +303,10 @@ void AsyncDetector::CaptureThread(std::string fileName, int startFrame, float* f
 	trackerSettings.SetDistance(tracking::DistCenters);
     trackerSettings.m_kalmanType = tracking::KalmanLinear;
     trackerSettings.m_filterGoal = tracking::FilterRect;
-    trackerSettings.m_lostTrackType = tracking::TrackKCF; // Use KCF tracker for collisions resolving
+    trackerSettings.m_lostTrackType = tracking::TrackNone; // Use KCF tracker for collisions resolving
     trackerSettings.m_matchType = tracking::MatchHungrian;
-    trackerSettings.m_dt = 0.5f;                             // Delta time for Kalman filter
-    trackerSettings.m_accelNoiseMag = 0.5f;                  // Accel noise magnitude for Kalman filter
+    trackerSettings.m_dt = 0.2f;                             // Delta time for Kalman filter
+    trackerSettings.m_accelNoiseMag = 0.3f;                  // Accel noise magnitude for Kalman filter
     trackerSettings.m_distThres = frameHeight / 10.f;         // Distance threshold between region and object on two frames
 
     trackerSettings.m_useAbandonedDetection = false;
@@ -322,8 +324,10 @@ void AsyncDetector::CaptureThread(std::string fileName, int startFrame, float* f
     }
 
     // Capture the first frame
+	size_t frameInd = startFrame;
     cv::Mat firstFrame;
     capture >> firstFrame;
+	++frameInd;
 
     std::thread thDetection(DetectThread, detectorConfig, firstFrame, framesQue, stopFlag);
     std::thread thTracking(TrackingThread, trackerSettings, framesQue, stopFlag);
@@ -331,8 +335,8 @@ void AsyncDetector::CaptureThread(std::string fileName, int startFrame, float* f
     // Capture frame
     for (; !(*stopFlag);)
     {
-        frame_ptr frameInfo(new FrameInfo());
-        frameInfo->m_dt = cv::getTickCount();;
+        frame_ptr frameInfo(new FrameInfo(frameInd));
+        frameInfo->m_dt = cv::getTickCount();
         capture >> frameInfo->m_frame;
         if (frameInfo->m_frame.empty())
         {
@@ -348,7 +352,13 @@ void AsyncDetector::CaptureThread(std::string fileName, int startFrame, float* f
 
         framesQue->AddNewFrame(frameInfo, 15);
 
+#if 0
         std::this_thread::sleep_for(std::chrono::milliseconds(1000 / cvRound(*fps)));
+#else
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+#endif
+
+		++frameInd;
     }
 
     framesQue->SetBreak(true);
@@ -385,7 +395,7 @@ void AsyncDetector::DetectThread(const config_t& config, cv::Mat firstFrame, Fra
             const regions_t& regions = detector->GetDetects();
             frameInfo->m_regions.assign(regions.begin(), regions.end());
 
-            frameInfo->m_inDetector = 2;
+            frameInfo->m_inDetector.store(2);
             framesQue->Signal(frameInfo->m_dt);
         }
     }
@@ -407,7 +417,7 @@ void AsyncDetector::TrackingThread(const TrackerSettings& settings, FramesQueue*
             tracker->Update(frameInfo->m_regions, frameInfo->m_clFrame, frameInfo->m_fps);
 
             frameInfo->m_tracks = tracker->GetTracks();
-            frameInfo->m_inTracker = 2;
+            frameInfo->m_inTracker.store(2);
             framesQue->Signal(frameInfo->m_dt);
         }
     }

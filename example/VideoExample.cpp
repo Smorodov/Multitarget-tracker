@@ -169,7 +169,7 @@ void VideoExample::AsyncProcess()
     int64 allTime = 0;
     int64 startLoopTime = cv::getTickCount();
 	size_t processCounter = 0;
-    for (; !stopCapture; )
+    for (; !stopCapture.load(); )
     {
         FrameInfo& frameInfo = m_frameInfo[processCounter % 2];
         {
@@ -273,7 +273,7 @@ void VideoExample::CaptureAndDetect(VideoExample* thisPtr, std::atomic<bool>& st
 
     int trackingTimeOut = thisPtr->m_trackingTimeOut;
 	size_t processCounter = 0;
-    for (; !stopCapture;)
+    for (; !stopCapture.load();)
     {
         FrameInfo& frameInfo = thisPtr->m_frameInfo[processCounter % 2];
 
