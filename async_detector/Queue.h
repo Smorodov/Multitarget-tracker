@@ -9,6 +9,8 @@
 #include <condition_variable>
 #include <atomic>
 
+#define SHOW_QUE_LOG 0
+#if SHOW_QUE_LOG
 ///
 /// \brief currTime
 /// \return
@@ -25,109 +27,36 @@ inline std::string CurrTime_()
 
 #define QUE_LOG std::cout << CurrTime_()
 #define QUE_ERR_LOG (std::cerr << CurrTime_())
-
-///
-/// A threadsafe-queue
-///
-template <class T>
-class SafeQueue
-{
-public:
-    ///
-    SafeQueue(void)
-        : m_que()
-        , m_mutex()
-        , m_cond()
-    {
-    }
-    SafeQueue(const SafeQueue&) = delete;
-    SafeQueue(SafeQueue&&) = delete;
-    SafeQueue& operator=(const SafeQueue&) = delete;
-    SafeQueue& operator=(SafeQueue&&) = delete;
-
-    ///
-    virtual ~SafeQueue(void) = default;
-
-protected:
-    typedef std::list<T> queue_t;
-    queue_t m_que;
-    mutable std::mutex m_mutex;
-    std::condition_variable m_cond;
-
-    ///
-    /// Add an element to the queue
-    ///
-    void enqueue(T t)
-    {
-        std::lock_guard<std::mutex> lock(m_mutex);
-        m_que.push_back(t);
-        m_cond.notify_all();
-    }
-
-    ///
-    /// Add an element to the queue
-    ///
-    void enqueue(T t, size_t maxQueueSize)
-    {
-        std::lock_guard<std::mutex> lock(m_mutex);
-        m_que.push(t);
-
-        if (m_que.size() > maxQueueSize)
-        {
-            m_que.pop();
-        }
-        m_cond.notify_all();
-    }
-
-    ///
-    /// Add an element to the queue
-    ///
-    template<typename RET_V, typename RET_F>
-    RET_V enqueue(T t, RET_F && F)
-    {
-        std::lock_guard<std::mutex> lock(m_mutex);
-        m_que.push(t);
-        RET_V ret = F(m_que.front());
-        m_cond.notify_all();
-
-        return ret;
-    }
-
-    ///
-    /// Get the "front"-element
-    /// If the queue is empty, wait till a element is avaiable
-    ///
-    void dequeue(T& val)
-    {
-        std::unique_lock<std::mutex> lock(m_mutex);
-		m_cond.wait(lock, [this] { return !m_que.empty(); });
-        val = m_que.front();
-        m_que.pop();
-    }
-
-    ///
-    size_t size()
-    {
-        std::lock_guard<std::mutex> lock(m_mutex);
-        return m_que.size();
-    }
-};
-
+#endif
 
 struct FrameInfo;
 typedef std::shared_ptr<FrameInfo> frame_ptr;
 ///
 /// A threadsafe-queue with Frames
 ///
-class FramesQueue : public SafeQueue<frame_ptr>
+class FramesQueue
 {
+private:
+    typedef std::list<frame_ptr> queue_t;
+
 public:
     ///
     /// \brief FramesQueue
     ///
     FramesQueue()
-        : m_break(false)
+          : m_que(),
+          m_mutex(),
+          m_cond(),
+          m_break(false)
     {}
+
+    FramesQueue(const FramesQueue&) = delete;
+    FramesQueue(FramesQueue&&) = delete;
+    FramesQueue& operator=(const FramesQueue&) = delete;
+    FramesQueue& operator=(FramesQueue&&) = delete;
+
+    ///
+    ~FramesQueue(void) = default;
 
     ///
     /// \brief AddNewFrame
@@ -135,18 +64,23 @@ public:
     ///
     void AddNewFrame(frame_ptr frameInfo, size_t maxQueueSize)
     {
-        //QUE_LOG << "AddNewFrame start: " << frameInfo->m_dt << std::endl;
+#if SHOW_QUE_LOG
+        QUE_LOG << "AddNewFrame start: " << frameInfo->m_dt << std::endl;
+#endif
 		std::lock_guard<std::mutex> lock(m_mutex);
 
 		if (!maxQueueSize || (maxQueueSize > 0 && m_que.size() < maxQueueSize))
 		{
 			m_que.push_back(frameInfo);
 		}
-		//QUE_LOG << "AddNewFrame end: " << frameInfo->m_dt << ", queue size " << m_que.size() << std::endl;
+#if SHOW_QUE_LOG
+		QUE_LOG << "AddNewFrame end: " << frameInfo->m_dt << ", frameInd " << frameInfo->m_frameInd << ", queue size " << m_que.size() << std::endl;
+#endif
 
 		m_cond.notify_all();
     }
 
+#if SHOW_QUE_LOG
     ///
     /// \brief PrintQue
     ///
@@ -156,17 +90,17 @@ public:
         size_t i = 0;
         for (auto it : m_que)
         {
-            if (it->m_inDetector && it->m_inTracker)
+            if (it->m_inDetector.load() && it->m_inTracker.load())
             {
-                std::cout << i << " d" << it->m_inDetector << " t" << it->m_inTracker << "; ";
+                std::cout << i << " d" << it->m_inDetector.load() << " t" << it->m_inTracker.load() << "; ";
             }
-            else if (it->m_inDetector)
+            else if (it->m_inDetector.load())
             {
-                std::cout << i << " d" << it->m_inDetector << "; ";
+                std::cout << i << " d" << it->m_inDetector.load() << "; ";
             }
-            else if (it->m_inTracker)
+            else if (it->m_inTracker.load())
             {
-                std::cout << i << " t" << it->m_inTracker << "; ";
+                std::cout << i << " t" << it->m_inTracker.load() << "; ";
             }
             else
             {
@@ -176,19 +110,20 @@ public:
         }
         std::cout << std::endl;
     }
-
+#endif
     ///
     /// \brief GetLastUndetectedFrame
     /// \return
     ///
     frame_ptr GetLastUndetectedFrame()
     {
-        //QUE_LOG << "GetLastUndetectedFrame start" << std::endl;
-
+#if SHOW_QUE_LOG
+        QUE_LOG << "GetLastUndetectedFrame start" << std::endl;
+#endif
         std::unique_lock<std::mutex> lock(m_mutex);
-        while (m_que.empty() || m_que.back()->m_inDetector)
+        while (m_que.empty() || m_que.back()->m_inDetector.load())
         {
-            if (m_break)
+            if (m_break.load())
             {
                 break;
             }
@@ -196,13 +131,15 @@ public:
             m_cond.wait(lock);
             //PrintQue();
         }
-        if (!m_break)
+        if (!m_break.load())
         {
             frame_ptr frameInfo = m_que.back();
-            frameInfo->m_inDetector = 1;
-
-            //QUE_LOG << "GetLastUndetectedFrame end: " << frameInfo->m_dt << std::endl;
-
+            assert(frameInfo->m_inDetector.load() == 0);
+            assert(frameInfo->m_inTracker.load());
+            frameInfo->m_inDetector.store(1);
+#if SHOW_QUE_LOG
+            QUE_LOG << "GetLastUndetectedFrame end: " << frameInfo->m_dt << ", frameInd " << frameInfo->m_frameInd << std::endl;
+#endif
             return frameInfo;
         }
         return nullptr;
@@ -217,7 +154,7 @@ public:
         queue_t::iterator res_it = m_que.end();
         for (queue_t::iterator it = m_que.begin(); it != m_que.end(); ++it)
         {
-            if ((*it)->m_inDetector != 1 && (*it)->m_inTracker == 0)
+            if ((*it)->m_inDetector.load() != 1 && (*it)->m_inTracker.load() == 0)
             {
                 res_it = it;
                 break;
@@ -232,13 +169,14 @@ public:
     ///
     frame_ptr GetFirstDetectedFrame()
     {
-        //QUE_LOG << "GetFirstDetectedFrame start" << std::endl;
-
+#if SHOW_QUE_LOG
+        QUE_LOG << "GetFirstDetectedFrame start" << std::endl;
+#endif
         std::unique_lock<std::mutex> lock(m_mutex);
         queue_t::iterator it = SearchUntracked();
         while (it == m_que.end())
         {
-            if (m_break)
+            if (m_break.load())
             {
                 break;
             }
@@ -247,12 +185,15 @@ public:
             it = SearchUntracked();
             //PrintQue();
         }
-        if (!m_break)
+        if (!m_break.load())
         {
             frame_ptr frameInfo = *it;
-            frameInfo->m_inTracker = 1;
-
-            //QUE_LOG << "GetFirstDetectedFrame end: " << frameInfo->m_dt << std::endl;
+            assert(frameInfo->m_inTracker.load() == 0);
+            assert(frameInfo->m_inDetector.load() != 1);
+            frameInfo->m_inTracker.store(1);
+#if SHOW_QUE_LOG
+            QUE_LOG << "GetFirstDetectedFrame end: " << frameInfo->m_dt << ", frameInd " << frameInfo->m_frameInd << std::endl;
+#endif
             return frameInfo;
         }
         return nullptr;
@@ -264,12 +205,13 @@ public:
     ///
     frame_ptr GetFirstProcessedFrame()
     {
-        //QUE_LOG << "GetFirstProcessedFrame start" << std::endl;
-
+#if SHOW_QUE_LOG
+        QUE_LOG << "GetFirstProcessedFrame start" << std::endl;
+#endif
         std::unique_lock<std::mutex> lock(m_mutex);
-        while (m_que.empty() || m_que.front()->m_inTracker != 2)
+        while (m_que.empty() || m_que.front()->m_inTracker.load() != 2)
         {
-            if (m_break)
+            if (m_break.load())
             {
                 break;
             }
@@ -277,13 +219,13 @@ public:
             m_cond.wait(lock);
             //PrintQue();
         }
-        if (!m_break)
+        if (!m_break.load())
         {
             frame_ptr frameInfo = m_que.front();
             m_que.pop_front();
-
-            //QUE_LOG << "GetFirstProcessedFrame end: " << frameInfo->m_dt << std::endl;
-
+#if SHOW_QUE_LOG
+            QUE_LOG << "GetFirstProcessedFrame end: " << frameInfo->m_dt << ", frameInd " << frameInfo->m_frameInd << std::endl;
+#endif
             return frameInfo;
         }
         return nullptr;
@@ -292,21 +234,38 @@ public:
     ///
     /// \brief Signal
     ///
-    void Signal(int64 ts)
+    void Signal(
+#if SHOW_QUE_LOG
+		int64 ts
+#else
+		int64 /*ts*/
+#endif
+	)
     {
-        //QUE_LOG << "Signal start:" << ts << std::endl;
+#if SHOW_QUE_LOG
+        QUE_LOG << "Signal start:" << ts << std::endl;
+#endif
         m_cond.notify_all();
-        //QUE_LOG << "Signal end: " << ts << std::endl;
+#if SHOW_QUE_LOG
+        QUE_LOG << "Signal end: " << ts << std::endl;
+#endif
     }
 
     void SetBreak(bool val)
     {
-        //QUE_LOG << "SetBreak start:" << val << std::endl;
+#if SHOW_QUE_LOG
+        QUE_LOG << "SetBreak start:" << val << std::endl;
+#endif
         m_break = val;
         Signal(0);
-        //QUE_LOG << "SetBreak end:" << val << std::endl;
+#if SHOW_QUE_LOG
+        QUE_LOG << "SetBreak end:" << val << std::endl;
+#endif
     }
 
 private:
+    queue_t m_que;
+    mutable std::mutex m_mutex;
+    std::condition_variable m_cond;
     std::atomic<bool> m_break;
 };
