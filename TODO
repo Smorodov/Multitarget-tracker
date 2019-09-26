@@ -10,10 +10,6 @@ Deep SORT:
 2. https://github.com/bitzy/DeepSort
 3. https://github.com/oylz/DS
 
-BGFG:
-1. Original Vibe
-2. Integration with new https://github.com/andrewssobral/bgslibrary
-
 Metrics between regions and tracking objects:
 1. Profiling histograms
 2. HOG
