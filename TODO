@@ -4,6 +4,11 @@ Global data association for multi-object tracking using network flows:
 3. Tracking The Untrackable: Learning To Track Multiple Cues with Long-Term Dependencies
 4. http://openaccess.thecvf.com/content_cvpr_2017/papers/Tang_Multiple_People_Tracking_CVPR_2017_paper.pdf
 5. https://github.com/abhineet123/Deep-Learning-for-Tracking-and-Detection
+6. https://arxiv.org/abs/1903.05625
+7. https://arxiv.org/abs/1907.03961
+8. http://www.cvlibs.net/projects/online_tracking/
+9. https://github.com/jwchoi384/Gaussian_YOLOv3
+10. https://github.com/humoncy/YOLOv3-SORT-ReID
 
 Deep SORT:
 1. https://github.com/nwojke/deep_sort
@@ -17,7 +22,7 @@ BGFG:
 Metrics between regions and tracking objects:
 1. Profiling histograms
 2. HOG
-3. Normaliza pixels metric to [0, 1]
+3. Normalize pixels metric to [0, 1]
 
 New runtime:
 1. Integration with deepstream sdk 4.0
