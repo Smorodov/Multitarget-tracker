@@ -154,7 +154,11 @@ public:
         queue_t::iterator res_it = m_que.end();
         for (queue_t::iterator it = m_que.begin(); it != m_que.end(); ++it)
         {
-            if ((*it)->m_inDetector.load() != 1 && (*it)->m_inTracker.load() == 0)
+            if ((*it)->m_inDetector.load() == 1)
+            {
+                break;
+            }
+            else if ((*it)->m_inTracker.load() == 0)
             {
                 res_it = it;
                 break;

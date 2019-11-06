@@ -31,7 +31,7 @@ struct FrameInfo
     std::atomic<int> m_inTracker;  // 0 - not in Tracker, 1 - tracker started processing, 2 - objects was tracked
 
     FrameInfo(size_t frameInd)
-        : m_inDetector(0), m_inTracker(0), m_frameInd(frameInd)
+        : m_frameInd(frameInd), m_inDetector(0), m_inTracker(0)
     {
     }
 };
