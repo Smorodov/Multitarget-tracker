@@ -184,7 +184,7 @@ struct symlist_iterator
     /**
      * @internal
      */
-    int dir;
+    int dir = 0;
 };
 
 /**

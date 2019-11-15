@@ -119,7 +119,7 @@ protected:
     /**
      * @internal 
      */
-    int act_top_num;
+    int act_top_num = 0;
     /**
      * @internal 
      */
