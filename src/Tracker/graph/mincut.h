@@ -66,12 +66,12 @@ protected:
     /**
      * @internal
      */
-	int min_cut;
+	int min_cut = 0;
 	
     /**
      * @internal
      */
-    bool set_vars_executed;
+    bool set_vars_executed = false;
 	
     /**
      * @internal

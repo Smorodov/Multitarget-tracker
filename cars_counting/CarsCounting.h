@@ -78,28 +78,28 @@ public:
         if (isIntersect)
         {
             cv::Point2f pt;
-            if ((m_pt1.x <= m_pt2.x) && (m_pt1.y > m_pt1.y))
+            if ((m_pt1.x <= m_pt2.x) && (m_pt1.y > m_pt2.y))
             {
                 pt.x = (m_pt1.x + m_pt2.x) / 2.f - 0.01f;
                 pt.y = (m_pt1.y + m_pt1.y) / 2.f - 0.01f;
             }
             else
             {
-                if ((m_pt1.x <= m_pt2.x) && (m_pt1.y <= m_pt1.y))
+                if ((m_pt1.x <= m_pt2.x) && (m_pt1.y <= m_pt2.y))
                 {
                     pt.x = (m_pt1.x + m_pt2.x) / 2.f + 0.01f;
                     pt.y = (m_pt1.y + m_pt1.y) / 2.f - 0.01f;
                 }
                 else
                 {
-                    if ((m_pt1.x > m_pt2.x) && (m_pt1.y > m_pt1.y))
+                    if ((m_pt1.x > m_pt2.x) && (m_pt1.y > m_pt2.y))
                     {
                         pt.x = (m_pt1.x + m_pt2.x) / 2.f - 0.01f;
                         pt.y = (m_pt1.y + m_pt1.y) / 2.f + 0.01f;
                     }
                     else
                     {
-                        if ((m_pt1.x > m_pt2.x) && (m_pt1.y <= m_pt1.y))
+                        if ((m_pt1.x > m_pt2.x) && (m_pt1.y <= m_pt2.y))
                         {
                             pt.x = (m_pt1.x + m_pt2.x) / 2.f + 0.01f;
                             pt.y = (m_pt1.y + m_pt1.y) / 2.f + 0.01f;

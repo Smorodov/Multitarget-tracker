@@ -52,24 +52,21 @@ void MotionDetector::DetectContour()
 #else
     cv::findContours(m_fg, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE, cv::Point());
 #endif
-	if (contours.size() > 0)
+	for (size_t i = 0; i < contours.size(); i++)
 	{
-		for (size_t i = 0; i < contours.size(); i++)
-		{
-            cv::Rect br = cv::boundingRect(contours[i]);
+		cv::Rect br = cv::boundingRect(contours[i]);
 
-            if (br.width >= m_minObjectSize.width &&
-                br.height >= m_minObjectSize.height)
+		if (br.width >= m_minObjectSize.width &&
+			br.height >= m_minObjectSize.height)
+		{
+			if (m_useRotatedRect)
 			{
-                if (m_useRotatedRect)
-                {
-                    cv::RotatedRect rr = cv::minAreaRect(contours[i]);
-                    m_regions.push_back(CRegion(rr));
-                }
-                else
-                {
-                    m_regions.push_back(CRegion(br));
-                }
+				cv::RotatedRect rr = cv::minAreaRect(contours[i]);
+				m_regions.push_back(CRegion(rr));
+			}
+			else
+			{
+				m_regions.push_back(CRegion(br));
 			}
 		}
 	}

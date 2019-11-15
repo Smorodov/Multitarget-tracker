@@ -137,7 +137,7 @@ protected:
      * phase, such that it can be assured that this node is matched @em
      * after all its pertinent children were correctly matched.
      */
-    int pert_children;
+    int pert_children = 0;
 
     /**
      * @internal
@@ -145,7 +145,7 @@ protected:
      * calculated in the reduction phase and is used to determine the root 
      * of the pertinent subtree, i.e. the last node for template matchings. 
      */
-    int pert_leaves;
+    int pert_leaves = 0;
 
     /**
      * @internal
@@ -155,7 +155,7 @@ protected:
      * of a Q-node is_endmost is only true for the first and the last son.
      * For the sons of P-nodes ths flag is always true.
      */
-    bool is_endmost;
+    bool is_endmost = false;
 
     /**
      * @internal
@@ -163,7 +163,7 @@ protected:
      * should know its father; Because of complexity issuses this isn't
      * always possible and  thus father is valid iff is_endmost is true.
      */
-    pq_node* father;
+    pq_node* father = nullptr;
 
     /**
      * @internal
@@ -214,7 +214,7 @@ protected:
     /**
      * @internal
      */
-    int id;
+    int id = 0;
 
     /**
      * @internal
@@ -224,7 +224,7 @@ protected:
     /**
      * @internal
      */
-    int up_id;
+    int up_id = 0;
 
     //
     // Friends
@@ -375,19 +375,19 @@ private:
      * @internal
      * Number of children.
      */
-    int child_count;
+    int child_count = 0;
 
     /**
      * @internal
      * Number of partial children.
      */
-    int partial_count;
+    int partial_count = 0;
 
     /**
      * @internal
      * Number of full children.
      */
-    int full_count;
+    int full_count = 0;
 
     //
     // Friends 
@@ -552,19 +552,19 @@ private:
      * in another, such that <tt>--pert_end</tt> is empty and between the
      * two blocks.
      */
-    bool pert_cons;
+    bool pert_cons = false;
 
     /**
      * @internal
      * Number of partial children.
      */
-    int partial_count;
+    int partial_count = 0;
 
     /**
      * @internal
      * Number of full children.
      */
-    int full_count;
+    int full_count = 0;
     
     //
     // Friends 
@@ -761,7 +761,7 @@ private:
     /**
      * @internal
      */
-    bool direction;	
+    bool direction = false;	
 
     //
     // Friends 

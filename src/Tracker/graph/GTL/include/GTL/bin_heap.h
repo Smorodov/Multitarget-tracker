@@ -50,7 +50,7 @@ public:
      * @internal
      * Position in container.
      */
-    int pos;
+    int pos = 0;
 };
 
     

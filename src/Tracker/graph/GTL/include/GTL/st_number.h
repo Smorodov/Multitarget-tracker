@@ -420,7 +420,7 @@ protected:
     /**
      * @internal
      */
-    pathfinder* pf;
+    pathfinder* pf = nullptr;
 
     /**
      * @internal

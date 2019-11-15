@@ -128,17 +128,17 @@ protected:
     /**
      * @internal
      */
-    bool artif_source_target;
+    bool artif_source_target = false;
 
     /**
      * @internal
      */
-    bool set_vars_executed;
+    bool set_vars_executed = false;
 
     /**
      * @internal
      */
-    double max_graph_flow;
+    double max_graph_flow = 0.;
 
     /**
      * @internal

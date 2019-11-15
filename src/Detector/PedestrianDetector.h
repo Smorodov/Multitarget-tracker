@@ -28,7 +28,7 @@ public:
 	}
 
 private:
-    DetectorTypes m_detectorType;
+    DetectorTypes m_detectorType = HOG;
 
     ///
     /// \brief m_hog

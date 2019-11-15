@@ -447,7 +447,7 @@ float* crop_H(float *H,int* h_height,int* h_width,int depth,int dh,int dw) {
         for(int j = 1;j < *h_width-dw;j ++)
             for(int k = 0;k < depth;k ++)
                 crop_H[i-1 + (j-1)*(crop_h) + k*(crop_h*crop_w)] = H[k*(*h_width * *h_height) + j*(*h_height) + i];
-    delete H;
+    delete []H;
     *h_height = crop_h;*h_width = crop_w;
     return crop_H;
 }

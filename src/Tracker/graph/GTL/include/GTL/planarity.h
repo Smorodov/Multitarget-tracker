@@ -593,22 +593,22 @@ private:
     /**
      * @internal
      */
-    bool planar;
+    bool planar = false;
     
     /**
      * @internal
      */
-    bool emp;
+    bool emp = false;
     
     /**
      * @internal
      */
-    bool kup;
+    bool kup = false;
     
     /**
      * @internal
      */
-    bool bip;
+    bool bip = false;
 };
 
 __GTL_END_NAMESPACE

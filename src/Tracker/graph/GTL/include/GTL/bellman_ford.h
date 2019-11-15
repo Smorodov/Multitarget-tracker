@@ -200,7 +200,7 @@ private:
      * 
      * @sa bellman_ford::weights.
      */
-    bool vars_set; 
+    bool vars_set = false; 
 
     /**
      * @brief distance from source s.
@@ -229,7 +229,7 @@ private:
      * 
      * @sa bellman_ford::negative_cycle.
      */
-    bool cycle; 
+    bool cycle = 0; 
 };
 
 __GTL_END_NAMESPACE

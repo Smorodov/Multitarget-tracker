@@ -27,7 +27,7 @@ public:
     cv::Rect Update(cv::Rect rect, bool dataCorrect);
 
 private:
-    tracking::KalmanType m_type;
+    tracking::KalmanType m_type = tracking::KalmanLinear;
     std::unique_ptr<cv::KalmanFilter> m_linearKalman;
 #ifdef USE_OCV_UKF
     cv::Ptr<cv::tracking::UnscentedKalmanFilter> m_uncsentedKalman;
@@ -41,14 +41,14 @@ private:
     cv::Rect_<track_t> m_lastRectResult;
     cv::Rect_<track_t> m_lastRect;
 
-    bool m_initialized;
-    track_t m_deltaTime;
-    track_t m_deltaTimeMin;
-    track_t m_deltaTimeMax;
-    track_t m_lastDist;
-    track_t m_deltaStep;
+    bool m_initialized = false;
+    track_t m_deltaTime = 0.2;
+    track_t m_deltaTimeMin = 0.2;
+    track_t m_deltaTimeMax = 2 * 0.2;
+    track_t m_lastDist = 0;
+    track_t m_deltaStep = 0;
     static const int m_deltaStepsCount = 20;
-    track_t m_accelNoiseMag;
+    track_t m_accelNoiseMag = 0.5;
 
     void CreateLinear(Point_t xy0, Point_t xyv0);
     void CreateLinear(cv::Rect_<track_t> rect0, Point_t rectv0);

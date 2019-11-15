@@ -335,13 +335,13 @@ private:
      * @internal
      * Root of tree.
      */
-    pq_node* root;
+    pq_node* root = nullptr;
 
     /**
      * @internal
      * Root of pertinent subtree; defined after succesful reduction.
      */
-    pq_node* pert_root;
+    pq_node* pert_root = nullptr;
 
     /**
      * @internal
@@ -351,26 +351,26 @@ private:
      * of the pertinent subtree, which gets only the pertinent children as
      * sons.
      */
-    q_node* pseudo;
+    q_node* pseudo = nullptr;
 
     /**
      * @internal
      * (PQ-) node for which the reduction failed.
      */
-    pq_node* fail;
+    pq_node* fail = nullptr;
 
     /**
      * @internal
      * @c true iff reduction failed at the root of the pertinent subtree.
      */
-    bool failed_at_root;
+    bool failed_at_root = false;
 
     /**
      * @internal
      * Number of pertinent leaves for the current reduction; defined after
      * bubble-up.
      */
-    int pert_leaves_count;
+    int pert_leaves_count = 0;
 
     //
     // Friends
