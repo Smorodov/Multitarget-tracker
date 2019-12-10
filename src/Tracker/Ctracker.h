@@ -17,7 +17,6 @@
 ///
 struct TrackerSettings
 {
-    //tracking::DistType m_distType = tracking::DistCenters;
     tracking::KalmanType m_kalmanType = tracking::KalmanLinear;
     tracking::FilterGoal m_filterGoal = tracking::FilterCenter;
     tracking::LostTrackType m_lostTrackType = tracking::TrackKCF;
@@ -111,6 +110,12 @@ struct TrackerSettings
 		std::fill(m_distType.begin(), m_distType.end(), 0.0f);
 		m_distType[distType] = 1.f;
 		return true;
+	}
+
+	///
+	bool CheckType(const std::string& type1, const std::string& type2) const
+	{
+		return type1.empty() || type2.empty() || (type1 == type2);
 	}
 };
 

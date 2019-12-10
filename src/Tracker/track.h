@@ -267,8 +267,6 @@ public:
 	///
 	track_t CalcDistHist(const CRegion& reg, cv::UMat currFrame) const;
 
-    bool CheckType(const std::string& type) const;
-
     void Update(const CRegion& region, bool dataCorrect, size_t max_trace_length, cv::UMat prevFrame, cv::UMat currFrame, int trajLen);
 
     bool IsStatic() const;

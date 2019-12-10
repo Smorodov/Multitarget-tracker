@@ -163,7 +163,7 @@ void CTracker::CreateDistaceMatrix(const regions_t& regions, distMatrix_t& costM
 		for (size_t j = 0; j < regions.size(); ++j)
 		{
 			auto dist = maxPossibleCost;
-			if (m_tracks[i]->CheckType(regions[j].m_type))
+			if (m_settings.CheckType(m_tracks[i]->LastRegion().m_type, regions[j].m_type))
 			{
 				dist = 0;
 				size_t ind = 0;
