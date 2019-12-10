@@ -266,13 +266,6 @@ public:
 	/// \return
 	///
 	track_t CalcDistHist(const CRegion& reg, cv::UMat currFrame) const;
-	///
-	/// \brief CalcDistHOG
-	/// Euclidean distance from 0 to 1 between HOG descriptors on two N and N+1 frames
-	/// \param reg
-	/// \return
-	///
-	track_t CalcDistHOG(const CRegion& reg) const;
 
     bool CheckType(const std::string& type) const;
 

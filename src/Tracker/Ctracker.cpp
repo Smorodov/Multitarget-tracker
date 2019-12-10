@@ -187,11 +187,6 @@ void CTracker::CreateDistaceMatrix(const regions_t& regions, distMatrix_t& costM
 					dist += m_settings.m_distType[ind] * track->CalcDistHist(regions[j], currFrame);
 				}
 				++ind;
-				if (m_settings.m_distType[ind] > 0.0f && ind == tracking::DistHOG)
-				{
-					dist += m_settings.m_distType[ind] * track->CalcDistHOG(regions[j]);
-				}
-				++ind;
 				assert(ind == tracking::DistsCount);
 			}
 

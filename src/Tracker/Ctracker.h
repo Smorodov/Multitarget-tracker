@@ -79,7 +79,6 @@ struct TrackerSettings
 		m_distType[tracking::DistRects] = 0.0f;
 		m_distType[tracking::DistJaccard] = 0.5f;
 		m_distType[tracking::DistHist] = 0.5f;
-		m_distType[tracking::DistHOG] = 0.0f;
 
 		assert(CheckDistance());
 	}

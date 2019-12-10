@@ -130,16 +130,6 @@ track_t CTrack::CalcDistHist(const CRegion& reg, cv::UMat currFrame) const
 }
 
 ///
-/// \brief CTrack::CalcDistHOG
-/// \param reg
-/// \return
-///
-track_t CTrack::CalcDistHOG(const CRegion& reg) const
-{
-	return 1;
-}
-
-///
 /// \brief CTrack::CheckType
 /// \param type
 /// \return

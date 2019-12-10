@@ -112,7 +112,6 @@ enum DistType
     DistRects,     // Euclidean distance between bounding rectangles, pixels
     DistJaccard,   // Intersection over Union, IoU, [0, 1]
 	DistHist,      // Bhatacharia distance between histograms, [0, 1]
-	DistHOG,       // Euclidean distance between HOG descriptors, [0, 1]
 	DistsCount
 };
 
