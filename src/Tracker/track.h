@@ -172,7 +172,7 @@ struct TrackingObject
 	bool m_isStatic = false;
 	bool m_outOfTheFrame = false;
 	std::string m_type;
-	float m_confidence;
+	float m_confidence = -1;
 	std::vector<cv::Point> m_points;
 
 
