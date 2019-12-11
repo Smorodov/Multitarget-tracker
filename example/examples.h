@@ -628,6 +628,11 @@ protected:
 		settings.m_maximumAllowedSkippedFrames = cvRound(2 * m_fps); // Maximum allowed skipped frames
 		settings.m_maxTraceLength = cvRound(5 * m_fps);      // Maximum trace length
 
+		settings.AddNearTypes("car", "bus", false);
+		settings.AddNearTypes("car", "truck", false);
+		settings.AddNearTypes("person", "bicycle", true);
+		settings.AddNearTypes("person", "motorbike", true);
+
 		m_tracker = std::make_unique<CTracker>(settings);
 
 		return true;
