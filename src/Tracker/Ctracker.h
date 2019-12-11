@@ -5,6 +5,8 @@
 #include <array>
 #include <deque>
 #include <numeric>
+#include <map>
+#include <set>
 
 #include "defines.h"
 #include "track.h"
@@ -17,7 +19,6 @@
 ///
 struct TrackerSettings
 {
-    //tracking::DistType m_distType = tracking::DistCenters;
     tracking::KalmanType m_kalmanType = tracking::KalmanLinear;
     tracking::FilterGoal m_filterGoal = tracking::FilterCenter;
     tracking::LostTrackType m_lostTrackType = tracking::TrackKCF;
@@ -73,13 +74,18 @@ struct TrackerSettings
     int m_maxStaticTime = 25;
 
 	///
+	/// \brief m_nearTypes
+	/// Object types that can be matched while tracking
+	///
+	std::map<std::string, std::set<std::string>> m_nearTypes;
+
+	///
 	TrackerSettings()
 	{
 		m_distType[tracking::DistCenters] = 0.0f;
 		m_distType[tracking::DistRects] = 0.0f;
 		m_distType[tracking::DistJaccard] = 0.5f;
 		m_distType[tracking::DistHist] = 0.5f;
-		m_distType[tracking::DistHOG] = 0.0f;
 
 		assert(CheckDistance());
 	}
@@ -112,6 +118,43 @@ struct TrackerSettings
 		std::fill(m_distType.begin(), m_distType.end(), 0.0f);
 		m_distType[distType] = 1.f;
 		return true;
+	}
+
+	///
+	void AddNearTypes(const std::string& type1, const std::string& type2, bool sym)
+	{
+		auto AddOne = [&](const std::string& type1, const std::string& type2)
+		{
+			auto it = m_nearTypes.find(type1);
+			if (it == std::end(m_nearTypes))
+			{
+				m_nearTypes[type1] = std::set<std::string>{ type2 };
+			}
+			else
+			{
+				it->second.insert(type2);
+			}
+		};
+		AddOne(type1, type2);
+		if (sym)
+		{
+			AddOne(type2, type1);
+		}
+	}
+
+	///
+	bool CheckType(const std::string& type1, const std::string& type2) const
+	{
+		bool res = type1.empty() || type2.empty() || (type1 == type2);
+		if (!res)
+		{
+			auto it = m_nearTypes.find(type1);
+			if (it != std::end(m_nearTypes))
+			{
+				res = it->second.find(type2) != std::end(it->second);
+			}
+		}
+		return res;
 	}
 };
 

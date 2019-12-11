@@ -130,26 +130,6 @@ track_t CTrack::CalcDistHist(const CRegion& reg, cv::UMat currFrame) const
 }
 
 ///
-/// \brief CTrack::CalcDistHOG
-/// \param reg
-/// \return
-///
-track_t CTrack::CalcDistHOG(const CRegion& reg) const
-{
-	return 1;
-}
-
-///
-/// \brief CTrack::CheckType
-/// \param type
-/// \return
-///
-bool CTrack::CheckType(const std::string& type) const
-{
-    return m_lastRegion.m_type.empty() || type.empty() || (m_lastRegion.m_type == type);
-}
-
-///
 /// \brief CTrack::Update
 /// \*param region
 /// \param dataCorrect
