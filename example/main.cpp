@@ -96,7 +96,7 @@ int main(int argc, char** argv)
 #endif
 
     default:
-        std::cerr << "Wrong example number!" << std::endl;
+        std::cerr << "Wrong example number: " << exampleNum << std::endl;
         break;
     }
 
