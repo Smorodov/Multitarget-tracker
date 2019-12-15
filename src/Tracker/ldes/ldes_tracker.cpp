@@ -413,9 +413,8 @@ cv::Mat LDESTracker::getFeatures(const cv::Mat & patchl, cv::Mat& han, int* size
 {
 	cv::Mat FeaturesMap;
 	// HOG features
-	IplImage z_ipl = patchl;
 	CvLSVMFeatureMapCaskade *map;
-	getFeatureMaps(&z_ipl, cell_size, &map);
+	getFeatureMaps(patchl, cell_size, &map);
 	normalizeAndTruncate(map, 0.2f);
 	PCAFeatureMaps(map);
 	sizes[0] = map->sizeY;

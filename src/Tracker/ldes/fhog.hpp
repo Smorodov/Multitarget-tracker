@@ -55,8 +55,7 @@
 //#include "_lsvmc_error.h"
 //#include "_lsvmc_routine.h"
 
-//#include "opencv2/imgproc.hpp"
-#include "opencv2/imgproc/imgproc_c.h"
+#include <opencv2/imgproc.hpp>
 
 
 //modified from "_lsvmc_types.h"
@@ -123,7 +122,7 @@ typedef struct{
 // Getting feature map for the selected subimage  
 //
 // API
-// int getFeatureMaps(const IplImage * image, const int k, featureMap **map);
+// int getFeatureMaps(const cv::Mat& image, const int k, featureMap **map);
 // INPUT
 // image             - selected subimage
 // k                 - size of cells
@@ -132,7 +131,7 @@ typedef struct{
 // RESULT
 // Error status
 */
-int getFeatureMaps(const IplImage * image, const int k, CvLSVMFeatureMapCaskade **map);
+int getFeatureMaps(const cv::Mat& image, const int k, CvLSVMFeatureMapCaskade **map);
 
 
 /*
