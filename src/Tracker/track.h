@@ -173,8 +173,6 @@ struct TrackingObject
 	bool m_outOfTheFrame = false;
 	std::string m_type;
 	float m_confidence = -1;
-	std::vector<cv::Point> m_points;
-
 
 	///
     TrackingObject(const cv::RotatedRect& rrect, size_t ID, const Trace& trace,
