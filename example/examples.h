@@ -662,9 +662,11 @@ protected:
 			{
 				DrawTrack(frame, 1, track);
 
-				std::string label = track.m_type + ": " + std::to_string(track.m_confidence);
+
+				std::stringstream label;
+				label << track.m_type << " " << std::setprecision(2) << track.m_velocity << ": " << track.m_confidence;
 				int baseLine = 0;
-				cv::Size labelSize = cv::getTextSize(label, cv::FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
+				cv::Size labelSize = cv::getTextSize(label.str(), cv::FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
 
                 cv::Rect brect = track.m_rrect.boundingRect();
 #if (CV_VERSION_MAJOR >= 4)
@@ -672,7 +674,7 @@ protected:
 #else
                 cv::rectangle(frame, cv::Rect(cv::Point(brect.x, brect.y - labelSize.height), cv::Size(labelSize.width, labelSize.height + baseLine)), cv::Scalar(255, 255, 255), CV_FILLED);
 #endif
-                cv::putText(frame, label, brect.tl(), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 0, 0));
+                cv::putText(frame, label.str(), brect.tl(), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 0, 0));
 			}
 		}
 

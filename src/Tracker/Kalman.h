@@ -26,6 +26,8 @@ public:
     cv::Rect GetRectPrediction();
     cv::Rect Update(cv::Rect rect, bool dataCorrect);
 
+	cv::Vec<track_t, 2> GetVelocity() const;
+
 private:
     tracking::KalmanType m_type = tracking::KalmanLinear;
     std::unique_ptr<cv::KalmanFilter> m_linearKalman;

@@ -299,7 +299,8 @@ const CRegion& CTrack::LastRegion() const
 ///
 TrackingObject CTrack::ConstructObject() const
 {
-    return TrackingObject(GetLastRect(), m_trackID, m_trace, IsStatic(), IsOutOfTheFrame(), m_lastRegion.m_type, m_lastRegion.m_confidence);
+    return TrackingObject(GetLastRect(), m_trackID, m_trace, IsStatic(), IsOutOfTheFrame(),
+		                  m_lastRegion.m_type, m_lastRegion.m_confidence, m_kalman->GetVelocity());
 }
 
 ///

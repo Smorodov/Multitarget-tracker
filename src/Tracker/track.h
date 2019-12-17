@@ -166,20 +166,20 @@ private:
 ///
 struct TrackingObject
 {
-    cv::RotatedRect m_rrect;
-	Trace m_trace;
-	size_t m_ID = 0;
-	bool m_isStatic = false;
-	bool m_outOfTheFrame = false;
-	std::string m_type;
-	float m_confidence = -1;
+    cv::RotatedRect m_rrect;           // Coordinates
+	Trace m_trace;                     // Trajectory
+	size_t m_ID = 0;                   // Objects ID
+	bool m_isStatic = false;           // Object is abandoned
+	bool m_outOfTheFrame = false;      // Is object out of freme
+	std::string m_type;                // Objects type name or empty value
+	float m_confidence = -1;           // From Detector with score (YOLO or SSD)
+	cv::Vec<track_t, 2> m_velocity;    // pixels/sec
 
 	///
     TrackingObject(const cv::RotatedRect& rrect, size_t ID, const Trace& trace,
-		bool isStatic, bool outOfTheFrame,
-		const std::string& type, float confidence)
+		bool isStatic, bool outOfTheFrame, const std::string& type, float confidence, cv::Vec<track_t, 2> velocity)
 		:
-        m_rrect(rrect), m_ID(ID), m_isStatic(isStatic), m_outOfTheFrame(outOfTheFrame), m_type(type), m_confidence(confidence)
+        m_rrect(rrect), m_ID(ID), m_isStatic(isStatic), m_outOfTheFrame(outOfTheFrame), m_type(type), m_confidence(confidence), m_velocity(velocity)
 	{
 		for (size_t i = 0; i < trace.size(); ++i)
 		{
