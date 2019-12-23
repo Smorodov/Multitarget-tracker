@@ -11,6 +11,7 @@
 // ---------------------------------------------------------------------------
 typedef float track_t;
 typedef cv::Point_<track_t> Point_t;
+#define El_t CV_32F
 #define Mat_t CV_32FC
 
 ///
