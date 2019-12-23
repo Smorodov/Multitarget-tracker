@@ -16,9 +16,8 @@
 class TKalmanFilter
 {
 public:
-    TKalmanFilter(tracking::KalmanType type, Point_t pt, track_t deltaTime = 0.2, track_t accelNoiseMag = 0.5);
-    TKalmanFilter(tracking::KalmanType type, cv::Rect rect, track_t deltaTime = 0.2, track_t accelNoiseMag = 0.5);
-	~TKalmanFilter();
+    TKalmanFilter(tracking::KalmanType type, track_t deltaTime = 0.2, track_t accelNoiseMag = 0.5);
+    ~TKalmanFilter() = default;
 
     Point_t GetPointPrediction();
     Point_t Update(Point_t pt, bool dataCorrect);

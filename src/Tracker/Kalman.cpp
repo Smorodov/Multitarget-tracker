@@ -3,10 +3,8 @@
 #include <vector>
 
 //---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
 TKalmanFilter::TKalmanFilter(
         tracking::KalmanType type,
-        Point_t pt,
         track_t deltaTime, // time increment (lower values makes target more "massive")
         track_t accelNoiseMag
         )
@@ -20,36 +18,6 @@ TKalmanFilter::TKalmanFilter(
       m_accelNoiseMag(accelNoiseMag)
 {
     m_deltaStep = (m_deltaTimeMax - m_deltaTimeMin) / m_deltaStepsCount;
-
-    m_initialPoints.push_back(pt);
-    m_lastPointResult = pt;
-}
-
-//---------------------------------------------------------------------------
-TKalmanFilter::TKalmanFilter(
-        tracking::KalmanType type,
-        cv::Rect rect,
-        track_t deltaTime, // time increment (lower values makes target more "massive")
-        track_t accelNoiseMag
-        )
-    :
-      m_type(type),
-      m_initialized(false),
-      m_deltaTime(deltaTime),
-      m_deltaTimeMin(deltaTime),
-      m_deltaTimeMax(2 * deltaTime),
-      m_lastDist(0),
-      m_accelNoiseMag(accelNoiseMag)
-{
-    m_deltaStep = (m_deltaTimeMax - m_deltaTimeMin) / m_deltaStepsCount;
-
-    m_initialRects.push_back(rect);
-    m_lastRectResult = rect;
-}
-
-//---------------------------------------------------------------------------
-TKalmanFilter::~TKalmanFilter()
-{
 }
 
 //---------------------------------------------------------------------------
@@ -468,6 +436,7 @@ Point_t TKalmanFilter::Update(Point_t pt, bool dataCorrect)
             if (dataCorrect)
             {
                 m_initialPoints.push_back(pt);
+                m_lastPointResult = pt;
             }
         }
         if (m_initialPoints.size() == MIN_INIT_VALS)
@@ -614,6 +583,10 @@ cv::Rect TKalmanFilter::Update(cv::Rect rect, bool dataCorrect)
             if (dataCorrect)
             {
                 m_initialRects.push_back(rect);
+                m_lastRectResult.x = static_cast<track_t>(rect.x);
+                m_lastRectResult.y = static_cast<track_t>(rect.y);
+                m_lastRectResult.width = static_cast<track_t>(rect.width);
+                m_lastRectResult.height = static_cast<track_t>(rect.height);
             }
         }
         if (m_initialRects.size() == MIN_INIT_VALS)
