@@ -34,6 +34,71 @@ const char* keys =
 
 int main(int argc, char** argv)
 {
+#if 1
+	Point_t lastPt(10, 10);
+	TKalmanFilter kf(tracking::KalmanLinear, lastPt, 0.2f, 0.5f);
+
+	int xStep = 5;
+	int yStep = 4;
+	srand(12345);
+	cv::Mat img(1080, 1920, CV_8UC3, cv::Scalar(255, 255, 255));
+	cv::circle(img, lastPt, 2, cv::Scalar(0, 255, 0), 1);
+	cv::namedWindow("img", cv::WINDOW_AUTOSIZE);
+	double distR = 0;
+	double distF = 0;
+	std::vector<double> dists;
+	std::vector<double> distsX;
+	std::vector<double> distsY;
+	for (int i = 0; i < 100; ++i)
+	{
+		int r = rand() % 6;
+		lastPt.x += xStep;
+		lastPt.y += yStep;
+		Point_t pt(lastPt.x + ((r % 2) ? -1 : 1) * r, lastPt.y + ((r % 2) ? 1 : -1) * r);
+
+		Point_t upd = kf.Update(pt, true);
+		Point_t pred = kf.GetPointPrediction();
+
+		distR += cv::norm(cv::Vec2f(lastPt.x, lastPt.y), cv::Vec2f(pt.x, pt.y), cv::NORM_L2);
+		distF += cv::norm(cv::Vec2f(lastPt.x, lastPt.y), cv::Vec2f(upd.x, upd.y), cv::NORM_L2);
+
+		dists.push_back(cv::norm(cv::Vec2f(pt.x, pt.y), cv::Vec2f(upd.x, upd.y), cv::NORM_L2));
+		distsX.push_back(std::abs<double>(pt.x - upd.x));
+		distsY.push_back(std::abs<double>(pt.y - upd.y));
+		if (dists.size() > 50)
+		{
+			dists.erase(dists.begin());
+			distsX.erase(distsX.begin());
+			distsY.erase(distsY.begin());
+		}
+		cv::Scalar mean;
+		cv::Scalar var;
+		cv::meanStdDev(dists, mean, var);
+		std::cout << "mean = " << mean << ", var = " << var << std::endl;
+		cv::circle(img, upd, std::max(10, cvRound(3 * var[0])), cv::Scalar(255, 0, 255), 1);
+
+		cv::Scalar meanX;
+		cv::Scalar varX;
+		cv::meanStdDev(distsX, meanX, varX);
+		std::cout << "meanX = " << meanX << ", varX = " << varX << std::endl;
+		cv::Scalar meanY;
+		cv::Scalar varY;
+		cv::meanStdDev(distsY, meanY, varY);
+		std::cout << "meanY = " << meanY << ", varY = " << varY << std::endl;
+		//cv::circle(img, upd, std::max(10, cvRound(3 * var[0])), cv::Scalar(255, 0, 255), 1);
+
+		std::cout << "orig = " << lastPt << ", noise = " << pt << ", filtered = " << upd << std::endl;
+
+		cv::circle(img, lastPt, 2, cv::Scalar(0, 255, 0), 1);
+		cv::circle(img, pt, 3, cv::Scalar(0, 0, 255), -1);
+		cv::circle(img, upd, 4, cv::Scalar(255, 0, 0), 1);
+		cv::imshow("img", img);
+		cv::waitKey(0);
+	}
+	std::cout << "err rand = " << distR << ", err fiiltered = " << distF << std::endl;
+	cv::waitKey(0);
+	return 0;
+#endif
     Help();
 
     cv::CommandLineParser parser(argc, argv, keys);
