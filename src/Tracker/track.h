@@ -289,7 +289,7 @@ private:
 
     Point_t m_predictionPoint;
     cv::RotatedRect m_predictionRect;
-    std::unique_ptr<TKalmanFilter> m_kalman;
+    TKalmanFilter m_kalman;
     bool m_filterObjectSize = false;
     bool m_outOfTheFrame = false;
 

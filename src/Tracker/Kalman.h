@@ -16,9 +16,8 @@
 class TKalmanFilter
 {
 public:
-    TKalmanFilter(tracking::KalmanType type, Point_t pt, track_t deltaTime = 0.2, track_t accelNoiseMag = 0.5);
-    TKalmanFilter(tracking::KalmanType type, cv::Rect rect, track_t deltaTime = 0.2, track_t accelNoiseMag = 0.5);
-	~TKalmanFilter();
+    TKalmanFilter(tracking::KalmanType type, track_t deltaTime = 0.2, track_t accelNoiseMag = 0.5);
+    ~TKalmanFilter() = default;
 
     Point_t GetPointPrediction();
     Point_t Update(Point_t pt, bool dataCorrect);
@@ -30,7 +29,7 @@ public:
 
 private:
     tracking::KalmanType m_type = tracking::KalmanLinear;
-    std::unique_ptr<cv::KalmanFilter> m_linearKalman;
+    cv::KalmanFilter m_linearKalman;
 #ifdef USE_OCV_UKF
     cv::Ptr<cv::tracking::UnscentedKalmanFilter> m_uncsentedKalman;
 #endif
@@ -44,13 +43,13 @@ private:
     cv::Rect_<track_t> m_lastRect;
 
     bool m_initialized = false;
-    track_t m_deltaTime = 0.2;
-    track_t m_deltaTimeMin = 0.2;
-    track_t m_deltaTimeMax = 2 * 0.2;
+    track_t m_deltaTime = 0.2f;
+    track_t m_deltaTimeMin = 0.2f;
+    track_t m_deltaTimeMax = 2 * 0.2f;
     track_t m_lastDist = 0;
     track_t m_deltaStep = 0;
     static const int m_deltaStepsCount = 20;
-    track_t m_accelNoiseMag = 0.5;
+    track_t m_accelNoiseMag = 0.5f;
 
     void CreateLinear(Point_t xy0, Point_t xyv0);
     void CreateLinear(cv::Rect_<track_t> rect0, Point_t rectv0);

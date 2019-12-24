@@ -3,10 +3,8 @@
 #include <vector>
 
 //---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
 TKalmanFilter::TKalmanFilter(
         tracking::KalmanType type,
-        Point_t pt,
         track_t deltaTime, // time increment (lower values makes target more "massive")
         track_t accelNoiseMag
         )
@@ -20,36 +18,6 @@ TKalmanFilter::TKalmanFilter(
       m_accelNoiseMag(accelNoiseMag)
 {
     m_deltaStep = (m_deltaTimeMax - m_deltaTimeMin) / m_deltaStepsCount;
-
-    m_initialPoints.push_back(pt);
-    m_lastPointResult = pt;
-}
-
-//---------------------------------------------------------------------------
-TKalmanFilter::TKalmanFilter(
-        tracking::KalmanType type,
-        cv::Rect rect,
-        track_t deltaTime, // time increment (lower values makes target more "massive")
-        track_t accelNoiseMag
-        )
-    :
-      m_type(type),
-      m_initialized(false),
-      m_deltaTime(deltaTime),
-      m_deltaTimeMin(deltaTime),
-      m_deltaTimeMax(2 * deltaTime),
-      m_lastDist(0),
-      m_accelNoiseMag(accelNoiseMag)
-{
-    m_deltaStep = (m_deltaTimeMax - m_deltaTimeMin) / m_deltaStepsCount;
-
-    m_initialRects.push_back(rect);
-    m_lastRectResult = rect;
-}
-
-//---------------------------------------------------------------------------
-TKalmanFilter::~TKalmanFilter()
-{
 }
 
 //---------------------------------------------------------------------------
@@ -61,9 +29,9 @@ void TKalmanFilter::CreateLinear(Point_t xy0, Point_t xyv0)
     // shows, woh much target can accelerate.
 
     // 4 state variables, 2 measurements
-    m_linearKalman = std::make_unique<cv::KalmanFilter>(4, 2, 0);
+    m_linearKalman.init(4, 2, 0, El_t);
     // Transition cv::Matrix
-    m_linearKalman->transitionMatrix = (cv::Mat_<track_t>(4, 4) <<
+    m_linearKalman.transitionMatrix = (cv::Mat_<track_t>(4, 4) <<
                                         1, 0, m_deltaTime, 0,
                                         0, 1, 0, m_deltaTime,
                                         0, 0, 1, 0,
@@ -71,29 +39,29 @@ void TKalmanFilter::CreateLinear(Point_t xy0, Point_t xyv0)
 
     // init...
     m_lastPointResult = xy0;
-    m_linearKalman->statePre.at<track_t>(0) = xy0.x; // x
-    m_linearKalman->statePre.at<track_t>(1) = xy0.y; // y
+    m_linearKalman.statePre.at<track_t>(0) = xy0.x; // x
+    m_linearKalman.statePre.at<track_t>(1) = xy0.y; // y
 
-    m_linearKalman->statePre.at<track_t>(2) = xyv0.x;
-    m_linearKalman->statePre.at<track_t>(3) = xyv0.y;
+    m_linearKalman.statePre.at<track_t>(2) = xyv0.x;
+    m_linearKalman.statePre.at<track_t>(3) = xyv0.y;
 
-    m_linearKalman->statePost.at<track_t>(0) = xy0.x;
-    m_linearKalman->statePost.at<track_t>(1) = xy0.y;
+    m_linearKalman.statePost.at<track_t>(0) = xy0.x;
+    m_linearKalman.statePost.at<track_t>(1) = xy0.y;
 
-    cv::setIdentity(m_linearKalman->measurementMatrix);
+    cv::setIdentity(m_linearKalman.measurementMatrix);
 
-    m_linearKalman->processNoiseCov = (cv::Mat_<track_t>(4, 4) <<
+    m_linearKalman.processNoiseCov = (cv::Mat_<track_t>(4, 4) <<
                                        pow(m_deltaTime,4.0)/4.0	,0						,pow(m_deltaTime,3.0)/2.0		,0,
                                        0						,pow(m_deltaTime,4.0)/4.0	,0							,pow(m_deltaTime,3.0)/2.0,
                                        pow(m_deltaTime,3.0)/2.0	,0						,pow(m_deltaTime,2.0)			,0,
                                        0						,pow(m_deltaTime,3.0)/2.0	,0							,pow(m_deltaTime,2.0));
 
 
-    m_linearKalman->processNoiseCov *= m_accelNoiseMag;
+    m_linearKalman.processNoiseCov *= m_accelNoiseMag;
 
-    cv::setIdentity(m_linearKalman->measurementNoiseCov, cv::Scalar::all(0.1));
+    cv::setIdentity(m_linearKalman.measurementNoiseCov, cv::Scalar::all(0.1));
 
-    cv::setIdentity(m_linearKalman->errorCovPost, cv::Scalar::all(.1));
+    cv::setIdentity(m_linearKalman.errorCovPost, cv::Scalar::all(.1));
 
     m_initialized = true;
 }
@@ -107,9 +75,9 @@ void TKalmanFilter::CreateLinear(cv::Rect_<track_t> rect0, Point_t rectv0)
     // shows, woh much target can accelerate.
 
     // 6 state variables (x, y, dx, dy, width, height), 4 measurements (x, y, width, height)
-    m_linearKalman = std::make_unique<cv::KalmanFilter>(8, 4, 0);
+    m_linearKalman.init(8, 4, 0, El_t);
     // Transition cv::Matrix
-    m_linearKalman->transitionMatrix = (cv::Mat_<track_t>(8, 8) <<
+    m_linearKalman.transitionMatrix = (cv::Mat_<track_t>(8, 8) <<
                                         1, 0, 0, 0, m_deltaTime, 0,           0,           0,
                                         0, 1, 0, 0, 0,           m_deltaTime, 0,           0,
                                         0, 0, 1, 0, 0,           0,           m_deltaTime, 0,
@@ -120,26 +88,26 @@ void TKalmanFilter::CreateLinear(cv::Rect_<track_t> rect0, Point_t rectv0)
                                         0, 0, 0, 0, 0,           0,           0,           1);
 
     // init...
-    m_linearKalman->statePre.at<track_t>(0) = rect0.x;      // x
-    m_linearKalman->statePre.at<track_t>(1) = rect0.y;      // y
-    m_linearKalman->statePre.at<track_t>(2) = rect0.width;  // width
-    m_linearKalman->statePre.at<track_t>(3) = rect0.height; // height
-    m_linearKalman->statePre.at<track_t>(4) = rectv0.x;     // dx
-    m_linearKalman->statePre.at<track_t>(5) = rectv0.y;     // dy
-    m_linearKalman->statePre.at<track_t>(6) = 0;            // dw
-    m_linearKalman->statePre.at<track_t>(7) = 0;            // dh
+    m_linearKalman.statePre.at<track_t>(0) = rect0.x;      // x
+    m_linearKalman.statePre.at<track_t>(1) = rect0.y;      // y
+    m_linearKalman.statePre.at<track_t>(2) = rect0.width;  // width
+    m_linearKalman.statePre.at<track_t>(3) = rect0.height; // height
+    m_linearKalman.statePre.at<track_t>(4) = rectv0.x;     // dx
+    m_linearKalman.statePre.at<track_t>(5) = rectv0.y;     // dy
+    m_linearKalman.statePre.at<track_t>(6) = 0;            // dw
+    m_linearKalman.statePre.at<track_t>(7) = 0;            // dh
 
-    m_linearKalman->statePost.at<track_t>(0) = rect0.x;
-    m_linearKalman->statePost.at<track_t>(1) = rect0.y;
-    m_linearKalman->statePost.at<track_t>(2) = rect0.width;
-    m_linearKalman->statePost.at<track_t>(3) = rect0.height;
+    m_linearKalman.statePost.at<track_t>(0) = rect0.x;
+    m_linearKalman.statePost.at<track_t>(1) = rect0.y;
+    m_linearKalman.statePost.at<track_t>(2) = rect0.width;
+    m_linearKalman.statePost.at<track_t>(3) = rect0.height;
 
-    cv::setIdentity(m_linearKalman->measurementMatrix);
+    cv::setIdentity(m_linearKalman.measurementMatrix);
 
     track_t n1 = pow(m_deltaTime, 4.f) / 4.f;
     track_t n2 = pow(m_deltaTime, 3.f) / 2.f;
     track_t n3 = pow(m_deltaTime, 2.f);
-    m_linearKalman->processNoiseCov = (cv::Mat_<track_t>(8, 8) <<
+    m_linearKalman.processNoiseCov = (cv::Mat_<track_t>(8, 8) <<
                                        n1, 0,  0,  0,  n2, 0,  0,  0,
                                        0,  n1, 0,  0,  0,  n2, 0,  0,
                                        0,  0,  n1, 0,  0,  0,  n2, 0,
@@ -149,11 +117,11 @@ void TKalmanFilter::CreateLinear(cv::Rect_<track_t> rect0, Point_t rectv0)
                                        0,  0,  n2, 0,  0,  0,  n3, 0,
                                        0,  0,  0,  n2, 0,  0,  0,  n3);
 
-    m_linearKalman->processNoiseCov *= m_accelNoiseMag;
+    m_linearKalman.processNoiseCov *= m_accelNoiseMag;
 
-    cv::setIdentity(m_linearKalman->measurementNoiseCov, cv::Scalar::all(0.1));
+    cv::setIdentity(m_linearKalman.measurementNoiseCov, cv::Scalar::all(0.1));
 
-    cv::setIdentity(m_linearKalman->errorCovPost, cv::Scalar::all(.1));
+    cv::setIdentity(m_linearKalman.errorCovPost, cv::Scalar::all(.1));
 
     m_initialized = true;
 }
@@ -236,16 +204,16 @@ void TKalmanFilter::CreateUnscented(Point_t xy0, Point_t xyv0)
     int CP = 0;
 
     cv::Mat processNoiseCov = cv::Mat::zeros(DP, DP, Mat_t(1));
-    processNoiseCov.at<track_t>(0, 0) = 1e-14;
-    processNoiseCov.at<track_t>(1, 1) = 1e-14;
-    processNoiseCov.at<track_t>(2, 2) = 1e-6;
-    processNoiseCov.at<track_t>(3, 3) = 1e-6;
-    processNoiseCov.at<track_t>(4, 4) = 1e-6;
-    processNoiseCov.at<track_t>(5, 5) = 1e-6;
+    processNoiseCov.at<track_t>(0, 0) = 1e-14f;
+    processNoiseCov.at<track_t>(1, 1) = 1e-14f;
+    processNoiseCov.at<track_t>(2, 2) = 1e-6f;
+    processNoiseCov.at<track_t>(3, 3) = 1e-6f;
+    processNoiseCov.at<track_t>(4, 4) = 1e-6f;
+    processNoiseCov.at<track_t>(5, 5) = 1e-6f;
 
     cv::Mat measurementNoiseCov = cv::Mat::zeros(MP, MP, Mat_t(1));
-    measurementNoiseCov.at<track_t>(0, 0) = 1e-6;
-    measurementNoiseCov.at<track_t>(1, 1) = 1e-6;
+    measurementNoiseCov.at<track_t>(0, 0) = 1e-6f;
+    measurementNoiseCov.at<track_t>(1, 1) = 1e-6f;
 
     cv::Mat initState(DP, 1, Mat_t(1));
     initState.at<track_t>(0, 0) = xy0.x;
@@ -255,7 +223,7 @@ void TKalmanFilter::CreateUnscented(Point_t xy0, Point_t xyv0)
     initState.at<track_t>(4, 0) = 0;
     initState.at<track_t>(5, 0) = 0;
 
-    cv::Mat P = 1e-6 * cv::Mat::eye(DP, DP, Mat_t(1));
+    cv::Mat P = 1e-6f * cv::Mat::eye(DP, DP, Mat_t(1));
 
     cv::Ptr<AcceleratedModel> model(new AcceleratedModel(m_deltaTime, false));
     cv::tracking::UnscentedKalmanFilterParams params(DP, MP, CP, 0, 0, model);
@@ -282,20 +250,20 @@ void TKalmanFilter::CreateUnscented(cv::Rect_<track_t> rect0, Point_t rectv0)
     int CP = 0;
 
     cv::Mat processNoiseCov = cv::Mat::zeros(DP, DP, Mat_t(1));
-    processNoiseCov.at<track_t>(0, 0) = 1e-3;
-    processNoiseCov.at<track_t>(1, 1) = 1e-3;
-    processNoiseCov.at<track_t>(2, 2) = 1e-3;
-    processNoiseCov.at<track_t>(3, 3) = 1e-3;
-    processNoiseCov.at<track_t>(4, 4) = 1e-3;
-    processNoiseCov.at<track_t>(5, 5) = 1e-3;
-    processNoiseCov.at<track_t>(6, 6) = 1e-3;
-    processNoiseCov.at<track_t>(7, 7) = 1e-3;
+    processNoiseCov.at<track_t>(0, 0) = 1e-3f;
+    processNoiseCov.at<track_t>(1, 1) = 1e-3f;
+    processNoiseCov.at<track_t>(2, 2) = 1e-3f;
+    processNoiseCov.at<track_t>(3, 3) = 1e-3f;
+    processNoiseCov.at<track_t>(4, 4) = 1e-3f;
+    processNoiseCov.at<track_t>(5, 5) = 1e-3f;
+    processNoiseCov.at<track_t>(6, 6) = 1e-3f;
+    processNoiseCov.at<track_t>(7, 7) = 1e-3f;
 
     cv::Mat measurementNoiseCov = cv::Mat::zeros(MP, MP, Mat_t(1));
-    measurementNoiseCov.at<track_t>(0, 0) = 1e-3;
-    measurementNoiseCov.at<track_t>(1, 1) = 1e-3;
-    measurementNoiseCov.at<track_t>(2, 2) = 1e-3;
-    measurementNoiseCov.at<track_t>(3, 3) = 1e-3;
+    measurementNoiseCov.at<track_t>(0, 0) = 1e-3f;
+    measurementNoiseCov.at<track_t>(1, 1) = 1e-3f;
+    measurementNoiseCov.at<track_t>(2, 2) = 1e-3f;
+    measurementNoiseCov.at<track_t>(3, 3) = 1e-3f;
 
     cv::Mat initState(DP, 1, Mat_t(1));
     initState.at<track_t>(0, 0) = rect0.x;
@@ -307,7 +275,7 @@ void TKalmanFilter::CreateUnscented(cv::Rect_<track_t> rect0, Point_t rectv0)
     initState.at<track_t>(6, 0) = rect0.width;
     initState.at<track_t>(7, 0) = rect0.height;
 
-    cv::Mat P = 1e-3 * cv::Mat::eye(DP, DP, Mat_t(1));
+    cv::Mat P = 1e-3f * cv::Mat::eye(DP, DP, Mat_t(1));
 
     cv::Ptr<AcceleratedModel> model(new AcceleratedModel(m_deltaTime, true));
     cv::tracking::UnscentedKalmanFilterParams params(DP, MP, CP, 0, 0, model);
@@ -334,16 +302,16 @@ void TKalmanFilter::CreateAugmentedUnscented(Point_t xy0, Point_t xyv0)
     int CP = 0;
 
     cv::Mat processNoiseCov = cv::Mat::zeros(DP, DP, Mat_t(1));
-    processNoiseCov.at<track_t>(0, 0) = 1e-14;
-    processNoiseCov.at<track_t>(1, 1) = 1e-14;
-    processNoiseCov.at<track_t>(2, 2) = 1e-6;
-    processNoiseCov.at<track_t>(3, 3) = 1e-6;
-    processNoiseCov.at<track_t>(4, 4) = 1e-6;
-    processNoiseCov.at<track_t>(5, 5) = 1e-6;
+    processNoiseCov.at<track_t>(0, 0) = 1e-14f;
+    processNoiseCov.at<track_t>(1, 1) = 1e-14f;
+    processNoiseCov.at<track_t>(2, 2) = 1e-6f;
+    processNoiseCov.at<track_t>(3, 3) = 1e-6f;
+    processNoiseCov.at<track_t>(4, 4) = 1e-6f;
+    processNoiseCov.at<track_t>(5, 5) = 1e-6f;
 
     cv::Mat measurementNoiseCov = cv::Mat::zeros(MP, MP, Mat_t(1));
-    measurementNoiseCov.at<track_t>(0, 0) = 1e-6;
-    measurementNoiseCov.at<track_t>(1, 1) = 1e-6;
+    measurementNoiseCov.at<track_t>(0, 0) = 1e-6f;
+    measurementNoiseCov.at<track_t>(1, 1) = 1e-6f;
 
     cv::Mat initState(DP, 1, Mat_t(1));
     initState.at<track_t>(0, 0) = xy0.x;
@@ -353,7 +321,7 @@ void TKalmanFilter::CreateAugmentedUnscented(Point_t xy0, Point_t xyv0)
     initState.at<track_t>(4, 0) = 0;
     initState.at<track_t>(5, 0) = 0;
 
-    cv::Mat P = 1e-6 * cv::Mat::eye(DP, DP, Mat_t(1));
+    cv::Mat P = 1e-6f * cv::Mat::eye(DP, DP, Mat_t(1));
 
     cv::Ptr<AcceleratedModel> model(new AcceleratedModel(m_deltaTime, false));
     cv::tracking::AugmentedUnscentedKalmanFilterParams params(DP, MP, CP, 0, 0, model);
@@ -380,20 +348,20 @@ void TKalmanFilter::CreateAugmentedUnscented(cv::Rect_<track_t> rect0, Point_t r
     int CP = 0;
 
     cv::Mat processNoiseCov = cv::Mat::zeros(DP, DP, Mat_t(1));
-    processNoiseCov.at<track_t>(0, 0) = 1e-3;
-    processNoiseCov.at<track_t>(1, 1) = 1e-3;
-    processNoiseCov.at<track_t>(2, 2) = 1e-3;
-    processNoiseCov.at<track_t>(3, 3) = 1e-3;
-    processNoiseCov.at<track_t>(4, 4) = 1e-3;
-    processNoiseCov.at<track_t>(5, 5) = 1e-3;
-    processNoiseCov.at<track_t>(6, 6) = 1e-3;
-    processNoiseCov.at<track_t>(7, 7) = 1e-3;
+    processNoiseCov.at<track_t>(0, 0) = 1e-3f;
+    processNoiseCov.at<track_t>(1, 1) = 1e-3f;
+    processNoiseCov.at<track_t>(2, 2) = 1e-3f;
+    processNoiseCov.at<track_t>(3, 3) = 1e-3f;
+    processNoiseCov.at<track_t>(4, 4) = 1e-3f;
+    processNoiseCov.at<track_t>(5, 5) = 1e-3f;
+    processNoiseCov.at<track_t>(6, 6) = 1e-3f;
+    processNoiseCov.at<track_t>(7, 7) = 1e-3f;
 
     cv::Mat measurementNoiseCov = cv::Mat::zeros(MP, MP, Mat_t(1));
-    measurementNoiseCov.at<track_t>(0, 0) = 1e-3;
-    measurementNoiseCov.at<track_t>(1, 1) = 1e-3;
-    measurementNoiseCov.at<track_t>(2, 2) = 1e-3;
-    measurementNoiseCov.at<track_t>(3, 3) = 1e-3;
+    measurementNoiseCov.at<track_t>(0, 0) = 1e-3f;
+    measurementNoiseCov.at<track_t>(1, 1) = 1e-3f;
+    measurementNoiseCov.at<track_t>(2, 2) = 1e-3f;
+    measurementNoiseCov.at<track_t>(3, 3) = 1e-3f;
 
     cv::Mat initState(DP, 1, Mat_t(1));
     initState.at<track_t>(0, 0) = rect0.x;
@@ -405,7 +373,7 @@ void TKalmanFilter::CreateAugmentedUnscented(cv::Rect_<track_t> rect0, Point_t r
     initState.at<track_t>(6, 0) = rect0.width;
     initState.at<track_t>(7, 0) = rect0.height;
 
-    cv::Mat P = 1e-3 * cv::Mat::eye(DP, DP, Mat_t(1));
+    cv::Mat P = 1e-3f * cv::Mat::eye(DP, DP, Mat_t(1));
 
     cv::Ptr<AcceleratedModel> model(new AcceleratedModel(m_deltaTime, true));
     cv::tracking::AugmentedUnscentedKalmanFilterParams params(DP, MP, CP, 0, 0, model);
@@ -435,7 +403,7 @@ Point_t TKalmanFilter::GetPointPrediction()
         switch (m_type)
         {
         case tracking::KalmanLinear:
-            prediction = m_linearKalman->predict();
+            prediction = m_linearKalman.predict();
             break;
 
         case tracking::KalmanUnscented:
@@ -443,7 +411,7 @@ Point_t TKalmanFilter::GetPointPrediction()
 #ifdef USE_OCV_UKF
             prediction = m_uncsentedKalman->predict();
 #else
-            prediction = m_linearKalman->predict();
+            prediction = m_linearKalman.predict();
             std::cerr << "UnscentedKalmanFilter was disabled in CMAKE! Set KalmanLinear in constructor." << std::endl;
 #endif
             break;
@@ -468,6 +436,7 @@ Point_t TKalmanFilter::Update(Point_t pt, bool dataCorrect)
             if (dataCorrect)
             {
                 m_initialPoints.push_back(pt);
+                m_lastPointResult = pt;
             }
         }
         if (m_initialPoints.size() == MIN_INIT_VALS)
@@ -527,7 +496,7 @@ Point_t TKalmanFilter::Update(Point_t pt, bool dataCorrect)
         {
         case tracking::KalmanLinear:
         {
-            estimated = m_linearKalman->correct(measurement);
+            estimated = m_linearKalman.correct(measurement);
 
             // Inertia correction
             track_t currDist = sqrtf(sqr(estimated.at<track_t>(0) - pt.x) + sqr(estimated.at<track_t>(1) - pt.y));
@@ -541,8 +510,8 @@ Point_t TKalmanFilter::Update(Point_t pt, bool dataCorrect)
             }
             m_lastDist = currDist;
 
-            m_linearKalman->transitionMatrix.at<track_t>(0, 2) = m_deltaTime;
-            m_linearKalman->transitionMatrix.at<track_t>(1, 3) = m_deltaTime;
+            m_linearKalman.transitionMatrix.at<track_t>(0, 2) = m_deltaTime;
+            m_linearKalman.transitionMatrix.at<track_t>(1, 3) = m_deltaTime;
 
             break;
         }
@@ -552,7 +521,7 @@ Point_t TKalmanFilter::Update(Point_t pt, bool dataCorrect)
 #ifdef USE_OCV_UKF
             estimated = m_uncsentedKalman->correct(measurement);
 #else
-            estimated = m_linearKalman->correct(measurement);
+            estimated = m_linearKalman.correct(measurement);
             std::cerr << "UnscentedKalmanFilter was disabled in CMAKE! Set KalmanLinear in constructor." << std::endl;
 #endif
             break;
@@ -581,7 +550,7 @@ cv::Rect TKalmanFilter::GetRectPrediction()
         switch (m_type)
         {
         case tracking::KalmanLinear:
-            prediction = m_linearKalman->predict();
+            prediction = m_linearKalman.predict();
             break;
 
         case tracking::KalmanUnscented:
@@ -589,7 +558,7 @@ cv::Rect TKalmanFilter::GetRectPrediction()
 #ifdef USE_OCV_UKF
             prediction = m_uncsentedKalman->predict();
 #else
-            prediction = m_linearKalman->predict();
+            prediction = m_linearKalman.predict();
             std::cerr << "UnscentedKalmanFilter was disabled in CMAKE! Set KalmanLinear in constructor." << std::endl;
 #endif
             break;
@@ -614,6 +583,10 @@ cv::Rect TKalmanFilter::Update(cv::Rect rect, bool dataCorrect)
             if (dataCorrect)
             {
                 m_initialRects.push_back(rect);
+                m_lastRectResult.x = static_cast<track_t>(rect.x);
+                m_lastRectResult.y = static_cast<track_t>(rect.y);
+                m_lastRectResult.width = static_cast<track_t>(rect.width);
+                m_lastRectResult.height = static_cast<track_t>(rect.height);
             }
         }
         if (m_initialRects.size() == MIN_INIT_VALS)
@@ -687,7 +660,7 @@ cv::Rect TKalmanFilter::Update(cv::Rect rect, bool dataCorrect)
         {
         case tracking::KalmanLinear:
         {
-            estimated = m_linearKalman->correct(measurement);
+            estimated = m_linearKalman.correct(measurement);
 
             m_lastRectResult.x = estimated.at<track_t>(0);   //update using measurements
             m_lastRectResult.y = estimated.at<track_t>(1);
@@ -706,10 +679,10 @@ cv::Rect TKalmanFilter::Update(cv::Rect rect, bool dataCorrect)
             }
             m_lastDist = currDist;
 
-            m_linearKalman->transitionMatrix.at<track_t>(0, 4) = m_deltaTime;
-            m_linearKalman->transitionMatrix.at<track_t>(1, 5) = m_deltaTime;
-            m_linearKalman->transitionMatrix.at<track_t>(2, 6) = m_deltaTime;
-            m_linearKalman->transitionMatrix.at<track_t>(3, 7) = m_deltaTime;
+            m_linearKalman.transitionMatrix.at<track_t>(0, 4) = m_deltaTime;
+            m_linearKalman.transitionMatrix.at<track_t>(1, 5) = m_deltaTime;
+            m_linearKalman.transitionMatrix.at<track_t>(2, 6) = m_deltaTime;
+            m_linearKalman.transitionMatrix.at<track_t>(3, 7) = m_deltaTime;
 
             break;
         }
@@ -724,7 +697,7 @@ cv::Rect TKalmanFilter::Update(cv::Rect rect, bool dataCorrect)
             m_lastRectResult.width = estimated.at<track_t>(6);
             m_lastRectResult.height = estimated.at<track_t>(7);
 #else
-            estimated = m_linearKalman->correct(measurement);
+            estimated = m_linearKalman.correct(measurement);
 
             m_lastRectResult.x = estimated.at<track_t>(0);   //update using measurements
             m_lastRectResult.y = estimated.at<track_t>(1);
@@ -756,17 +729,17 @@ cv::Vec<track_t, 2> TKalmanFilter::GetVelocity() const
 	{
 	case tracking::KalmanLinear:
 	{
-		if (m_linearKalman.get())
+		if (m_linearKalman.statePre.rows > 3)
 		{
 			int indX = 2;
 			int indY = 3;
-			if (m_linearKalman->statePre.rows > 4)
+			if (m_linearKalman.statePre.rows > 4)
 			{
 				indX = 4;
 				indY = 5;
 			}
-			res[0] = m_linearKalman->statePre.at<track_t>(indX);
-			res[1] = m_linearKalman->statePre.at<track_t>(indY);
+			res[0] = m_linearKalman.statePre.at<track_t>(indX);
+			res[1] = m_linearKalman.statePre.at<track_t>(indY);
 		}
 		break;
 	}

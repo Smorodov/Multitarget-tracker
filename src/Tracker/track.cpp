@@ -31,18 +31,16 @@ CTrack::CTrack(
       m_lastRegion(region),
       m_predictionPoint(region.m_rrect.center),
       m_predictionRect(region.m_rrect),
+      m_kalman(kalmanType, deltaTime, accelNoiseMag),
       m_filterObjectSize(filterObjectSize),
       m_outOfTheFrame(false),
       m_externalTrackerForLost(externalTrackerForLost)
 {
     if (filterObjectSize)
-    {
-        m_kalman = std::make_unique<TKalmanFilter>(kalmanType, region.m_brect, deltaTime, accelNoiseMag);
-    }
+        m_kalman.Update(region.m_brect, true);
     else
-    {
-        m_kalman = std::make_unique<TKalmanFilter>(kalmanType, m_predictionPoint, deltaTime, accelNoiseMag);
-    }
+        m_kalman.Update(m_predictionPoint, true);
+
     m_trace.push_back(m_predictionPoint, m_predictionPoint);
 }
 
@@ -300,7 +298,7 @@ const CRegion& CTrack::LastRegion() const
 TrackingObject CTrack::ConstructObject() const
 {
     return TrackingObject(GetLastRect(), m_trackID, m_trace, IsStatic(), IsOutOfTheFrame(),
-		                  m_lastRegion.m_type, m_lastRegion.m_confidence, m_kalman->GetVelocity());
+                          m_lastRegion.m_type, m_lastRegion.m_confidence, m_kalman.GetVelocity());
 }
 
 ///
@@ -335,7 +333,7 @@ void CTrack::RectUpdate(
         cv::UMat currFrame
         )
 {
-    m_kalman->GetRectPrediction();
+    m_kalman.GetRectPrediction();
 
     bool recalcPrediction = true;
 
@@ -466,7 +464,7 @@ void CTrack::RectUpdate(
 
                 cv::Rect prect(cvRound(newRect.x) + roiRect.x, cvRound(newRect.y) + roiRect.y, cvRound(newRect.width), cvRound(newRect.height));
 
-                UpdateRRect(brect, m_kalman->Update(prect, true));
+                UpdateRRect(brect, m_kalman.Update(prect, true));
 
                 recalcPrediction = false;
             }
@@ -541,11 +539,11 @@ void CTrack::RectUpdate(
 					if (newRect.angle > 0.5f)
 					{
 						m_predictionRect = newRect;
-						m_kalman->Update(newRect.boundingRect(), true);
+                        m_kalman.Update(newRect.boundingRect(), true);
 					}
 					else
 					{
-						UpdateRRect(brect, m_kalman->Update(newRect.boundingRect(), true));
+                        UpdateRRect(brect, m_kalman.Update(newRect.boundingRect(), true));
 					}
 
                     recalcPrediction = false;
@@ -564,7 +562,7 @@ void CTrack::RectUpdate(
 
     if (recalcPrediction)
     {
-        UpdateRRect(m_predictionRect.boundingRect(), m_kalman->Update(region.m_brect, dataCorrect));
+        UpdateRRect(m_predictionRect.boundingRect(), m_kalman.Update(region.m_brect, dataCorrect));
     }
 
     cv::Rect brect = m_predictionRect.boundingRect();
@@ -782,9 +780,9 @@ void CTrack::PointUpdate(
         const cv::Size& frameSize
         )
 {
-    m_kalman->GetPointPrediction();
+    m_kalman.GetPointPrediction();
 
-    m_predictionPoint = m_kalman->Update(pt, dataCorrect);
+    m_predictionPoint = m_kalman.Update(pt, dataCorrect);
 
     if (dataCorrect)
     {
