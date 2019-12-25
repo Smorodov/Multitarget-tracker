@@ -270,6 +270,7 @@ public:
     bool IsStatic() const;
     bool IsStaticTimeout(int framesTime) const;
 	bool IsOutOfTheFrame() const;
+	bool IsInsideArea(const Point_t& pt, track_t minVal) const; // Test point inside in prediction area: prediction area + object velocity
 
     cv::RotatedRect GetLastRect() const;
 

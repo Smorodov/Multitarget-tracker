@@ -81,7 +81,7 @@ void CTracker::UpdateTrackingState(
         {
             if (assignment[i] != -1)
             {
-                if (costMatrix[i + assignment[i] * N] > m_settings.m_distThres)
+				if (costMatrix[i + assignment[i] * N] > m_settings.m_distThres)
                 {
                     assignment[i] = -1;
                     m_tracks[i]->SkippedFrames()++;

@@ -34,10 +34,10 @@ const char* keys =
 
 int main(int argc, char** argv)
 {
-#if 1
+#if 0
+    TKalmanFilter kf(tracking::KalmanLinear, 0.2f, 0.5f);
     cv::Mat img(1080, 1920, CV_8UC3, cv::Scalar(255, 255, 255));
     Point_t lastPt(10, img.rows / 2);
-    TKalmanFilter kf(tracking::KalmanLinear, 0.2f, 0.5f);
     kf.Update(lastPt, true);
 	int xStep = 5;
 	srand(12345);
@@ -75,11 +75,21 @@ int main(int argc, char** argv)
         cv::meanStdDev(dists, mean, var);
         std::cout << "mean = " << mean << ", var = " << var << std::endl;
 
+#if 0
         float angle = atan2(var[0], var[1]);
         cv::RotatedRect rr(pred,
                            cv::Size2f(std::max(10.f, static_cast<track_t>(20.f * var[0])),
                            std::max(10.f, static_cast<track_t>(20.f * var[1]))),
                 180.f * angle / CV_PI);
+#else
+        auto vel = kf.GetVelocity();
+        std::cout << "velocity = " << vel << std::endl;
+        float angle = atan2(vel[0], vel[1]);
+        cv::RotatedRect rr(pred,
+                           cv::Size2f(std::max(img.rows / 20.f, static_cast<track_t>(3.f * fabs(vel[0]))),
+                           std::max(img.cols / 20.f, static_cast<track_t>(3.f * fabs(vel[1])))),
+                180.f * angle / CV_PI);
+#endif
         cv::ellipse(img, rr, cv::Scalar(100, 100, 100), 1);
 
 		std::cout << "orig = " << lastPt << ", noise = " << pt << ", filtered = " << upd << std::endl;

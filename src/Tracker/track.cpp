@@ -203,6 +203,20 @@ bool CTrack::IsOutOfTheFrame() const
 }
 
 ///
+/// \brief CTrack::IsInsideArea
+/// \param pt
+/// \return
+///
+bool CTrack::IsInsideArea(const Point_t& pt, track_t minVal) const
+{
+	auto velocity = m_kalman.GetVelocity();
+	velocity[0] = std::max(minVal, 3 * velocity[0]);
+	velocity[1] = std::max(minVal, 3 * velocity[1]);
+	track_t res = sqr(pt.x - m_predictionPoint.x) / sqr(velocity[0]) + sqr(pt.y - m_predictionPoint.y) / sqr(velocity[1]);
+	return (res <= 1.f);
+}
+
+///
 /// \brief CTrack::CheckStatic
 /// \param trajLen
 /// \return
