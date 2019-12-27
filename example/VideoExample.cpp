@@ -392,7 +392,14 @@ void VideoExample::DrawTrack(cv::Mat frame,
     {
         cv::line(frame, ResizePoint(rectPoints[i]), ResizePoint(rectPoints[(i+1) % 4]), color);
     }
-
+#if 0
+    float angle = 0;//atan2(track.m_velocity[0], track.m_velocity[1]);
+    cv::RotatedRect rr(track.m_rrect.center,
+                       cv::Size2f(std::max(frame.rows / 20.f, static_cast<track_t>(3.f * fabs(track.m_velocity[0]))),
+                       std::max(frame.cols / 20.f, static_cast<track_t>(3.f * fabs(track.m_velocity[1])))),
+            180.f * angle / CV_PI);
+    cv::ellipse(frame, rr, cv::Scalar(100, 100, 100), 1);
+#endif
     if (drawTrajectory)
     {
         cv::Scalar cl = m_colors[track.m_ID % m_colors.size()];
