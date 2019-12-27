@@ -40,9 +40,15 @@ struct TrackerSettings
 
     ///
     /// \brief m_distThres
-    /// Distance threshold for Assignment problem for tracking::DistCenters or for tracking::DistRects (for tracking::DistJaccard it need from 0 to 1)
+    /// Distance threshold for Assignment problem: from 0 to 1
     ///
-    track_t m_distThres = 0.5f;
+    track_t m_distThres = 0.8f;
+
+    ///
+    /// \brief m_minAreaRadius
+    /// Minimal area radius in pixels for objects centers
+    ///
+    track_t m_minAreaRadius = 20.f;
 
     ///
     /// \brief m_maximumAllowedSkippedFrames
