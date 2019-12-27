@@ -39,14 +39,15 @@ void TKalmanFilter::CreateLinear(Point_t xy0, Point_t xyv0)
 
     // init...
     m_lastPointResult = xy0;
-    m_linearKalman.statePre.at<track_t>(0) = xy0.x; // x
-    m_linearKalman.statePre.at<track_t>(1) = xy0.y; // y
-
-    m_linearKalman.statePre.at<track_t>(2) = xyv0.x;
-    m_linearKalman.statePre.at<track_t>(3) = xyv0.y;
+    m_linearKalman.statePre.at<track_t>(0) = xy0.x;  // x
+    m_linearKalman.statePre.at<track_t>(1) = xy0.y;  // y
+    m_linearKalman.statePre.at<track_t>(2) = xyv0.x; // vx
+    m_linearKalman.statePre.at<track_t>(3) = xyv0.y; // vy
 
     m_linearKalman.statePost.at<track_t>(0) = xy0.x;
     m_linearKalman.statePost.at<track_t>(1) = xy0.y;
+    m_linearKalman.statePost.at<track_t>(2) = xyv0.x;
+    m_linearKalman.statePost.at<track_t>(3) = xyv0.y;
 
     cv::setIdentity(m_linearKalman.measurementMatrix);
 
@@ -101,6 +102,10 @@ void TKalmanFilter::CreateLinear(cv::Rect_<track_t> rect0, Point_t rectv0)
     m_linearKalman.statePost.at<track_t>(1) = rect0.y;
     m_linearKalman.statePost.at<track_t>(2) = rect0.width;
     m_linearKalman.statePost.at<track_t>(3) = rect0.height;
+    m_linearKalman.statePost.at<track_t>(4) = rectv0.x;
+    m_linearKalman.statePost.at<track_t>(5) = rectv0.y;
+    m_linearKalman.statePost.at<track_t>(6) = 0;
+    m_linearKalman.statePost.at<track_t>(7) = 0;
 
     cv::setIdentity(m_linearKalman.measurementMatrix);
 
