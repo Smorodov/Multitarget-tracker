@@ -264,9 +264,10 @@ bool CarsCounting::InitTracker(cv::UMat frame)
     settings.m_filterGoal = tracking::FilterRect;
     settings.m_lostTrackType = tracking::TrackCSRT; // Use KCF tracker for collisions resolving
     settings.m_matchType = tracking::MatchHungrian;
-    settings.m_dt = 0.5f;                             // Delta time for Kalman filter
-    settings.m_accelNoiseMag = 0.5f;                  // Accel noise magnitude for Kalman filter
-    settings.m_distThres = frame.rows / 15.f;         // Distance threshold between region and object on two frames
+    settings.m_dt = 0.5f;                           // Delta time for Kalman filter
+    settings.m_accelNoiseMag = 0.5f;                // Accel noise magnitude for Kalman filter
+    settings.m_distThres = 0.8f;                    // Distance threshold between region and object on two frames
+    settings.m_minAreaRadius = frame.rows / 20.f;
 
     settings.m_useAbandonedDetection = false;
     if (settings.m_useAbandonedDetection)

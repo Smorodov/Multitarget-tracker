@@ -169,12 +169,32 @@ void CTracker::CreateDistaceMatrix(const regions_t& regions, distMatrix_t& costM
 				size_t ind = 0;
 				if (m_settings.m_distType[ind] > 0.0f && ind == tracking::DistCenters)
 				{
+#if 1
+                    track_t ellipseDist = track->IsInsideArea(regions[j].m_rrect.center, m_settings.m_minAreaRadius);
+                    if (ellipseDist > 1)
+                        dist += m_settings.m_distType[ind];
+                    else
+                        dist += ellipseDist * m_settings.m_distType[ind];
+#else
 					dist += m_settings.m_distType[ind] * track->CalcDistCenter(regions[j]);
+#endif
 				}
 				++ind;
 				if (m_settings.m_distType[ind] > 0.0f && ind == tracking::DistRects)
 				{
+#if 1
+                    track_t ellipseDist = track->IsInsideArea(regions[j].m_rrect.center, m_settings.m_minAreaRadius);
+                    if (ellipseDist > 1)
+                        ellipseDist = 1;
+
+                    track_t dw = track->WidthDist(regions[j]);
+                    track_t dh = track->HeightDist(regions[j]);
+
+                    constexpr track_t k = 1.f / 3.f;
+                    dist += m_settings.m_distType[ind] * (ellipseDist + dw + dh) * k;
+#else
 					dist += m_settings.m_distType[ind] * track->CalcDistRect(regions[j]);
+#endif
 				}
 				++ind;
 				if (m_settings.m_distType[ind] > 0.0f && ind == tracking::DistJaccard)

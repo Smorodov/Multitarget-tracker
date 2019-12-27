@@ -305,9 +305,10 @@ void AsyncDetector::CaptureThread(std::string fileName, int startFrame, float* f
     trackerSettings.m_filterGoal = tracking::FilterRect;
     trackerSettings.m_lostTrackType = tracking::TrackNone; // Use KCF tracker for collisions resolving
     trackerSettings.m_matchType = tracking::MatchHungrian;
-    trackerSettings.m_dt = 0.2f;                             // Delta time for Kalman filter
-    trackerSettings.m_accelNoiseMag = 0.3f;                  // Accel noise magnitude for Kalman filter
-    trackerSettings.m_distThres = frameHeight / 10.f;         // Distance threshold between region and object on two frames
+    trackerSettings.m_dt = 0.2f;                           // Delta time for Kalman filter
+    trackerSettings.m_accelNoiseMag = 0.3f;                // Accel noise magnitude for Kalman filter
+    trackerSettings.m_distThres = 0.8f;                    // Distance threshold between region and object on two frames
+    trackerSettings.m_minAreaRadius = frameHeight / 20.f;
 
     trackerSettings.m_useAbandonedDetection = false;
     if (trackerSettings.m_useAbandonedDetection)

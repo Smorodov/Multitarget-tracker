@@ -204,16 +204,43 @@ bool CTrack::IsOutOfTheFrame() const
 
 ///
 /// \brief CTrack::IsInsideArea
+///        If result <= 1 then center of the object is inside ellipse with prediction and velocity
 /// \param pt
 /// \return
 ///
-bool CTrack::IsInsideArea(const Point_t& pt, track_t minVal) const
+track_t CTrack::IsInsideArea(const Point_t& pt, track_t minVal) const
 {
 	auto velocity = m_kalman.GetVelocity();
-	velocity[0] = std::max(minVal, 3 * velocity[0]);
-	velocity[1] = std::max(minVal, 3 * velocity[1]);
+    velocity[0] = std::max(minVal, 3 * velocity[0]);
+    velocity[1] = std::max(minVal, 3 * velocity[1]);
 	track_t res = sqr(pt.x - m_predictionPoint.x) / sqr(velocity[0]) + sqr(pt.y - m_predictionPoint.y) / sqr(velocity[1]);
-	return (res <= 1.f);
+    return res;
+}
+
+///
+/// \brief CTrack::WidthDist
+/// \param reg
+/// \return
+///
+track_t CTrack::WidthDist(const CRegion& reg) const
+{
+    if (m_lastRegion.m_rrect.size.width < reg.m_rrect.size.width)
+        return 1.f - m_lastRegion.m_rrect.size.width / reg.m_rrect.size.width;
+    else
+        return 1.f - reg.m_rrect.size.width / m_lastRegion.m_rrect.size.width;
+}
+
+///
+/// \brief CTrack::HeightDist
+/// \param reg
+/// \return
+///
+track_t CTrack::HeightDist(const CRegion& reg) const
+{
+    if (m_lastRegion.m_rrect.size.height < reg.m_rrect.size.height)
+        return 1.f - m_lastRegion.m_rrect.size.height / reg.m_rrect.size.height;
+    else
+        return 1.f - reg.m_rrect.size.height / m_lastRegion.m_rrect.size.height;
 }
 
 ///
