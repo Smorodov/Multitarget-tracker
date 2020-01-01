@@ -124,7 +124,7 @@ track_t CTrack::CalcDistHist(const CRegion& reg, cv::UMat currFrame) const
 		res = static_cast<track_t>(cv::compareHist(reg.m_hist, m_lastRegion.m_hist, CV_COMP_BHATTACHARYYA));
 		//res = 1.f - static_cast<track_t>(cv::compareHist(reg.m_hist, m_lastRegion.m_hist, CV_COMP_CORREL));
 #else
-		res = static_cast<track_t>(cv::compareHist(reg.m_hist, m_lastRegion.m_hist, cv::COMP_BHATTACHARYYA));
+		res = static_cast<track_t>(cv::compareHist(reg.m_hist, m_lastRegion.m_hist, cv::HISTCMP_BHATTACHARYYA));
 #endif
 	}
 
