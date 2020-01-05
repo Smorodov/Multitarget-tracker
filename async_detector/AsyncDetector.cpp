@@ -1,6 +1,35 @@
 #include "AsyncDetector.h"
 
 ///
+/// \brief DrawFilledRect
+///
+void DrawFilledRect(cv::Mat& frame, const cv::Rect& rect, cv::Scalar cl, int alpha)
+{
+	if (alpha)
+	{
+		const int alpha_1 = 255 - alpha;
+		const int nchans = frame.channels();
+		int color[3] = { cv::saturate_cast<int>(cl[0]), cv::saturate_cast<int>(cl[1]), cv::saturate_cast<int>(cl[2]) };
+		for (int y = rect.y; y < rect.y + rect.height; ++y)
+		{
+			uchar* ptr = frame.ptr(y) + nchans * rect.x;
+			for (int x = rect.x; x < rect.x + rect.width; ++x)
+			{
+				for (int i = 0; i < nchans; ++i)
+				{
+					ptr[i] = cv::saturate_cast<uchar>((alpha_1 * ptr[i] + alpha * color[i]) / 255);
+				}
+				ptr += nchans;
+			}
+		}
+	}
+	else
+	{
+		cv::rectangle(frame, rect, cl, cv::FILLED);
+	}
+}
+
+///
 /// \brief AsyncDetector::AsyncDetector
 /// \param parser
 ///
@@ -225,11 +254,7 @@ void AsyncDetector::DrawData(frame_ptr frameInfo, int framesCounter, int currTim
 				cv::Size labelSize = cv::getTextSize(label, cv::FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
 
                 cv::Rect brect = track.m_rrect.boundingRect();
-#if (CV_VERSION_MAJOR >= 4)
-                cv::rectangle(frameInfo->m_frame, cv::Rect(cv::Point(brect.x, brect.y - labelSize.height), cv::Size(labelSize.width, labelSize.height + baseLine)), cv::Scalar(255, 255, 255), cv::FILLED);
-#else
-                cv::rectangle(frameInfo->m_frame, cv::Rect(cv::Point(brect.x, brect.y - labelSize.height), cv::Size(labelSize.width, labelSize.height + baseLine)), cv::Scalar(255, 255, 255), CV_FILLED);
-#endif
+				DrawFilledRect(frameInfo->m_frame, cv::Rect(cv::Point(brect.x, brect.y - labelSize.height), cv::Size(labelSize.width, labelSize.height + baseLine)), cv::Scalar(200, 200, 200), 150);
                 cv::putText(frameInfo->m_frame, label, brect.tl(), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 0, 0));
             }
         }
