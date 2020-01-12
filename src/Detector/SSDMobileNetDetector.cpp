@@ -55,11 +55,21 @@ bool SSDMobileNetDetector::Init(const config_t& config)
         targets["DNN_TARGET_OPENCL_FP16"] = cv::dnn::DNN_TARGET_OPENCL_FP16;
         targets["DNN_TARGET_MYRIAD"] = cv::dnn::DNN_TARGET_MYRIAD;
 #endif
-        auto target = targets.find(dnnTarget->second);
-        if (target != std::end(targets))
-        {
-            m_net.setPreferableTarget(target->second);
-        }
+#if (((CV_VERSION_MAJOR == 4) && (CV_VERSION_MINOR >= 2)) || (CV_VERSION_MAJOR > 4))
+		targets["DNN_TARGET_CUDA"] = cv::dnn::DNN_TARGET_CUDA;
+		targets["DNN_TARGET_CUDA_FP16"] = cv::dnn::DNN_TARGET_CUDA_FP16;
+#endif
+		std::cout << "Trying to set target " << dnnTarget->second << "... ";
+		auto target = targets.find(dnnTarget->second);
+		if (target != std::end(targets))
+		{
+			std::cout << "Succeded!" << std::endl;
+			m_net.setPreferableTarget(target->second);
+		}
+		else
+		{
+			std::cout << "Failed" << std::endl;
+		}
     }
 
 #if (CV_VERSION_MAJOR >= 4)
@@ -72,12 +82,20 @@ bool SSDMobileNetDetector::Init(const config_t& config)
         backends["DNN_BACKEND_INFERENCE_ENGINE"] = cv::dnn::DNN_BACKEND_INFERENCE_ENGINE;
         backends["DNN_BACKEND_OPENCV"] = cv::dnn::DNN_BACKEND_OPENCV;
         backends["DNN_BACKEND_VKCOM"] = cv::dnn::DNN_BACKEND_VKCOM;
-
-        auto backend = backends.find(dnnTarget->second);
-        if (backend != std::end(backends))
-        {
-            m_net.setPreferableBackend(backend->second);
-        }
+#if (((CV_VERSION_MAJOR == 4) && (CV_VERSION_MINOR >= 2)) || (CV_VERSION_MAJOR > 4))
+		backends["DNN_BACKEND_CUDA"] = cv::dnn::DNN_BACKEND_CUDA;
+#endif
+		std::cout << "Trying to set backend " << dnnBackend->second << "... ";
+		auto backend = backends.find(dnnBackend->second);
+		if (backend != std::end(backends))
+		{
+			std::cout << "Succeded!" << std::endl;
+			m_net.setPreferableBackend(backend->second);
+		}
+		else
+		{
+			std::cout << "Failed" << std::endl;
+		}
     }
 #endif
 

@@ -478,7 +478,7 @@ protected:
     bool InitDetector(cv::UMat frame)
     {
         config_t config;
-        const int yoloTest = 0;
+        const int yoloTest = 1;
 
 #ifdef _WIN32
         std::string pathToModel = "../../data/";
@@ -503,7 +503,7 @@ protected:
         config.emplace("confidenceThreshold", "0.1");
         config.emplace("maxCropRatio", "2.0");
         config.emplace("dnnTarget", "DNN_TARGET_CPU");
-        config.emplace("dnnBackend", "DNN_BACKEND_INFERENCE_ENGINE");
+        config.emplace("dnnBackend", "DNN_BACKEND_OPENCV");
 
         m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Yolo_OCV, config, frame));
         if (m_detector.get())

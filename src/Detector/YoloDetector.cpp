@@ -38,6 +38,33 @@ YoloOCVDetector::~YoloOCVDetector(void)
 ///
 bool YoloOCVDetector::Init(const config_t& config)
 {
+#if (((CV_VERSION_MAJOR == 4) && (CV_VERSION_MINOR >= 2)) || (CV_VERSION_MAJOR > 4))
+	std::map<cv::dnn::Target, std::string> dictTargets;
+	dictTargets[cv::dnn::DNN_TARGET_CPU] = "DNN_TARGET_CPU";
+	dictTargets[cv::dnn::DNN_TARGET_OPENCL] = "DNN_TARGET_OPENCL";
+	dictTargets[cv::dnn::DNN_TARGET_OPENCL_FP16] = "DNN_TARGET_OPENCL_FP16";
+	dictTargets[cv::dnn::DNN_TARGET_MYRIAD] = "DNN_TARGET_MYRIAD";
+	dictTargets[cv::dnn::DNN_TARGET_CUDA] = "DNN_TARGET_CUDA";
+	dictTargets[cv::dnn::DNN_TARGET_CUDA_FP16] = "DNN_TARGET_CUDA_FP16";
+
+	std::map<int, std::string> dictBackends;
+	dictBackends[cv::dnn::DNN_BACKEND_DEFAULT] = "DNN_BACKEND_DEFAULT";
+	dictBackends[cv::dnn::DNN_BACKEND_HALIDE] = "DNN_BACKEND_HALIDE";
+	dictBackends[cv::dnn::DNN_BACKEND_INFERENCE_ENGINE] = "DNN_BACKEND_INFERENCE_ENGINE";
+	dictBackends[cv::dnn::DNN_BACKEND_OPENCV] = "DNN_BACKEND_OPENCV";
+	dictBackends[cv::dnn::DNN_BACKEND_VKCOM] = "DNN_BACKEND_VKCOM";
+	dictBackends[cv::dnn::DNN_BACKEND_CUDA] = "DNN_BACKEND_CUDA";
+	dictBackends[1000000] = "DNN_BACKEND_INFERENCE_ENGINE_NGRAPH";
+	dictBackends[1000000 + 1] = "DNN_BACKEND_INFERENCE_ENGINE_NN_BUILDER_2019";
+
+	std::cout << "Avaible pairs for Target - backend:" << std::endl;
+	std::vector<std::pair<cv::dnn::Backend, cv::dnn::Target>> pairs = cv::dnn::getAvailableBackends();
+	for (auto p : pairs)
+	{
+		std::cout << dictBackends[p.first] << " (" << p.first << ") - " << dictTargets[p.second] << " (" << p.second << ")" << std::endl;
+	}
+#endif
+
     auto modelConfiguration = config.find("modelConfiguration");
     auto modelBinary = config.find("modelBinary");
     if (modelConfiguration != config.end() && modelBinary != config.end())
@@ -55,11 +82,21 @@ bool YoloOCVDetector::Init(const config_t& config)
         targets["DNN_TARGET_OPENCL_FP16"] = cv::dnn::DNN_TARGET_OPENCL_FP16;
         targets["DNN_TARGET_MYRIAD"] = cv::dnn::DNN_TARGET_MYRIAD;
 #endif
+#if (((CV_VERSION_MAJOR == 4) && (CV_VERSION_MINOR >= 2)) || (CV_VERSION_MAJOR > 4))
+		targets["DNN_TARGET_CUDA"] = cv::dnn::DNN_TARGET_CUDA;
+		targets["DNN_TARGET_CUDA_FP16"] = cv::dnn::DNN_TARGET_CUDA_FP16;
+#endif
+		std::cout << "Trying to set target " << dnnTarget->second << "... ";
         auto target = targets.find(dnnTarget->second);
         if (target != std::end(targets))
         {
+			std::cout << "Succeded!" << std::endl;
             m_net.setPreferableTarget(target->second);
         }
+		else
+		{
+			std::cout << "Failed" << std::endl;
+		}
     }
 
 #if (CV_VERSION_MAJOR >= 4)
@@ -72,12 +109,20 @@ bool YoloOCVDetector::Init(const config_t& config)
         backends["DNN_BACKEND_INFERENCE_ENGINE"] = cv::dnn::DNN_BACKEND_INFERENCE_ENGINE;
         backends["DNN_BACKEND_OPENCV"] = cv::dnn::DNN_BACKEND_OPENCV;
         backends["DNN_BACKEND_VKCOM"] = cv::dnn::DNN_BACKEND_VKCOM;
-
-        auto backend = backends.find(dnnTarget->second);
+#if (((CV_VERSION_MAJOR == 4) && (CV_VERSION_MINOR >= 2)) || (CV_VERSION_MAJOR > 4))
+		backends["DNN_BACKEND_CUDA"] = cv::dnn::DNN_BACKEND_CUDA;
+#endif
+		std::cout << "Trying to set backend " << dnnBackend->second << "... ";
+        auto backend = backends.find(dnnBackend->second);
         if (backend != std::end(backends))
         {
+			std::cout << "Succeded!" << std::endl;
             m_net.setPreferableBackend(backend->second);
         }
+		else
+		{
+			std::cout << "Failed" << std::endl;
+		}
     }
 #endif
 
