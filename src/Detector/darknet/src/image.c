@@ -1,3 +1,6 @@
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
 #include "image.h"
 #include "utils.h"
 #include "blas.h"
@@ -246,9 +249,9 @@ image **load_alphabet()
 {
     int i, j;
     const int nsize = 8;
-    image** alphabets = (image**)calloc(nsize, sizeof(image*));
+    image** alphabets = (image**)xcalloc(nsize, sizeof(image*));
     for(j = 0; j < nsize; ++j){
-        alphabets[j] = (image*)calloc(128, sizeof(image));
+        alphabets[j] = (image*)xcalloc(128, sizeof(image));
         for(i = 32; i < 127; ++i){
             char buff[256];
             sprintf(buff, "data/labels/%d_%d.png", i, j);
@@ -264,7 +267,7 @@ image **load_alphabet()
 detection_with_class* get_actual_detections(detection *dets, int dets_num, float thresh, int* selected_detections_num, char **names)
 {
     int selected_num = 0;
-    detection_with_class* result_arr = (detection_with_class*)calloc(dets_num, sizeof(detection_with_class));
+    detection_with_class* result_arr = (detection_with_class*)xcalloc(dets_num, sizeof(detection_with_class));
     int i;
     for (i = 0; i < dets_num; ++i) {
         int best_class = -1;
@@ -328,7 +331,15 @@ void draw_detections_v3(image im, detection *dets, int num, float thresh, char *
         int j;
         for (j = 0; j < classes; ++j) {
             if (selected_detections[i].det.prob[j] > thresh && j != best_class) {
-                printf("%s: %.0f%%\n", names[j], selected_detections[i].det.prob[j] * 100);
+                printf("%s: %.0f%%", names[j], selected_detections[i].det.prob[j] * 100);
+
+                if (ext_output)
+                    printf("\t(left_x: %4.0f   top_y: %4.0f   width: %4.0f   height: %4.0f)\n",
+                        round((selected_detections[i].det.bbox.x - selected_detections[i].det.bbox.w / 2)*im.w),
+                        round((selected_detections[i].det.bbox.y - selected_detections[i].det.bbox.h / 2)*im.h),
+                        round(selected_detections[i].det.bbox.w*im.w), round(selected_detections[i].det.bbox.h*im.h));
+                else
+                    printf("\n");
             }
         }
     }
@@ -616,8 +627,8 @@ void normalize_image(image p)
 
 void normalize_image2(image p)
 {
-    float* min = (float*)calloc(p.c, sizeof(float));
-    float* max = (float*)calloc(p.c, sizeof(float));
+    float* min = (float*)xcalloc(p.c, sizeof(float));
+    float* max = (float*)xcalloc(p.c, sizeof(float));
     int i,j;
     for(i = 0; i < p.c; ++i) min[i] = max[i] = p.data[i*p.h*p.w];
 
@@ -646,7 +657,7 @@ void normalize_image2(image p)
 image copy_image(image p)
 {
     image copy = p;
-    copy.data = (float*)calloc(p.h * p.w * p.c, sizeof(float));
+    copy.data = (float*)xcalloc(p.h * p.w * p.c, sizeof(float));
     memcpy(copy.data, p.data, p.h*p.w*p.c*sizeof(float));
     return copy;
 }
@@ -676,7 +687,7 @@ void save_image_png(image im, const char *name)
     char buff[256];
     //sprintf(buff, "%s (%d)", name, windows);
     sprintf(buff, "%s.png", name);
-    unsigned char* data = (unsigned char*)calloc(im.w * im.h * im.c, sizeof(unsigned char));
+    unsigned char* data = (unsigned char*)xcalloc(im.w * im.h * im.c, sizeof(unsigned char));
     int i,k;
     for(k = 0; k < im.c; ++k){
         for(i = 0; i < im.w*im.h; ++i){
@@ -697,7 +708,7 @@ void save_image_options(image im, const char *name, IMTYPE f, int quality)
     else if (f == TGA) sprintf(buff, "%s.tga", name);
     else if (f == JPG) sprintf(buff, "%s.jpg", name);
     else               sprintf(buff, "%s.png", name);
-    unsigned char* data = (unsigned char*)calloc(im.w * im.h * im.c, sizeof(unsigned char));
+    unsigned char* data = (unsigned char*)xcalloc(im.w * im.h * im.c, sizeof(unsigned char));
     int i, k;
     for (k = 0; k < im.c; ++k) {
         for (i = 0; i < im.w*im.h; ++i) {
@@ -755,17 +766,31 @@ image make_empty_image(int w, int h, int c)
 image make_image(int w, int h, int c)
 {
     image out = make_empty_image(w,h,c);
-    out.data = (float*)calloc(h * w * c, sizeof(float));
+    out.data = (float*)xcalloc(h * w * c, sizeof(float));
     return out;
 }
 
 image make_random_image(int w, int h, int c)
 {
     image out = make_empty_image(w,h,c);
-    out.data = (float*)calloc(h * w * c, sizeof(float));
+    out.data = (float*)xcalloc(h * w * c, sizeof(float));
     int i;
     for(i = 0; i < w*h*c; ++i){
         out.data[i] = (rand_normal() * .25) + .5;
+    }
+    return out;
+}
+
+image float_to_image_scaled(int w, int h, int c, float *data)
+{
+    image out = make_image(w, h, c);
+    int abs_max = 0;
+    int i = 0;
+    for (i = 0; i < w*h*c; ++i) {
+        if (fabs(data[i]) > abs_max) abs_max = fabs(data[i]);
+    }
+    for (i = 0; i < w*h*c; ++i) {
+        out.data[i] = data[i] / abs_max;
     }
     return out;
 }
@@ -1275,6 +1300,8 @@ float bilinear_interpolate(image im, float x, float y, int c)
 
 image resize_image(image im, int w, int h)
 {
+    if (im.w == w && im.h == h) return copy_image(im);
+
     image resized = make_image(w, h, im.c);
     image part = make_image(w, im.h, im.c);
     int r, c, k;
@@ -1401,6 +1428,18 @@ image load_image_stb(char *filename, int channels)
     }
     free(data);
     return im;
+}
+
+image load_image_stb_resize(char *filename, int w, int h, int c)
+{
+    image out = load_image_stb(filename, c);    // without OpenCV
+
+    if ((h && w) && (h != out.h || w != out.w)) {
+        image resized = resize_image(out, w, h);
+        free_image(out);
+        out = resized;
+    }
+    return out;
 }
 
 image load_image(char *filename, int w, int h, int c)

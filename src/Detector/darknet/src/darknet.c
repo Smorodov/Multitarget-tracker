@@ -258,12 +258,12 @@ layer normalize_layer(layer l, int n)
 {
     int j;
     l.batch_normalize=1;
-    l.scales = (float*)calloc(n, sizeof(float));
+    l.scales = (float*)xcalloc(n, sizeof(float));
     for(j = 0; j < n; ++j){
         l.scales[j] = 1;
     }
-    l.rolling_mean = (float*)calloc(n, sizeof(float));
-    l.rolling_variance = (float*)calloc(n, sizeof(float));
+    l.rolling_mean = (float*)xcalloc(n, sizeof(float));
+    l.rolling_variance = (float*)xcalloc(n, sizeof(float));
     return l;
 }
 
@@ -455,12 +455,17 @@ int main(int argc, char **argv)
 
 #ifndef GPU
     gpu_index = -1;
+    init_cpu();
 #else
     if(gpu_index >= 0){
         cuda_set_device(gpu_index);
         CHECK_CUDA(cudaSetDeviceFlags(cudaDeviceScheduleBlockingSync));
     }
+
+    show_cuda_cudnn_info();
 #endif
+
+    show_opencv_info();
 
     if (0 == strcmp(argv[1], "average")){
         average(argc, argv);
@@ -476,7 +481,7 @@ int main(int argc, char **argv)
         float thresh = find_float_arg(argc, argv, "-thresh", .24);
 		int ext_output = find_arg(argc, argv, "-ext_output");
         char *filename = (argc > 4) ? argv[4]: 0;
-        test_detector("cfg/coco.data", argv[2], argv[3], filename, thresh, 0.5, 0, ext_output, 0, NULL, 0);
+        test_detector("cfg/coco.data", argv[2], argv[3], filename, thresh, 0.5, 0, ext_output, 0, NULL, 0, 0);
     } else if (0 == strcmp(argv[1], "cifar")){
         run_cifar(argc, argv);
     } else if (0 == strcmp(argv[1], "go")){
@@ -529,8 +534,6 @@ int main(int argc, char **argv)
         oneoff(argv[2], argv[3], argv[4]);
     } else if (0 == strcmp(argv[1], "partial")){
         partial(argv[2], argv[3], argv[4], atoi(argv[5]));
-    } else if (0 == strcmp(argv[1], "average")){
-        average(argc, argv);
     } else if (0 == strcmp(argv[1], "visualize")){
         visualize(argv[2], (argc > 3) ? argv[3] : 0);
     } else if (0 == strcmp(argv[1], "imtest")){
