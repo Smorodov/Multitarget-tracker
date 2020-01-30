@@ -6,6 +6,10 @@
 #include <stdio.h>
 #include <time.h>
 
+#ifndef M_PI
+#define M_PI       3.14159265358979323846   // pi
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -13,6 +17,9 @@ extern "C" {
 LIB_API void free_ptrs(void **ptrs, int n);
 LIB_API void top_k(float *a, int n, int k, int *index);
 
+void *xmalloc(size_t size);
+void *xcalloc(size_t nmemb, size_t size);
+void *xrealloc(void *ptr, size_t size);
 double what_time_is_it_now();
 int *read_map(char *filename);
 void shuffle(void *arr, size_t n, size_t size);
@@ -30,6 +37,8 @@ LIB_API void find_replace(const char* str, char* orig, char* rep, char* output);
 void replace_image_to_label(const char* input_path, char* output_path);
 void error(const char *s);
 void malloc_error();
+void calloc_error();
+void realloc_error();
 void file_error(char *s);
 void strip(char *s);
 void strip_args(char *s);
@@ -69,6 +78,9 @@ char *find_char_arg(int argc, char **argv, char *arg, char *def);
 int sample_array(float *a, int n);
 int sample_array_custom(float *a, int n);
 void print_statistics(float *a, int n);
+unsigned int random_gen_fast(void);
+float random_float_fast();
+int rand_int_fast(int min, int max);
 unsigned int random_gen();
 float random_float();
 float rand_uniform_strong(float min, float max);
@@ -80,6 +92,11 @@ int check_array_is_inf(float *arr, int size);
 int int_index(int *a, int val, int n);
 int *random_index_order(int min, int max);
 int max_int_index(int *a, int n);
+boxabs box_to_boxabs(const box* b, const int img_w, const int img_h, const int bounds_check);
+int make_directory(char *path, int mode);
+
+#define max_val_cmp(a,b) (((a) > (b)) ? (a) : (b))
+#define min_val_cmp(a,b) (((a) < (b)) ? (a) : (b))
 
 #ifdef __cplusplus
 }

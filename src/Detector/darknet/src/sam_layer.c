@@ -1,4 +1,5 @@
 #include "sam_layer.h"
+#include "utils.h"
 #include "dark_cuda.h"
 #include "blas.h"
 #include <stdio.h>
@@ -18,14 +19,14 @@ layer make_sam_layer(int batch, int index, int w, int h, int c, int w2, int h2, 
     l.out_h = h2;
     l.out_c = c2;
     assert(l.out_c == l.c);
-    assert(l.w == l.out_w & l.h == l.out_h);
+    assert(l.w == l.out_w && l.h == l.out_h);
 
     l.outputs = l.out_w*l.out_h*l.out_c;
     l.inputs = l.outputs;
     l.index = index;
 
-    l.delta = (float*)calloc(l.outputs * batch, sizeof(float));
-    l.output = (float*)calloc(l.outputs * batch, sizeof(float));
+    l.delta = (float*)xcalloc(l.outputs * batch, sizeof(float));
+    l.output = (float*)xcalloc(l.outputs * batch, sizeof(float));
 
     l.forward = forward_sam_layer;
     l.backward = backward_sam_layer;
@@ -45,8 +46,8 @@ void resize_sam_layer(layer *l, int w, int h)
     l->out_h = h;
     l->outputs = l->out_w*l->out_h*l->out_c;
     l->inputs = l->outputs;
-    l->delta = (float*)realloc(l->delta, l->outputs * l->batch * sizeof(float));
-    l->output = (float*)realloc(l->output, l->outputs * l->batch * sizeof(float));
+    l->delta = (float*)xrealloc(l->delta, l->outputs * l->batch * sizeof(float));
+    l->output = (float*)xrealloc(l->output, l->outputs * l->batch * sizeof(float));
 
 #ifdef GPU
     cuda_free(l->output_gpu);
@@ -60,7 +61,7 @@ void resize_sam_layer(layer *l, int w, int h)
 void forward_sam_layer(const layer l, network_state state)
 {
     int size = l.batch * l.out_c * l.out_w * l.out_h;
-    int channel_size = 1;
+    //int channel_size = 1;
     float *from_output = state.net.layers[l.index].output;
 
     int i;
@@ -79,7 +80,7 @@ void backward_sam_layer(const layer l, network_state state)
     //scale_cpu(l.batch, l.out_w, l.out_h, l.out_c, l.delta, l.w, l.h, l.c, state.net.layers[l.index].delta);
 
     int size = l.batch * l.out_c * l.out_w * l.out_h;
-    int channel_size = 1;
+    //int channel_size = 1;
     float *from_output = state.net.layers[l.index].output;
     float *from_delta = state.net.layers[l.index].delta;
 
