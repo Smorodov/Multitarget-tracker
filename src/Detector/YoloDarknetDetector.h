@@ -32,8 +32,11 @@ public:
 private:
 	std::unique_ptr<Detector> m_detector;
 
+	float m_WHRatio = 1.f;
     float m_confidenceThreshold = 0.5f;
     float m_maxCropRatio = 3.0f;
 	std::vector<std::string> m_classNames;
 	std::set<std::string> m_classesWhiteList;
+
+	void DetectInCrop(cv::Mat colorFrame, const cv::Rect& crop, regions_t& tmpRegions);
 };

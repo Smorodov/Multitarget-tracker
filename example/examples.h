@@ -609,13 +609,14 @@ protected:
 #if 0
         config.emplace("modelConfiguration", pathToModel + "yolov3-tiny.cfg");
         config.emplace("modelBinary", pathToModel + "yolov3-tiny.weights");
+		config.emplace("confidenceThreshold", "0.5");
 #else
         config.emplace("modelConfiguration", pathToModel + "yolov3.cfg");
         config.emplace("modelBinary", pathToModel + "yolov3.weights");
+		config.emplace("confidenceThreshold", "0.7");
 #endif
         config.emplace("classNames", pathToModel + "coco.names");
-        config.emplace("confidenceThreshold", "0.6");
-        config.emplace("maxCropRatio", "3.0");
+        config.emplace("maxCropRatio", "2.0");
 
         config.emplace("white_list", "person");
         config.emplace("white_list", "car");
@@ -645,8 +646,8 @@ protected:
 		TrackerSettings settings;
         settings.SetDistance(tracking::DistCenters);
 		settings.m_kalmanType = tracking::KalmanLinear;
-        settings.m_filterGoal = tracking::FilterRect;
-        settings.m_lostTrackType = tracking::TrackNone;      // Use visual objects tracker for collisions resolving
+        settings.m_filterGoal = tracking::FilterCenter;
+        settings.m_lostTrackType = tracking::TrackKCF;      // Use visual objects tracker for collisions resolving
 		settings.m_matchType = tracking::MatchHungrian;
 		settings.m_dt = 0.3f;                                // Delta time for Kalman filter
 		settings.m_accelNoiseMag = 0.2f;                     // Accel noise magnitude for Kalman filter
