@@ -34,10 +34,11 @@ private:
 
     static const int InWidth = 300;
     static const int InHeight = 300;
-    float m_WHRatio;
-    float m_inScaleFactor;
-    float m_meanVal;
-    float m_confidenceThreshold;
-    float m_maxCropRatio;
+
+    float m_WHRatio = 1.f;
+    float m_inScaleFactor = 0.007843f;
+    float m_meanVal = 127.5;
+    float m_confidenceThreshold = 0.5f;
+    float m_maxCropRatio = 2.0f;
     std::vector<std::string> m_classNames;
 };
