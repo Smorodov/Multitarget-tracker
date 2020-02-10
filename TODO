@@ -8,17 +8,12 @@ Global data association for multi-object tracking using network flows:
 7. https://arxiv.org/abs/1907.03961
 8. http://www.cvlibs.net/projects/online_tracking/
 9. https://github.com/jwchoi384/Gaussian_YOLOv3
-10. https://github.com/humoncy/YOLOv3-SORT-ReID
 
 Deep SORT:
-1. https://github.com/nwojke/deep_sort
-2. https://github.com/bitzy/DeepSort
+1. https://github.com/humoncy/YOLOv3-SORT-ReID
+2. https://github.com/nwojke/deep_sort
+3. https://github.com/bitzy/DeepSort
 3. https://github.com/oylz/DS
-
-Metrics between regions and tracking objects:
-1. Profiling histograms
-2. HOG
-3. Normalize pixels metric to [0, 1]
 
 New runtime:
 1. Integration with deepstream sdk 4.0
