@@ -616,7 +616,7 @@ protected:
 		config.emplace("confidenceThreshold", "0.7");
 #endif
         config.emplace("classNames", pathToModel + "coco.names");
-        config.emplace("maxCropRatio", "2.0");
+        config.emplace("maxCropRatio", "-1");
 
         config.emplace("white_list", "person");
         config.emplace("white_list", "car");
@@ -697,6 +697,26 @@ protected:
 				cv::Size labelSize = cv::getTextSize(label.str(), cv::FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
 
                 cv::Rect brect = track.m_rrect.boundingRect();
+				if (brect.x < 0)
+				{
+					brect.width = std::min(brect.width, frame.cols - 1);
+					brect.x = 0;
+				}
+				else if (brect.x + brect.width >= frame.cols)
+				{
+					brect.x = std::max(0, frame.cols - brect.width - 1);
+					brect.width = std::min(brect.width, frame.cols - 1);
+				}
+				if (brect.y - labelSize.height < 0)
+				{
+					brect.height = std::min(brect.height, frame.rows - 1);
+					brect.y = labelSize.height;
+				}
+				else if (brect.y + brect.height >= frame.rows)
+				{
+					brect.y = std::max(0, frame.rows - brect.height - 1);
+					brect.height = std::min(brect.height, frame.rows - 1);
+				}
 				DrawFilledRect(frame, cv::Rect(cv::Point(brect.x, brect.y - labelSize.height), cv::Size(labelSize.width, labelSize.height + baseLine)), cv::Scalar(200, 200, 200), 150);
                 cv::putText(frame, label.str(), brect.tl(), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 0, 0));
 			}

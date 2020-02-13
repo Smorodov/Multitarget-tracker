@@ -2,9 +2,7 @@
 
 #include "BaseDetector.h"
 
-#define OPENCV
 #include "darknet/include/yolo_v2_class.hpp"
-#undef OPENCV
 // You only look once (YOLO)-Detector (https://arxiv.org/abs/1612.08242) to detect objects
 // Models can be downloaded here: https://pjreddie.com/darknet/yolo/
 // Default network is 416x416
@@ -39,4 +37,9 @@ private:
 	std::set<std::string> m_classesWhiteList;
 
 	void DetectInCrop(cv::Mat colorFrame, const cv::Rect& crop, regions_t& tmpRegions);
+	void Detect(cv::Mat colorFrame, regions_t& tmpRegions);
+	void FillImg(image_t& detImage);
+
+	cv::Mat m_tmpImg;
+	std::vector<float> m_tmpBuf;
 };
