@@ -729,37 +729,39 @@ cv::Rect TKalmanFilter::Update(cv::Rect rect, bool dataCorrect)
 //---------------------------------------------------------------------------
 cv::Vec<track_t, 2> TKalmanFilter::GetVelocity() const
 {
-	cv::Vec<track_t, 2> res(0, 0);
-	switch (m_type)
-	{
-	case tracking::KalmanLinear:
-	{
-		if (m_linearKalman.statePre.rows > 3)
-		{
-			int indX = 2;
-			int indY = 3;
-			if (m_linearKalman.statePre.rows > 4)
-			{
-				indX = 4;
-				indY = 5;
-			}
-			res[0] = m_linearKalman.statePre.at<track_t>(indX);
-			res[1] = m_linearKalman.statePre.at<track_t>(indY);
-		}
-		break;
-	}
+    cv::Vec<track_t, 2> res(0, 0);
+    if (m_initialized)
+    {
+        switch (m_type)
+        {
+        case tracking::KalmanLinear:
+        {
+            if (m_linearKalman.statePre.rows > 3)
+            {
+                int indX = 2;
+                int indY = 3;
+                if (m_linearKalman.statePre.rows > 4)
+                {
+                    indX = 4;
+                    indY = 5;
+                }
+                res[0] = m_linearKalman.statePre.at<track_t>(indX);
+                res[1] = m_linearKalman.statePre.at<track_t>(indY);
+            }
+            break;
+        }
 
-	case tracking::KalmanUnscented:
-	case tracking::KalmanAugmentedUnscented:
+        case tracking::KalmanUnscented:
+        case tracking::KalmanAugmentedUnscented:
 #ifdef USE_OCV_UKF
-		cv::Mat state = m_uncsentedKalman->getState();
-		res[0] = state.at<track_t>(2);
-		res[1] = state.at<track_t>(3);
+            cv::Mat state = m_uncsentedKalman->getState();
+            res[0] = state.at<track_t>(2);
+            res[1] = state.at<track_t>(3);
 #else
-		std::cerr << "UnscentedKalmanFilter was disabled in CMAKE! Set KalmanLinear in constructor." << std::endl;
+            std::cerr << "UnscentedKalmanFilter was disabled in CMAKE! Set KalmanLinear in constructor." << std::endl;
 #endif
-		break;
-	}
-
-	return res;
+            break;
+        }
+    }
+    return res;
 }

@@ -50,6 +50,7 @@ bool YoloDarknetDetector::Init(const config_t& config)
             std::string className;
             for (; std::getline(classNamesFile, className); )
             {
+                className.erase(className.find_last_not_of(" \t\n\r\f\v") + 1);
                 m_classNames.push_back(className);
             }
         }
