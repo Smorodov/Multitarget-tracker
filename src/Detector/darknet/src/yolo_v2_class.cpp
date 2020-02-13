@@ -280,24 +280,9 @@ LIB_API std::vector<bbox_t> Detector::detect(image_t img, float thresh, bool use
 #endif
     //std::cout << "net.gpu_index = " << net.gpu_index << std::endl;
 
-    image im;
-    im.c = img.c;
-    im.data = img.data;
-    im.h = img.h;
-    im.w = img.w;
-
-    image sized;
-
-    if (net.w == im.w && net.h == im.h) {
-        sized = make_image(im.w, im.h, im.c);
-        memcpy(sized.data, im.data, im.w*im.h*im.c * sizeof(float));
-    }
-    else
-        sized = resize_image(im, net.w, net.h);
-
     layer l = net.layers[net.n - 1];
 
-    float *X = sized.data;
+    float *X = img.data;
 
     float *prediction = network_predict(net, X);
 
@@ -313,7 +298,7 @@ LIB_API std::vector<bbox_t> Detector::detect(image_t img, float thresh, bool use
     int nboxes = 0;
     int letterbox = 0;
     float hier_thresh = 0.5;
-    detection *dets = get_network_boxes(&net, im.w, im.h, thresh, hier_thresh, 0, 1, &nboxes, letterbox);
+    detection *dets = get_network_boxes(&net, img.w, img.h, thresh, hier_thresh, 0, 1, &nboxes, letterbox);
     if (nms) do_nms_sort(dets, nboxes, l.classes, nms);
 
     std::vector<bbox_t> bbox_vec;
@@ -326,10 +311,10 @@ LIB_API std::vector<bbox_t> Detector::detect(image_t img, float thresh, bool use
         if (prob > thresh)
         {
             bbox_t bbox;
-            bbox.x = std::max((double)0, (b.x - b.w / 2.)*im.w);
-            bbox.y = std::max((double)0, (b.y - b.h / 2.)*im.h);
-            bbox.w = b.w*im.w;
-            bbox.h = b.h*im.h;
+            bbox.x = std::max((double)0, (b.x - b.w / 2.)* img.w);
+            bbox.y = std::max((double)0, (b.y - b.h / 2.)* img.h);
+            bbox.w = b.w* img.w;
+            bbox.h = b.h* img.h;
             bbox.obj_id = obj_id;
             bbox.prob = prob;
             bbox.track_id = 0;
@@ -343,8 +328,6 @@ LIB_API std::vector<bbox_t> Detector::detect(image_t img, float thresh, bool use
     }
 
     free_detections(dets, nboxes);
-    if(sized.data)
-        free(sized.data);
 
 #ifdef GPU
     if (cur_gpu_id != old_gpu_index)
