@@ -4,7 +4,7 @@ project(MTTracking)
 
 unset(CMAKE_CXX_FLAGS CACHE)
 unset(CMAKE_CXX_FLAGS_RELEASE CACHE)
-# unset(CMAKE_CXX_FLAGS_DEBUG CACHE)
+unset(CMAKE_CXX_FLAGS_DEBUG CACHE)
 
 find_package(OpenMP)
 if (OPENMP_FOUND)

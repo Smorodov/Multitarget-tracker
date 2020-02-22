@@ -42,14 +42,23 @@ endif()
 
   set(tracker_sources
              Tracker/Ctracker.cpp
-             Tracker/track.cpp
-             Tracker/HungarianAlg/HungarianAlg.cpp
-             Tracker/Kalman.cpp
-
              Tracker/Ctracker.h
+             Tracker/ShortPathCalculator.cpp
+             Tracker/ShortPathCalculator.h
+             Tracker/track.cpp
              Tracker/track.h
-             Tracker/HungarianAlg/HungarianAlg.h
+             Tracker/Kalman.cpp
              Tracker/Kalman.h
+
+             Tracker/HungarianAlg/HungarianAlg.cpp
+             Tracker/HungarianAlg/HungarianAlg.h
+
+             Tracker/muSSP/Graph.cpp
+             Tracker/muSSP/Node.cpp
+             Tracker/muSSP/Sink.cpp
+             Tracker/muSSP/Sink.h
+             Tracker/muSSP/Node.h
+             Tracker/muSSP/Graph.h
 
              Tracker/VOTTracker.hpp
              Tracker/dat/dat_tracker.cpp
@@ -215,13 +224,12 @@ else()
 endif(USE_OCV_BGFG)
 
 
-INCLUDE_DIRECTORIES(
-                    ${PROJECT_SOURCE_DIR}
-                    ${PROJECT_SOURCE_DIR}/../src
-                    ${PROJECT_SOURCE_DIR}/Tracker
-                    ${PROJECT_SOURCE_DIR}/Tracker/graph
-                    ${PROJECT_SOURCE_DIR}/Tracker/graph/GTL/include
-)
+include_directories(${PROJECT_SOURCE_DIR})
+include_directories(${PROJECT_SOURCE_DIR}/../src)
+include_directories(${PROJECT_SOURCE_DIR}/Tracker)
+include_directories(${PROJECT_SOURCE_DIR}/Tracker/graph)
+include_directories(${PROJECT_SOURCE_DIR}/Tracker/graph/GTL/include)
+
 
 if (CMAKE_COMPILER_IS_GNUCXX)
     add_library(${PROJECT_NAME} SHARED 
