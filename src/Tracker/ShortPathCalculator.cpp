@@ -189,20 +189,23 @@ void SPmuSSP::Solve(const distMatrix_t& costMatrix, size_t N, size_t M, assignme
     Graph orgGraph(nNodes, nArcs, 0, nNodes - 1, 0, 0);
     int edgeID = 0;
     int edgesSum = 0;
+    int nodesSum = 0;
     for (const auto& layer : m_detects)
     {
-        for (const auto& node : layer.m_nodes)
+        for (size_t j = 0; j < layer.m_nodes.size(); ++j)
         {
+            const auto& node = layer.m_nodes[j];
             for (size_t i = 0; i < node.m_arcs.size(); ++i)
             {
                 const auto& arc = node.m_arcs[i];
-                int tail = edgesSum + i;
-                int head = edgesSum + layer.m_arcsCount + arc.first;
+                int tail = nodesSum + j;
+                int head = nodesSum + layer.m_nodes.size() + arc.first;
                 orgGraph.add_edge(tail, head, edgeID, arc.second);
                 ++edgeID;
             }
         }
         edgesSum += layer.m_arcsCount;
+        nodesSum += layer.m_nodes.size();
     }
 
     // Find paths
@@ -215,6 +218,64 @@ void SPmuSSP::Solve(const distMatrix_t& costMatrix, size_t N, size_t M, assignme
     {
         costSum += i;
     }
-    //printf("The number of paths: %ld, total cost is %.7f, final path cost is: %.7f.\n", path_cost.size(), cost_sum, path_cost[path_cost.size() - 1]);
-    //print_solution(org_graph.get(), path_set, "output.txt");//"output_edge_rm.txt"
+    // printf("The number of paths: %ld, total cost is %.7f, final path cost is: %.7f.\n", path_cost.size(), cost_sum, path_cost[path_cost.size() - 1]);
+    // print_solution(org_graph.get(), path_set, "output.txt");//"output_edge_rm.txt"
+
+    auto GetRowIndFromID = [&](int id)
+    {
+        int res = -1;
+        size_t nodesSum = 0;
+        for (const auto& layer : m_detects)
+        {
+            if (nodesSum + layer.m_nodes.size() > static_cast<size_t>(id))
+            {
+                res = id - nodesSum;
+            }
+            nodesSum += layer.m_nodes.size();
+        }
+        return res;
+    };
+    auto GetRegionIndFromID = [&](int id)
+    {
+        int res = -1;
+        size_t nodesSum = 0;
+        for (size_t i = 0; i < m_detects.size(); ++i)
+        {
+            const auto& layer = m_detects[i];
+            if (nodesSum + layer.m_nodes.size() > static_cast<size_t>(id))
+            {
+                if (i + 1 == m_detects.size())
+                    res = id - nodesSum;
+                break;
+            }
+            nodesSum += layer.m_nodes.size();
+        }
+        return res;
+    };
+
+    for (size_t i = 0; i < pathSet.size(); ++i)
+    {
+        const auto& path = pathSet[i];
+
+        std::map<int, size_t> freq;
+
+        for (size_t j = 0; j < path.size(); ++j)
+        {
+            int row = GetRowIndFromID(path[j]);
+            assert(row >= 0);
+            freq[row]++;
+        }
+        int maxRow = -1;
+        size_t maxvals = 0;
+        for (auto it : freq)
+        {
+            if (maxvals < it.second)
+            {
+                maxvals = it.second;
+                maxRow = it.first;
+            }
+        }
+        assert(maxRow >= 0);
+        assignment[maxRow] = GetRegionIndFromID(path.size() - 1);
+    }
 }
