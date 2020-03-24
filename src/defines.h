@@ -14,6 +14,9 @@ typedef cv::Point_<track_t> Point_t;
 #define El_t CV_32F
 #define Mat_t CV_32FC
 
+typedef std::vector<int> assignments_t;
+typedef std::vector<track_t> distMatrix_t;
+
 ///
 /// \brief config_t
 ///
@@ -101,7 +104,8 @@ enum Detectors
     Pedestrian_C4,
     SSD_MobileNet,
     Yolo_OCV,
-	Yolo_Darknet
+	Yolo_Darknet,
+	Yolo_TensorRT
 };
 
 ///
@@ -141,7 +145,8 @@ enum KalmanType
 enum MatchType
 {
     MatchHungrian,
-    MatchBipart
+    MatchBipart,
+    muSSP
 };
 
 ///

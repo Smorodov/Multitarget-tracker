@@ -5,9 +5,6 @@
 #include "defines.h"
 // http://community.topcoder.com/tc?module=Static&d1=tutorials&d2=hungarianAlgorithm
 
-typedef std::vector<int> assignments_t;
-typedef std::vector<track_t> distMatrix_t;
-
 ///
 /// \brief The AssignmentProblemSolver class
 ///

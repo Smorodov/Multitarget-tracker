@@ -10,7 +10,7 @@
 
 #include "defines.h"
 #include "track.h"
-#include "HungarianAlg/HungarianAlg.h"
+#include "ShortPathCalculator.h"
 
 // ----------------------------------------------------------------------
 
@@ -237,10 +237,8 @@ private:
 
     cv::UMat m_prevFrame;
 
+    std::unique_ptr<ShortPathCalculator> m_SPCalculator;
+
     void CreateDistaceMatrix(const regions_t& regions, distMatrix_t& costMatrix, track_t maxPossibleCost, track_t& maxCost, cv::UMat currFrame);
-
-    void SolveHungrian(const distMatrix_t& costMatrix, size_t N, size_t M, assignments_t& assignment);
-    void SolveBipartiteGraphs(const distMatrix_t& costMatrix, size_t N, size_t M, assignments_t& assignment, track_t maxCost);
-
     void UpdateTrackingState(const regions_t& regions, cv::UMat currFrame, float fps);
 };

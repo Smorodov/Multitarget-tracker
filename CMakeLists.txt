@@ -4,7 +4,7 @@ project(MTTracking)
 
 unset(CMAKE_CXX_FLAGS CACHE)
 unset(CMAKE_CXX_FLAGS_RELEASE CACHE)
-# unset(CMAKE_CXX_FLAGS_DEBUG CACHE)
+unset(CMAKE_CXX_FLAGS_DEBUG CACHE)
 
 find_package(OpenMP)
 if (OPENMP_FOUND)
@@ -77,5 +77,12 @@ if (MSVC)
 endif()
 
 endif(BUILD_YOLO_LIB)
+
+option(BUILD_YOLO_TENSORRT "Should compiled TensorRT binding for YOLO?" OFF)
+if (BUILD_YOLO_TENSORRT)
+    add_subdirectory(src/Detector/tensorrt_yolo)
+    add_definitions(-DBUILD_YOLO_TENSORRT)
+endif(BUILD_YOLO_TENSORRT)
+
 
 add_subdirectory(src)

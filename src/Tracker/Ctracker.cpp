@@ -1,10 +1,5 @@
 #include "Ctracker.h"
 
-#include <GTL/GTL.h>
-#include "mygraph.h"
-#include "mwbmatching.h"
-#include "tokenise.h"
-
 ///
 /// \brief CTracker::CTracker
 /// Tracker. Manage tracks. Create, remove, update.
@@ -15,6 +10,22 @@ CTracker::CTracker(const TrackerSettings& settings)
       m_settings(settings),
       m_nextTrackID(0)
 {
+    ShortPathCalculator* spcalc = nullptr;
+    SPSettings spSettings = { settings.m_distThres, 12 };
+    switch (m_settings.m_matchType)
+    {
+    case tracking::MatchHungrian:
+        spcalc = new SPHungrian(spSettings);
+        break;
+    case tracking::MatchBipart:
+        spcalc = new SPBipart(spSettings);
+        break;
+    case tracking::muSSP:
+        spcalc = new SPmuSSP(spSettings);
+        break;
+    }
+    assert(spcalc != nullptr);
+    m_SPCalculator = std::unique_ptr<ShortPathCalculator>(spcalc);
 }
 
 ///
@@ -66,15 +77,8 @@ void CTracker::UpdateTrackingState(
         track_t maxCost = 0;
         CreateDistaceMatrix(regions, costMatrix, maxPossibleCost, maxCost, currFrame);
 
-        // Solving assignment problem (tracks and predictions of Kalman filter)
-        if (m_settings.m_matchType == tracking::MatchHungrian)
-        {
-            SolveHungrian(costMatrix, N, M, assignment);
-        }
-        else
-        {
-            SolveBipartiteGraphs(costMatrix, N, M, assignment, maxCost);
-        }
+        // Solving assignment problem (shortest paths)
+        m_SPCalculator->Solve(costMatrix, N, M, assignment, maxCost);
 
         // clean assignment from pairs with large distance
         for (size_t i = 0; i < assignment.size(); i++)
@@ -217,75 +221,4 @@ void CTracker::CreateDistaceMatrix(const regions_t& regions, distMatrix_t& costM
 			}
 		}
 	}
-}
-
-///
-/// \brief CTracker::SolveHungrian
-/// \param costMatrix
-/// \param N
-/// \param M
-/// \param assignment
-///
-void CTracker::SolveHungrian(const distMatrix_t& costMatrix, size_t N, size_t M, assignments_t& assignment)
-{
-    AssignmentProblemSolver APS;
-    APS.Solve(costMatrix, N, M, assignment, AssignmentProblemSolver::optimal);
-}
-
-///
-/// \brief CTracker::SolveBipartiteGraphs
-/// \param costMatrix
-/// \param N
-/// \param M
-/// \param assignment
-/// \param maxCost
-///
-void CTracker::SolveBipartiteGraphs(const distMatrix_t& costMatrix, size_t N, size_t M, assignments_t& assignment, track_t maxCost)
-{
-    MyGraph G;
-    G.make_directed();
-
-    std::vector<node> nodes(N + M);
-
-    for (size_t i = 0; i < nodes.size(); ++i)
-    {
-        nodes[i] = G.new_node();
-    }
-
-    edge_map<int> weights(G, 100);
-    for (size_t i = 0; i < N; i++)
-    {
-        bool hasZeroEdge = false;
-
-        for (size_t j = 0; j < M; j++)
-        {
-            track_t currCost = costMatrix[i + j * N];
-
-            edge e = G.new_edge(nodes[i], nodes[N + j]);
-
-            if (currCost < m_settings.m_distThres)
-            {
-                int weight = static_cast<int>(maxCost - currCost + 1);
-                G.set_edge_weight(e, weight);
-                weights[e] = weight;
-            }
-            else
-            {
-                if (!hasZeroEdge)
-                {
-                    G.set_edge_weight(e, 0);
-                    weights[e] = 0;
-                }
-                hasZeroEdge = true;
-            }
-        }
-    }
-
-    edges_t L = MAX_WEIGHT_BIPARTITE_MATCHING(G, weights);
-    for (edges_t::iterator it = L.begin(); it != L.end(); ++it)
-    {
-        node a = it->source();
-        node b = it->target();
-        assignment[b.id()] = static_cast<assignments_t::value_type>(a.id() - N);
-    }
 }

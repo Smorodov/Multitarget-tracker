@@ -8,6 +8,10 @@
 #ifdef BUILD_YOLO_LIB
 #include "YoloDarknetDetector.h"
 #endif
+#ifdef BUILD_YOLO_TENSORRT
+#include "YoloTensorRTDetector.h"
+#endif
+
 ///
 /// \brief CreateDetector
 /// \param detectorType
@@ -74,6 +78,14 @@ BaseDetector* CreateDetector(
         detector = new YoloDarknetDetector(frame);
 #else
 		std::cerr << "Darknet inference engine was not configured in CMake" << std::endl;
+#endif
+		break;
+
+	case tracking::Yolo_TensorRT:
+#ifdef BUILD_YOLO_TENSORRT
+		detector = new YoloTensorRTDetector(frame);
+#else
+		std::cerr << "TensorRT inference engine was not configured in CMake" << std::endl;
 #endif
 		break;
 

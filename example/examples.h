@@ -727,3 +727,155 @@ protected:
 };
 
 #endif
+
+#ifdef BUILD_YOLO_TENSORRT
+// ----------------------------------------------------------------------
+
+///
+/// \brief The YoloTensorRTExample class
+///
+class YoloTensorRTExample : public VideoExample
+{
+public:
+	YoloTensorRTExample(const cv::CommandLineParser& parser)
+		:
+		VideoExample(parser)
+	{
+	}
+
+protected:
+	///
+	/// \brief InitDetector
+	/// \param frame
+	/// \return
+	///
+	bool InitDetector(cv::UMat frame)
+	{
+		config_t config;
+
+#ifdef _WIN32
+		std::string pathToModel = "../../data/";
+#else
+		std::string pathToModel = "../data/";
+#endif
+#if 0
+		config.emplace("modelConfiguration", pathToModel + "yolov3-tiny.cfg");
+		config.emplace("modelBinary", pathToModel + "yolov3-tiny.weights");
+		config.emplace("confidenceThreshold", "0.5");
+#else
+		config.emplace("modelConfiguration", pathToModel + "yolov3.cfg");
+		config.emplace("modelBinary", pathToModel + "yolov3.weights");
+		config.emplace("confidenceThreshold", "0.7");
+#endif
+		config.emplace("classNames", pathToModel + "coco.names");
+		config.emplace("maxCropRatio", "-1");
+
+		config.emplace("white_list", "person");
+		config.emplace("white_list", "car");
+		config.emplace("white_list", "bicycle");
+		config.emplace("white_list", "motorbike");
+		config.emplace("white_list", "bus");
+		config.emplace("white_list", "truck");
+		//config.emplace("white_list", "traffic light");
+		//config.emplace("white_list", "stop sign");
+
+		m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Yolo_TensorRT, config, frame));
+		if (m_detector.get())
+		{
+			m_detector->SetMinObjectSize(cv::Size(frame.cols / 40, frame.rows / 40));
+			return true;
+		}
+		return false;
+	}
+
+	///
+	/// \brief InitTracker
+	/// \param frame
+	/// \return
+	///
+	bool InitTracker(cv::UMat frame)
+	{
+		TrackerSettings settings;
+		settings.SetDistance(tracking::DistCenters);
+		settings.m_kalmanType = tracking::KalmanLinear;
+		settings.m_filterGoal = tracking::FilterCenter;
+		settings.m_lostTrackType = tracking::TrackKCF;      // Use visual objects tracker for collisions resolving
+		settings.m_matchType = tracking::MatchHungrian;
+		settings.m_dt = 0.3f;                                // Delta time for Kalman filter
+		settings.m_accelNoiseMag = 0.2f;                     // Accel noise magnitude for Kalman filter
+		settings.m_distThres = 0.8f;                         // Distance threshold between region and object on two frames
+		settings.m_minAreaRadius = frame.rows / 20.f;
+		settings.m_maximumAllowedSkippedFrames = cvRound(2 * m_fps); // Maximum allowed skipped frames
+		settings.m_maxTraceLength = cvRound(5 * m_fps);      // Maximum trace length
+
+		settings.AddNearTypes("car", "bus", false);
+		settings.AddNearTypes("car", "truck", false);
+		settings.AddNearTypes("person", "bicycle", true);
+		settings.AddNearTypes("person", "motorbike", true);
+
+		m_tracker = std::make_unique<CTracker>(settings);
+
+		return true;
+	}
+
+	///
+	/// \brief DrawData
+	/// \param frame
+	/// \param framesCounter
+	/// \param currTime
+	///
+	void DrawData(cv::Mat frame, int framesCounter, int currTime)
+	{
+		auto tracks = m_tracker->GetTracks();
+
+		if (m_showLogs)
+		{
+			std::cout << "Frame " << framesCounter << ": tracks = " << tracks.size() << ", time = " << currTime << std::endl;
+		}
+
+		for (const auto& track : tracks)
+		{
+			if (track.IsRobust(2,                           // Minimal trajectory size
+				0.5f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
+				cv::Size2f(0.1f, 8.0f))      // Min and max ratio: width / height
+				)
+			{
+				DrawTrack(frame, 1, track);
+
+
+				std::stringstream label;
+				label << track.m_type << " " << std::setprecision(2) << track.m_velocity << ": " << track.m_confidence;
+				int baseLine = 0;
+				cv::Size labelSize = cv::getTextSize(label.str(), cv::FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
+
+				cv::Rect brect = track.m_rrect.boundingRect();
+				if (brect.x < 0)
+				{
+					brect.width = std::min(brect.width, frame.cols - 1);
+					brect.x = 0;
+				}
+				else if (brect.x + brect.width >= frame.cols)
+				{
+					brect.x = std::max(0, frame.cols - brect.width - 1);
+					brect.width = std::min(brect.width, frame.cols - 1);
+				}
+				if (brect.y - labelSize.height < 0)
+				{
+					brect.height = std::min(brect.height, frame.rows - 1);
+					brect.y = labelSize.height;
+				}
+				else if (brect.y + brect.height >= frame.rows)
+				{
+					brect.y = std::max(0, frame.rows - brect.height - 1);
+					brect.height = std::min(brect.height, frame.rows - 1);
+				}
+				DrawFilledRect(frame, cv::Rect(cv::Point(brect.x, brect.y - labelSize.height), cv::Size(labelSize.width, labelSize.height + baseLine)), cv::Scalar(200, 200, 200), 150);
+				cv::putText(frame, label.str(), brect.tl(), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 0, 0));
+			}
+		}
+
+		//m_detector->CalcMotionMap(frame);
+	}
+};
+
+#endif
