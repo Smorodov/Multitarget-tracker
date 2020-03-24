@@ -104,7 +104,8 @@ enum Detectors
     Pedestrian_C4,
     SSD_MobileNet,
     Yolo_OCV,
-	Yolo_Darknet
+	Yolo_Darknet,
+	Yolo_TensorRT
 };
 
 ///

@@ -40,6 +40,10 @@ if (BUILD_YOLO_LIB)
     set(detector_sources ${detector_sources} Detector/YoloDarknetDetector.cpp Detector/YoloDarknetDetector.h)
 endif()
 
+if (BUILD_YOLO_TENSORRT)
+    set(detector_sources ${detector_sources} Detector/YoloTensorRTDetector.cpp Detector/YoloTensorRTDetector.h)
+endif()
+
   set(tracker_sources
              Tracker/Ctracker.cpp
              Tracker/Ctracker.h
@@ -261,6 +265,11 @@ endif()
 if (BUILD_YOLO_LIB)
     set(LIBS ${LIBS} yolo_lib)
 endif(BUILD_YOLO_LIB)
+
+if (BUILD_YOLO_TENSORRT)
+    set(LIBS ${LIBS} yolo_rt_lib)
+endif(BUILD_YOLO_TENSORRT)
+
 
 target_link_libraries(${PROJECT_NAME} ${LIBS})
 
