@@ -1,7 +1,7 @@
 #pragma once
 
 #include "BaseDetector.h"
-#include "Detector/pedestrians/c4-pedestrian-detector.h"
+#include "pedestrians/c4-pedestrian-detector.h"
 
 ///
 /// \brief The PedestrianDetector class

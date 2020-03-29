@@ -27,6 +27,7 @@ INCLUDE_DIRECTORIES(
 set(LIBS
     ${OpenCV_LIBS}
     mtracking
+    mdetection
 )
                      
 if (BUILD_YOLO_LIB)

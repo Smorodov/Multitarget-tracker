@@ -753,6 +753,17 @@ void CTrack::CreateExternalTracker(int channels)
 		{
 #if (CV_VERSION_MAJOR >= 4)
 			cv::TrackerCSRT::Params params;
+			params.psr_threshold = 0.04f; // 0.035f;
+			if (channels == 1)
+			{
+				params.use_gray = true;
+				params.use_rgb = false;
+			}
+			else
+			{
+				params.use_gray = false;
+				params.use_rgb = true;
+			}
 			m_tracker = cv::TrackerCSRT::create(params);
 #endif
 		}
