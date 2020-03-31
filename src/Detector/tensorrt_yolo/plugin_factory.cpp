@@ -112,7 +112,7 @@ YoloLayerV3::YoloLayerV3(const void* data, size_t length)
     read(d, m_GridSize);
     read(d, m_OutputSize);
     assert(d = a + length);
-};
+}
 
 YoloLayerV3::YoloLayerV3(const uint32_t& numBoxes, const uint32_t& numClasses, const uint32_t& gridSize) :
     m_NumBoxes(numBoxes),
@@ -123,7 +123,7 @@ YoloLayerV3::YoloLayerV3(const uint32_t& numBoxes, const uint32_t& numClasses, c
     assert(m_NumClasses > 0);
     assert(m_GridSize > 0);
     m_OutputSize = m_GridSize * m_GridSize * (m_NumBoxes * (4 + 1 + m_NumClasses));
-};
+}
 
 int YoloLayerV3::getNbOutputs() const { return 1; }
 

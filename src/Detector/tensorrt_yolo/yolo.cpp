@@ -94,7 +94,7 @@ Yolo::Yolo(const uint32_t batchSize, const NetworkInfo& networkInfo, const Infer
     allocateBuffers();
     NV_CUDA_CHECK(cudaStreamCreate(&m_CudaStream));
     assert(verifyYoloEngine());
-};
+}
 
 Yolo::~Yolo()
 {
@@ -607,7 +607,7 @@ void Yolo::parseConfigBlocks()
                 ? outputTensor.masks.size()
                 : std::stoul(trim(block.at("num")));
             outputTensor.numClasses = std::stoul(block.at("classes"));
-			
+
 			for (int i=0;i< outputTensor.numClasses;++i)
 			{
 				m_ClassNames.push_back(std::to_string(i));
