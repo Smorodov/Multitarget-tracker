@@ -70,4 +70,8 @@ set(TENSORRT_LIBS
     ${GFLAGS_LIBRARIES}
 )
 
+if (CMAKE_COMPILER_IS_GNUCXX)
+    set(TENSORRT_LIBS ${TENSORRT_LIBS} stdc++fs nvinfer_plugin)
+endif(CMAKE_COMPILER_IS_GNUCXX)
+
 target_link_libraries(${libname_rt} ${TENSORRT_LIBS})
