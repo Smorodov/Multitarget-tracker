@@ -41,7 +41,8 @@ int main(int argc, char** argv)
 
     CarsCounting cars_counting(parser);
 
-    cars_counting.AddLine(RoadLine(cv::Point2f(0.2f, 0.5f), cv::Point2f(0.95f, 0.6f), 0));
+	cars_counting.AddLine(RoadLine(cv::Point2f(0.02f, 0.45f), cv::Point2f(0.28f, 0.55f), 0));
+    cars_counting.AddLine(RoadLine(cv::Point2f(0.3f, 0.6f), cv::Point2f(0.8f, 0.6f), 1));
 
     cars_counting.Process();
 

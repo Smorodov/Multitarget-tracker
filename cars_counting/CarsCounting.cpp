@@ -244,6 +244,33 @@ bool CarsCounting::InitTracker(cv::UMat frame)
     const int minStaticTime = 5;
 
     config_t config;
+
+#if 1 // YOLO
+#ifdef _WIN32
+	std::string pathToModel = "../../data/";
+#else
+	std::string pathToModel = "../data/";
+#endif
+
+	config.emplace("modelConfiguration", pathToModel + "yolov3.cfg");
+	config.emplace("modelBinary", pathToModel + "yolov3.weights");
+	config.emplace("confidenceThreshold", "0.7");
+	config.emplace("classNames", pathToModel + "coco.names");
+	config.emplace("maxCropRatio", "-1");
+
+	config.emplace("white_list", "person");
+	config.emplace("white_list", "car");
+	config.emplace("white_list", "bicycle");
+	config.emplace("white_list", "motorbike");
+	config.emplace("white_list", "bus");
+	config.emplace("white_list", "truck");
+	//config.emplace("white_list", "traffic light");
+	//config.emplace("white_list", "stop sign");
+
+	m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Yolo_Darknet, config, frame));
+
+#else // Background subtraction
+
 #if 1
     config.emplace("history", std::to_string(cvRound(10 * minStaticTime * m_fps)));
     config.emplace("varThreshold", "16");
@@ -256,18 +283,29 @@ bool CarsCounting::InitTracker(cv::UMat frame)
     config.emplace("isParallel", "1");
     m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Motion_CNT, config, m_useLocalTracking, frame));
 #endif
+
+#endif
+
     m_detector->SetMinObjectSize(cv::Size(m_minObjWidth, m_minObjWidth));
 
     TrackerSettings settings;
-	settings.SetDistance(tracking::DistCenters);
+	settings.SetDistance(tracking::DistJaccard);
     settings.m_kalmanType = tracking::KalmanLinear;
-    settings.m_filterGoal = tracking::FilterRect;
+    settings.m_filterGoal = tracking::FilterCenter;
     settings.m_lostTrackType = tracking::TrackCSRT; // Use KCF tracker for collisions resolving
     settings.m_matchType = tracking::MatchHungrian;
-    settings.m_dt = 0.5f;                           // Delta time for Kalman filter
-    settings.m_accelNoiseMag = 0.5f;                // Accel noise magnitude for Kalman filter
-    settings.m_distThres = 0.8f;                    // Distance threshold between region and object on two frames
+    settings.m_dt = 0.3f;                           // Delta time for Kalman filter
+    settings.m_accelNoiseMag = 0.2f;                // Accel noise magnitude for Kalman filter
+    settings.m_distThres = 0.7f;                    // Distance threshold between region and object on two frames
     settings.m_minAreaRadius = frame.rows / 20.f;
+	settings.m_maximumAllowedSkippedFrames = cvRound(2 * m_fps); // Maximum allowed skipped frames
+	settings.m_maxTraceLength = cvRound(3 * m_fps);      // Maximum trace length
+
+	settings.AddNearTypes("car", "bus", false);
+	settings.AddNearTypes("car", "truck", false);
+	settings.AddNearTypes("person", "bicycle", true);
+	settings.AddNearTypes("person", "motorbike", true);
+
 
     settings.m_useAbandonedDetection = false;
     if (settings.m_useAbandonedDetection)
@@ -312,7 +350,7 @@ void CarsCounting::DrawData(cv::Mat frame, int framesCounter, int currTime)
         else
         {
             if (track.IsRobust(cvRound(m_fps / 4),          // Minimal trajectory size
-                                0.7f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
+                                0.8f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
                                 cv::Size2f(0.1f, 8.0f))      // Min and max ratio: width / height
                     )
             {

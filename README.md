@@ -1,5 +1,13 @@
 ![travis ci:](https://travis-ci.org/Smorodov/Multitarget-tracker.svg?branch=master)
 
+# New videos!
+
+1. Traffic counting
+[![Traffic counting:](https://img.youtube.com/vi/LzCv6Dr46kw/0.jpg)](https://youtu.be/LzCv6Dr46kw)
+
+2. ADAS
+Coming soon...
+
 # Multitarget (multiple objects) tracker
 
 #### 1. Objects detector can be created with function [CreateDetector](https://github.com/Smorodov/Multitarget-tracker/blob/master/src/Detector/BaseDetector.cpp) with different values of the detectorType:
