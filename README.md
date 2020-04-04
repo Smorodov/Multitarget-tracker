@@ -2,10 +2,12 @@
 
 # New videos!
 
-1. Traffic counting
+* Traffic counting
+
 [![Traffic counting:](https://img.youtube.com/vi/LzCv6Dr46kw/0.jpg)](https://youtu.be/LzCv6Dr46kw)
 
-2. ADAS
+* ADAS
+
 Coming soon...
 
 # Multitarget (multiple objects) tracker
