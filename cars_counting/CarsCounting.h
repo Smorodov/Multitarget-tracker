@@ -61,7 +61,7 @@ public:
         std::string label = "Line " + std::to_string(m_uid) + ": " + std::to_string(m_intersect1) + "/" + std::to_string(m_intersect2);
         //int baseLine = 0;
         //cv::Size labelSize = cv::getTextSize(label, cv::FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
-        cv::putText(frame, label, Ptf2i(0.5f * (m_pt1 + m_pt2)), cv::FONT_HERSHEY_TRIPLEX, 0.5, cv::Scalar(0, 0, 0));
+        cv::putText(frame, label, Ptf2i(0.5f * (m_pt1 + m_pt2)), cv::FONT_HERSHEY_TRIPLEX, 1.0, cv::Scalar(200, 0, 200));
     }
 
     ///
@@ -164,7 +164,7 @@ private:
             b2 = (pt2.x * pt1.y - pt1.x * pt2.y) / (pt2.x - pt1.x);
         }
 
-        //Определение координат пересечения прямых
+        // Intersection coords
         cv::Point2f intersectPt;
 
         bool isIntersect = true;
