@@ -387,9 +387,8 @@ void CTrack::RectUpdate(
         int res = 0;
 
         if (size < 2)
-        {
             size = 2;
-        }
+
         if (v < 0)
         {
             res = v;
@@ -398,13 +397,14 @@ void CTrack::RectUpdate(
         }
         else if (v + size > hi - 1)
         {
+			res = v;
             v = hi - 1 - size;
             if (v < 0)
             {
                 size += v;
                 v = 0;
             }
-            res = v;
+            res -= v;
             return res;
         }
         return res;

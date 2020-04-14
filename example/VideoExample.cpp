@@ -433,13 +433,10 @@ void VideoExample::DrawTrack(cv::Mat frame,
 bool VideoExample::OpenCapture(cv::VideoCapture& capture)
 {
     if (m_inFile.size() == 1)
-    {
         capture.open(atoi(m_inFile.c_str()));
-    }
     else
-    {
         capture.open(m_inFile);
-    }
+
     if (capture.isOpened())
     {
         capture.set(cv::CAP_PROP_POS_FRAMES, m_startFrame);
@@ -447,7 +444,7 @@ bool VideoExample::OpenCapture(cv::VideoCapture& capture)
         m_fps = std::max(1.f, (float)capture.get(cv::CAP_PROP_FPS));
         return true;
     }
-    return true;
+    return false;
 }
 
 ///

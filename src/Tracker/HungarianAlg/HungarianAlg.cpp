@@ -543,18 +543,17 @@ void AssignmentProblemSolver::assignmentsuboptimal1(assignments_t& assignment, t
 						singleValidationFound = true;
 						break;
 					}
-
-					if (singleValidationFound)
-					{
-						for (size_t nestedRow = 0; nestedRow < nOfRows; nestedRow++)
-							if ((nOfValidObservations[nestedRow] > 1) && distMatrix[nestedRow + nOfRows*col] != std::numeric_limits<track_t>::max())
-							{
-								distMatrix[nestedRow + nOfRows*col] = std::numeric_limits<track_t>::max();
-								nOfValidObservations[nestedRow] -= 1;
-								nOfValidTracks[col] -= 1;
-								repeatSteps = true;
-							}
-					}
+				}
+				if (singleValidationFound)
+				{
+					for (size_t nestedRow = 0; nestedRow < nOfRows; nestedRow++)
+						if ((nOfValidObservations[nestedRow] > 1) && distMatrix[nestedRow + nOfRows * col] != std::numeric_limits<track_t>::max())
+						{
+							distMatrix[nestedRow + nOfRows * col] = std::numeric_limits<track_t>::max();
+							nOfValidObservations[nestedRow] -= 1;
+							nOfValidTracks[col] -= 1;
+							repeatSteps = true;
+						}
 				}
 			}
 
