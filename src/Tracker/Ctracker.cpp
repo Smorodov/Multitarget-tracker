@@ -99,15 +99,18 @@ void CTracker::UpdateTrackingState(
         }
 
         // If track didn't get detects long time, remove it.
-        for (int i = 0; i < static_cast<int>(m_tracks.size()); i++)
+        for (size_t i = 0; i < m_tracks.size();)
         {
             if (m_tracks[i]->SkippedFrames() > m_settings.m_maximumAllowedSkippedFrames ||
                     m_tracks[i]->IsStaticTimeout(cvRound(fps * (m_settings.m_maxStaticTime - m_settings.m_minStaticTime))))
             {
                 m_tracks.erase(m_tracks.begin() + i);
                 assignment.erase(assignment.begin() + i);
-                i--;
             }
+			else
+			{
+				++i;
+			}
         }
     }
 
