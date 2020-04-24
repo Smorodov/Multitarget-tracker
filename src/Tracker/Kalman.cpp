@@ -141,7 +141,7 @@ void TKalmanFilter::CreateLinearAcceleration(Point_t xy0, Point_t xyv0)
 	// Transition cv::Matrix
 	const track_t dt = m_deltaTime;
 	const track_t dt2 = 0.5f * m_deltaTime * m_deltaTime;
-	m_linearKalman.transitionMatrix = (cv::Mat_<track_t>(4, 4) <<
+	m_linearKalman.transitionMatrix = (cv::Mat_<track_t>(6, 6) <<
 		1, 0, dt, 0,  dt2, 0,
 		0, 1, 0,  dt, 0,   dt2,
 		0, 0, 1,  0,  dt,  0,
@@ -589,14 +589,20 @@ Point_t TKalmanFilter::Update(Point_t pt, bool dataCorrect)
             switch (m_type)
             {
             case tracking::KalmanLinear:
-                CreateLinear(xy0, xyv0);
+                if (m_useAcceleration)
+					CreateLinearAcceleration(xy0, xyv0);
+				else
+					CreateLinear(xy0, xyv0);
                 break;
 
             case tracking::KalmanUnscented:
 #ifdef USE_OCV_UKF
                 CreateUnscented(xy0, xyv0);
 #else
-                CreateLinear(xy0, xyv0);
+				if (m_useAcceleration)
+					CreateLinearAcceleration(xy0, xyv0);
+				else
+					CreateLinear(xy0, xyv0);
                 std::cerr << "UnscentedKalmanFilter was disabled in CMAKE! Set KalmanLinear in constructor." << std::endl;
 #endif
                 break;
@@ -605,7 +611,10 @@ Point_t TKalmanFilter::Update(Point_t pt, bool dataCorrect)
 #ifdef USE_OCV_UKF
                 CreateAugmentedUnscented(xy0, xyv0);
 #else
-                CreateLinear(xy0, xyv0);
+				if (m_useAcceleration)
+					CreateLinearAcceleration(xy0, xyv0);
+				else
+					CreateLinear(xy0, xyv0);
                 std::cerr << "AugmentedUnscentedKalmanFilter was disabled in CMAKE! Set KalmanLinear in constructor." << std::endl;
 #endif
                 break;
@@ -636,20 +645,22 @@ Point_t TKalmanFilter::Update(Point_t pt, bool dataCorrect)
             estimated = m_linearKalman.correct(measurement);
 
             // Inertia correction
-            track_t currDist = sqrtf(sqr(estimated.at<track_t>(0) - pt.x) + sqr(estimated.at<track_t>(1) - pt.y));
-            if (currDist > m_lastDist)
-            {
-                m_deltaTime = std::min(m_deltaTime + m_deltaStep, m_deltaTimeMax);
-            }
-            else
-            {
-                m_deltaTime = std::max(m_deltaTime - m_deltaStep, m_deltaTimeMin);
-            }
-            m_lastDist = currDist;
+			if (!m_useAcceleration)
+			{
+				track_t currDist = sqrtf(sqr(estimated.at<track_t>(0) - pt.x) + sqr(estimated.at<track_t>(1) - pt.y));
+				if (currDist > m_lastDist)
+				{
+					m_deltaTime = std::min(m_deltaTime + m_deltaStep, m_deltaTimeMax);
+				}
+				else
+				{
+					m_deltaTime = std::max(m_deltaTime - m_deltaStep, m_deltaTimeMin);
+				}
+				m_lastDist = currDist;
 
-            m_linearKalman.transitionMatrix.at<track_t>(0, 2) = m_deltaTime;
-            m_linearKalman.transitionMatrix.at<track_t>(1, 3) = m_deltaTime;
-
+				m_linearKalman.transitionMatrix.at<track_t>(0, 2) = m_deltaTime;
+				m_linearKalman.transitionMatrix.at<track_t>(1, 3) = m_deltaTime;
+			}
             break;
         }
 
@@ -750,14 +761,20 @@ cv::Rect TKalmanFilter::Update(cv::Rect rect, bool dataCorrect)
             switch (m_type)
             {
             case tracking::KalmanLinear:
-                CreateLinear(rect0, rectv0);
+				if (m_useAcceleration)
+					CreateLinearAcceleration(rect0, rectv0);
+				else
+					CreateLinear(rect0, rectv0);
                 break;
 
             case tracking::KalmanUnscented:
 #ifdef USE_OCV_UKF
                 CreateUnscented(rect0, rectv0);
 #else
-                CreateLinear(rect0, rectv0);
+				if (m_useAcceleration)
+					CreateLinearAcceleration(rect0, rectv0);
+				else
+					CreateLinear(rect0, rectv0);
                 std::cerr << "UnscentedKalmanFilter was disabled in CMAKE! Set KalmanLinear in constructor." << std::endl;
 #endif
                 break;
@@ -766,7 +783,10 @@ cv::Rect TKalmanFilter::Update(cv::Rect rect, bool dataCorrect)
 #ifdef USE_OCV_UKF
                 CreateAugmentedUnscented(rect0, rectv0);
 #else
-                CreateLinear(rect0, rectv0);
+				if (m_useAcceleration)
+					CreateLinearAcceleration(rect0, rectv0);
+				else
+					CreateLinear(rect0, rectv0);
                 std::cerr << "AugmentedUnscentedKalmanFilter was disabled in CMAKE! Set KalmanLinear in constructor." << std::endl;
 #endif
                 break;
@@ -805,22 +825,24 @@ cv::Rect TKalmanFilter::Update(cv::Rect rect, bool dataCorrect)
             m_lastRectResult.height = estimated.at<track_t>(3);
 
             // Inertia correction
-            track_t currDist = sqrtf(sqr(estimated.at<track_t>(0) - rect.x) + sqr(estimated.at<track_t>(1) - rect.y) + sqr(estimated.at<track_t>(2) - rect.width) + sqr(estimated.at<track_t>(3) - rect.height));
-            if (currDist > m_lastDist)
-            {
-                m_deltaTime = std::min(m_deltaTime + m_deltaStep, m_deltaTimeMax);
-            }
-            else
-            {
-                m_deltaTime = std::max(m_deltaTime - m_deltaStep, m_deltaTimeMin);
-            }
-            m_lastDist = currDist;
+			if (!m_useAcceleration)
+			{
+				track_t currDist = sqrtf(sqr(estimated.at<track_t>(0) - rect.x) + sqr(estimated.at<track_t>(1) - rect.y) + sqr(estimated.at<track_t>(2) - rect.width) + sqr(estimated.at<track_t>(3) - rect.height));
+				if (currDist > m_lastDist)
+				{
+					m_deltaTime = std::min(m_deltaTime + m_deltaStep, m_deltaTimeMax);
+				}
+				else
+				{
+					m_deltaTime = std::max(m_deltaTime - m_deltaStep, m_deltaTimeMin);
+				}
+				m_lastDist = currDist;
 
-            m_linearKalman.transitionMatrix.at<track_t>(0, 4) = m_deltaTime;
-            m_linearKalman.transitionMatrix.at<track_t>(1, 5) = m_deltaTime;
-            m_linearKalman.transitionMatrix.at<track_t>(2, 6) = m_deltaTime;
-            m_linearKalman.transitionMatrix.at<track_t>(3, 7) = m_deltaTime;
-
+				m_linearKalman.transitionMatrix.at<track_t>(0, 4) = m_deltaTime;
+				m_linearKalman.transitionMatrix.at<track_t>(1, 5) = m_deltaTime;
+				m_linearKalman.transitionMatrix.at<track_t>(2, 6) = m_deltaTime;
+				m_linearKalman.transitionMatrix.at<track_t>(3, 7) = m_deltaTime;
+			}
             break;
         }
 
