@@ -38,6 +38,12 @@ struct TrackerSettings
     ///
     track_t m_accelNoiseMag = 0.1f;
 
+	///
+	/// \brief m_useAcceleration
+	/// Constant velocity or constant acceleration motion model
+	///
+	bool m_useAcceleration = false;
+
     ///
     /// \brief m_distThres
     /// Distance threshold for Assignment problem: from 0 to 1

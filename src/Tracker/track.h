@@ -231,6 +231,7 @@ public:
             tracking::KalmanType kalmanType,
             track_t deltaTime,
             track_t accelNoiseMag,
+		    bool useAcceleration,
             size_t trackID,
             bool filterObjectSize,
             tracking::LostTrackType externalTrackerForLost);

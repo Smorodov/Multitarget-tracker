@@ -42,7 +42,7 @@ Coming soon...
 
 3.1. Linear Kalman filter from OpenCV (tracking::KalmanLinear)
 
-3.2. Unscented Kalman filter from OpenCV (tracking::KalmanUnscented)
+3.2. Unscented Kalman filter from OpenCV (tracking::KalmanUnscented) with constant velocity or constant acceleration models
 
 3.3. [Kalman goal](https://github.com/Smorodov/Multitarget-tracker/blob/master/src/Tracker/Ctracker.h) is only coordinates (tracking::FilterCenter) or coordinates and size (tracking::FilterRect)
 
