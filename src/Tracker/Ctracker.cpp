@@ -123,6 +123,7 @@ void CTracker::UpdateTrackingState(
                                                       m_settings.m_kalmanType,
                                                       m_settings.m_dt,
                                                       m_settings.m_accelNoiseMag,
+                                                      m_settings.m_useAcceleration,
                                                       m_nextTrackID++,
                                                       m_settings.m_filterGoal == tracking::FilterRect,
                                                       m_settings.m_lostTrackType));

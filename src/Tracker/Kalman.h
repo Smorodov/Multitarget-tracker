@@ -16,7 +16,7 @@
 class TKalmanFilter
 {
 public:
-    TKalmanFilter(tracking::KalmanType type, track_t deltaTime = 0.2, track_t accelNoiseMag = 0.5);
+    TKalmanFilter(tracking::KalmanType type, bool useAcceleration, track_t deltaTime, track_t accelNoiseMag);
     ~TKalmanFilter() = default;
 
     Point_t GetPointPrediction();
@@ -50,9 +50,17 @@ private:
     track_t m_deltaStep = 0;
     static const int m_deltaStepsCount = 20;
     track_t m_accelNoiseMag = 0.5f;
+	bool m_useAcceleration = false; // If set true then will be used motion model x(t) = x0 + v0 * t + a * t^2 / 2
 
+	// Constant velocity model
     void CreateLinear(Point_t xy0, Point_t xyv0);
     void CreateLinear(cv::Rect_<track_t> rect0, Point_t rectv0);
+	
+	// Constant acceleration model
+	// https://www.mathworks.com/help/driving/ug/linear-kalman-filters.html
+	void CreateLinearAcceleration(Point_t xy0, Point_t xyv0);
+	void CreateLinearAcceleration(cv::Rect_<track_t> rect0, Point_t rectv0);
+
 #ifdef USE_OCV_UKF
     void CreateUnscented(Point_t xy0, Point_t xyv0);
     void CreateUnscented(cv::Rect_<track_t> rect0, Point_t rectv0);

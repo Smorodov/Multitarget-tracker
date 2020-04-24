@@ -21,6 +21,7 @@ CTrack::CTrack(
         tracking::KalmanType kalmanType,
         track_t deltaTime,
         track_t accelNoiseMag,
+	    bool useAcceleration,
         size_t trackID,
         bool filterObjectSize,
         tracking::LostTrackType externalTrackerForLost
@@ -31,7 +32,7 @@ CTrack::CTrack(
       m_lastRegion(region),
       m_predictionPoint(region.m_rrect.center),
       m_predictionRect(region.m_rrect),
-      m_kalman(kalmanType, deltaTime, accelNoiseMag),
+      m_kalman(kalmanType, useAcceleration, deltaTime, accelNoiseMag),
       m_filterObjectSize(filterObjectSize),
       m_outOfTheFrame(false),
       m_externalTrackerForLost(externalTrackerForLost)
