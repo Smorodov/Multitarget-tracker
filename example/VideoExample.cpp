@@ -393,12 +393,24 @@ void VideoExample::DrawTrack(cv::Mat frame,
         cv::line(frame, ResizePoint(rectPoints[i]), ResizePoint(rectPoints[(i+1) % 4]), color);
     }
 #if 0
-    float angle = 0;//atan2(track.m_velocity[0], track.m_velocity[1]);
+#if 0
+	track_t minAreaRadiusPix = frame.rows / 20.f;
+#else
+	track_t minAreaRadiusPix = -1.f;
+#endif
+	track_t minAreaRadiusK = 0.8f;
+	cv::Size_<track_t> minRadius(minAreaRadiusPix, minAreaRadiusPix);
+	if (minAreaRadiusPix < 0)
+	{
+		minRadius.width = minAreaRadiusK * track.m_rrect.size.width;
+		minRadius.height = minAreaRadiusK * track.m_rrect.size.height;
+	}
+	float angle = 0;// atan2(track.m_velocity[0], track.m_velocity[1]);
     cv::RotatedRect rr(track.m_rrect.center,
-                       cv::Size2f(std::max(frame.rows / 20.f, static_cast<track_t>(3.f * fabs(track.m_velocity[0]))),
-                       std::max(frame.cols / 20.f, static_cast<track_t>(3.f * fabs(track.m_velocity[1])))),
+                       cv::Size2f(std::max(minRadius.width, static_cast<track_t>(3.f * fabs(track.m_velocity[0]))),
+                       std::max(minRadius.height, static_cast<track_t>(3.f * fabs(track.m_velocity[1])))),
             180.f * angle / CV_PI);
-    cv::ellipse(frame, rr, cv::Scalar(100, 100, 100), 1);
+    cv::ellipse(frame, rr, cv::Scalar(100, 0, 100), 1);
 #endif
     if (drawTrajectory)
     {
