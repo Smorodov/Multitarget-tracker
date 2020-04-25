@@ -97,7 +97,7 @@ protected:
         settings.m_dt = 0.4f;                             // Delta time for Kalman filter
         settings.m_accelNoiseMag = 0.5f;                  // Accel noise magnitude for Kalman filter
         settings.m_distThres = 0.95f;                    // Distance threshold between region and object on two frames
-        settings.m_minAreaRadius = frame.rows / 20.f;
+        settings.m_minAreaRadiusPix = frame.rows / 20.f;
 
         settings.m_useAbandonedDetection = false;
         if (settings.m_useAbandonedDetection)
@@ -213,7 +213,7 @@ protected:
         settings.m_dt = 0.3f;                                // Delta time for Kalman filter
         settings.m_accelNoiseMag = 0.1f;                     // Accel noise magnitude for Kalman filter
         settings.m_distThres = 0.8f;                         // Distance threshold between region and object on two frames
-        settings.m_minAreaRadius = frame.rows / 20.f;
+        settings.m_minAreaRadiusPix = frame.rows / 20.f;
         settings.m_maximumAllowedSkippedFrames = cvRound(m_fps / 2);   // Maximum allowed skipped frames
         settings.m_maxTraceLength = cvRound(5 * m_fps);            // Maximum trace length
 
@@ -310,7 +310,7 @@ protected:
         settings.m_dt = 0.3f;                             // Delta time for Kalman filter
         settings.m_accelNoiseMag = 0.1f;                  // Accel noise magnitude for Kalman filter
         settings.m_distThres = 0.8f;                      // Distance threshold between region and object on two frames
-        settings.m_minAreaRadius = frame.rows / 20.f;
+        settings.m_minAreaRadiusPix = frame.rows / 20.f;
         settings.m_maximumAllowedSkippedFrames = cvRound(m_fps);   // Maximum allowed skipped frames
         settings.m_maxTraceLength = cvRound(5 * m_fps);   // Maximum trace length
 
@@ -408,7 +408,7 @@ protected:
         settings.m_dt = 0.3f;                                // Delta time for Kalman filter
         settings.m_accelNoiseMag = 0.1f;                     // Accel noise magnitude for Kalman filter
         settings.m_distThres = 0.8f;                         // Distance threshold between region and object on two frames
-        settings.m_minAreaRadius = frame.rows / 20.f;
+        settings.m_minAreaRadiusPix = frame.rows / 20.f;
         settings.m_maximumAllowedSkippedFrames = cvRound(2 * m_fps); // Maximum allowed skipped frames
         settings.m_maxTraceLength = cvRound(5 * m_fps);      // Maximum trace length
 
@@ -529,7 +529,7 @@ protected:
         settings.m_dt = 0.3f;                                // Delta time for Kalman filter
         settings.m_accelNoiseMag = 0.2f;                     // Accel noise magnitude for Kalman filter
         settings.m_distThres = 0.8f;                         // Distance threshold between region and object on two frames
-        settings.m_minAreaRadius = frame.rows / 20.f;
+        settings.m_minAreaRadiusPix = frame.rows / 20.f;
         settings.m_maximumAllowedSkippedFrames = cvRound(2 * m_fps); // Maximum allowed skipped frames
         settings.m_maxTraceLength = cvRound(5 * m_fps);      // Maximum trace length
 
@@ -653,7 +653,12 @@ protected:
 		settings.m_dt = settings.m_useAcceleration ? 0.05f : 0.4f; // Delta time for Kalman filter
 		settings.m_accelNoiseMag = 0.2f;                     // Accel noise magnitude for Kalman filter
         settings.m_distThres = 0.8f;                         // Distance threshold between region and object on two frames
-        settings.m_minAreaRadius = frame.rows / 20.f;
+#if 0
+		settings.m_minAreaRadiusPix = frame.rows / 20.f;
+#else
+		settings.m_minAreaRadiusPix = -1.f;
+#endif
+		settings.m_minAreaRadiusK = 0.8f;
 		settings.m_maximumAllowedSkippedFrames = cvRound(2 * m_fps); // Maximum allowed skipped frames
 		settings.m_maxTraceLength = cvRound(5 * m_fps);      // Maximum trace length
 
@@ -805,7 +810,7 @@ protected:
 		settings.m_dt = 0.3f;                                // Delta time for Kalman filter
 		settings.m_accelNoiseMag = 0.2f;                     // Accel noise magnitude for Kalman filter
 		settings.m_distThres = 0.8f;                         // Distance threshold between region and object on two frames
-		settings.m_minAreaRadius = frame.rows / 20.f;
+		settings.m_minAreaRadiusPix = frame.rows / 20.f;
 		settings.m_maximumAllowedSkippedFrames = cvRound(2 * m_fps); // Maximum allowed skipped frames
 		settings.m_maxTraceLength = cvRound(5 * m_fps);      // Maximum trace length
 

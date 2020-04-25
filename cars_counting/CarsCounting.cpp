@@ -297,7 +297,7 @@ bool CarsCounting::InitTracker(cv::UMat frame)
     settings.m_dt = 0.3f;                           // Delta time for Kalman filter
     settings.m_accelNoiseMag = 0.2f;                // Accel noise magnitude for Kalman filter
     settings.m_distThres = 0.7f;                    // Distance threshold between region and object on two frames
-    settings.m_minAreaRadius = frame.rows / 20.f;
+    settings.m_minAreaRadiusPix = frame.rows / 20.f;
 	settings.m_maximumAllowedSkippedFrames = cvRound(2 * m_fps); // Maximum allowed skipped frames
 	settings.m_maxTraceLength = cvRound(3 * m_fps);      // Maximum trace length
 

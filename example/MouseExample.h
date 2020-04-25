@@ -55,7 +55,7 @@ void MouseTracking(cv::CommandLineParser parser)
 	settings.m_dt = 0.2f;
 	settings.m_accelNoiseMag = 0.5f;
     settings.m_distThres = 0.8f;
-    settings.m_minAreaRadius = frame.rows / 20.f;
+    settings.m_minAreaRadiusPix = frame.rows / 20.f;
 	settings.m_maximumAllowedSkippedFrames = 25;
 	settings.m_maxTraceLength = 25;
 

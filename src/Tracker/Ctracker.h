@@ -54,7 +54,13 @@ struct TrackerSettings
     /// \brief m_minAreaRadius
     /// Minimal area radius in pixels for objects centers
     ///
-    track_t m_minAreaRadius = 20.f;
+    track_t m_minAreaRadiusPix = 20.f;
+
+	///
+	/// \brief m_minAreaRadius
+	/// Minimal area radius in ration for object size.. Used if m_minAreaRadiusPix < 0
+	///
+	track_t m_minAreaRadiusK = 0.5f;
 
     ///
     /// \brief m_maximumAllowedSkippedFrames
