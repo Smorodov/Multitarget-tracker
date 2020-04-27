@@ -145,8 +145,7 @@ enum KalmanType
 enum MatchType
 {
     MatchHungrian,
-    MatchBipart,
-    muSSP
+    MatchBipart
 };
 
 ///

@@ -17,13 +17,6 @@ set(main_sources ../common/nms.h ../common/defines.h)
              HungarianAlg/HungarianAlg.cpp
              HungarianAlg/HungarianAlg.h
 
-             muSSP/Graph.cpp
-             muSSP/Node.cpp
-             muSSP/Sink.cpp
-             muSSP/Sink.h
-             muSSP/Node.h
-             muSSP/Graph.h
-
              VOTTracker.hpp
              dat/dat_tracker.cpp
              dat/dat_tracker.hpp
