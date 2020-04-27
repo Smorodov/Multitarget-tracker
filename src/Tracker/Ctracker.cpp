@@ -20,9 +20,6 @@ CTracker::CTracker(const TrackerSettings& settings)
     case tracking::MatchBipart:
         spcalc = new SPBipart(spSettings);
         break;
-    case tracking::muSSP:
-        spcalc = new SPmuSSP(spSettings);
-        break;
     }
     assert(spcalc != nullptr);
     m_SPCalculator = std::unique_ptr<ShortPathCalculator>(spcalc);
