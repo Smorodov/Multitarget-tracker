@@ -1,3 +1,4 @@
+#include <fstream>
 #include "YoloDarknetDetector.h"
 #include "nms.h"
 
