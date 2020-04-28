@@ -1,6 +1,7 @@
 #pragma once
 #include "defines.h"
 #include <memory>
+#include <deque>
 
 #include <opencv2/opencv.hpp>
 

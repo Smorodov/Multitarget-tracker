@@ -121,7 +121,7 @@ track_t CTrack::CalcDistHist(const CRegion& reg, cv::UMat currFrame) const
 	}
 	if (!reg.m_hist.empty() && !m_lastRegion.m_hist.empty())
 	{
-#if (((CV_VERSION_MAJOR == 4) && (CV_VERSION_MINOR < 2)) || (CV_VERSION_MAJOR == 3))
+#if (((CV_VERSION_MAJOR == 4) && (CV_VERSION_MINOR < 1)) || (CV_VERSION_MAJOR == 3))
 		res = static_cast<track_t>(cv::compareHist(reg.m_hist, m_lastRegion.m_hist, CV_COMP_BHATTACHARYYA));
 		//res = 1.f - static_cast<track_t>(cv::compareHist(reg.m_hist, m_lastRegion.m_hist, CV_COMP_CORREL));
 #else
@@ -213,53 +213,55 @@ bool CTrack::IsOutOfTheFrame() const
 /// \param pt
 /// \return
 ///
-track_t CTrack::IsInsideArea(const Point_t& pt, cv::Size_<track_t> minRadius) const
+track_t CTrack::IsInsideArea(const Point_t& pt, cv::Size_<track_t> minRadius, bool fastAndRoughly) const
 {
-#if 0
+	track_t res = 1;
+
 	auto velocity = m_kalman.GetVelocity();
-    velocity[0] = std::max(minRadius.width, 3 * velocity[0]);
-    velocity[1] = std::max(minRadius.height, 3 * velocity[1]);
-	track_t res = sqr(pt.x - m_predictionPoint.x) / sqr(velocity[0]) + sqr(pt.y - m_predictionPoint.y) / sqr(velocity[1]);
-    return res;
-#else
-	// Move ellipse to velocity
-	auto velocity = m_kalman.GetVelocity();
-	Point_t d(3.f * velocity[0], 3.f * velocity[1]);
-	cv::Size_<track_t> els(std::max(minRadius.width, fabs(d.x)), std::max(minRadius.height, fabs(d.y)));
-	Point_t p1 = m_predictionPoint;
-	Point_t p2(p1.x + d.x, p1.y + d.y);
-	float angle = 0;
-	Point_t nc = p1;
-	Point_t p2_(p2.x - p1.x, p2.y - p1.y);
-	if (fabs(p2_.x - p2_.y) > 5) // pix
+	velocity[0] = std::max(minRadius.width, 3 * velocity[0]);
+	velocity[1] = std::max(minRadius.height, 3 * velocity[1]);
+	if (fastAndRoughly)
 	{
-		if (fabs(p2_.x) > 0.0001f)
-		{
-			track_t l = std::min(els.width, els.height) / 2;
-
-			track_t p2_l = sqrtf(sqr(p2_.x) + sqr(p2_.y));
-			nc.x = l * p2_.x / p2_l + p1.x;
-			nc.y = l * p2_.y / p2_l + p1.y;
-
-			angle = atanf(p2_.y / p2_.x);
-		}
-		else
-		{
-			nc.y += d.y / 2;
-			angle = CV_PI / 2.f;
-		}
+		res = sqr(pt.x - m_predictionPoint.x) / sqr(velocity[0]) + sqr(pt.y - m_predictionPoint.y) / sqr(velocity[1]);
 	}
+	else
+	{
+		// Move ellipse to velocity
+		cv::Size_<track_t> els(std::max(minRadius.width, fabs(velocity[0])), std::max(minRadius.height, fabs(velocity[1])));
+		Point_t p1 = m_predictionPoint;
+		Point_t p2(p1.x + velocity[0], p1.y + velocity[1]);
+		float angle = 0;
+		Point_t nc = p1;
+		Point_t p2_(p2.x - p1.x, p2.y - p1.y);
+		if (fabs(p2_.x - p2_.y) > 5) // pix
+		{
+			if (fabs(p2_.x) > 0.0001f)
+			{
+				track_t l = std::min(els.width, els.height) / 3;
 
-	// Shifted ellipse
-	Point_t pt_(pt.x - nc.x, pt.y - nc.y);
-	track_t r = sqrtf(sqr(pt_.x) + sqr(pt_.y));
-	track_t t = (r > 1) ? acosf(pt_.x / r) : 0;
-	track_t t_ = t - angle;
-	Point_t pt_rotated(r * cosf(t_), r * sinf(t_));
+				track_t p2_l = sqrtf(sqr(p2_.x) + sqr(p2_.y));
+				nc.x = l * p2_.x / p2_l + p1.x;
+				nc.y = l * p2_.y / p2_l + p1.y;
 
-	track_t res = sqr(pt_rotated.x) / sqr(els.width) + sqr(pt_rotated.y) / sqr(els.height);
+				angle = atanf(p2_.y / p2_.x);
+			}
+			else
+			{
+				nc.y += velocity[1] / 3;
+				angle = CV_PI / 2.f;
+			}
+		}
+
+		// Shifted ellipse
+		Point_t pt_(pt.x - nc.x, pt.y - nc.y);
+		track_t r = sqrtf(sqr(pt_.x) + sqr(pt_.y));
+		track_t t = (r > 1) ? acosf(pt_.x / r) : 0;
+		track_t t_ = t - angle;
+		Point_t pt_rotated(r * cosf(t_), r * sinf(t_));
+
+		res = sqr(pt_rotated.x) / sqr(els.width) + sqr(pt_rotated.y) / sqr(els.height);
+	}
 	return res;
-#endif
 }
 
 ///
@@ -654,12 +656,15 @@ void CTrack::RectUpdate(
     cv::Rect brect = m_predictionRect.boundingRect();
     int dx = Clamp(brect.x, brect.width, currFrame.cols);
     int dy = Clamp(brect.y, brect.height, currFrame.rows);
+#if 0
     m_predictionRect.center.x += dx;
     m_predictionRect.center.y += dy;
-
+#endif
     m_outOfTheFrame = (dx != 0) || (dy != 0);
 
     m_predictionPoint = m_predictionRect.center;
+
+	//std::cout << "brect = " << brect << ", dx = " << dx << ", dy = " << dy << ", m_outOfTheFrame = " << m_outOfTheFrame << ", m_predictionPoint = " << m_predictionPoint << std::endl;
 }
 
 ///
@@ -903,7 +908,6 @@ void CTrack::PointUpdate(
         }
         return false;
     };
-    m_outOfTheFrame = false;
-    m_outOfTheFrame |= Clamp(m_predictionPoint.x, frameSize.width);
-    m_outOfTheFrame |= Clamp(m_predictionPoint.y, frameSize.height);
+	auto p = m_predictionPoint;
+    m_outOfTheFrame = Clamp(p.x, frameSize.width) | Clamp(p.y, frameSize.height);
 }

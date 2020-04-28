@@ -181,7 +181,7 @@ void CTracker::CreateDistaceMatrix(const regions_t& regions, distMatrix_t& costM
 						minRadius.width = m_settings.m_minAreaRadiusK * regions[j].m_rrect.size.width;
 						minRadius.height = m_settings.m_minAreaRadiusK * regions[j].m_rrect.size.height;
 					}
-                    track_t ellipseDist = track->IsInsideArea(regions[j].m_rrect.center, minRadius);
+                    track_t ellipseDist = track->IsInsideArea(regions[j].m_rrect.center, minRadius, false);
                     if (ellipseDist > 1)
                         dist += m_settings.m_distType[ind];
                     else
@@ -200,7 +200,7 @@ void CTracker::CreateDistaceMatrix(const regions_t& regions, distMatrix_t& costM
 						minRadius.width = m_settings.m_minAreaRadiusK * regions[j].m_rrect.size.width;
 						minRadius.height = m_settings.m_minAreaRadiusK * regions[j].m_rrect.size.height;
 					}
-                    track_t ellipseDist = track->IsInsideArea(regions[j].m_rrect.center, minRadius);
+                    track_t ellipseDist = track->IsInsideArea(regions[j].m_rrect.center, minRadius, false);
 					ellipseDist = (ellipseDist > 1) ? 0 : (1 - ellipseDist);
 
                     track_t dw = track->WidthDist(regions[j]);
