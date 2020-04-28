@@ -417,7 +417,7 @@ void VideoExample::DrawTrack(cv::Mat frame,
 	{
 		if (fabs(p2_.x) > 0.0001f)
 		{
-			track_t l = std::min(els.width, els.height) / 2;
+			track_t l = std::min(els.width, els.height) / 3;
 
 			track_t p2_l = sqrt(sqr(p2_.x) + sqr(p2_.y));
 			nc.x = l * p2_.x / p2_l + p1.x;
@@ -427,7 +427,7 @@ void VideoExample::DrawTrack(cv::Mat frame,
 		}
 		else
 		{
-			nc.y += d.y / 2;
+			nc.y += d.y / 3;
 			angle = CV_PI / 2.f;
 		}
 	}

@@ -273,7 +273,7 @@ public:
     /// \param minVal
     /// \return
     ///
-    track_t IsInsideArea(const Point_t& pt, cv::Size_<track_t> minRadius) const;
+    track_t IsInsideArea(const Point_t& pt, cv::Size_<track_t> minRadius, bool fastAndRoughly) const;
     track_t WidthDist(const CRegion& reg) const;
     track_t HeightDist(const CRegion& reg) const;
 
