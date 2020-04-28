@@ -215,11 +215,51 @@ bool CTrack::IsOutOfTheFrame() const
 ///
 track_t CTrack::IsInsideArea(const Point_t& pt, cv::Size_<track_t> minRadius) const
 {
+#if 0
 	auto velocity = m_kalman.GetVelocity();
     velocity[0] = std::max(minRadius.width, 3 * velocity[0]);
     velocity[1] = std::max(minRadius.height, 3 * velocity[1]);
 	track_t res = sqr(pt.x - m_predictionPoint.x) / sqr(velocity[0]) + sqr(pt.y - m_predictionPoint.y) / sqr(velocity[1]);
     return res;
+#else
+	// Move ellipse to velocity
+	auto velocity = m_kalman.GetVelocity();
+	Point_t d(3.f * velocity[0], 3.f * velocity[1]);
+	cv::Size_<track_t> els(std::max(minRadius.width, fabs(d.x)), std::max(minRadius.height, fabs(d.y)));
+	Point_t p1 = m_predictionPoint;
+	Point_t p2(p1.x + d.x, p1.y + d.y);
+	float angle = 0;
+	Point_t nc = p1;
+	Point_t p2_(p2.x - p1.x, p2.y - p1.y);
+	if (fabs(p2_.x - p2_.y) > 5) // pix
+	{
+		if (fabs(p2_.x) > 0.0001f)
+		{
+			track_t l = std::min(els.width, els.height) / 2;
+
+			track_t p2_l = sqrtf(sqr(p2_.x) + sqr(p2_.y));
+			nc.x = l * p2_.x / p2_l + p1.x;
+			nc.y = l * p2_.y / p2_l + p1.y;
+
+			angle = atanf(p2_.y / p2_.x);
+		}
+		else
+		{
+			nc.y += d.y / 2;
+			angle = CV_PI / 2.f;
+		}
+	}
+
+	// Shifted ellipse
+	Point_t pt_(pt.x - nc.x, pt.y - nc.y);
+	track_t r = sqrtf(sqr(pt_.x) + sqr(pt_.y));
+	track_t t = (r > 1) ? acosf(pt_.x / r) : 0;
+	track_t t_ = t - angle;
+	Point_t pt_rotated(r * cosf(t_), r * sinf(t_));
+
+	track_t res = sqr(pt_rotated.x) / sqr(els.width) + sqr(pt_rotated.y) / sqr(els.height);
+	return res;
+#endif
 }
 
 ///
@@ -230,9 +270,9 @@ track_t CTrack::IsInsideArea(const Point_t& pt, cv::Size_<track_t> minRadius) co
 track_t CTrack::WidthDist(const CRegion& reg) const
 {
     if (m_lastRegion.m_rrect.size.width < reg.m_rrect.size.width)
-        return 1.f - m_lastRegion.m_rrect.size.width / reg.m_rrect.size.width;
+        return m_lastRegion.m_rrect.size.width / reg.m_rrect.size.width;
     else
-        return 1.f - reg.m_rrect.size.width / m_lastRegion.m_rrect.size.width;
+        return reg.m_rrect.size.width / m_lastRegion.m_rrect.size.width;
 }
 
 ///
@@ -243,9 +283,9 @@ track_t CTrack::WidthDist(const CRegion& reg) const
 track_t CTrack::HeightDist(const CRegion& reg) const
 {
     if (m_lastRegion.m_rrect.size.height < reg.m_rrect.size.height)
-        return 1.f - m_lastRegion.m_rrect.size.height / reg.m_rrect.size.height;
+        return m_lastRegion.m_rrect.size.height / reg.m_rrect.size.height;
     else
-        return 1.f - reg.m_rrect.size.height / m_lastRegion.m_rrect.size.height;
+        return reg.m_rrect.size.height / m_lastRegion.m_rrect.size.height;
 }
 
 ///
