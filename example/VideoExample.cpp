@@ -398,18 +398,41 @@ void VideoExample::DrawTrack(cv::Mat frame,
 #else
 	track_t minAreaRadiusPix = -1.f;
 #endif
-	track_t minAreaRadiusK = 0.8f;
+	track_t minAreaRadiusK = 0.5f;
 	cv::Size_<track_t> minRadius(minAreaRadiusPix, minAreaRadiusPix);
 	if (minAreaRadiusPix < 0)
 	{
 		minRadius.width = minAreaRadiusK * track.m_rrect.size.width;
 		minRadius.height = minAreaRadiusK * track.m_rrect.size.height;
 	}
-	float angle = 0;// atan2(track.m_velocity[0], track.m_velocity[1]);
-    cv::RotatedRect rr(track.m_rrect.center,
-                       cv::Size2f(std::max(minRadius.width, static_cast<track_t>(3.f * fabs(track.m_velocity[0]))),
-                       std::max(minRadius.height, static_cast<track_t>(3.f * fabs(track.m_velocity[1])))),
-            180.f * angle / CV_PI);
+
+	Point_t d(3.f * track.m_velocity[0], 3.f * track.m_velocity[1]);
+	cv::Size2f els(std::max(minRadius.width, fabs(d.x)), std::max(minRadius.height, fabs(d.y)));
+	Point_t p1 = track.m_rrect.center;
+	Point_t p2(p1.x + d.x, p1.y + d.y);
+	float angle = 0;
+	Point_t nc = p1;
+	Point_t p2_(p2.x - p1.x, p2.y - p1.y);
+	if (fabs(p2_.x - p2_.y) > 5) // pix
+	{
+		if (fabs(p2_.x) > 0.0001f)
+		{
+			track_t l = std::min(els.width, els.height) / 2;
+
+			track_t p2_l = sqrt(sqr(p2_.x) + sqr(p2_.y));
+			nc.x = l * p2_.x / p2_l + p1.x;
+			nc.y = l * p2_.y / p2_l + p1.y;
+
+			angle = atan(p2_.y / p2_.x);
+		}
+		else
+		{
+			nc.y += d.y / 2;
+			angle = CV_PI / 2.f;
+		}
+	}
+
+	cv::RotatedRect rr(nc, els, 180.f * angle / CV_PI);
     cv::ellipse(frame, rr, cv::Scalar(100, 0, 100), 1);
 #endif
     if (drawTrajectory)
