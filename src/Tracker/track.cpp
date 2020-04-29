@@ -208,60 +208,50 @@ bool CTrack::IsOutOfTheFrame() const
 }
 
 ///
+cv::RotatedRect CTrack::CalcPredictionEllipse(cv::Size_<track_t> minRadius) const
+{
+	// Move ellipse to velocity
+	auto velocity = m_kalman.GetVelocity();
+	Point_t d(3.f * velocity[0], 3.f * velocity[1]);
+	
+	cv::RotatedRect rrect(m_predictionPoint, cv::Size2f(std::max(minRadius.width, fabs(d.x)), std::max(minRadius.height, fabs(d.y))), 0);
+
+	if (fabs(d.x) + fabs(d.y) > 4) // pix
+	{
+		if (fabs(d.x) > 0.0001f)
+		{
+			track_t l = std::min(rrect.size.width, rrect.size.height) / 3;
+
+			track_t p2_l = sqrtf(sqr(d.x) + sqr(d.y));
+			rrect.center.x = l * d.x / p2_l + m_predictionPoint.x;
+			rrect.center.y = l * d.y / p2_l + m_predictionPoint.y;
+
+			rrect.angle = atanf(d.y / d.x);
+		}
+		else
+		{
+			rrect.center.y += d.y / 3;
+			rrect.angle = CV_PI / 2.f;
+		}
+	}
+	return rrect;
+}
+
+///
 /// \brief CTrack::IsInsideArea
 ///        If result <= 1 then center of the object is inside ellipse with prediction and velocity
 /// \param pt
 /// \return
 ///
-track_t CTrack::IsInsideArea(const Point_t& pt, cv::Size_<track_t> minRadius, bool fastAndRoughly) const
+track_t CTrack::IsInsideArea(const Point_t& pt, const cv::RotatedRect& rrect) const
 {
-	track_t res = 1;
+	Point_t pt_(pt.x - rrect.center.x, pt.y - rrect.center.y);
+	track_t r = sqrtf(sqr(pt_.x) + sqr(pt_.y));
+	track_t t = (r > 1) ? acosf(pt_.x / r) : 0;
+	track_t t_ = t - rrect.angle;
+	Point_t pt_rotated(r * cosf(t_), r * sinf(t_));
 
-	auto velocity = m_kalman.GetVelocity();
-	velocity[0] = std::max(minRadius.width, 3 * velocity[0]);
-	velocity[1] = std::max(minRadius.height, 3 * velocity[1]);
-	if (fastAndRoughly)
-	{
-		res = sqr(pt.x - m_predictionPoint.x) / sqr(velocity[0]) + sqr(pt.y - m_predictionPoint.y) / sqr(velocity[1]);
-	}
-	else
-	{
-		// Move ellipse to velocity
-		cv::Size_<track_t> els(std::max(minRadius.width, fabs(velocity[0])), std::max(minRadius.height, fabs(velocity[1])));
-		Point_t p1 = m_predictionPoint;
-		Point_t p2(p1.x + velocity[0], p1.y + velocity[1]);
-		float angle = 0;
-		Point_t nc = p1;
-		Point_t p2_(p2.x - p1.x, p2.y - p1.y);
-		if (fabs(p2_.x - p2_.y) > 5) // pix
-		{
-			if (fabs(p2_.x) > 0.0001f)
-			{
-				track_t l = std::min(els.width, els.height) / 3;
-
-				track_t p2_l = sqrtf(sqr(p2_.x) + sqr(p2_.y));
-				nc.x = l * p2_.x / p2_l + p1.x;
-				nc.y = l * p2_.y / p2_l + p1.y;
-
-				angle = atanf(p2_.y / p2_.x);
-			}
-			else
-			{
-				nc.y += velocity[1] / 3;
-				angle = CV_PI / 2.f;
-			}
-		}
-
-		// Shifted ellipse
-		Point_t pt_(pt.x - nc.x, pt.y - nc.y);
-		track_t r = sqrtf(sqr(pt_.x) + sqr(pt_.y));
-		track_t t = (r > 1) ? acosf(pt_.x / r) : 0;
-		track_t t_ = t - angle;
-		Point_t pt_rotated(r * cosf(t_), r * sinf(t_));
-
-		res = sqr(pt_rotated.x) / sqr(els.width) + sqr(pt_rotated.y) / sqr(els.height);
-	}
-	return res;
+	return sqr(pt_rotated.x) / sqr(rrect.size.width) + sqr(pt_rotated.y) / sqr(rrect.size.height);
 }
 
 ///

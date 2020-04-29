@@ -266,14 +266,15 @@ public:
 	///
 	track_t CalcDistHist(const CRegion& reg, cv::UMat currFrame) const;
 
-    ///
-    /// \brief IsInsideArea
-    /// Test point inside in prediction area: prediction area + object velocity
-    /// \param pt
-    /// \param minVal
-    /// \return
-    ///
-    track_t IsInsideArea(const Point_t& pt, cv::Size_<track_t> minRadius, bool fastAndRoughly) const;
+	cv::RotatedRect CalcPredictionEllipse(cv::Size_<track_t> minRadius) const;
+	///
+	/// \brief IsInsideArea
+	/// Test point inside in prediction area: prediction area + object velocity
+	/// \param pt
+	/// \param minVal
+	/// \return
+	///
+	track_t IsInsideArea(const Point_t& pt, const cv::RotatedRect& rrect) const;
     track_t WidthDist(const CRegion& reg) const;
     track_t HeightDist(const CRegion& reg) const;
 
