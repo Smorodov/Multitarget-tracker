@@ -27,7 +27,7 @@ float *get_regression_values(char **labels, int n)
     return v;
 }
 
-void train_classifier(char *datacfg, char *cfgfile, char *weightfile, int *gpus, int ngpus, int clear, int dontuse_opencv, int dont_show, int mjpeg_port, int calc_topk, int show_imgs)
+void train_classifier(char *datacfg, char *cfgfile, char *weightfile, int *gpus, int ngpus, int clear, int dontuse_opencv, int dont_show, int mjpeg_port, int calc_topk, int show_imgs, char* chart_path)
 {
     int i;
 
@@ -48,7 +48,10 @@ void train_classifier(char *datacfg, char *cfgfile, char *weightfile, int *gpus,
         if(weightfile){
             load_weights(&nets[i], weightfile);
         }
-        if(clear) *nets[i].seen = 0;
+        if (clear) {
+            *nets[i].seen = 0;
+            *nets[i].cur_iteration = 0;
+        }
         nets[i].learning_rate *= ngpus;
     }
     srand(time(0));
@@ -66,6 +69,11 @@ void train_classifier(char *datacfg, char *cfgfile, char *weightfile, int *gpus,
     int topk_data = option_find_int(options, "top", 5);
     char topk_buff[10];
     sprintf(topk_buff, "top%d", topk_data);
+    if (classes != net.layers[net.n - 1].inputs) {
+        printf("\n Error: num of filters = %d in the last conv-layer in cfg-file doesn't match to classes = %d in data-file \n",
+            net.layers[net.n - 1].inputs, classes);
+        getchar();
+    }
 
     char **labels = get_labels(label_list);
     list *plist = get_paths(train_list);
@@ -112,8 +120,8 @@ void train_classifier(char *datacfg, char *cfgfile, char *weightfile, int *gpus,
     int number_of_lines = 100;
     int img_size = 1000;
     char windows_name[100];
-    sprintf(windows_name, "average loss (id:%d)", random_gen());
-    if (!dontuse_opencv) img = draw_train_chart(windows_name, max_img_loss, net.max_batches, number_of_lines, img_size, dont_show);
+    sprintf(windows_name, "chart_%s.png", base);
+    if (!dontuse_opencv) img = draw_train_chart(windows_name, max_img_loss, net.max_batches, number_of_lines, img_size, dont_show, chart_path);
 #endif  //OPENCV
 
     data train;
@@ -126,6 +134,10 @@ void train_classifier(char *datacfg, char *cfgfile, char *weightfile, int *gpus,
     int iter_save_last = get_current_batch(net);
     int iter_topk = get_current_batch(net);
     float topk = 0;
+
+    int count = 0;
+    double start, time_remaining, avg_time = -1, alpha_time = 0.01;
+    start = what_time_is_it_now();
 
     while(get_current_batch(net) < net.max_batches || net.max_batches == 0){
         time=clock();
@@ -157,8 +169,8 @@ void train_classifier(char *datacfg, char *cfgfile, char *weightfile, int *gpus,
         calc_topk_for_each = fmax(calc_topk_for_each, 100);
         if (i % 10 == 0) {
             if (calc_topk) {
-                fprintf(stderr, "\n (next TOP5 calculation at %d iterations) ", calc_topk_for_each);
-                if (topk > 0) fprintf(stderr, " Last accuracy TOP5 = %2.2f %% \n", topk * 100);
+                fprintf(stderr, "\n (next TOP%d calculation at %d iterations) ", topk_data, calc_topk_for_each);
+                if (topk > 0) fprintf(stderr, " Last accuracy TOP%d = %2.2f %% \n", topk_data, topk * 100);
             }
 
             if (net.cudnn_half) {
@@ -170,14 +182,19 @@ void train_classifier(char *datacfg, char *cfgfile, char *weightfile, int *gpus,
         int draw_precision = 0;
         if (calc_topk && (i >= calc_topk_for_each || i == net.max_batches)) {
             iter_topk = i;
-            topk = validate_classifier_single(datacfg, cfgfile, weightfile, &net, topk_data); // calc TOP5
+            topk = validate_classifier_single(datacfg, cfgfile, weightfile, &net, topk_data); // calc TOP-n
             printf("\n accuracy %s = %f \n", topk_buff, topk);
             draw_precision = 1;
         }
 
-        printf("%d, %.3f: %f, %f avg, %f rate, %lf seconds, %ld images\n", get_current_batch(net), (float)(*net.seen)/ train_images_num, loss, avg_loss, get_current_rate(net), sec(clock()-time), *net.seen);
+        time_remaining = (net.max_batches - i)*(what_time_is_it_now() - start) / 60 / 60;
+        // set initial value, even if resume training from 10000 iteration
+        if (avg_time < 0) avg_time = time_remaining;
+        else avg_time = alpha_time * time_remaining + (1 -  alpha_time) * avg_time;
+        start = what_time_is_it_now();
+        printf("%d, %.3f: %f, %f avg, %f rate, %lf seconds, %ld images, %f hours left\n", get_current_batch(net), (float)(*net.seen)/ train_images_num, loss, avg_loss, get_current_rate(net), sec(clock()-time), *net.seen, avg_time);
 #ifdef OPENCV
-        if (!dontuse_opencv) draw_train_loss(windows_name, img, img_size, avg_loss, max_img_loss, i, net.max_batches, topk, draw_precision, topk_buff, dont_show, mjpeg_port);
+        if (!dontuse_opencv) draw_train_loss(windows_name, img, img_size, avg_loss, max_img_loss, i, net.max_batches, topk, draw_precision, topk_buff, dont_show, mjpeg_port, avg_time);
 #endif  // OPENCV
 
         if (i >= (iter_save + 1000)) {
@@ -748,13 +765,14 @@ void try_classifier(char *datacfg, char *cfgfile, char *weightfile, char *filena
         float *predictions = network_predict(net, X);
 
         layer l = net.layers[layer_num];
-        for(int i = 0; i < l.c; ++i){
+        int i;
+        for(i = 0; i < l.c; ++i){
             if(l.rolling_mean) printf("%f %f %f\n", l.rolling_mean[i], l.rolling_variance[i], l.scales[i]);
         }
 #ifdef GPU
         cuda_pull_array(l.output_gpu, l.output, l.outputs);
 #endif
-        for(int i = 0; i < l.outputs; ++i){
+        for(i = 0; i < l.outputs; ++i){
             printf("%f\n", l.output[i]);
         }
         /*
@@ -772,7 +790,7 @@ void try_classifier(char *datacfg, char *cfgfile, char *weightfile, char *filena
 
         top_predictions(net, top, indexes);
         printf("%s: Predicted in %f seconds.\n", input, sec(clock()-time));
-        for(int i = 0; i < top; ++i){
+        for(i = 0; i < top; ++i){
             int index = indexes[i];
             printf("%s: %f\n", names[index], predictions[index]);
         }
@@ -800,6 +818,11 @@ void predict_classifier(char *datacfg, char *cfgfile, char *weightfile, char *fi
     if(!name_list) name_list = option_find_str(options, "labels", "data/labels.list");
     int classes = option_find_int(options, "classes", 2);
     printf(" classes = %d, output in cfg = %d \n", classes, net.layers[net.n - 1].c);
+    if (classes != net.layers[net.n - 1].inputs) {
+        printf("\n Error: num of filters = %d in the last conv-layer in cfg-file doesn't match to classes = %d in data-file \n",
+            net.layers[net.n - 1].inputs, classes);
+        getchar();
+    }
     if (top == 0) top = option_find_int(options, "top", 1);
     if (top > classes) top = classes;
 
@@ -1349,9 +1372,10 @@ void run_classifier(int argc, char **argv)
     char *filename = (argc > 6) ? argv[6]: 0;
     char *layer_s = (argc > 7) ? argv[7]: 0;
     int layer = layer_s ? atoi(layer_s) : -1;
+    char* chart_path = find_char_arg(argc, argv, "-chart", 0);
     if(0==strcmp(argv[2], "predict")) predict_classifier(data, cfg, weights, filename, top);
     else if(0==strcmp(argv[2], "try")) try_classifier(data, cfg, weights, filename, atoi(layer_s));
-    else if(0==strcmp(argv[2], "train")) train_classifier(data, cfg, weights, gpus, ngpus, clear, dontuse_opencv, dont_show, mjpeg_port, calc_topk, show_imgs);
+    else if(0==strcmp(argv[2], "train")) train_classifier(data, cfg, weights, gpus, ngpus, clear, dontuse_opencv, dont_show, mjpeg_port, calc_topk, show_imgs, chart_path);
     else if(0==strcmp(argv[2], "demo")) demo_classifier(data, cfg, weights, cam_index, filename, benchmark, benchmark_layers);
     else if(0==strcmp(argv[2], "gun")) gun_classifier(data, cfg, weights, cam_index, filename);
     else if(0==strcmp(argv[2], "threat")) threat_classifier(data, cfg, weights, cam_index, filename);

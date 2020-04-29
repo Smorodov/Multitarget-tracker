@@ -55,7 +55,9 @@ void free_layer_custom(layer l, int keep_cudnn_desc)
     if (l.type == DROPOUT) {
         if (l.rand)           free(l.rand);
 #ifdef GPU
-        if (l.rand_gpu)             cuda_free(l.rand_gpu);
+        if (l.rand_gpu)              cuda_free(l.rand_gpu);
+        if (l.drop_blocks_scale)     cuda_free_host(l.drop_blocks_scale);
+        if (l.drop_blocks_scale_gpu) cuda_free(l.drop_blocks_scale_gpu);
 #endif
         return;
     }
@@ -158,6 +160,8 @@ void free_layer_custom(layer l, int keep_cudnn_desc)
     if (l.binary_weights_gpu)      cuda_free(l.binary_weights_gpu);
     if (l.mean_gpu)                cuda_free(l.mean_gpu), l.mean_gpu = NULL;
     if (l.variance_gpu)            cuda_free(l.variance_gpu), l.variance_gpu = NULL;
+    if (l.m_cbn_avg_gpu)           cuda_free(l.m_cbn_avg_gpu), l.m_cbn_avg_gpu = NULL;
+    if (l.v_cbn_avg_gpu)           cuda_free(l.v_cbn_avg_gpu), l.v_cbn_avg_gpu = NULL;
     if (l.rolling_mean_gpu)        cuda_free(l.rolling_mean_gpu), l.rolling_mean_gpu = NULL;
     if (l.rolling_variance_gpu)    cuda_free(l.rolling_variance_gpu), l.rolling_variance_gpu = NULL;
     if (l.variance_delta_gpu)      cuda_free(l.variance_delta_gpu), l.variance_delta_gpu = NULL;

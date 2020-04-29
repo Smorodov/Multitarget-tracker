@@ -3,10 +3,13 @@
 #include "image.h"
 #include "dark_cuda.h"
 #include "box.h"
+#include "http_stream.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+extern int check_mistakes;
 
 #define NUMCHARS 37
 
@@ -178,7 +181,6 @@ matrix load_image_augment_paths(char **paths, int n, int use_flip, int min, int 
     return X;
 }
 
-extern int check_mistakes;
 
 box_label *read_boxes(char *filename, int *n)
 {
@@ -192,7 +194,10 @@ box_label *read_boxes(char *filename, int *n)
         char *new_line = "\n";
         fwrite(new_line, sizeof(char), strlen(new_line), fw);
         fclose(fw);
-        if (check_mistakes) getchar();
+        if (check_mistakes) {
+            printf("\n Error in read_boxes() \n");
+            getchar();
+        }
 
         *n = 0;
         return boxes;
@@ -386,7 +391,7 @@ int fill_truth_detection(const char *path, int num_boxes, float *truth, int clas
             printf("\n Wrong annotation: class_id = %d. But class_id should be [from 0 to %d], file: %s \n", id, (classes-1), labelpath);
             sprintf(buff, "echo %s \"Wrong annotation: class_id = %d. But class_id should be [from 0 to %d]\" >> bad_label.list", labelpath, id, (classes-1));
             system(buff);
-            getchar();
+            if (check_mistakes) getchar();
             ++sub;
             continue;
         }
@@ -941,13 +946,16 @@ void blend_truth_mosaic(float *new_truth, int boxes, float *old_truth, int w, in
 
 #include "http_stream.h"
 
-data load_data_detection(int n, char **paths, int m, int w, int h, int c, int boxes, int classes, int use_flip, int use_blur, int use_mixup,
+data load_data_detection(int n, char **paths, int m, int w, int h, int c, int boxes, int classes, int use_flip, int use_gaussian_noise, int use_blur, int use_mixup,
     float jitter, float hue, float saturation, float exposure, int mini_batch, int track, int augment_speed, int letter_box, int show_imgs)
 {
     const int random_index = random_gen();
     c = c ? c : 3;
 
-    assert(use_mixup != 2);
+    if (use_mixup == 2) {
+        printf("\n cutmix=1 - isn't supported for Detector \n");
+        exit(0);
+    }
     if (use_mixup == 3 && letter_box) {
         printf("\n Combination: letter_box=1 & mosaic=1 - isn't supported, use only 1 of these parameters \n");
         exit(0);
@@ -975,7 +983,7 @@ data load_data_detection(int n, char **paths, int m, int w, int h, int c, int bo
 
     float r1 = 0, r2 = 0, r3 = 0, r4 = 0, r_scale = 0;
     float dhue = 0, dsat = 0, dexp = 0, flip = 0, blur = 0;
-    int augmentation_calculated = 0;
+    int augmentation_calculated = 0, gaussian_noise = 0;
 
     d.y = make_matrix(n, 5*boxes);
     int i_mixup = 0;
@@ -994,7 +1002,10 @@ data load_data_detection(int n, char **paths, int m, int w, int h, int c, int bo
             mat_cv *src;
             src = load_image_mat_cv(filename, flag);
             if (src == NULL) {
-                if (check_mistakes) getchar();
+                if (check_mistakes) {
+                    printf("\n Error in load_data_detection() - OpenCV \n");
+                    getchar();
+                }
                 continue;
             }
 
@@ -1026,6 +1037,9 @@ data load_data_detection(int n, char **paths, int m, int w, int h, int c, int bo
                     else if (tmp_blur == 1) blur = 1;
                     else blur = use_blur;
                 }
+
+                if (use_gaussian_noise && rand_int(0, 1) == 1) gaussian_noise = use_gaussian_noise;
+                else gaussian_noise = 0;
             }
 
             int pleft = rand_precalc_random(-dw, dw, r1);
@@ -1075,7 +1089,7 @@ data load_data_detection(int n, char **paths, int m, int w, int h, int c, int bo
             if ((min_w_h / 8) < blur && blur > 1) blur = min_w_h / 8;   // disable blur if one of the objects is too small
 
             image ai = image_data_augmentation(src, w, h, pleft, ptop, swidth, sheight, flip, dhue, dsat, dexp,
-                blur, boxes, truth);
+                gaussian_noise, blur, boxes, truth);
 
             if (use_mixup == 0) {
                 d.X.vals[i] = ai.data;
@@ -1195,7 +1209,7 @@ void blend_images(image new_img, float alpha, image old_img, float beta)
         new_img.data[i] = new_img.data[i] * alpha + old_img.data[i] * beta;
 }
 
-data load_data_detection(int n, char **paths, int m, int w, int h, int c, int boxes, int classes, int use_flip, int use_blur, int use_mixup, float jitter,
+data load_data_detection(int n, char **paths, int m, int w, int h, int c, int boxes, int classes, int use_flip, int gaussian_noise, int use_blur, int use_mixup, float jitter,
     float hue, float saturation, float exposure, int mini_batch, int track, int augment_speed, int letter_box, int show_imgs)
 {
     const int random_index = random_gen();
@@ -1205,7 +1219,15 @@ data load_data_detection(int n, char **paths, int m, int w, int h, int c, int bo
     if(track) random_paths = get_sequential_paths(paths, n, m, mini_batch, augment_speed);
     else random_paths = get_random_paths(paths, n, m);
 
-    assert(use_mixup < 2);
+    //assert(use_mixup < 2);
+    if (use_mixup == 2) {
+        printf("\n cutmix=1 - isn't supported for Detector \n");
+        exit(0);
+    }
+    if (use_mixup == 3) {
+        printf("\n mosaic=1 - compile Darknet with OpenCV for using mosaic=1 \n");
+        exit(0);
+    }
     int mixup = use_mixup ? random_gen() % 2 : 0;
     //printf("\n mixup = %d \n", mixup);
     if (mixup) {
@@ -1377,7 +1399,7 @@ void *load_thread(void *ptr)
     } else if (a.type == REGION_DATA){
         *a.d = load_data_region(a.n, a.paths, a.m, a.w, a.h, a.num_boxes, a.classes, a.jitter, a.hue, a.saturation, a.exposure);
     } else if (a.type == DETECTION_DATA){
-        *a.d = load_data_detection(a.n, a.paths, a.m, a.w, a.h, a.c, a.num_boxes, a.classes, a.flip, a.blur, a.mixup, a.jitter,
+        *a.d = load_data_detection(a.n, a.paths, a.m, a.w, a.h, a.c, a.num_boxes, a.classes, a.flip, a.gaussian_noise, a.blur, a.mixup, a.jitter,
             a.hue, a.saturation, a.exposure, a.mini_batch, a.track, a.augment_speed, a.letter_box, a.show_imgs);
     } else if (a.type == SWAG_DATA){
         *a.d = load_data_swag(a.paths, a.n, a.classes, a.jitter);
@@ -1405,6 +1427,40 @@ pthread_t load_data_in_thread(load_args args)
     return thread;
 }
 
+static const int thread_wait_ms = 5;
+static volatile int flag_exit;
+static volatile int * run_load_data = NULL;
+static load_args * args_swap = NULL;
+static pthread_t* threads = NULL;
+
+pthread_mutex_t mtx_load_data = PTHREAD_MUTEX_INITIALIZER;
+
+void *run_thread_loop(void *ptr)
+{
+    const int i = *(int *)ptr;
+
+    while (!custom_atomic_load_int(&flag_exit)) {
+        while (!custom_atomic_load_int(&run_load_data[i])) {
+            if (custom_atomic_load_int(&flag_exit)) {
+                free(ptr);
+                return 0;
+            }
+            this_thread_sleep_for(thread_wait_ms);
+        }
+
+        pthread_mutex_lock(&mtx_load_data);
+        load_args *args_local = (load_args *)xcalloc(1, sizeof(load_args));
+        *args_local = args_swap[i];
+        pthread_mutex_unlock(&mtx_load_data);
+
+        load_thread(args_local);
+
+        custom_atomic_store_int(&run_load_data[i], 0);
+    }
+    free(ptr);
+    return 0;
+}
+
 void *load_threads(void *ptr)
 {
     //srand(time(0));
@@ -1415,6 +1471,34 @@ void *load_threads(void *ptr)
     int total = args.n;
     free(ptr);
     data* buffers = (data*)xcalloc(args.threads, sizeof(data));
+    if (!threads) {
+        threads = (pthread_t*)xcalloc(args.threads, sizeof(pthread_t));
+        run_load_data = (volatile int *)xcalloc(args.threads, sizeof(int));
+        args_swap = (load_args *)xcalloc(args.threads, sizeof(load_args));
+        fprintf(stderr, " Create %d permanent cpu-threads \n", args.threads);
+
+        for (i = 0; i < args.threads; ++i) {
+            int* ptr = (int*)xcalloc(1, sizeof(int));
+            *ptr = i;
+            if (pthread_create(&threads[i], 0, run_thread_loop, ptr)) error("Thread creation failed");
+        }
+    }
+
+    for (i = 0; i < args.threads; ++i) {
+        args.d = buffers + i;
+        args.n = (i + 1) * total / args.threads - i * total / args.threads;
+
+        pthread_mutex_lock(&mtx_load_data);
+        args_swap[i] = args;
+        pthread_mutex_unlock(&mtx_load_data);
+
+        custom_atomic_store_int(&run_load_data[i], 1);  // run thread
+    }
+    for (i = 0; i < args.threads; ++i) {
+        while (custom_atomic_load_int(&run_load_data[i])) this_thread_sleep_for(thread_wait_ms); //   join
+    }
+
+    /*
     pthread_t* threads = (pthread_t*)xcalloc(args.threads, sizeof(pthread_t));
     for(i = 0; i < args.threads; ++i){
         args.d = buffers + i;
@@ -1424,6 +1508,8 @@ void *load_threads(void *ptr)
     for(i = 0; i < args.threads; ++i){
         pthread_join(threads[i], 0);
     }
+    */
+
     *out = concat_datas(buffers, args.threads);
     out->shallow = 0;
     for(i = 0; i < args.threads; ++i){
@@ -1431,8 +1517,26 @@ void *load_threads(void *ptr)
         free_data(buffers[i]);
     }
     free(buffers);
-    free(threads);
+    //free(threads);
     return 0;
+}
+
+void free_load_threads(void *ptr)
+{
+    load_args args = *(load_args *)ptr;
+    if (args.threads == 0) args.threads = 1;
+    int i;
+    if (threads) {
+        custom_atomic_store_int(&flag_exit, 1);
+        for (i = 0; i < args.threads; ++i) {
+            pthread_join(threads[i], 0);
+        }
+        free((void*)run_load_data);
+        free(args_swap);
+        free(threads);
+        threads = NULL;
+        custom_atomic_store_int(&flag_exit, 0);
+    }
 }
 
 pthread_t load_data(load_args args)

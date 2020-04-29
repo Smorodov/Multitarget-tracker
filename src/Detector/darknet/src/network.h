@@ -102,12 +102,14 @@ float *get_network_output_gpu(network net);
 void forward_network_gpu(network net, network_state state);
 void backward_network_gpu(network net, network_state state);
 void update_network_gpu(network net);
+void forward_backward_network_gpu(network net, float *x, float *y);
 #endif
 
 float get_current_seq_subdivisions(network net);
 int get_sequence_value(network net);
 float get_current_rate(network net);
 int get_current_batch(network net);
+int64_t get_current_iteration(network net);
 //void free_network(network net); // darknet.h
 void compare_networks(network n1, network n2, data d);
 char *get_layer_string(LAYER_TYPE a);

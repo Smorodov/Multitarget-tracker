@@ -92,21 +92,24 @@ void save_cv_jpg(mat_cv *img, const char *name);
 void draw_detections_cv_v3(mat_cv* show_img, detection *dets, int num, float thresh, char **names, image **alphabet, int classes, int ext_output);
 
 // Draw Loss & Accuracy chart
-mat_cv* draw_train_chart(char *windows_name, float max_img_loss, int max_batches, int number_of_lines, int img_size, int dont_show);
+mat_cv* draw_train_chart(char *windows_name, float max_img_loss, int max_batches, int number_of_lines, int img_size, int dont_show, char* chart_path);
 void draw_train_loss(char *windows_name, mat_cv* img, int img_size, float avg_loss, float max_img_loss, int current_batch, int max_batches,
-    float precision, int draw_precision, char *accuracy_name, int dont_show, int mjpeg_port);
+    float precision, int draw_precision, char *accuracy_name, int dont_show, int mjpeg_port, double time_remaining);
 
 // Data augmentation
 image image_data_augmentation(mat_cv* mat, int w, int h,
     int pleft, int ptop, int swidth, int sheight, int flip,
     float dhue, float dsat, float dexp,
-    int blur, int num_boxes, float *truth);
+    int gaussian_noise, int blur, int num_boxes, float *truth);
 
 // blend two images with (alpha and beta)
 void blend_images_cv(image new_img, float alpha, image old_img, float beta);
 
 // bilateralFilter bluring
 image blur_image(image src_img, int ksize);
+
+// draw objects for Adversarial attacks
+void cv_draw_object(image sized, float *truth_cpu, int max_boxes, int num_truth, int *it_num_set, float *lr_set, int *boxonly, int classes, char **names);
 
 // Show Anchors
 void show_acnhors(int number_of_boxes, int num_of_clusters, float *rel_width_height_array, model anchors_data, int width, int height);
