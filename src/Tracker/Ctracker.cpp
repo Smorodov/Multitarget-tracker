@@ -161,68 +161,78 @@ void CTracker::CreateDistaceMatrix(const regions_t& regions, distMatrix_t& costM
     const size_t N = m_tracks.size();	// Tracking objects
     maxCost = 0;
 
-	for (size_t i = 0; i < m_tracks.size(); ++i)
+	for (size_t i = 0; i < N; ++i)
 	{
 		const auto& track = m_tracks[i];
 
+		// Calc predicted area for track
+		cv::Size_<track_t> minRadius;
+		if (m_settings.m_minAreaRadiusPix < 0)
+		{
+			minRadius.width = m_settings.m_minAreaRadiusK * track->LastRegion().m_rrect.size.width;
+			minRadius.height = m_settings.m_minAreaRadiusK * track->LastRegion().m_rrect.size.height;
+		}
+		else
+		{
+			minRadius.width = m_settings.m_minAreaRadiusPix;
+			minRadius.height = m_settings.m_minAreaRadiusPix;
+		}
+		cv::RotatedRect predictedArea = track->CalcPredictionEllipse(minRadius);
+
+		// Calc distance between track and regions
 		for (size_t j = 0; j < regions.size(); ++j)
 		{
+			const auto& reg = regions[j];
+
 			auto dist = maxPossibleCost;
-			if (m_settings.CheckType(m_tracks[i]->LastRegion().m_type, regions[j].m_type))
+			if (m_settings.CheckType(m_tracks[i]->LastRegion().m_type, reg.m_type))
 			{
 				dist = 0;
 				size_t ind = 0;
 				if (m_settings.m_distType[ind] > 0.0f && ind == tracking::DistCenters)
 				{
 #if 1
-					cv::Size_<track_t> minRadius(m_settings.m_minAreaRadiusPix, m_settings.m_minAreaRadiusPix);
-					if (m_settings.m_minAreaRadiusPix < 0)
-					{
-						minRadius.width = m_settings.m_minAreaRadiusK * regions[j].m_rrect.size.width;
-						minRadius.height = m_settings.m_minAreaRadiusK * regions[j].m_rrect.size.height;
-					}
-                    track_t ellipseDist = track->IsInsideArea(regions[j].m_rrect.center, minRadius, false);
+                    track_t ellipseDist = track->IsInsideArea(reg.m_rrect.center, predictedArea);
                     if (ellipseDist > 1)
                         dist += m_settings.m_distType[ind];
                     else
                         dist += ellipseDist * m_settings.m_distType[ind];
 #else
-					dist += m_settings.m_distType[ind] * track->CalcDistCenter(regions[j]);
+					dist += m_settings.m_distType[ind] * track->CalcDistCenter(reg);
 #endif
 				}
 				++ind;
+
 				if (m_settings.m_distType[ind] > 0.0f && ind == tracking::DistRects)
 				{
 #if 1
-					cv::Size_<track_t> minRadius(m_settings.m_minAreaRadiusPix, m_settings.m_minAreaRadiusPix);
-					if (m_settings.m_minAreaRadiusPix < 0)
+                    track_t ellipseDist = track->IsInsideArea(reg.m_rrect.center, predictedArea);
+					if (ellipseDist < 1)
 					{
-						minRadius.width = m_settings.m_minAreaRadiusK * regions[j].m_rrect.size.width;
-						minRadius.height = m_settings.m_minAreaRadiusK * regions[j].m_rrect.size.height;
+						track_t dw = track->WidthDist(reg);
+						track_t dh = track->HeightDist(reg);
+						dist += m_settings.m_distType[ind] * (1 - (1 - ellipseDist) * (dw + dh) * 0.5f);
 					}
-                    track_t ellipseDist = track->IsInsideArea(regions[j].m_rrect.center, minRadius, false);
-					ellipseDist = (ellipseDist > 1) ? 0 : (1 - ellipseDist);
-
-                    track_t dw = track->WidthDist(regions[j]);
-                    track_t dh = track->HeightDist(regions[j]);
-
-                    constexpr track_t k = 1.f / 2.f;
-                    dist += m_settings.m_distType[ind] * (1 - ellipseDist * (dw + dh) * k);
-
+					else
+					{
+						dist += m_settings.m_distType[ind];
+					}
 					//std::cout << "dist = " << dist << ", ed = " << ellipseDist << ", dw = " << dw << ", dh = " << dh << std::endl;
 #else
-					dist += m_settings.m_distType[ind] * track->CalcDistRect(regions[j]);
+					dist += m_settings.m_distType[ind] * track->CalcDistRect(reg);
 #endif
 				}
 				++ind;
+
 				if (m_settings.m_distType[ind] > 0.0f && ind == tracking::DistJaccard)
 				{
-					dist += m_settings.m_distType[ind] * track->CalcDistJaccard(regions[j]);
+					dist += m_settings.m_distType[ind] * track->CalcDistJaccard(reg);
 				}
 				++ind;
+
 				if (m_settings.m_distType[ind] > 0.0f && ind == tracking::DistHist)
 				{
-					dist += m_settings.m_distType[ind] * track->CalcDistHist(regions[j], currFrame);
+					dist += m_settings.m_distType[ind] * track->CalcDistHist(reg, currFrame);
 				}
 				++ind;
 				assert(ind == tracking::DistsCount);

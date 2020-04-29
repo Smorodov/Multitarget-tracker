@@ -654,6 +654,11 @@ void normalize_image2(image p)
     free(max);
 }
 
+void copy_image_inplace(image src, image dst)
+{
+    memcpy(dst.data, src.data, src.h*src.w*src.c * sizeof(float));
+}
+
 image copy_image(image p)
 {
     image copy = p;
@@ -1298,6 +1303,66 @@ float bilinear_interpolate(image im, float x, float y, int c)
     return val;
 }
 
+void quantize_image(image im)
+{
+    int size = im.c * im.w * im.h;
+    int i;
+    for (i = 0; i < size; ++i) im.data[i] = (int)(im.data[i] * 255) / 255. + (0.5/255);
+}
+
+void make_image_red(image im)
+{
+    int r, c, k;
+    for (r = 0; r < im.h; ++r) {
+        for (c = 0; c < im.w; ++c) {
+            float val = 0;
+            for (k = 0; k < im.c; ++k) {
+                val += get_pixel(im, c, r, k);
+                set_pixel(im, c, r, k, 0);
+            }
+            for (k = 0; k < im.c; ++k) {
+                //set_pixel(im, c, r, k, val);
+            }
+            set_pixel(im, c, r, 0, val);
+        }
+    }
+}
+
+image make_attention_image(int img_size, float *original_delta_cpu, float *original_input_cpu, int w, int h, int c)
+{
+    image attention_img;
+    attention_img.w = w;
+    attention_img.h = h;
+    attention_img.c = c;
+    attention_img.data = original_delta_cpu;
+    make_image_red(attention_img);
+
+    int k;
+    float min_val = 999999, mean_val = 0, max_val = -999999;
+    for (k = 0; k < img_size; ++k) {
+        if (original_delta_cpu[k] < min_val) min_val = original_delta_cpu[k];
+        if (original_delta_cpu[k] > max_val) max_val = original_delta_cpu[k];
+        mean_val += original_delta_cpu[k];
+    }
+    mean_val = mean_val / img_size;
+    float range = max_val - min_val;
+
+    for (k = 0; k < img_size; ++k) {
+        float val = original_delta_cpu[k];
+        val = fabs(mean_val - val) / range;
+        original_delta_cpu[k] = val * 4;
+    }
+
+    image resized = resize_image(attention_img, w / 4, h / 4);
+    attention_img = resize_image(resized, w, h);
+    free_image(resized);
+    for (k = 0; k < img_size; ++k) attention_img.data[k] += original_input_cpu[k];
+
+    //normalize_image(attention_img);
+    //show_image(attention_img, "delta");
+    return attention_img;
+}
+
 image resize_image(image im, int w, int h)
 {
     if (im.w == w && im.h == h) return copy_image(im);
@@ -1410,7 +1475,10 @@ image load_image_stb(char *filename, int channels)
         char *new_line = "\n";
         fwrite(new_line, sizeof(char), strlen(new_line), fw);
         fclose(fw);
-        if (check_mistakes) getchar();
+        if (check_mistakes) {
+            printf("\n Error in load_image_stb() \n");
+            getchar();
+        }
         return make_image(10, 10, 3);
         //exit(EXIT_FAILURE);
     }

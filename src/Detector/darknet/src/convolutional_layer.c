@@ -346,28 +346,28 @@ void cudnn_convolutional_setup(layer *l, int cudnn_preference, size_t workspace_
 void free_convolutional_batchnorm(convolutional_layer *l)
 {
     if (!l->share_layer) {
-        free(l->scales);            l->scales = NULL;
-        free(l->scale_updates);     l->scale_updates = NULL;
-        free(l->mean);              l->mean = NULL;
-        free(l->variance);          l->variance = NULL;
-        free(l->mean_delta);        l->mean_delta = NULL;
-        free(l->variance_delta);    l->variance_delta = NULL;
-        free(l->rolling_mean);      l->rolling_mean = NULL;
-        free(l->rolling_variance);  l->rolling_variance = NULL;
-        free(l->x);                 l->x = NULL;
-        free(l->x_norm);            l->x_norm = NULL;
+        if (l->scales)          free(l->scales),            l->scales = NULL;
+        if (l->scale_updates)   free(l->scale_updates),     l->scale_updates = NULL;
+        if (l->mean)            free(l->mean),              l->mean = NULL;
+        if (l->variance)        free(l->variance),          l->variance = NULL;
+        if (l->mean_delta)      free(l->mean_delta),        l->mean_delta = NULL;
+        if (l->variance_delta)  free(l->variance_delta),    l->variance_delta = NULL;
+        if (l->rolling_mean)    free(l->rolling_mean),      l->rolling_mean = NULL;
+        if (l->rolling_variance) free(l->rolling_variance),  l->rolling_variance = NULL;
+        if (l->x)               free(l->x),                 l->x = NULL;
+        if (l->x_norm)          free(l->x_norm),            l->x_norm = NULL;
 
 #ifdef GPU
-        cuda_free(l->scales_gpu);           l->scales_gpu = NULL;
-        cuda_free(l->scale_updates_gpu);    l->scale_updates_gpu = NULL;
-        cuda_free(l->mean_gpu);             l->mean_gpu = NULL;
-        cuda_free(l->variance_gpu);         l->variance_gpu = NULL;
-        cuda_free(l->mean_delta_gpu);       l->mean_delta_gpu = NULL;
-        cuda_free(l->variance_delta_gpu);   l->variance_delta_gpu = NULL;
-        cuda_free(l->rolling_mean_gpu);     l->rolling_mean_gpu = NULL;
-        cuda_free(l->rolling_variance_gpu); l->rolling_variance_gpu = NULL;
-        cuda_free(l->x_gpu);                l->x_gpu = NULL;
-        cuda_free(l->x_norm_gpu);           l->x_norm_gpu = NULL;
+        if (l->scales_gpu)          cuda_free(l->scales_gpu),           l->scales_gpu = NULL;
+        if (l->scale_updates_gpu)   cuda_free(l->scale_updates_gpu),    l->scale_updates_gpu = NULL;
+        if (l->mean_gpu)            cuda_free(l->mean_gpu),             l->mean_gpu = NULL;
+        if (l->variance_gpu)        cuda_free(l->variance_gpu),         l->variance_gpu = NULL;
+        if (l->mean_delta_gpu)      cuda_free(l->mean_delta_gpu),       l->mean_delta_gpu = NULL;
+        if (l->variance_delta_gpu)  cuda_free(l->variance_delta_gpu),   l->variance_delta_gpu = NULL;
+        if (l->rolling_mean_gpu)    cuda_free(l->rolling_mean_gpu),     l->rolling_mean_gpu = NULL;
+        if (l->rolling_variance_gpu) cuda_free(l->rolling_variance_gpu), l->rolling_variance_gpu = NULL;
+        if (l->x_gpu)               cuda_free(l->x_gpu),                l->x_gpu = NULL;
+        if (l->x_norm_gpu)          cuda_free(l->x_norm_gpu),           l->x_norm_gpu = NULL;
 #endif
     }
 }
@@ -416,7 +416,7 @@ convolutional_layer make_convolutional_layer(int batch, int steps, int h, int w,
 
     if (l.share_layer) {
         if (l.size != l.share_layer->size || l.nweights != l.share_layer->nweights || l.c != l.share_layer->c || l.n != l.share_layer->n) {
-            printf("Layer size, nweights, channels or filters don't match for the share_layer");
+            printf(" Layer size, nweights, channels or filters don't match for the share_layer");
             getchar();
         }
 
@@ -438,8 +438,8 @@ convolutional_layer make_convolutional_layer(int batch, int steps, int h, int w,
 
     // float scale = 1./sqrt(size*size*c);
     float scale = sqrt(2./(size*size*c/groups));
-    if (l.activation == NORM_CHAN_SOFTMAX_MAXVAL) {
-        for (i = 0; i < l.nweights; ++i) l.weights[i] = -10;   // rand_normal();
+    if (l.activation == NORM_CHAN || l.activation == NORM_CHAN_SOFTMAX || l.activation == NORM_CHAN_SOFTMAX_MAXVAL) {
+        for (i = 0; i < l.nweights; ++i) l.weights[i] = 1;   // rand_normal();
     }
     else {
         for (i = 0; i < l.nweights; ++i) l.weights[i] = scale*rand_uniform(-1, 1);   // rand_normal();
@@ -611,6 +611,8 @@ convolutional_layer make_convolutional_layer(int batch, int steps, int h, int w,
 
                     l.mean_gpu = cuda_make_array(l.mean, n);
                     l.variance_gpu = cuda_make_array(l.variance, n);
+                    l.m_cbn_avg_gpu = cuda_make_array(l.mean, n);
+                    l.v_cbn_avg_gpu = cuda_make_array(l.variance, n);
 #ifndef CUDNN
                     l.mean_delta_gpu = cuda_make_array(l.mean, n);
                     l.variance_delta_gpu = cuda_make_array(l.variance, n);
@@ -784,7 +786,7 @@ void resize_convolutional_layer(convolutional_layer *l, int w, int h)
 
     if (l->activation == SWISH || l->activation == MISH) l->activation_input = (float*)realloc(l->activation_input, total_batch*l->outputs * sizeof(float));
 #ifdef GPU
-    if (old_w < w || old_h < h) {
+    if (old_w < w || old_h < h || l->dynamic_minibatch) {
         if (l->train) {
             cuda_free(l->delta_gpu);
             l->delta_gpu = cuda_make_array(l->delta, total_batch*l->outputs);
@@ -1238,7 +1240,7 @@ void forward_convolutional_layer(convolutional_layer l, network_state state)
                         l.c / l.groups,     // input channels
                         l.h, l.w,           // input size (h, w)
                         l.size, l.size,     // kernel size (h, w)
-                        l.pad, l.pad,       // padding (h, w)
+                        l.pad * l.dilation, l.pad * l.dilation,       // padding (h, w)
                         l.stride_y, l.stride_x, // stride (h, w)
                         l.dilation, l.dilation, // dilation (h, w)
                         b);                 // output
@@ -1429,7 +1431,7 @@ void backward_convolutional_layer(convolutional_layer l, network_state state)
                 l.c / l.groups,     // input channels
                 l.h, l.w,           // input size (h, w)
                 l.size, l.size,     // kernel size (h, w)
-                l.pad, l.pad,       // padding (h, w)
+                l.pad * l.dilation, l.pad * l.dilation,       // padding (h, w)
                 l.stride_y, l.stride_x, // stride (h, w)
                 l.dilation, l.dilation, // dilation (h, w)
                 b);                 // output
@@ -1451,7 +1453,7 @@ void backward_convolutional_layer(convolutional_layer l, network_state state)
                     l.c / l.groups,         // input channels (h, w)
                     l.h, l.w,               // input size (h, w)
                     l.size, l.size,         // kernel size (h, w)
-                    l.pad, l.pad,           // padding (h, w)
+                    l.pad * l.dilation, l.pad * l.dilation,           // padding (h, w)
                     l.stride_y, l.stride_x,     // stride (h, w)
                     l.dilation, l.dilation, // dilation (h, w)
                     state.delta + (i*l.groups + j)* (l.c / l.groups)*l.h*l.w); // output (delta)
