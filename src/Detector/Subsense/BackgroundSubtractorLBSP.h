@@ -64,7 +64,7 @@ protected:
 	//! default kernel size for median blur post-proc filtering
 	const int m_nDefaultMedianBlurKernelSize;
 	//! specifies whether the algorithm is fully initialized or not
-	bool m_bInitialized;
+	bool m_bInitialized = false;
 	//! specifies whether automatic model resets are enabled or not
 	bool m_bAutoModelResetEnabled;
 	//! specifies whether the camera is considered moving or not

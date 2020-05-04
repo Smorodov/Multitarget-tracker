@@ -59,20 +59,46 @@ protected:
         m_minObjWidth = frame.cols / 50;
 
         config_t config;
-#if 1
-        config.emplace("history", std::to_string(cvRound(10 * m_minStaticTime * m_fps)));
-        config.emplace("varThreshold", "16");
-        config.emplace("detectShadows", "1");
-        config.emplace("useRotatedRect", "0");
-        m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Motion_MOG2, config, frame));
-#else
-        config.emplace("minPixelStability", "15");
-        config.emplace("maxPixelStability", "900");
-        config.emplace("useHistory", "1");
-        config.emplace("isParallel", "1");
-        config.emplace("useRotatedRect", "0");
-        m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Motion_CNT, config, frame));
-#endif
+		config.emplace("useRotatedRect", "0");
+
+		tracking::Detectors detectorType = tracking::Detectors::Motion_MOG2;
+
+		switch (detectorType)
+		{
+		case tracking::Detectors::Motion_VIBE:
+			config.emplace("samples", "20");
+			config.emplace("pixelNeighbor", "4");
+			config.emplace("distanceThreshold", "17");
+			config.emplace("matchingThreshold", "2");
+			config.emplace("updateFactor", "16");
+			break;
+		case tracking::Detectors::Motion_MOG:
+			config.emplace("history", std::to_string(cvRound(20 * m_minStaticTime * m_fps)));
+			config.emplace("nmixtures", "3");
+			config.emplace("backgroundRatio", "0.7");
+			config.emplace("noiseSigma", "0");
+			break;
+		case tracking::Detectors::Motion_GMG:
+			config.emplace("initializationFrames", "50");
+			config.emplace("decisionThreshold", "0.7");
+			break;
+		case tracking::Detectors::Motion_CNT:
+			config.emplace("minPixelStability", "15");
+			config.emplace("maxPixelStability", std::to_string(cvRound(20 * m_minStaticTime * m_fps)));
+			config.emplace("useHistory", "1");
+			config.emplace("isParallel", "1");
+			break;
+		case tracking::Detectors::Motion_SuBSENSE:
+			break;
+		case tracking::Detectors::Motion_LOBSTER:
+			break;
+		case tracking::Detectors::Motion_MOG2:
+			config.emplace("history", std::to_string(cvRound(20 * m_minStaticTime * m_fps)));
+			config.emplace("varThreshold", "10");
+			config.emplace("detectShadows", "1");
+			break;
+		}
+        m_detector = std::unique_ptr<BaseDetector>(CreateDetector(detectorType, config, frame));
 
         if (m_detector.get())
         {
@@ -92,12 +118,18 @@ protected:
 		settings.SetDistance(tracking::DistCenters);
         settings.m_kalmanType = tracking::KalmanLinear;
         settings.m_filterGoal = tracking::FilterCenter;
-        settings.m_lostTrackType = tracking::TrackKCF;       // Use visual objects tracker for collisions resolving
+        settings.m_lostTrackType = tracking::TrackCSRT;       // Use visual objects tracker for collisions resolving
         settings.m_matchType = tracking::MatchHungrian;
-        settings.m_dt = 0.4f;                             // Delta time for Kalman filter
-        settings.m_accelNoiseMag = 0.5f;                  // Accel noise magnitude for Kalman filter
+		settings.m_useAcceleration = false;                   // Use constant acceleration motion model
+		settings.m_dt = settings.m_useAcceleration ? 0.05f : 0.2f; // Delta time for Kalman filter
+		settings.m_accelNoiseMag = 0.2f;                  // Accel noise magnitude for Kalman filter
         settings.m_distThres = 0.95f;                    // Distance threshold between region and object on two frames
-        settings.m_minAreaRadiusPix = frame.rows / 20.f;
+#if 0
+		settings.m_minAreaRadiusPix = frame.rows / 20.f;
+#else
+		settings.m_minAreaRadiusPix = -1.f;
+#endif
+		settings.m_minAreaRadiusK = 0.8f;
 
         settings.m_useAbandonedDetection = false;
         if (settings.m_useAbandonedDetection)

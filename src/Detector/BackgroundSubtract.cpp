@@ -270,7 +270,7 @@ void BackgroundSubtract::Subtract(const cv::UMat& image, cv::UMat& foreground)
 
     case ALG_SuBSENSE:
     case ALG_LOBSTER:
-        if (foreground.size() != image.size())
+        if (foreground.size() != image.size() || foreground.type() != CV_8UC1)
         {
             m_modelSuBSENSE->initialize(GetImg().getMat(cv::ACCESS_READ), cv::Mat());
             foreground.create(image.size(), CV_8UC1);
