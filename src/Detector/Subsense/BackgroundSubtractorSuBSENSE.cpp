@@ -737,5 +737,8 @@ void BackgroundSubtractorSuBSENSE::getBackgroundDescriptorsImage(cv::OutputArray
 
 void BackgroundSubtractorSuBSENSE::apply(cv::InputArray image, cv::OutputArray fgmask, double learningRateOverride)
 {
-    (*this)(image, fgmask, learningRateOverride);
+	if (m_bInitialized)
+		(*this)(image, fgmask, learningRateOverride);
+	else
+		initialize(image.getMat(), cv::Mat());
 }

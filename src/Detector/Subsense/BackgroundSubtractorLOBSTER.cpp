@@ -329,5 +329,8 @@ void BackgroundSubtractorLOBSTER::apply(cv::InputArray image, cv::OutputArray fg
     {
         learningRateOverride = BGSLOBSTER_DEFAULT_LEARNING_RATE;
     }
-    (*this)(image, fgmask, learningRateOverride);
+	if (m_bInitialized)
+		(*this)(image, fgmask, learningRateOverride);
+	else
+		initialize(image.getMat(), cv::Mat());
 }
