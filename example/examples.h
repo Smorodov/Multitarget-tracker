@@ -694,10 +694,10 @@ protected:
     bool InitTracker(cv::UMat frame)
 	{
 		TrackerSettings settings;
-        settings.SetDistance(tracking::DistCenters);
+        settings.SetDistance(tracking::DistRects);
 		settings.m_kalmanType = tracking::KalmanLinear;
         settings.m_filterGoal = tracking::FilterCenter;
-        settings.m_lostTrackType = tracking::TrackKCF;      // Use visual objects tracker for collisions resolving
+        settings.m_lostTrackType = tracking::TrackCSRT;      // Use visual objects tracker for collisions resolving
 		settings.m_matchType = tracking::MatchHungrian;
 		settings.m_useAcceleration = false;                   // Use constant acceleration motion model
 		settings.m_dt = settings.m_useAcceleration ? 0.05f : 0.4f; // Delta time for Kalman filter
@@ -710,10 +710,11 @@ protected:
 #endif
 		settings.m_minAreaRadiusK = 0.8f;
 		settings.m_maximumAllowedSkippedFrames = cvRound(2 * m_fps); // Maximum allowed skipped frames
-		settings.m_maxTraceLength = cvRound(5 * m_fps);      // Maximum trace length
+		settings.m_maxTraceLength = cvRound(2 * m_fps);      // Maximum trace length
 
-		settings.AddNearTypes("car", "bus", false);
-		settings.AddNearTypes("car", "truck", false);
+		settings.AddNearTypes("car", "bus", true);
+		settings.AddNearTypes("car", "truck", true);
+		settings.AddNearTypes("bus", "truck", true);
 		settings.AddNearTypes("person", "bicycle", true);
 		settings.AddNearTypes("person", "motorbike", true);
 
@@ -739,16 +740,20 @@ protected:
 
 		for (const auto& track : tracks)
 		{
-            if (track.IsRobust(2,                           // Minimal trajectory size
-                0.5f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
+            if (track.IsRobust(3,                           // Minimal trajectory size
+                0.7f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
 				cv::Size2f(0.1f, 8.0f))      // Min and max ratio: width / height
 				)
 			{
-				DrawTrack(frame, 1, track);
+				DrawTrack(frame, 1, track, false);
 
 
 				std::stringstream label;
+#if 1
+				label << track.m_type << std::setprecision(2) << ": " << track.m_confidence;
+#else
 				label << track.m_type << " " << std::setprecision(2) << track.m_velocity << ": " << track.m_confidence;
+#endif
 				int baseLine = 0;
 				cv::Size labelSize = cv::getTextSize(label.str(), cv::FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
 
