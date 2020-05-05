@@ -4,157 +4,152 @@
 
 namespace vibe
 {
-
-VIBE::VIBE(int channels, int samples, int pixel_neighbor, int distance_threshold, int matching_threshold, int update_factor):
-    samples_(samples),
-    channels_(channels),
-    pixel_neighbor_(pixel_neighbor),
-    distance_threshold_(distance_threshold),
-    matching_threshold_(matching_threshold),
-    update_factor_(update_factor)
-{
-    model_ = nullptr;
-    rng_idx_ = 0;
-    srand(0);
-    for (int i = 0; i < RANDOM_BUFFER_SIZE; i ++)
-    {
-        rng_[i] = rand();
-    }
-}
-
-VIBE::~VIBE()
-{
-    if (model_ != nullptr)
-    {
-        delete[] model_;
-    }
-}
-
-cv::Vec2i VIBE::getRndNeighbor(int i, int j)
-{
-    int neighbor_count = (pixel_neighbor_ * 2 + 1) * (pixel_neighbor_ * 2 + 1);
-    int rnd = rng_[rng_idx_ = ( rng_idx_ + 1 ) % RANDOM_BUFFER_SIZE] % neighbor_count;
-    int start_i = i - pixel_neighbor_;
-    int start_j = j - pixel_neighbor_;
-    int area = pixel_neighbor_ * 2 + 1;
-    int position_i = rnd / area;
-    int position_j = rnd % area;
-    int cur_i = std::max(std::min(start_i + position_i, size_.height - 1), 0);
-    int cur_j = std::max(std::min(start_j + position_j, size_.width - 1), 0);
-    return cv::Vec2i(cur_i, cur_j);
-}
-
-void VIBE::init(const cv::Mat &img)
-{
-    CV_Assert(img.channels() == channels_);
-
-    size_ = img.size();
-
-	if (model_ != nullptr)
+	///
+	VIBE::VIBE(int channels, int samples, int pixel_neighbor, int distance_threshold, int matching_threshold, int update_factor) :
+		m_samples(samples),
+		m_channels(channels),
+		m_pixelNeighbor(pixel_neighbor),
+		m_distanceThreshold(distance_threshold),
+		m_matchingThreshold(matching_threshold),
+		m_updateFactor(update_factor)
 	{
-		delete[] model_;
-	}
-    model_ = new unsigned char[channels_ * samples_ * size_.width * size_.height];
-
-    mask_ = cv::Mat(size_, CV_8UC1, cv::Scalar::all(0));
-
-    unsigned char* image = img.data;
-    for (int i = 0; i < img.rows; i++)
-    {
-        for (int j = 0; j < img.cols; j++)
-        {
-            for (int c = 0; c < channels_; c++)
-            {
-                model_[channels_ * samples_ * size_.width * i + channels_ * samples_ * j + c] = image[channels_ * size_.width * i + channels_ * j + c];
-            }
-            for (int s = 1; s < samples_; s++)
-            {
-                cv::Vec2i rnd_pos = getRndNeighbor(i, j);
-                int img_idx = channels_ * size_.width * rnd_pos[0] + channels_ * rnd_pos[1];
-                int model_idx = channels_ * samples_ * size_.width * i + channels_ * samples_ * j + channels_ * s;
-                for (int c = 0; c < channels_; c ++)
-                {
-                    model_[model_idx + c] = image[img_idx + c];
-                }
-            }
-        }
-    }
-}
-
-void VIBE::update(const cv::Mat& img)
-{
-    CV_Assert(channels_ == img.channels());
-
-	if (size_ != img.size())
-	{
-		init(img);
-		return;
+		//srand(0);
+		for (int i = 0; i < RANDOM_BUFFER_SIZE; i++)
+		{
+			m_rng[i] = rand();
+		}
 	}
 
-    unsigned char *img_ptr = img.data;
-    for (int i = 0; i < img.rows; i++)
-    {
-        for (int j = 0; j < img.cols; j++)
-        {
-            bool flag = false;
-            int matching_counter = 0;
-            int img_idx = channels_ * size_.width * i + channels_ * j;
-            for (int s = 0; s < samples_; s ++)
-            {
-                int model_idx = channels_ * samples_ * size_.width * i + channels_ * samples_ * j + channels_ * s;
-                int channels_counter = 0;
-                for (int c = 0; c < channels_; c ++)
-                {
-                    if (std::abs(img_ptr[img_idx + c] - model_[model_idx + c]) < distance_threshold_)
-                    {
-                        channels_counter++;
-                    }
-                }
-                if (channels_counter == channels_)
-                {
-                    matching_counter++;
-                }
-                if (matching_counter > matching_threshold_)
-                {
-                    flag = true;
-                    break;
-                }
-            }
+	///
+	VIBE::~VIBE()
+	{
+	}
 
-            if (flag)
-            {
-                mask_.data[size_.width * i + j] = 0;
-                if (0 == rng_[ rng_idx_ = ( rng_idx_ + 1 ) % RANDOM_BUFFER_SIZE] % update_factor_)
-                {
-                    int sample = rng_[ rng_idx_ = ( rng_idx_ + 1 ) % RANDOM_BUFFER_SIZE] % samples_;
-                    int model_idx = channels_ * samples_ * size_.width * i + channels_ * samples_ * j + channels_ * sample;
-                    for (int c = 0; c < channels_; c ++)
-                    {
-                        model_[model_idx + c] = img_ptr[img_idx + c];
-                    }
+	///
+	cv::Vec2i VIBE::getRndNeighbor(int i, int j)
+	{
+		int neighbor_count = (m_pixelNeighbor * 2 + 1) * (m_pixelNeighbor * 2 + 1);
+		int rnd = m_rng[m_rngIdx = (m_rngIdx + 1) % RANDOM_BUFFER_SIZE] % neighbor_count;
+		int start_i = i - m_pixelNeighbor;
+		int start_j = j - m_pixelNeighbor;
+		int area = m_pixelNeighbor * 2 + 1;
+		int position_i = rnd / area;
+		int position_j = rnd % area;
+		int cur_i = std::max(std::min(start_i + position_i, m_size.height - 1), 0);
+		int cur_j = std::max(std::min(start_j + position_j, m_size.width - 1), 0);
+		return cv::Vec2i(cur_i, cur_j);
+	}
 
-                    cv::Vec2i rnd_pos = getRndNeighbor(i, j);
-                    sample = rng_[rng_idx_ = ( rng_idx_ + 1) % RANDOM_BUFFER_SIZE] % samples_;
-                    model_idx = channels_ * samples_ * size_.width * rnd_pos[0] + channels_ * samples_ * rnd_pos[1] + channels_ * sample;
-                    for (int c = 0; c < channels_; c ++)
-                    {
-                        model_[model_idx + c] = img_ptr[img_idx + c];
-                    }
+	///
+	void VIBE::init(const cv::Mat &img)
+	{
+		CV_Assert(img.channels() == m_channels);
 
-                }
-            }
-            else
-            {
-                mask_.data[size_.width * i + j] = 255;
-            }
-        }
-    }
-}
+		m_size = img.size();
 
-cv::Mat& VIBE::getMask()
-{
-    return mask_;
-}
+		m_model.resize(m_channels * m_samples * m_size.width * m_size.height, 0);
 
+		m_mask = cv::Mat(m_size, CV_8UC1, cv::Scalar::all(0));
 
+		const uchar* image = img.data;
+		for (int i = 0; i < img.rows; i++)
+		{
+			for (int j = 0; j < img.cols; j++)
+			{
+				for (int c = 0; c < m_channels; c++)
+				{
+					m_model[m_channels * m_samples * m_size.width * i + m_channels * m_samples * j + c] = image[m_channels * m_size.width * i + m_channels * j + c];
+				}
+				for (int s = 1; s < m_samples; s++)
+				{
+					cv::Vec2i rnd_pos = getRndNeighbor(i, j);
+					int img_idx = m_channels * m_size.width * rnd_pos[0] + m_channels * rnd_pos[1];
+					int model_idx = m_channels * m_samples * m_size.width * i + m_channels * m_samples * j + m_channels * s;
+					for (int c = 0; c < m_channels; c++)
+					{
+						m_model[model_idx + c] = image[img_idx + c];
+					}
+				}
+			}
+		}
+	}
+
+	///
+	void VIBE::update(const cv::Mat& img)
+	{
+		CV_Assert(m_channels == img.channels());
+
+		if (m_size != img.size())
+		{
+			init(img);
+			return;
+		}
+
+		int rowsCount = img.rows;
+#pragma omp parallel for
+		for (int i = 0; i < rowsCount; i++)
+		{
+			const uchar* img_ptr = img.ptr(i);
+			uchar* mask_ptr = m_mask.ptr(i);
+
+			for (int j = 0; j < img.cols; j++)
+			{
+				bool flag = false;
+				int matching_counter = 0;
+				model_t::value_type* model_ptr = &m_model[m_channels * m_samples * m_size.width * i + m_channels * m_samples * j];
+				for (int s = 0; s < m_samples; s++)
+				{
+					int channels_counter = 0;
+					for (int c = 0; c < m_channels; c++)
+					{
+						if (std::abs((int)model_ptr[c] - img_ptr[c]) < m_distanceThreshold)
+							++channels_counter;
+					}
+					if (channels_counter == m_channels)
+					{
+						if (++matching_counter > m_matchingThreshold)
+						{
+							flag = true;
+							break;
+						}
+					}
+					model_ptr += m_channels;
+				}
+
+				if (flag)
+				{
+					mask_ptr[0] = 0;
+					if (0 == m_rng[m_rngIdx = (m_rngIdx + 1) % RANDOM_BUFFER_SIZE] % m_updateFactor)
+					{
+						int sample = m_rng[m_rngIdx = (m_rngIdx + 1) % RANDOM_BUFFER_SIZE] % m_samples;
+						int model_idx = m_channels * m_samples * m_size.width * i + m_channels * m_samples * j + m_channels * sample;
+						for (int c = 0; c < m_channels; c++)
+						{
+							m_model[model_idx + c] = img_ptr[c];
+						}
+
+						cv::Vec2i rnd_pos = getRndNeighbor(i, j);
+						sample = m_rng[m_rngIdx = (m_rngIdx + 1) % RANDOM_BUFFER_SIZE] % m_samples;
+						model_idx = m_channels * m_samples * m_size.width * rnd_pos[0] + m_channels * m_samples * rnd_pos[1] + m_channels * sample;
+						for (int c = 0; c < m_channels; c++)
+						{
+							m_model[model_idx + c] = img_ptr[c];
+						}
+					}
+				}
+				else
+				{
+					mask_ptr[0] = 255;
+				}
+				img_ptr += m_channels;
+				++mask_ptr;
+			}
+		}
+	}
+
+	///
+	cv::Mat& VIBE::getMask()
+	{
+		return m_mask;
+	}
 }

@@ -46,7 +46,6 @@ bool BackgroundSubtract::Init(const config_t& config)
                     params[i] = std::stoi(conf->second);
                 }
             }
-
             m_modelVibe = std::make_unique<vibe::VIBE>(m_channels, params[0], params[1], params[2], params[3], params[4]);
             break;
         }
@@ -81,7 +80,6 @@ bool BackgroundSubtract::Init(const config_t& config)
                     }
                 }
             }
-
             m_modelOCV = cv::bgsegm::createBackgroundSubtractorMOG(std::get<0>(params), std::get<1>(params), std::get<2>(params), std::get<3>(params));
             break;
         }
@@ -109,7 +107,6 @@ bool BackgroundSubtract::Init(const config_t& config)
                     }
                 }
             }
-
             m_modelOCV = cv::bgsegm::createBackgroundSubtractorGMG(std::get<0>(params), std::get<1>(params));
             break;
         }
@@ -144,7 +141,6 @@ bool BackgroundSubtract::Init(const config_t& config)
                     }
                 }
             }
-
             m_modelOCV = cv::bgsegm::createBackgroundSubtractorCNT(std::get<0>(params), std::get<1>(params) != 0, std::get<2>(params), std::get<3>(params) != 0);
 #else
             std::cerr << "OpenCV CNT algorithm is not implemented! Used Vibe by default." << std::endl;
@@ -196,7 +192,6 @@ bool BackgroundSubtract::Init(const config_t& config)
                     }
                 }
             }
-
             m_modelOCV = cv::createBackgroundSubtractorMOG2(std::get<0>(params), std::get<1>(params), std::get<2>(params) != 0).dynamicCast<cv::BackgroundSubtractor>();
             break;
         }

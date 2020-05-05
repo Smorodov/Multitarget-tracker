@@ -33,8 +33,8 @@ public:
 
     void Subtract(const cv::UMat& image, cv::UMat& foreground);
 	
-	int m_channels;
-	BGFG_ALGS m_algType;
+	int m_channels = 1;
+	BGFG_ALGS m_algType = BGFG_ALGS::ALG_MOG2;
 
 private:
 	std::unique_ptr<vibe::VIBE> m_modelVibe;

@@ -12,7 +12,7 @@ namespace vibe
 class VIBE
 {
 public:
-    VIBE(int channels = 1, int samples = 20, int pixel_neighbor = 1, int distance_threshold = 20, int matching_threshold = 3, int update_factor = 16);
+    VIBE(int channels, int samples, int pixel_neighbor, int distance_threshold, int matching_threshold, int update_factor);
     ~VIBE();
 
     void update(const cv::Mat& img);
@@ -20,24 +20,25 @@ public:
 
 	int GetChannels() const
 	{
-		return channels_;
+		return m_channels;
 	}
 
 private:
-    int samples_;
-    int channels_;
-    int pixel_neighbor_;
-    int distance_threshold_;
-    int matching_threshold_;
-    int update_factor_;
+    int m_samples = 20;
+    int m_channels = 1;
+    int m_pixelNeighbor = 1;
+    int m_distanceThreshold = 20;
+    int m_matchingThreshold = 3;
+    int m_updateFactor = 16;
 
-    cv::Size size_;
-    unsigned char *model_;
+    cv::Size m_size;
+	typedef std::vector<uchar> model_t;
+    model_t m_model;
 
-    cv::Mat mask_;
+    cv::Mat m_mask;
 
-    unsigned int rng_[RANDOM_BUFFER_SIZE];
-    int rng_idx_;
+    unsigned int m_rng[RANDOM_BUFFER_SIZE];
+    int m_rngIdx = 0;
 
     cv::Vec2i getRndNeighbor(int i, int j);
 	void init(const cv::Mat& img);
