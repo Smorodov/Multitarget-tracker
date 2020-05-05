@@ -31,16 +31,28 @@ install:
   - sudo apt-get install -y --allow-unauthenticated python-dev python-numpy libtbb2 libtbb-dev libjpeg-dev libpng-dev libtiff-dev libjasper-dev libdc1394-22-dev
 
   # Download v3.0.0 .zip file and extract.
-  - curl -sL https://github.com/Itseez/opencv/archive/3.4.7.zip > opencv.zip
+  - curl -sL https://github.com/opencv/opencv/archive/3.4.10.zip > opencv.zip
   - unzip opencv.zip
-  - cd opencv-3.4.7
+  - cd opencv-3.4.10
   
   # Create a new 'build' folder.
   - mkdir build
   - cd build
   
   # Set build instructions for Ubuntu distro.
-  - cmake -D CMAKE_BUILD_TYPE=RELEASE -D CMAKE_INSTALL_PREFIX=/usr/local -D WITH_TBB=ON -D BUILD_NEW_PYTHON_SUPPORT=OFF -D WITH_V4L=ON -D INSTALL_C_EXAMPLES=OFF -D INSTALL_PYTHON_EXAMPLES=OFF -D BUILD_TESTS=OFF -D BUILD_PERF_TESTS=OFF -D BUILD_EXAMPLES=OFF -D WITH_QT=OFF -D WITH_OPENGL=OFF -D BUILD_JAVA=OFF -D BUILD_opencv_python3=OFF -D BUILD_opencv_python_tests=OFF -D BUILD_opencv_python_bindings_generator=OFF -D CPU_BASELINE=AVX2 -D CPU_DISPATCH=AVX2 -D BUILD_opencv_apps=OFF ..
+  - cmake -D CMAKE_BUILD_TYPE=RELEASE \
+          -D CMAKE_INSTALL_PREFIX=/usr/local \
+          -D WITH_TBB=ON \
+          -D WITH_V4L=ON \
+          -D BUILD_JAVA=OFF \
+          -D INSTALL_C_EXAMPLES=OFF -D BUILD_EXAMPLES=OFF \
+          -D BUILD_TESTS=OFF -D BUILD_PERF_TESTS=OFF \
+          -D WITH_QT=OFF \
+          -D WITH_OPENGL=OFF \
+          -D BUILD_opencv_apps=OFF \
+          -D BUILD_opencv_python3=OFF -D BUILD_opencv_python_tests=OFF -D INSTALL_PYTHON_EXAMPLES=OFF -D BUILD_NEW_PYTHON_SUPPORT=OFF -D BUILD_opencv_python_bindings_generator=OFF \
+          -D CPU_BASELINE=AVX2 -D CPU_DISPATCH=AVX2 ..
+
   
   # Run 'make' with four threads.
   - make -j4
@@ -59,4 +71,4 @@ install:
 
 script:
   - cmake .
-  - make
+  - make -j4
