@@ -248,14 +248,14 @@ void BackgroundSubtract::Subtract(const cv::UMat& image, cv::UMat& foreground)
     {
     case ALG_VIBE:
         m_modelVibe->update(GetImg().getMat(cv::ACCESS_READ));
-        foreground = m_modelVibe->getMask().getUMat(cv::ACCESS_READ);
+		m_rawForeground = m_modelVibe->getMask().getUMat(cv::ACCESS_READ);
         break;
 
     case ALG_MOG:
     case ALG_GMG:
     case ALG_CNT:
 #ifdef USE_OCV_BGFG
-        m_modelOCV->apply(GetImg(), foreground);
+        m_modelOCV->apply(GetImg(), m_rawForeground);
         break;
 #else
         std::cerr << "OpenCV bgfg algorithms are not implemented!" << std::endl;
@@ -264,25 +264,25 @@ void BackgroundSubtract::Subtract(const cv::UMat& image, cv::UMat& foreground)
 
     case ALG_SuBSENSE:
     case ALG_LOBSTER:
-        if (foreground.size() != image.size() || foreground.type() != CV_8UC1)
+        if (m_rawForeground.size() != image.size() || m_rawForeground.type() != CV_8UC1)
         {
             m_modelSuBSENSE->initialize(GetImg().getMat(cv::ACCESS_READ), cv::Mat());
-            foreground.create(image.size(), CV_8UC1);
+			m_rawForeground.create(image.size(), CV_8UC1);
         }
         else
         {
-            m_modelSuBSENSE->apply(GetImg(), foreground);
+            m_modelSuBSENSE->apply(GetImg(), m_rawForeground);
         }
         break;
 
     case ALG_MOG2:
-        m_modelOCV->apply(GetImg(), foreground);
-        cv::threshold(foreground, foreground, 200, 255, cv::THRESH_BINARY);
+        m_modelOCV->apply(GetImg(), m_rawForeground);
+        cv::threshold(m_rawForeground, m_rawForeground, 200, 255, cv::THRESH_BINARY);
         break;
 
     default:
         m_modelVibe->update(GetImg().getMat(cv::ACCESS_READ));
-        foreground = m_modelVibe->getMask().getUMat(cv::ACCESS_READ);
+		m_rawForeground = m_modelVibe->getMask().getUMat(cv::ACCESS_READ);
         break;
     }
 
@@ -290,10 +290,10 @@ void BackgroundSubtract::Subtract(const cv::UMat& image, cv::UMat& foreground)
     //cv::imshow("before", foreground);
 #endif
 
-    cv::medianBlur(foreground, foreground, 3);
+    cv::medianBlur(m_rawForeground, foreground, 3);
 
-    cv::Mat dilateElement = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3), cv::Point(-1, -1));
-    cv::dilate(foreground, foreground, dilateElement, cv::Point(-1, -1), 2);
+    //cv::Mat dilateElement = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3), cv::Point(-1, -1));
+    //cv::dilate(foreground, foreground, dilateElement, cv::Point(-1, -1), 2);
 
 #ifndef SILENT_WORK
     //cv::imshow("after", foreground);

@@ -40,4 +40,6 @@ private:
 	std::unique_ptr<vibe::VIBE> m_modelVibe;
 	cv::Ptr<cv::BackgroundSubtractor> m_modelOCV;
     std::unique_ptr<BackgroundSubtractorLBSP> m_modelSuBSENSE;
+
+	cv::UMat m_rawForeground;
 };
