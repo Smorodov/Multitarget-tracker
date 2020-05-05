@@ -34,9 +34,8 @@ bool BackgroundSubtract::Init(const config_t& config)
         {
         case ALG_VIBE:
         {
-            std::vector<std::string> paramsConf = { "samples", "pixelNeighbor", "distanceThreshold", "matchingThreshold", "updateFactor" };
-            std::vector<int> params = { 20, 1, 20, 3, 16 };
-            assert(paramsConf.size() == params.size());
+			std::array<int, 5> params = { 20, 1, 20, 3, 16 };
+            std::array<std::string, params.size()> paramsConf = { "samples", "pixelNeighbor", "distanceThreshold", "matchingThreshold", "updateFactor" };
 
             for (size_t i = 0; i < paramsConf.size(); ++i)
             {
@@ -53,8 +52,8 @@ bool BackgroundSubtract::Init(const config_t& config)
 #ifdef USE_OCV_BGFG
         case ALG_MOG:
         {
-            std::vector<std::string> paramsConf = { "history", "nmixtures", "backgroundRatio", "noiseSigma" };
-            auto params = std::make_tuple(100, 3, 0.7, 0);
+			auto params = std::make_tuple(100, 3, 0.7, 0);
+            std::array<std::string, std::tuple_size<decltype(params)>::value> paramsConf = { "history", "nmixtures", "backgroundRatio", "noiseSigma" };
 
             for (size_t i = 0; i < paramsConf.size(); ++i)
             {
@@ -86,8 +85,8 @@ bool BackgroundSubtract::Init(const config_t& config)
 
         case ALG_GMG:
         {
-            std::vector<std::string> paramsConf = { "initializationFrames", "decisionThreshold" };
-            auto params = std::make_tuple(50, 0.7);
+			auto params = std::make_tuple(50, 0.7);
+            std::array<std::string, std::tuple_size<decltype(params)>::value> paramsConf = { "initializationFrames", "decisionThreshold" };
 
             for (size_t i = 0; i < paramsConf.size(); ++i)
             {
@@ -114,8 +113,8 @@ bool BackgroundSubtract::Init(const config_t& config)
         case ALG_CNT:
         {
 #if (((CV_VERSION_MAJOR == 3) && (CV_VERSION_MINOR >= 2)) || (CV_VERSION_MAJOR > 3))
-            std::vector<std::string> paramsConf = { "minPixelStability", "useHistory", "maxPixelStability", "isParallel" };
-            auto params = std::make_tuple(15, 1, 15 * 60, 1);
+			auto params = std::make_tuple(15, 1, 15 * 60, 1);
+            std::array<std::string, std::tuple_size<decltype(params)>::value> paramsConf = { "minPixelStability", "useHistory", "maxPixelStability", "isParallel" };
 
             for (size_t i = 0; i < paramsConf.size(); ++i)
             {
@@ -168,8 +167,8 @@ bool BackgroundSubtract::Init(const config_t& config)
 
         case ALG_MOG2:
         {
-            std::vector<std::string> paramsConf = { "history", "varThreshold", "detectShadows" };
-            auto params = std::make_tuple(500, 16, 1);
+			auto params = std::make_tuple(500, 16, 1);
+            std::array<std::string, std::tuple_size<decltype(params)>::value> paramsConf = { "history", "varThreshold", "detectShadows" };
 
             for (size_t i = 0; i < paramsConf.size(); ++i)
             {
