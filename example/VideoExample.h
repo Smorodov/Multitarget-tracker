@@ -33,6 +33,8 @@ protected:
     std::unique_ptr<BaseDetector> m_detector;
     std::unique_ptr<CTracker> m_tracker;
 
+	std::vector<TrackingObject> m_tracks;
+
     bool m_showLogs = true;
     float m_fps = 25;
 

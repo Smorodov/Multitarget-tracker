@@ -237,7 +237,7 @@ void YoloDarknetDetector::FillImg(image_t& detImage)
 	const int h = detImage.h;
 	const int w = detImage.w;
 	constexpr float knorm = 1.f / 255.f;
-	for (size_t y = 0; y < h; ++y)
+	for (int y = 0; y < h; ++y)
 	{
 		for (int c = 0; c < 3; ++c)
 		{

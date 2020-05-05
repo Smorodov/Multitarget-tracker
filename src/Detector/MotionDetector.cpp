@@ -84,6 +84,16 @@ void MotionDetector::Detect(cv::UMat& gray)
 }
 
 ///
+/// \brief MotionDetector::ResetModel
+/// \param img
+/// \param roiRect
+///
+void MotionDetector::ResetModel(const cv::UMat& img, const cv::Rect& roiRect)
+{
+	m_backgroundSubst->ResetModel(img, roiRect);
+}
+
+///
 /// \brief MotionDetector::CalcMotionMap
 /// \param frame
 ///
