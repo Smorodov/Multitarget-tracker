@@ -23,6 +23,8 @@ public:
 
 	void CalcMotionMap(cv::Mat frame);
 
+	void ResetModel(const cv::UMat& img, const cv::Rect& roiRect);
+
 private:
     void DetectContour();
 
@@ -30,6 +32,6 @@ private:
 
     cv::UMat m_fg;
 
-    BackgroundSubtract::BGFG_ALGS m_algType;
+    BackgroundSubtract::BGFG_ALGS m_algType = BackgroundSubtract::BGFG_ALGS::ALG_MOG2;
     bool m_useRotatedRect = false;
 };

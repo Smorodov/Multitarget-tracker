@@ -56,24 +56,24 @@ protected:
     ///
     bool InitDetector(cv::UMat frame)
     {
-        m_minObjWidth = frame.cols / 50;
+        m_minObjWidth = frame.cols / 20;
 
         config_t config;
 		config.emplace("useRotatedRect", "0");
 
-		tracking::Detectors detectorType = tracking::Detectors::Motion_MOG2;
+		tracking::Detectors detectorType = tracking::Detectors::Motion_VIBE;
 
 		switch (detectorType)
 		{
 		case tracking::Detectors::Motion_VIBE:
 			config.emplace("samples", "20");
-			config.emplace("pixelNeighbor", "4");
-			config.emplace("distanceThreshold", "17");
-			config.emplace("matchingThreshold", "2");
+			config.emplace("pixelNeighbor", "1");
+			config.emplace("distanceThreshold", "20");
+			config.emplace("matchingThreshold", "3");
 			config.emplace("updateFactor", "16");
 			break;
 		case tracking::Detectors::Motion_MOG:
-			config.emplace("history", std::to_string(cvRound(20 * m_minStaticTime * m_fps)));
+			config.emplace("history", std::to_string(cvRound(50 * m_minStaticTime * m_fps)));
 			config.emplace("nmixtures", "3");
 			config.emplace("backgroundRatio", "0.7");
 			config.emplace("noiseSigma", "0");
@@ -115,7 +115,7 @@ protected:
     bool InitTracker(cv::UMat frame)
     {
         TrackerSettings settings;
-		settings.SetDistance(tracking::DistCenters);
+		settings.SetDistance(tracking::DistRects);
         settings.m_kalmanType = tracking::KalmanLinear;
         settings.m_filterGoal = tracking::FilterCenter;
         settings.m_lostTrackType = tracking::TrackCSRT;       // Use visual objects tracker for collisions resolving
@@ -131,11 +131,11 @@ protected:
 #endif
 		settings.m_minAreaRadiusK = 0.8f;
 
-        settings.m_useAbandonedDetection = false;
+        settings.m_useAbandonedDetection = true;
         if (settings.m_useAbandonedDetection)
         {
             settings.m_minStaticTime = m_minStaticTime;
-            settings.m_maxStaticTime = 60;
+            settings.m_maxStaticTime = 10;
             settings.m_maximumAllowedSkippedFrames = cvRound(settings.m_minStaticTime * m_fps); // Maximum allowed skipped frames
             settings.m_maxTraceLength = 2 * settings.m_maximumAllowedSkippedFrames;        // Maximum trace length
         }
@@ -158,18 +158,46 @@ protected:
     ///
     void DrawData(cv::Mat frame, int framesCounter, int currTime)
     {
-		auto tracks = m_tracker->GetTracks();
+		m_tracks = m_tracker->GetTracks();
 
         if (m_showLogs)
         {
-            std::cout << "Frame " << framesCounter << ": tracks = " << tracks.size() << ", time = " << currTime << std::endl;
+            std::cout << "Frame " << framesCounter << ": tracks = " << m_tracks.size() << ", time = " << currTime << std::endl;
         }
 
-        for (const auto& track : tracks)
+        for (const auto& track : m_tracks)
         {
             if (track.m_isStatic)
             {
-                DrawTrack(frame, 1, track, true);
+                DrawTrack(frame, 1, track, false);
+
+				std::string label = "abandoned " + std::to_string(track.m_ID);
+				int baseLine = 0;
+				cv::Size labelSize = cv::getTextSize(label, cv::FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
+
+				cv::Rect brect = track.m_rrect.boundingRect();
+				if (brect.x < 0)
+				{
+					brect.width = std::min(brect.width, frame.cols - 1);
+					brect.x = 0;
+				}
+				else if (brect.x + brect.width >= frame.cols)
+				{
+					brect.x = std::max(0, frame.cols - brect.width - 1);
+					brect.width = std::min(brect.width, frame.cols - 1);
+				}
+				if (brect.y - labelSize.height < 0)
+				{
+					brect.height = std::min(brect.height, frame.rows - 1);
+					brect.y = labelSize.height;
+				}
+				else if (brect.y + brect.height >= frame.rows)
+				{
+					brect.y = std::max(0, frame.rows - brect.height - 1);
+					brect.height = std::min(brect.height, frame.rows - 1);
+				}
+				DrawFilledRect(frame, cv::Rect(cv::Point(brect.x, brect.y - labelSize.height), cv::Size(labelSize.width, labelSize.height + baseLine)), cv::Scalar(255, 0, 255), 150);
+				cv::putText(frame, label, brect.tl(), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 0, 0));
             }
             else
             {
@@ -262,14 +290,14 @@ protected:
     ///
     void DrawData(cv::Mat frame, int framesCounter, int currTime)
     {
-		auto tracks = m_tracker->GetTracks();
+		m_tracks = m_tracker->GetTracks();
 
         if (m_showLogs)
         {
-            std::cout << "Frame " << framesCounter << ": tracks = " << tracks.size() << ", time = " << currTime << std::endl;
+            std::cout << "Frame " << framesCounter << ": tracks = " << m_tracks.size() << ", time = " << currTime << std::endl;
         }
 
-        for (const auto& track : tracks)
+        for (const auto& track : m_tracks)
         {
             if (track.IsRobust(8,                           // Minimal trajectory size
                                 0.4f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
@@ -359,14 +387,14 @@ protected:
     ///
     void DrawData(cv::Mat frame, int framesCounter, int currTime)
     {
-		auto tracks = m_tracker->GetTracks();
+		m_tracks = m_tracker->GetTracks();
 
         if (m_showLogs)
         {
-            std::cout << "Frame " << framesCounter << ": tracks = " << tracks.size() << ", time = " << currTime << std::endl;
+            std::cout << "Frame " << framesCounter << ": tracks = " << m_tracks.size() << ", time = " << currTime << std::endl;
         }
 
-        for (const auto& track : tracks)
+        for (const auto& track : m_tracks)
         {
 			if (track.IsRobust(cvRound(m_fps / 2),          // Minimal trajectory size
                                 0.4f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
@@ -457,14 +485,14 @@ protected:
     ///
     void DrawData(cv::Mat frame, int framesCounter, int currTime)
     {
-		auto tracks = m_tracker->GetTracks();
+		m_tracks = m_tracker->GetTracks();
 
         if (m_showLogs)
         {
-            std::cout << "Frame " << framesCounter << ": tracks = " << tracks.size() << ", time = " << currTime << std::endl;
+            std::cout << "Frame " << framesCounter << ": tracks = " << m_tracks.size() << ", time = " << currTime << std::endl;
         }
 
-        for (const auto& track : tracks)
+        for (const auto& track : m_tracks)
         {
             if (track.IsRobust(5,                           // Minimal trajectory size
                                 0.2f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
@@ -578,14 +606,14 @@ protected:
     ///
     void DrawData(cv::Mat frame, int framesCounter, int currTime)
     {
-		auto tracks = m_tracker->GetTracks();
+		m_tracks = m_tracker->GetTracks();
 
         if (m_showLogs)
         {
-            std::cout << "Frame " << framesCounter << ": tracks = " << tracks.size() << ", time = " << currTime << std::endl;
+            std::cout << "Frame " << framesCounter << ": tracks = " << m_tracks.size() << ", time = " << currTime << std::endl;
         }
 
-        for (const auto& track : tracks)
+        for (const auto& track : m_tracks)
         {
             if (track.IsRobust(1,                           // Minimal trajectory size
                                 0.1f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
@@ -731,14 +759,14 @@ protected:
     ///
 	void DrawData(cv::Mat frame, int framesCounter, int currTime)
 	{
-		auto tracks = m_tracker->GetTracks();
+		m_tracks = m_tracker->GetTracks();
 
 		if (m_showLogs)
 		{
-			std::cout << "Frame " << framesCounter << ": tracks = " << tracks.size() << ", time = " << currTime << std::endl;
+			std::cout << "Frame " << framesCounter << ": tracks = " << m_tracks.size() << ", time = " << currTime << std::endl;
 		}
 
-		for (const auto& track : tracks)
+		for (const auto& track : m_tracks)
 		{
             if (track.IsRobust(3,                           // Minimal trajectory size
                 0.7f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
@@ -887,14 +915,14 @@ protected:
 	///
 	void DrawData(cv::Mat frame, int framesCounter, int currTime)
 	{
-		auto tracks = m_tracker->GetTracks();
+		m_tracks = m_tracker->GetTracks();
 
 		if (m_showLogs)
 		{
-			std::cout << "Frame " << framesCounter << ": tracks = " << tracks.size() << ", time = " << currTime << std::endl;
+			std::cout << "Frame " << framesCounter << ": tracks = " << m_tracks.size() << ", time = " << currTime << std::endl;
 		}
 
-		for (const auto& track : tracks)
+		for (const auto& track : m_tracks)
 		{
 			if (track.IsRobust(2,                           // Minimal trajectory size
 				0.5f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght

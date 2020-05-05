@@ -23,6 +23,8 @@ public:
 		return m_channels;
 	}
 
+	void ResetModel(const cv::Mat& img, const cv::Rect& roiRect);
+
 private:
     int m_samples = 20;
     int m_channels = 1;

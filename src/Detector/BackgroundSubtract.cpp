@@ -214,40 +214,43 @@ bool BackgroundSubtract::Init(const config_t& config)
 //----------------------------------------------------------------------
 //
 //----------------------------------------------------------------------
+cv::UMat BackgroundSubtract::GetImg(const cv::UMat& image)
+{
+	if (image.channels() != m_channels)
+	{
+		if (image.channels() == 1)
+		{
+			cv::UMat newImg;
+#if (CV_VERSION_MAJOR < 4)
+			cv::cvtColor(image, newImg, CV_GRAY2BGR);
+#else
+			cv::cvtColor(image, newImg, cv::COLOR_GRAY2BGR);
+#endif
+			return newImg;
+		}
+		else if (image.channels() == 3)
+		{
+			cv::UMat newImg;
+#if (CV_VERSION_MAJOR < 4)
+			cv::cvtColor(image, newImg, CV_BGR2GRAY);
+#else
+			cv::cvtColor(image, newImg, cv::COLOR_BGR2GRAY);
+#endif
+			return newImg;
+		}
+	}
+	return image;
+}
+
+//----------------------------------------------------------------------
+//
+//----------------------------------------------------------------------
 void BackgroundSubtract::Subtract(const cv::UMat& image, cv::UMat& foreground)
 {
-    auto GetImg = [&]() -> cv::UMat
-    {
-            if (image.channels() != m_channels)
-    {
-            if (image.channels() == 1)
-    {
-            cv::UMat newImg;
-        #if (CV_VERSION_MAJOR < 4)
-            cv::cvtColor(image, newImg, CV_GRAY2BGR);
-        #else
-            cv::cvtColor(image, newImg, cv::COLOR_GRAY2BGR);
-        #endif
-            return newImg;
-}
-            else if (image.channels() == 3)
-    {
-            cv::UMat newImg;
-        #if (CV_VERSION_MAJOR < 4)
-            cv::cvtColor(image, newImg, CV_BGR2GRAY);
-        #else
-            cv::cvtColor(image, newImg, cv::COLOR_BGR2GRAY);
-        #endif
-            return newImg;
-}
-}
-            return image;
-};
-
     switch (m_algType)
     {
     case ALG_VIBE:
-        m_modelVibe->update(GetImg().getMat(cv::ACCESS_READ));
+        m_modelVibe->update(GetImg(image).getMat(cv::ACCESS_READ));
 		m_rawForeground = m_modelVibe->getMask().getUMat(cv::ACCESS_READ);
         break;
 
@@ -255,7 +258,7 @@ void BackgroundSubtract::Subtract(const cv::UMat& image, cv::UMat& foreground)
     case ALG_GMG:
     case ALG_CNT:
 #ifdef USE_OCV_BGFG
-        m_modelOCV->apply(GetImg(), m_rawForeground);
+        m_modelOCV->apply(GetImg(image), m_rawForeground);
         break;
 #else
         std::cerr << "OpenCV bgfg algorithms are not implemented!" << std::endl;
@@ -266,22 +269,22 @@ void BackgroundSubtract::Subtract(const cv::UMat& image, cv::UMat& foreground)
     case ALG_LOBSTER:
         if (m_rawForeground.size() != image.size() || m_rawForeground.type() != CV_8UC1)
         {
-            m_modelSuBSENSE->initialize(GetImg().getMat(cv::ACCESS_READ), cv::Mat());
+            m_modelSuBSENSE->initialize(GetImg(image).getMat(cv::ACCESS_READ), cv::Mat());
 			m_rawForeground.create(image.size(), CV_8UC1);
         }
         else
         {
-            m_modelSuBSENSE->apply(GetImg(), m_rawForeground);
+            m_modelSuBSENSE->apply(GetImg(image), m_rawForeground);
         }
         break;
 
     case ALG_MOG2:
-        m_modelOCV->apply(GetImg(), m_rawForeground);
+        m_modelOCV->apply(GetImg(image), m_rawForeground);
         cv::threshold(m_rawForeground, m_rawForeground, 200, 255, cv::THRESH_BINARY);
         break;
 
     default:
-        m_modelVibe->update(GetImg().getMat(cv::ACCESS_READ));
+        m_modelVibe->update(GetImg(image).getMat(cv::ACCESS_READ));
 		m_rawForeground = m_modelVibe->getMask().getUMat(cv::ACCESS_READ);
         break;
     }
@@ -298,4 +301,15 @@ void BackgroundSubtract::Subtract(const cv::UMat& image, cv::UMat& foreground)
 #ifndef SILENT_WORK
     //cv::imshow("after", foreground);
 #endif
+}
+
+//----------------------------------------------------------------------
+//
+//----------------------------------------------------------------------
+void BackgroundSubtract::ResetModel(const cv::UMat& img, const cv::Rect& roiRect)
+{
+	if (m_algType == ALG_VIBE)
+	{
+		m_modelVibe->ResetModel(GetImg(img).getMat(cv::ACCESS_READ), roiRect);
+	}
 }

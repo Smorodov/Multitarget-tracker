@@ -38,6 +38,15 @@ public:
     virtual void Detect(cv::UMat& frame) = 0;
 
 	///
+	/// \brief ResetModel
+	/// \param img
+	/// \param roiRect
+	///
+	virtual void ResetModel(const cv::UMat& /*img*/, const cv::Rect& /*roiRect*/)
+	{
+	}
+
+	///
 	/// \brief CanGrayProcessing
 	///
 	virtual bool CanGrayProcessing() const = 0;

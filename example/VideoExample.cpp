@@ -332,12 +332,14 @@ void VideoExample::Detection(cv::Mat frame, regions_t& regions)
 {
     cv::UMat uframe;
     if (!m_detector->CanGrayProcessing())
-    {
         uframe = frame.getUMat(cv::ACCESS_READ);
-    }
 	else
-	{
 		cv::cvtColor(frame, uframe, cv::COLOR_BGR2GRAY);
+
+	for (const auto& track : m_tracks)
+	{
+		if (track.m_isStatic)
+			m_detector->ResetModel(uframe, track.m_rrect.boundingRect());
 	}
 
     m_detector->Detect(uframe);
@@ -467,8 +469,16 @@ void VideoExample::DrawTrack(cv::Mat frame,
 ///
 bool VideoExample::OpenCapture(cv::VideoCapture& capture)
 {
-    if (m_inFile.size() == 1)
-        capture.open(atoi(m_inFile.c_str()));
+	if (m_inFile.size() == 1)
+	{
+#ifdef _WIN32
+		capture.open(atoi(m_inFile.c_str()), cv::CAP_DSHOW);
+#else
+		capture.open(atoi(m_inFile.c_str()));
+#endif
+		//if (capture.isOpened())
+		//	capture.set(cv::CAP_PROP_SETTINGS, 1);
+	}
     else
         capture.open(m_inFile);
 
@@ -476,7 +486,10 @@ bool VideoExample::OpenCapture(cv::VideoCapture& capture)
     {
         capture.set(cv::CAP_PROP_POS_FRAMES, m_startFrame);
 
-        m_fps = std::max(1.f, (float)capture.get(cv::CAP_PROP_FPS));
+        m_fps = std::max(25.f, (float)capture.get(cv::CAP_PROP_FPS));
+
+		std::cout << "Video " << m_inFile << " was started from " << m_startFrame << " frame with " << m_fps << " fps" << std::endl;
+
         return true;
     }
     return false;

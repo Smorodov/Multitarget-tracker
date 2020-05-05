@@ -152,4 +152,54 @@ namespace vibe
 	{
 		return m_mask;
 	}
+
+	///
+	void VIBE::ResetModel(const cv::Mat& img, const cv::Rect& roiRect)
+	{
+		CV_Assert(m_channels == img.channels());
+
+		const int top = std::max(0, roiRect.y);
+		const int bottom = std::min(img.rows, roiRect.y + roiRect.height);
+		const int left = std::max(0, roiRect.x);
+		const int right = std::min(img.cols, roiRect.x + roiRect.width);
+		for (int i = top; i < bottom; i++)
+		{
+			const uchar* img_ptr = img.ptr(i) + m_channels * left;
+			uchar* mask_ptr = m_mask.ptr(i) + left;
+
+			for (int j = left; j < right; j++)
+			{
+				if (*mask_ptr)
+				{
+					bool flag = false;
+					int matching_counter = 0;
+					model_t::value_type* model_ptr = &m_model[m_channels * m_samples * m_size.width * i + m_channels * m_samples * j];
+					for (int s = 0; s < m_samples; s++)
+					{
+						int channels_counter = 0;
+						for (int c = 0; c < m_channels; c++)
+						{
+							if (std::abs((int)model_ptr[c] - img_ptr[c]) >= m_distanceThreshold)
+							{
+								model_ptr[c] = img_ptr[c];
+								++channels_counter;
+							}
+						}
+						if (channels_counter == m_channels)
+						{
+							if (++matching_counter > m_matchingThreshold)
+							{
+								flag = true;
+								break;
+							}
+						}
+						model_ptr += m_channels;
+					}
+				}
+
+				img_ptr += m_channels;
+				++mask_ptr;
+			}
+		}
+	}
 }
