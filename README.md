@@ -2,11 +2,11 @@
 
 # New videos!
 
-* Traffic counting
+* Traffic counting with YOLO v3
 
 [![Traffic counting:](https://img.youtube.com/vi/LzCv6Dr46kw/0.jpg)](https://youtu.be/LzCv6Dr46kw)
 
-* First step to ADAS
+* First step to ADAS with YOLO v4
 
 [![Simple ADAS:](https://img.youtube.com/vi/5cgg5fy90Xg/0.jpg)](https://youtu.be/5cgg5fy90Xg)
 
@@ -54,7 +54,7 @@
 
 4.1. No search (tracking::TrackNone)
 
-4.2. Built-in DAT (tracking::TrackDAT) from [foolwood](https://github.com/foolwood/DAT), STAPLE (tracking::TrackSTAPLE) from [xuduo35](https://github.com/xuduo35/STAPLE) or LDES (tracking::TrackLDES) from [yfji](https://github.com/yfji/LDESCpp); KCF (tracking::TrackSTAPLE), MIL (tracking::TrackSTAPLE), MedianFlow (tracking::TrackSTAPLE), GOTURN (tracking::TrackSTAPLE), MOSSE (tracking::TrackSTAPLE) or CSRT (tracking::TrackSTAPLE) from [opencv_contrib](https://github.com/opencv/opencv_contrib/tree/master/modules/tracking)
+4.2. Built-in DAT (tracking::TrackDAT) from [foolwood](https://github.com/foolwood/DAT), STAPLE (tracking::TrackSTAPLE) from [xuduo35](https://github.com/xuduo35/STAPLE) or LDES (tracking::TrackLDES) from [yfji](https://github.com/yfji/LDESCpp); KCF (tracking::TrackKCF), MIL (tracking::TrackMIL), MedianFlow (tracking::TrackMedianFlow), GOTURN (tracking::TrackGOTURN), MOSSE (tracking::TrackMOSSE) or CSRT (tracking::TrackCSRT) from [opencv_contrib](https://github.com/opencv/opencv_contrib/tree/master/modules/tracking)
 
 With this option the tracking can work match slower but more accuracy.
 
@@ -83,6 +83,7 @@ So we have a latency on 1 frame but on two free CPU cores we can increase perfor
 
 This pipeline can used with slow but accuracy DNN and track objects in intermediate frame in realtime without latency.
 
+Also you can read [Wiki in Russian](https://github.com/Smorodov/Multitarget-tracker/wiki).
 
 #### Demo Videos
 
@@ -125,7 +126,7 @@ This pipeline can used with slow but accuracy DNN and track objects in intermedi
 **Usage:**
 
            Usage:
-             ./MultitargetTracker <path to movie file> [--example]=<number of example 0..6> [--start_frame]=<start a video from this position> [--end_frame]=<play a video to this position> [--end_delay]=<delay in milliseconds after video ending> [--out]=<name of result video file> [--show_logs]=<show logs> [--gpu]=<use OpenCL> [--async]=<async pipeline>
+             ./MultitargetTracker <path to movie file> [--example]=<number of example 0..7> [--start_frame]=<start a video from this position> [--end_frame]=<play a video to this position> [--end_delay]=<delay in milliseconds after video ending> [--out]=<name of result video file> [--show_logs]=<show logs> [--gpu]=<use OpenCL> [--async]=<async pipeline>
              ./MultitargetTracker ../data/atrium.avi -e=1 -o=../data/atrium_motion.avi
            Press:
            * 'm' key for change mode: play|pause. When video is paused you can press any key for get next frame.
