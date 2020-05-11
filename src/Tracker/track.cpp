@@ -231,7 +231,7 @@ cv::RotatedRect CTrack::CalcPredictionEllipse(cv::Size_<track_t> minRadius) cons
 		else
 		{
 			rrect.center.y += d.y / 3;
-			rrect.angle = CV_PI / 2.f;
+			rrect.angle = static_cast<float>(CV_PI / 2.);
 		}
 	}
 	return rrect;
@@ -419,8 +419,8 @@ void CTrack::RectUpdate(
     {
         int res = 0;
 
-        if (size < 2)
-            size = 2;
+        if (size < 1)
+            size = 0;
 
         if (v < 0)
         {
@@ -650,11 +650,11 @@ void CTrack::RectUpdate(
     m_predictionRect.center.x += dx;
     m_predictionRect.center.y += dy;
 #endif
-    m_outOfTheFrame = (dx != 0) || (dy != 0);
+    m_outOfTheFrame = (dx != 0) || (dy != 0) || (brect.width < 2) || (brect.height < 2);
 
     m_predictionPoint = m_predictionRect.center;
 
-	//std::cout << "brect = " << brect << ", dx = " << dx << ", dy = " << dy << ", m_outOfTheFrame = " << m_outOfTheFrame << ", m_predictionPoint = " << m_predictionPoint << std::endl;
+	//std::cout << "brect = " << brect << ", dx = " << dx << ", dy = " << dy << ", outOfTheFrame = " << m_outOfTheFrame << ", predictionPoint = " << m_predictionPoint << std::endl;
 }
 
 ///
@@ -899,5 +899,7 @@ void CTrack::PointUpdate(
         return false;
     };
 	auto p = m_predictionPoint;
-    m_outOfTheFrame = Clamp(p.x, frameSize.width) | Clamp(p.y, frameSize.height);
+    m_outOfTheFrame = Clamp(p.x, frameSize.width) || Clamp(p.y, frameSize.height) || (m_predictionRect.size.width < 2) || (m_predictionRect.size.height < 2);
+
+	//std::cout << "predictionRect = " << m_predictionRect.boundingRect() << ", outOfTheFrame = " << m_outOfTheFrame << ", predictionPoint = " << m_predictionPoint << std::endl;
 }
