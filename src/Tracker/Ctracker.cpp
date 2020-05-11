@@ -99,6 +99,7 @@ void CTracker::UpdateTrackingState(
         for (size_t i = 0; i < m_tracks.size();)
         {
             if (m_tracks[i]->SkippedFrames() > m_settings.m_maximumAllowedSkippedFrames ||
+				m_tracks[i]->IsOutOfTheFrame() ||
                     m_tracks[i]->IsStaticTimeout(cvRound(fps * (m_settings.m_maxStaticTime - m_settings.m_minStaticTime))))
             {
                 m_tracks.erase(m_tracks.begin() + i);
