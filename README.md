@@ -116,12 +116,22 @@ Also you can read [Wiki in Russian](https://github.com/Smorodov/Multitarget-trac
 1. Download project sources
 2. Install CMake
 3. Install OpenCV (https://github.com/opencv/opencv) and OpenCV contrib (https://github.com/opencv/opencv_contrib) repositories
-4. Configure project CmakeLists.txt, set OpenCV_DIR.
+4. Configure project CmakeLists.txt, set OpenCV_DIR (-DOpenCV_DIR=/path/to/opencv/build).
 5. If opencv_contrib don't installed then disable options USE_OCV_BGFG=OFF, USE_OCV_KCF=OFF and USE_OCV_UKF=OFF
-6. If you want to use native darknet YOLO detector with CUDA + cuDNN then set BUILD_YOLO_LIB=ON
-7. For building example with low fps detector (now native darknet YOLO detector) and Tracker worked on each frame: BUILD_ASYNC_DETECTOR=ON
-8. For building example with line crossing detection (cars counting): BUILD_CARS_COUNTING=ON
-9. Go to the build directory and run make
+6. If you want to use native darknet YOLO detector with CUDA + cuDNN then set BUILD_YOLO_LIB=ON  (Install first CUDA and cuDNN libraries from Nvidia)
+7. If you want to use YOLO detector with TensorRT then set BUILD_YOLO_TENSORRT=ON (Install first TensorRT library from Nvidia)
+8. For building example with low fps detector (now native darknet YOLO detector) and Tracker worked on each frame: BUILD_ASYNC_DETECTOR=ON
+9. For building example with line crossing detection (cars counting): BUILD_CARS_COUNTING=ON
+10. Go to the build directory and run make
+
+**Full build:**
+
+           git clone https://github.com/Smorodov/Multitarget-tracker.git
+           cd Multitarget-tracker
+           mkdir build
+           cd build
+           cmake . .. -DUSE_OCV_BGFG=ON -DUSE_OCV_KCF=ON -DUSE_OCV_UKF=ON -DBUILD_YOLO_LIB=ON -DBUILD_YOLO_TENSORRT=ON -DBUILD_ASYNC_DETECTOR=ON -DBUILD_CARS_COUNTING=ON
+           make -j
 
 **Usage:**
 
