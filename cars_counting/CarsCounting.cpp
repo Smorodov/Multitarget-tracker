@@ -239,6 +239,8 @@ void CarsCounting::DrawTrack(cv::Mat frame,
 ///
 bool CarsCounting::InitTracker(cv::UMat frame)
 {
+	bool res = true;
+
     m_minObjWidth = frame.cols / 50;
 
     const int minStaticTime = 5;
@@ -252,8 +254,8 @@ bool CarsCounting::InitTracker(cv::UMat frame)
 	std::string pathToModel = "../data/";
 #endif
 
-	config.emplace("modelConfiguration", pathToModel + "yolov3.cfg");
-	config.emplace("modelBinary", pathToModel + "yolov3.weights");
+	config.emplace("modelConfiguration", pathToModel + "yolov4.cfg");
+	config.emplace("modelBinary", pathToModel + "yolov4.weights");
 	config.emplace("confidenceThreshold", "0.7");
 	config.emplace("classNames", pathToModel + "coco.names");
 	config.emplace("maxCropRatio", "-1");
@@ -286,44 +288,50 @@ bool CarsCounting::InitTracker(cv::UMat frame)
 
 #endif
 
-    m_detector->SetMinObjectSize(cv::Size(m_minObjWidth, m_minObjWidth));
+	if (m_detector.get())
+		m_detector->SetMinObjectSize(cv::Size(m_minObjWidth, m_minObjWidth));
+	else
+		res = false;
 
-    TrackerSettings settings;
-	settings.SetDistance(tracking::DistJaccard);
-    settings.m_kalmanType = tracking::KalmanLinear;
-    settings.m_filterGoal = tracking::FilterCenter;
-    settings.m_lostTrackType = tracking::TrackCSRT; // Use KCF tracker for collisions resolving
-    settings.m_matchType = tracking::MatchHungrian;
-    settings.m_dt = 0.3f;                           // Delta time for Kalman filter
-    settings.m_accelNoiseMag = 0.2f;                // Accel noise magnitude for Kalman filter
-    settings.m_distThres = 0.7f;                    // Distance threshold between region and object on two frames
-    settings.m_minAreaRadiusPix = frame.rows / 20.f;
-	settings.m_maximumAllowedSkippedFrames = cvRound(2 * m_fps); // Maximum allowed skipped frames
-	settings.m_maxTraceLength = cvRound(3 * m_fps);      // Maximum trace length
+	if (res)
+	{
+		TrackerSettings settings;
+		settings.SetDistance(tracking::DistJaccard);
+		settings.m_kalmanType = tracking::KalmanLinear;
+		settings.m_filterGoal = tracking::FilterCenter;
+		settings.m_lostTrackType = tracking::TrackCSRT; // Use KCF tracker for collisions resolving
+		settings.m_matchType = tracking::MatchHungrian;
+		settings.m_dt = 0.3f;                           // Delta time for Kalman filter
+		settings.m_accelNoiseMag = 0.2f;                // Accel noise magnitude for Kalman filter
+		settings.m_distThres = 0.7f;                    // Distance threshold between region and object on two frames
+		settings.m_minAreaRadiusPix = frame.rows / 20.f;
+		settings.m_maximumAllowedSkippedFrames = cvRound(2 * m_fps); // Maximum allowed skipped frames
+		settings.m_maxTraceLength = cvRound(3 * m_fps);      // Maximum trace length
 
-	settings.AddNearTypes("car", "bus", false);
-	settings.AddNearTypes("car", "truck", false);
-	settings.AddNearTypes("person", "bicycle", true);
-	settings.AddNearTypes("person", "motorbike", true);
+		settings.AddNearTypes("car", "bus", false);
+		settings.AddNearTypes("car", "truck", false);
+		settings.AddNearTypes("person", "bicycle", true);
+		settings.AddNearTypes("person", "motorbike", true);
 
 
-    settings.m_useAbandonedDetection = false;
-    if (settings.m_useAbandonedDetection)
-    {
-        settings.m_minStaticTime = minStaticTime;
-        settings.m_maxStaticTime = 60;
-        settings.m_maximumAllowedSkippedFrames = cvRound(settings.m_minStaticTime * m_fps); // Maximum allowed skipped frames
-        settings.m_maxTraceLength = 2 * settings.m_maximumAllowedSkippedFrames;        // Maximum trace length
-    }
-    else
-    {
-        settings.m_maximumAllowedSkippedFrames = cvRound(2 * m_fps); // Maximum allowed skipped frames
-        settings.m_maxTraceLength = cvRound(4 * m_fps);              // Maximum trace length
-    }
+		settings.m_useAbandonedDetection = false;
+		if (settings.m_useAbandonedDetection)
+		{
+			settings.m_minStaticTime = minStaticTime;
+			settings.m_maxStaticTime = 60;
+			settings.m_maximumAllowedSkippedFrames = cvRound(settings.m_minStaticTime * m_fps); // Maximum allowed skipped frames
+			settings.m_maxTraceLength = 2 * settings.m_maximumAllowedSkippedFrames;        // Maximum trace length
+		}
+		else
+		{
+			settings.m_maximumAllowedSkippedFrames = cvRound(2 * m_fps); // Maximum allowed skipped frames
+			settings.m_maxTraceLength = cvRound(4 * m_fps);              // Maximum trace length
+		}
 
-    m_tracker = std::make_unique<CTracker>(settings);
+		m_tracker = std::make_unique<CTracker>(settings);
+	}
 
-    return true;
+    return res;
 }
 
 ///
