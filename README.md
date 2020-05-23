@@ -2,6 +2,11 @@
 
 # New videos!
 
+* Vehicles speed calculation with YOLO v4 (Thanks [Sam Blake for great idea!](https://medium.com/hal24k-techblog/how-to-track-objects-in-the-real-world-with-tensorflow-sort-and-opencv-a64d9564ccb1))
+
+[![Vehicles speed:](https://img.youtube.com/vi/qOHYvDwpsO0/0.jpg)](https://youtu.be/qOHYvDwpsO0)
+
+
 * Traffic counting with YOLO v3
 
 [![Traffic counting:](https://img.youtube.com/vi/LzCv6Dr46kw/0.jpg)](https://youtu.be/LzCv6Dr46kw)

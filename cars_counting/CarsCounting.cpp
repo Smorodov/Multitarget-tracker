@@ -206,6 +206,54 @@ void CarsCounting::DrawTrack(cv::Mat frame,
 #else
         cv::rectangle(frame, ResizeRect(track.m_rrect.boundingRect()), cv::Scalar(0, 255, 0), 1, CV_AA);
 #endif
+
+		if (!m_geoParams.Empty())
+		{
+			size_t period = 2 * cvRound(m_fps);
+			if (period >= track.m_trace.size())
+				period = track.m_trace.size();
+			const auto& from = m_geoParams.Pix2Geo(track.m_trace[track.m_trace.size() - period]);
+			const auto& to = m_geoParams.Pix2Geo(track.m_trace[track.m_trace.size() - 1]);
+			auto dist = DistanceInMeters(from, to);
+
+			std::stringstream label;
+			if (period >= cvRound(m_fps) / 4)
+			{
+				auto velocity = (3.6f * dist * m_fps) / period;
+				//std::cout << track.m_type << ": distance " << std::fixed << std::setw(2) << std::setprecision(2) << dist << " on time " << (period / m_fps) << " with velocity " << velocity << " km/h: " << track.m_confidence << std::endl;
+				if (velocity < 1.f || std::isnan(velocity))
+					velocity = 0;
+				label << track.m_type << " " << std::fixed << std::setw(2) << std::setprecision(2) << velocity << " km/h";
+
+				int baseLine = 0;
+				double fontScale = 0.5;
+				cv::Size labelSize = cv::getTextSize(label.str(), cv::FONT_HERSHEY_SIMPLEX, fontScale, 1, &baseLine);
+
+				cv::Rect brect = track.m_rrect.boundingRect();
+				if (brect.x < 0)
+				{
+					brect.width = std::min(brect.width, frame.cols - 1);
+					brect.x = 0;
+				}
+				else if (brect.x + brect.width >= frame.cols)
+				{
+					brect.x = std::max(0, frame.cols - brect.width - 1);
+					brect.width = std::min(brect.width, frame.cols - 1);
+				}
+				if (brect.y - labelSize.height < 0)
+				{
+					brect.height = std::min(brect.height, frame.rows - 1);
+					brect.y = labelSize.height;
+				}
+				else if (brect.y + brect.height >= frame.rows)
+				{
+					brect.y = std::max(0, frame.rows - brect.height - 1);
+					brect.height = std::min(brect.height, frame.rows - 1);
+				}
+				cv::rectangle(frame, cv::Rect(cv::Point(brect.x, brect.y - labelSize.height), cv::Size(labelSize.width, labelSize.height + baseLine)), cv::Scalar(200, 200, 200), cv::FILLED);
+				cv::putText(frame, label.str(), brect.tl(), cv::FONT_HERSHEY_SIMPLEX, fontScale, cv::Scalar(0, 0, 0));
+			}
+		}
     }
 
     if (drawTrajectory)
@@ -331,6 +379,12 @@ bool CarsCounting::InitTracker(cv::UMat frame)
 		m_tracker = std::make_unique<CTracker>(settings);
 	}
 
+#if 0
+	std::vector<cv::Point> framePoints{ cv::Point(420, 348), cv::Point(509, 283), cv::Point(731, 281), cv::Point(840, 343) };
+	std::vector<cv::Point2f> geoPoints{ cv::Point2f(45.526646, 5.974535), cv::Point2f(45.527566, 5.973849), cv::Point2f(45.527904, 5.974135), cv::Point2f(45.526867, 5.974826) };
+	m_geoParams.SetKeyPoints(framePoints, geoPoints);
+#endif
+
     return res;
 }
 
@@ -347,7 +401,14 @@ void CarsCounting::DrawData(cv::Mat frame, int framesCounter, int currTime)
         std::cout << "Frame " << framesCounter << ": tracks = " << tracks.size() << ", time = " << currTime << std::endl;
     }
 
-    std::set<size_t> currIntersections;
+	if (!m_geoParams.Empty())
+	{
+		std::vector<cv::Point> points = m_geoParams.GetFramePoints();
+		for (size_t i = 0; i < points.size(); ++i)
+		{
+			cv::line(frame, points[i % points.size()], points[(i + 1) % points.size()], cv::Scalar(255, 255, 255), 1, cv::LINE_AA);
+		}
+	}
 	
     for (const auto& track : tracks)
     {
@@ -364,14 +425,10 @@ void CarsCounting::DrawData(cv::Mat frame, int framesCounter, int currTime)
             {
                 DrawTrack(frame, 1, track, true);
 
-                CheckLinesIntersection(track, static_cast<float>(frame.cols), static_cast<float>(frame.rows), currIntersections);
+                CheckLinesIntersection(track, static_cast<float>(frame.cols), static_cast<float>(frame.rows));
             }
         }
     }
-
-    m_lastIntersections.clear();
-    m_lastIntersections = currIntersections;
-
     //m_detector->CalcMotionMap(frame);
 
     for (const auto& rl : m_lines)
@@ -432,21 +489,23 @@ bool CarsCounting::RemoveLine(unsigned int lineUid)
 /// \brief CarsCounting::CheckLinesIntersection
 /// \param track
 ///
-void CarsCounting::CheckLinesIntersection(const TrackingObject& track, float xMax, float yMax, std::set<size_t>& currIntersections)
+void CarsCounting::CheckLinesIntersection(const TrackingObject& track, float xMax, float yMax)
 {
     auto Pti2f = [&](cv::Point pt) -> cv::Point2f
     {
         return cv::Point2f(pt.x / xMax, pt.y / yMax);
     };
 
-    for (auto& rl : m_lines)
-    {
-        if (m_lastIntersections.find(track.m_ID) == m_lastIntersections.end())
-        {
-            if (rl.IsIntersect(Pti2f(track.m_trace[track.m_trace.size() - 3]), Pti2f(track.m_trace[track.m_trace.size() - 1])))
-            {
-                currIntersections.insert(track.m_ID);
-            }
-        }
-    }
+	constexpr size_t minTrack = 5;
+	if (track.m_trace.size() >= minTrack)
+	{
+		for (auto& rl : m_lines)
+		{
+			if (m_lastIntersections.find(track.m_ID) == m_lastIntersections.end())
+			{
+				if (rl.IsIntersect(Pti2f(track.m_trace[track.m_trace.size() - minTrack]), Pti2f(track.m_trace[track.m_trace.size() - 1])))
+					m_lastIntersections.emplace(track.m_ID);
+			}
+		}
+	}
 }
