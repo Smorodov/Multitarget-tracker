@@ -133,6 +133,9 @@ Also you can read [Wiki in Russian](https://github.com/Smorodov/Multitarget-trac
            cmake . .. -DUSE_OCV_BGFG=ON -DUSE_OCV_KCF=ON -DUSE_OCV_UKF=ON -DBUILD_YOLO_LIB=ON -DBUILD_YOLO_TENSORRT=ON -DBUILD_ASYNC_DETECTOR=ON -DBUILD_CARS_COUNTING=ON
            make -j
 
+How to run cmake on Windows for Visual Studio 15 2017 Win64: [example](https://github.com/Smorodov/Multitarget-tracker/blob/master/data/cmake.bat). You need to add deirectory with cmake.exe to PATH and change build params in cmake.bat
+
+
 **Usage:**
 
            Usage:
@@ -188,8 +191,9 @@ GNU GPLv3: http://www.gnu.org/licenses/gpl-3.0.txt
 3. Wenda Qin, Tian Zhang, Junhe Chen "Traffic Monitoring By Video: Vehicles Tracking and Vehicle Data Analysing", 2016 ( http://cs-people.bu.edu/wdqin/FinalProject/CS585%20FinalProjectReport.html )
 4. Ipek BARIS "CLASSIFICATION AND TRACKING OF VEHICLES WITH HYBRID CAMERA SYSTEMS", 2016 ( http://cvrg.iyte.edu.tr/publications/IpekBaris_MScThesis.pdf )
 5. Cheng-Ta Lee, Albert Y. Chen, Cheng-Yi Chang "In-building Coverage of Automated External Defibrillators Considering Pedestrian Flow", 2016 ( http://www.see.eng.osaka-u.ac.jp/seeit/icccbe2016/Proceedings/Full_Papers/092-132.pdf )
-6. Omid Noorshams "Automated systems to assess weights and activity in grouphoused mice", 2017 ( https://pdfs.semanticscholar.org/e5ff/f04b4200c149fb39d56f171ba7056ab798d3.pdf ) 
-7. RADEK VOPÁLENSKÝ "DETECTION,TRACKING AND CLASSIFICATION OF VEHICLES", 2018 ( https://www.vutbr.cz/www_base/zav_prace_soubor_verejne.php?file_id=181063 )
-8. Márk Rátosi, Gyula Simon "Real-Time Localization and Tracking  using Visible Light Communication", 2018, ( https://ieeexplore.ieee.org/abstract/document/8533800 )
-9. Thi Nha Ngo, Kung-Chin Wu, En-Cheng Yang, Ta-Te Lin "Areal-time imaging system for multiple honey bee tracking and activity monitoring", 2019 ( https://www.sciencedirect.com/science/article/pii/S0168169919301498 )
-10. ROS, http://docs.ros.org/lunar/api/costmap_converter/html/Ctracker_8cpp_source.html
+6. Roberto Ciano, Dimitrij Klesev "Autonome Roboterschwarme in geschlossenen Raumen" in "informatikJournal 2016/17", 2017 ( https://docplayer.org/124538994-2016-17-informatikjournal-2016-17-aktuelle-berichte-aus-forschung-und-lehre-der-fakultaet-informatik.html )
+7. Omid Noorshams "Automated systems to assess weights and activity in grouphoused mice", 2017 ( https://pdfs.semanticscholar.org/e5ff/f04b4200c149fb39d56f171ba7056ab798d3.pdf ) 
+8. RADEK VOPÁLENSKÝ "DETECTION,TRACKING AND CLASSIFICATION OF VEHICLES", 2018 ( https://www.vutbr.cz/www_base/zav_prace_soubor_verejne.php?file_id=181063 )
+9. Márk Rátosi, Gyula Simon "Real-Time Localization and Tracking  using Visible Light Communication", 2018 ( https://ieeexplore.ieee.org/abstract/document/8533800 )
+10. Thi Nha Ngo, Kung-Chin Wu, En-Cheng Yang, Ta-Te Lin "Areal-time imaging system for multiple honey bee tracking and activity monitoring", 2019 ( https://www.sciencedirect.com/science/article/pii/S0168169919301498 )
+11. ROS, http://docs.ros.org/lunar/api/costmap_converter/html/Ctracker_8cpp_source.html
