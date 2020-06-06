@@ -122,13 +122,9 @@ public:
     void pop_front(size_t count)
     {
         if (count < size())
-        {
             m_trace.erase(m_trace.begin(), m_trace.begin() + count);
-        }
         else
-        {
             m_trace.clear();
-        }
     }
 
     ///
@@ -142,15 +138,12 @@ public:
 
         size_t i = 0;
         if (lastPeriod < m_trace.size())
-        {
             i = m_trace.size() - lastPeriod;
-        }
+
         for (; i < m_trace.size(); ++i)
         {
             if (m_trace[i].m_hasRaw)
-            {
                 ++res;
-            }
         }
 
         return res;
@@ -185,13 +178,9 @@ struct TrackingObject
 		{
             auto tp = trace.at(i);
             if (tp.m_hasRaw)
-            {
                 m_trace.push_back(tp.m_prediction, tp.m_raw);
-            }
             else
-            {
                 m_trace.push_back(tp.m_prediction);
-            }
 		}
 	}
 
@@ -204,18 +193,14 @@ struct TrackingObject
 		{
             float sr = m_rrect.size.width / m_rrect.size.height;
 			if (sizeRatio.width > 0)
-			{
 				res &= (sr > sizeRatio.width);
-			}
+
 			if (sizeRatio.height > 0)
-			{
 				res &= (sr < sizeRatio.height);
-			}
 		}
 		if (m_outOfTheFrame)
-		{
 			res = false;
-		}
+
 		return res;
 	}
 };

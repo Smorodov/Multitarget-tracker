@@ -226,24 +226,18 @@ void CTracker::CreateDistaceMatrix(const regions_t& regions, distMatrix_t& costM
 				++ind;
 
 				if (m_settings.m_distType[ind] > 0.0f && ind == tracking::DistJaccard)
-				{
 					dist += m_settings.m_distType[ind] * track->CalcDistJaccard(reg);
-				}
 				++ind;
 
 				if (m_settings.m_distType[ind] > 0.0f && ind == tracking::DistHist)
-				{
 					dist += m_settings.m_distType[ind] * track->CalcDistHist(reg, currFrame);
-				}
 				++ind;
 				assert(ind == tracking::DistsCount);
 			}
 
 			costMatrix[i + j * N] = dist;
 			if (dist > maxCost)
-			{
 				maxCost = dist;
-			}
 		}
 	}
 }

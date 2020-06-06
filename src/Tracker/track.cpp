@@ -151,13 +151,9 @@ void CTrack::Update(
         )
 {
     if (m_filterObjectSize) // Kalman filter for object coordinates and size
-    {
         RectUpdate(region, dataCorrect, prevFrame, currFrame);
-    }
     else // Kalman filter only for object center
-    {
         PointUpdate(region.m_rrect.center, region.m_rrect.size, dataCorrect, currFrame.size());
-    }
 
     if (dataCorrect)
     {
@@ -174,9 +170,7 @@ void CTrack::Update(
     }
 
     if (m_trace.size() > max_trace_length)
-    {
         m_trace.pop_front(m_trace.size() - max_trace_length);
-    }
 }
 
 ///
@@ -469,13 +463,11 @@ void CTrack::RectUpdate(
 
             cv::Size roiSize(std::max(2 * brect.width, currFrame.cols / 4), std::max(2 * brect.height, currFrame.rows / 4));
             if (roiSize.width > currFrame.cols)
-            {
                 roiSize.width = currFrame.cols;
-            }
+
             if (roiSize.height > currFrame.rows)
-            {
                 roiSize.height = currFrame.rows;
-            }
+
             cv::Point roiTL(brect.x + brect.width / 2 - roiSize.width / 2, brect.y + brect.height / 2 - roiSize.height / 2);
             cv::Rect roiRect(roiTL, roiSize);
             Clamp(roiRect.x, roiRect.width, currFrame.cols);
@@ -505,13 +497,9 @@ void CTrack::RectUpdate(
                         lastRect.area() > 0)
                 {
                     if (m_staticFrame.empty())
-                    {
                         m_tracker->init(cv::UMat(prevFrame, roiRect), lastRect);
-                    }
                     else
-                    {
                         m_tracker->init(cv::UMat(m_staticFrame, roiRect), lastRect);
-                    }
 #if 0
 #ifndef SILENT_WORK
                     cv::Mat tmp = cv::UMat(prevFrame, roiRect).getMat(cv::ACCESS_READ).clone();
@@ -550,9 +538,7 @@ void CTrack::RectUpdate(
         else
         {
             if (m_tracker && !m_tracker.empty())
-            {
                 m_tracker.release();
-            }
         }
 #else
         std::cerr << "KCF tracker was disabled in CMAKE! Set lostTrackType = TrackNone in constructor." << std::endl;
@@ -572,9 +558,7 @@ void CTrack::RectUpdate(
 
                 cv::Rect2d lastRect(brect.x, brect.y, brect.width, brect.height);
                 if (!m_staticFrame.empty())
-                {
                     lastRect = cv::Rect2d(m_staticRect.x, m_staticRect.y, m_staticRect.width, m_staticRect.height);
-                }
 
                 if (lastRect.x >= 0 &&
                         lastRect.y >= 0 &&
@@ -623,7 +607,6 @@ void CTrack::RectUpdate(
 					{
                         UpdateRRect(brect, m_kalman.Update(newRect.boundingRect(), true));
 					}
-
                     recalcPrediction = false;
                 }
             }
@@ -631,17 +614,13 @@ void CTrack::RectUpdate(
         else
         {
             if (m_VOTTracker)
-            {
                 m_VOTTracker = nullptr;
-            }
         }
         break;
     }
 
     if (recalcPrediction)
-    {
         UpdateRRect(m_predictionRect.boundingRect(), m_kalman.Update(region.m_brect, dataCorrect));
-    }
 
     cv::Rect brect = m_predictionRect.boundingRect();
     int dx = Clamp(brect.x, brect.width, currFrame.cols);
@@ -666,14 +645,11 @@ void CTrack::CreateExternalTracker(int channels)
     {
     case tracking::TrackNone:
         if (m_VOTTracker)
-        {
             m_VOTTracker = nullptr;
-        }
+
 #ifdef USE_OCV_KCF
         if (m_tracker && !m_tracker.empty())
-        {
             m_tracker.release();
-        }
 #endif
         break;
 
@@ -704,9 +680,7 @@ void CTrack::CreateExternalTracker(int channels)
         }
 #endif
         if (m_VOTTracker)
-        {
             m_VOTTracker = nullptr;
-        }
         break;
 
     case tracking::TrackMIL:
@@ -723,9 +697,7 @@ void CTrack::CreateExternalTracker(int channels)
         }
 #endif
         if (m_VOTTracker)
-        {
             m_VOTTracker = nullptr;
-        }
         break;
 
     case tracking::TrackMedianFlow:
@@ -742,9 +714,7 @@ void CTrack::CreateExternalTracker(int channels)
         }
 #endif
         if (m_VOTTracker)
-        {
             m_VOTTracker = nullptr;
-        }
         break;
 
     case tracking::TrackGOTURN:
@@ -761,9 +731,7 @@ void CTrack::CreateExternalTracker(int channels)
         }
 #endif
         if (m_VOTTracker)
-        {
             m_VOTTracker = nullptr;
-        }
         break;
 
     case tracking::TrackMOSSE:
@@ -778,9 +746,7 @@ void CTrack::CreateExternalTracker(int channels)
         }
 #endif
         if (m_VOTTracker)
-        {
             m_VOTTracker = nullptr;
-        }
         break;
 
 	case tracking::TrackCSRT:
@@ -805,36 +771,26 @@ void CTrack::CreateExternalTracker(int channels)
 		}
 #endif
         if (m_VOTTracker)
-        {
             m_VOTTracker = nullptr;
-        }
 		break;
 
     case tracking::TrackDAT:
 #ifdef USE_OCV_KCF
 		if (m_tracker && !m_tracker.empty())
-        {
-            m_tracker.release();
-        }
+			m_tracker.release();
 #endif
         if (!m_VOTTracker)
-        {
             m_VOTTracker = std::unique_ptr<DAT_TRACKER>(new DAT_TRACKER());
-        }
         break;
 
     case tracking::TrackSTAPLE:
 #ifdef USE_OCV_KCF
         if (m_tracker && !m_tracker.empty())
-        {
             m_tracker.release();
-        }
 #endif
 #ifdef USE_STAPLE_TRACKER
         if (!m_VOTTracker)
-        {
             m_VOTTracker = std::unique_ptr<STAPLE_TRACKER>(new STAPLE_TRACKER());
-        }
 #else
 		std::cerr << "Project was compiled without STAPLE tracking!" << std::endl;
 #endif
@@ -843,15 +799,11 @@ void CTrack::CreateExternalTracker(int channels)
 	case tracking::TrackLDES:
 #ifdef USE_OCV_KCF
 		if (m_tracker && !m_tracker.empty())
-		{
 			m_tracker.release();
-		}
 #endif
 #ifdef USE_STAPLE_TRACKER
 		if (!m_VOTTracker)
-		{
 			m_VOTTracker = std::unique_ptr<LDESTracker>(new LDESTracker());
-		}
 #else
 		std::cerr << "Project was compiled without STAPLE tracking!" << std::endl;
 #endif
