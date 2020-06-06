@@ -138,7 +138,7 @@ Also you can read [Wiki in Russian](https://github.com/Smorodov/Multitarget-trac
            cmake . .. -DUSE_OCV_BGFG=ON -DUSE_OCV_KCF=ON -DUSE_OCV_UKF=ON -DBUILD_YOLO_LIB=ON -DBUILD_YOLO_TENSORRT=ON -DBUILD_ASYNC_DETECTOR=ON -DBUILD_CARS_COUNTING=ON
            make -j
 
-How to run cmake on Windows for Visual Studio 15 2017 Win64: [example](https://github.com/Smorodov/Multitarget-tracker/blob/master/data/cmake.bat). You need to add deirectory with cmake.exe to PATH and change build params in cmake.bat
+How to run cmake on Windows for Visual Studio 15 2017 Win64: [example](https://github.com/Smorodov/Multitarget-tracker/blob/master/data/cmake.bat). You need to add directory with cmake.exe to PATH and change build params in cmake.bat
 
 
 **Usage:**
@@ -169,6 +169,7 @@ How to run cmake on Windows for Visual Studio 15 2017 Win64: [example](https://g
            9. [Optional] Use 2 threads for processing pipeline
               -a=1 or --async=0
 
+More details here: [How to run examples](https://github.com/Smorodov/Multitarget-tracker/wiki/Run-examples).
 
 #### Thirdparty libraries
 * OpenCV (and contrib): https://github.com/opencv/opencv and https://github.com/opencv/opencv_contrib
