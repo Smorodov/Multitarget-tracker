@@ -354,13 +354,11 @@ bool CarsCounting::InitTracker(cv::UMat frame)
 		settings.m_distThres = 0.7f;                    // Distance threshold between region and object on two frames
 		settings.m_minAreaRadiusPix = frame.rows / 20.f;
 		settings.m_maximumAllowedSkippedFrames = cvRound(2 * m_fps); // Maximum allowed skipped frames
-		settings.m_maxTraceLength = cvRound(3 * m_fps);      // Maximum trace length
 
 		settings.AddNearTypes("car", "bus", false);
 		settings.AddNearTypes("car", "truck", false);
 		settings.AddNearTypes("person", "bicycle", true);
 		settings.AddNearTypes("person", "motorbike", true);
-
 
 		settings.m_useAbandonedDetection = false;
 		if (settings.m_useAbandonedDetection)
@@ -372,7 +370,7 @@ bool CarsCounting::InitTracker(cv::UMat frame)
 		}
 		else
 		{
-			settings.m_maximumAllowedSkippedFrames = cvRound(2 * m_fps); // Maximum allowed skipped frames
+			settings.m_maximumAllowedSkippedFrames = cvRound(10 * m_fps); // Maximum allowed skipped frames
 			settings.m_maxTraceLength = cvRound(4 * m_fps);              // Maximum trace length
 		}
 
