@@ -157,7 +157,7 @@ else(HAVE_OPENCV_CONTRIB)
 
 endif(HAVE_OPENCV_CONTRIB)
 
-option(USE_OCV_UKF "Should use the Unscented Kalman Filterr from opencv_contrib?" OFF)
+option(USE_OCV_UKF "Should use the Unscented Kalman Filter from opencv_contrib?" OFF)
 
 if(USE_OCV_UKF)
     add_definitions(-DUSE_OCV_UKF)
