@@ -17,3 +17,4 @@ cmake.exe . ..  -G "Visual Studio 15 2017 Win64" ^
           -DTensorRT_LIBRARY=C:/TensorRT-5.1.5.0/lib/*.lib ^
           -DTensorRT_INCLUDE_DIR=C:/TensorRT-5.1.5.0/include ^
           -Dgflags_DIR=C:/work/libraries/gflags/build_x64
+cmake.exe --build . -j 6 --config Release
