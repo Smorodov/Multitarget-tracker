@@ -51,9 +51,27 @@ struct TrajectoryPoint
     {
     }
 
-    bool m_hasRaw = false;
+	///
+	TrajectoryPoint(const TrajectoryPoint& tp) noexcept
+		: m_prediction(tp.m_prediction), m_raw(tp.m_raw), m_hasRaw(tp.m_hasRaw)
+	{
+	}
+
+	///
+	TrajectoryPoint& operator=(const TrajectoryPoint& tp) noexcept
+	{
+		m_prediction = tp.m_prediction;
+		m_raw = tp.m_raw;
+		m_hasRaw = tp.m_hasRaw;
+		return *this;
+	}
+
+	///
+	TrajectoryPoint(TrajectoryPoint&&) = default;
+
     Point_t m_prediction;
     Point_t m_raw;
+	bool m_hasRaw = false;
 };
 
 // --------------------------------------------------------------------------
@@ -63,6 +81,11 @@ struct TrajectoryPoint
 class Trace
 {
 public:
+	///
+	Trace() = default;
+	///
+	Trace(Trace&&) = default;
+
     ///
     /// \brief operator []
     /// \param i
@@ -149,8 +172,18 @@ public:
         return res;
     }
 
+	///
+	/// \brief Reserve
+	/// \param capacity
+	/// \return
+	///
+	void Reserve(size_t capacity)
+	{
+		m_trace.reserve(capacity);
+	}
+
 private:
-    std::deque<TrajectoryPoint> m_trace;
+    std::vector<TrajectoryPoint> m_trace;
 };
 
 // --------------------------------------------------------------------------
@@ -159,21 +192,23 @@ private:
 ///
 struct TrackingObject
 {
-    cv::RotatedRect m_rrect;           // Coordinates
+	std::string m_type;                // Objects type name or empty value
 	Trace m_trace;                     // Trajectory
 	size_t m_ID = 0;                   // Objects ID
+	cv::RotatedRect m_rrect;           // Coordinates
+	cv::Vec<track_t, 2> m_velocity;    // pixels/sec
+	float m_confidence = -1;           // From Detector with score (YOLO or SSD)
 	bool m_isStatic = false;           // Object is abandoned
 	bool m_outOfTheFrame = false;      // Is object out of freme
-	std::string m_type;                // Objects type name or empty value
-	float m_confidence = -1;           // From Detector with score (YOLO or SSD)
-	cv::Vec<track_t, 2> m_velocity;    // pixels/sec
+	mutable bool m_lastRobust = false; // saved latest robust value
 
 	///
     TrackingObject(const cv::RotatedRect& rrect, size_t ID, const Trace& trace,
 		bool isStatic, bool outOfTheFrame, const std::string& type, float confidence, cv::Vec<track_t, 2> velocity)
 		:
-        m_rrect(rrect), m_ID(ID), m_isStatic(isStatic), m_outOfTheFrame(outOfTheFrame), m_type(type), m_confidence(confidence), m_velocity(velocity)
+        m_type(type), m_ID(ID), m_rrect(rrect), m_velocity(velocity), m_confidence(confidence), m_isStatic(isStatic), m_outOfTheFrame(outOfTheFrame)
 	{
+		m_trace.Reserve(trace.size());
 		for (size_t i = 0; i < trace.size(); ++i)
 		{
             auto tp = trace.at(i);
@@ -185,23 +220,25 @@ struct TrackingObject
 	}
 
 	///
+	TrackingObject(TrackingObject&&) = default;
+
+	///
 	bool IsRobust(int minTraceSize, float minRawRatio, cv::Size2f sizeRatio) const
 	{
-		bool res = m_trace.size() > static_cast<size_t>(minTraceSize);
-		res &= m_trace.GetRawCount(m_trace.size() - 1) / static_cast<float>(m_trace.size()) > minRawRatio;
+		m_lastRobust = m_trace.size() > static_cast<size_t>(minTraceSize);
+		m_lastRobust &= m_trace.GetRawCount(m_trace.size() - 1) / static_cast<float>(m_trace.size()) > minRawRatio;
 		if (sizeRatio.width + sizeRatio.height > 0)
 		{
             float sr = m_rrect.size.width / m_rrect.size.height;
 			if (sizeRatio.width > 0)
-				res &= (sr > sizeRatio.width);
+				m_lastRobust &= (sr > sizeRatio.width);
 
 			if (sizeRatio.height > 0)
-				res &= (sr < sizeRatio.height);
+				m_lastRobust &= (sr < sizeRatio.height);
 		}
 		if (m_outOfTheFrame)
-			res = false;
-
-		return res;
+			m_lastRobust = false;
+		return m_lastRobust;
 	}
 };
 
@@ -280,16 +317,14 @@ public:
     TrackingObject ConstructObject() const;
 
 private:
-    Trace m_trace;
+	TKalmanFilter m_kalman;
+	CRegion m_lastRegion;
+	Trace m_trace;
     size_t m_trackID = 0;
     size_t m_skippedFrames = 0;
-    CRegion m_lastRegion;
-
+    
     Point_t m_predictionPoint;
     cv::RotatedRect m_predictionRect;
-    TKalmanFilter m_kalman;
-    bool m_filterObjectSize = false;
-    bool m_outOfTheFrame = false;
 
     tracking::LostTrackType m_externalTrackerForLost;
 #ifdef USE_OCV_KCF
@@ -304,10 +339,13 @@ private:
     void PointUpdate(const Point_t& pt, const cv::Size& newObjSize, bool dataCorrect, const cv::Size& frameSize);
 
     bool CheckStatic(int trajLen, cv::UMat currFrame, const CRegion& region);
-    bool m_isStatic = false;
+	cv::UMat m_staticFrame;
+	cv::Rect m_staticRect;
     int m_staticFrames = 0;
-    cv::UMat m_staticFrame;
-    cv::Rect m_staticRect;
+	bool m_isStatic = false;
+
+	bool m_filterObjectSize = false;
+	bool m_outOfTheFrame = false;
 };
 
 typedef std::vector<std::unique_ptr<CTrack>> tracks_t;
