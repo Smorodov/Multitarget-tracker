@@ -13,7 +13,6 @@
 #include "Kalman.h"
 #include "VOTTracker.hpp"
 
-// --------------------------------------------------------------------------
 ///
 /// \brief The TrajectoryPoint struct
 ///
@@ -22,19 +21,14 @@ struct TrajectoryPoint
     ///
     /// \brief TrajectoryPoint
     ///
-    TrajectoryPoint()
-        : m_hasRaw(false)
-    {
-    }
+    TrajectoryPoint() = default;
 
     ///
     /// \brief TrajectoryPoint
     /// \param prediction
     ///
     TrajectoryPoint(const Point_t& prediction)
-        :
-          m_hasRaw(false),
-          m_prediction(prediction)
+        : m_prediction(prediction)
     {
     }
 
@@ -45,9 +39,9 @@ struct TrajectoryPoint
     ///
     TrajectoryPoint(const Point_t& prediction, const Point_t& raw)
         :
-          m_hasRaw(true),
           m_prediction(prediction),
-          m_raw(raw)
+          m_raw(raw),
+          m_hasRaw(true)
     {
     }
 
@@ -74,7 +68,6 @@ struct TrajectoryPoint
 	bool m_hasRaw = false;
 };
 
-// --------------------------------------------------------------------------
 ///
 /// \brief The Trace class
 ///
@@ -84,7 +77,9 @@ public:
 	///
 	Trace() = default;
 	///
-	Trace(Trace&&) = default;
+    Trace(const Trace&) = default;
+    ///
+    Trace(Trace&&) = default;
 
     ///
     /// \brief operator []
@@ -186,7 +181,6 @@ private:
     std::vector<TrajectoryPoint> m_trace;
 };
 
-// --------------------------------------------------------------------------
 ///
 /// \brief The TrackingObject class
 ///
@@ -206,23 +200,20 @@ struct TrackingObject
     TrackingObject(const cv::RotatedRect& rrect, size_t ID, const Trace& trace,
 		bool isStatic, bool outOfTheFrame, const std::string& type, float confidence, cv::Vec<track_t, 2> velocity)
 		:
-        m_type(type), m_ID(ID), m_rrect(rrect), m_velocity(velocity), m_confidence(confidence), m_isStatic(isStatic), m_outOfTheFrame(outOfTheFrame)
+        m_type(type), m_trace(trace), m_ID(ID), m_rrect(rrect), m_velocity(velocity), m_confidence(confidence), m_isStatic(isStatic), m_outOfTheFrame(outOfTheFrame)
 	{
-		m_trace.Reserve(trace.size());
-		for (size_t i = 0; i < trace.size(); ++i)
-		{
-            auto tp = trace.at(i);
-            if (tp.m_hasRaw)
-                m_trace.push_back(tp.m_prediction, tp.m_raw);
-            else
-                m_trace.push_back(tp.m_prediction);
-		}
 	}
 
 	///
 	TrackingObject(TrackingObject&&) = default;
 
-	///
+    ///
+    /// \brief IsRobust
+    /// \param minTraceSize
+    /// \param minRawRatio
+    /// \param sizeRatio
+    /// \return
+    ///
 	bool IsRobust(int minTraceSize, float minRawRatio, cv::Size2f sizeRatio) const
 	{
 		m_lastRobust = m_trace.size() > static_cast<size_t>(minTraceSize);
@@ -242,7 +233,15 @@ struct TrackingObject
 	}
 };
 
-// --------------------------------------------------------------------------
+///
+/// \brief The RegionEmbedding struct
+///
+struct RegionEmbedding
+{
+    cv::Mat m_hist;
+};
+
+
 ///
 /// \brief The CTrack class
 ///
@@ -250,13 +249,23 @@ class CTrack
 {
 public:
     CTrack(const CRegion& region,
-            tracking::KalmanType kalmanType,
-            track_t deltaTime,
-            track_t accelNoiseMag,
-		    bool useAcceleration,
-            size_t trackID,
-            bool filterObjectSize,
-            tracking::LostTrackType externalTrackerForLost);
+           tracking::KalmanType kalmanType,
+           track_t deltaTime,
+           track_t accelNoiseMag,
+           bool useAcceleration,
+           size_t trackID,
+           bool filterObjectSize,
+           tracking::LostTrackType externalTrackerForLost);
+
+    CTrack(const CRegion& region,
+           const RegionEmbedding& regionEmbedding,
+           tracking::KalmanType kalmanType,
+           track_t deltaTime,
+           track_t accelNoiseMag,
+           bool useAcceleration,
+           size_t trackID,
+           bool filterObjectSize,
+           tracking::LostTrackType externalTrackerForLost);
 
     ///
     /// \brief CalcDist
@@ -286,7 +295,7 @@ public:
 	/// \param currFrame
 	/// \return
 	///
-	track_t CalcDistHist(const CRegion& reg, cv::UMat currFrame) const;
+    track_t CalcDistHist(const CRegion& reg, cv::Mat& hist, cv::UMat currFrame) const;
 
 	cv::RotatedRect CalcPredictionEllipse(cv::Size_<track_t> minRadius) const;
 	///
@@ -301,6 +310,7 @@ public:
     track_t HeightDist(const CRegion& reg) const;
 
     void Update(const CRegion& region, bool dataCorrect, size_t max_trace_length, cv::UMat prevFrame, cv::UMat currFrame, int trajLen);
+    void Update(const CRegion& region, const RegionEmbedding& regionEmbedding, bool dataCorrect, size_t max_trace_length, cv::UMat prevFrame, cv::UMat currFrame, int trajLen);
 
     bool IsStatic() const;
     bool IsStaticTimeout(int framesTime) const;
@@ -320,11 +330,11 @@ private:
 	TKalmanFilter m_kalman;
 	CRegion m_lastRegion;
 	Trace m_trace;
+    cv::RotatedRect m_predictionRect;
+    Point_t m_predictionPoint;
+
     size_t m_trackID = 0;
     size_t m_skippedFrames = 0;
-    
-    Point_t m_predictionPoint;
-    cv::RotatedRect m_predictionRect;
 
     tracking::LostTrackType m_externalTrackerForLost;
 #ifdef USE_OCV_KCF
@@ -337,6 +347,8 @@ private:
     void CreateExternalTracker(int channels);
 
     void PointUpdate(const Point_t& pt, const cv::Size& newObjSize, bool dataCorrect, const cv::Size& frameSize);
+
+    RegionEmbedding m_regionEmbedding;
 
     bool CheckStatic(int trajLen, cv::UMat currFrame, const CRegion& region);
 	cv::UMat m_staticFrame;

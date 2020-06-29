@@ -51,8 +51,6 @@ public:
         B2RRect();
     }
 
-	mutable cv::Mat m_hist;
-
 	std::string m_type;
     cv::RotatedRect m_rrect;
     cv::Rect m_brect;

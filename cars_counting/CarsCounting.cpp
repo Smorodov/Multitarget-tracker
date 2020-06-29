@@ -209,11 +209,10 @@ void CarsCounting::DrawTrack(cv::Mat frame,
 
 		if (!m_geoParams.Empty())
 		{
-			size_t period = 2 * cvRound(m_fps);
-			if (period >= track.m_trace.size())
-				period = track.m_trace.size();
-			const auto& from = m_geoParams.Pix2Geo(track.m_trace[track.m_trace.size() - period]);
-			const auto& to = m_geoParams.Pix2Geo(track.m_trace[track.m_trace.size() - 1]);
+            int traceSize = static_cast<int>(track.m_trace.size());
+            int period = std::min(2 * cvRound(m_fps), traceSize);
+            const auto& from = m_geoParams.Pix2Geo(track.m_trace[traceSize - period]);
+            const auto& to = m_geoParams.Pix2Geo(track.m_trace[traceSize - 1]);
 			auto dist = DistanceInMeters(from, to);
 
 			std::stringstream label;

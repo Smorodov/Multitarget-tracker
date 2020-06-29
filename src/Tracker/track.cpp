@@ -16,26 +16,62 @@
 /// \param filterObjectSize
 /// \param externalTrackerForLost
 ///
-CTrack::CTrack(
-        const CRegion& region,
+CTrack::CTrack(const CRegion& region,
         tracking::KalmanType kalmanType,
         track_t deltaTime,
         track_t accelNoiseMag,
 	    bool useAcceleration,
         size_t trackID,
         bool filterObjectSize,
-        tracking::LostTrackType externalTrackerForLost
-        )
+        tracking::LostTrackType externalTrackerForLost)
     :
-      m_trackID(trackID),
-      m_skippedFrames(0),
-      m_lastRegion(region),
-      m_predictionPoint(region.m_rrect.center),
-      m_predictionRect(region.m_rrect),
       m_kalman(kalmanType, useAcceleration, deltaTime, accelNoiseMag),
-      m_filterObjectSize(filterObjectSize),
-      m_outOfTheFrame(false),
-      m_externalTrackerForLost(externalTrackerForLost)
+      m_lastRegion(region),
+      m_predictionRect(region.m_rrect),
+      m_predictionPoint(region.m_rrect.center),
+      m_trackID(trackID),
+      m_externalTrackerForLost(externalTrackerForLost),
+      m_filterObjectSize(filterObjectSize)
+{
+    if (filterObjectSize)
+        m_kalman.Update(region.m_brect, true);
+    else
+        m_kalman.Update(m_predictionPoint, true);
+
+    Point_t pt(m_predictionPoint.x, m_predictionPoint.y + region.m_brect.height / 2);
+    m_trace.push_back(pt, pt);
+}
+
+///
+/// \brief CTrack::CTrack
+/// \param region
+/// \param regionEmbedding
+/// \param kalmanType
+/// \param deltaTime
+/// \param accelNoiseMag
+/// \param useAcceleration
+/// \param trackID
+/// \param filterObjectSize
+/// \param externalTrackerForLost
+///
+CTrack::CTrack(const CRegion& region,
+        const RegionEmbedding& regionEmbedding,
+        tracking::KalmanType kalmanType,
+        track_t deltaTime,
+        track_t accelNoiseMag,
+        bool useAcceleration,
+        size_t trackID,
+        bool filterObjectSize,
+        tracking::LostTrackType externalTrackerForLost)
+    :
+      m_kalman(kalmanType, useAcceleration, deltaTime, accelNoiseMag),
+      m_lastRegion(region),
+      m_predictionRect(region.m_rrect),
+      m_predictionPoint(region.m_rrect.center),
+      m_trackID(trackID),
+      m_externalTrackerForLost(externalTrackerForLost),
+      m_regionEmbedding(regionEmbedding),
+      m_filterObjectSize(filterObjectSize)
 {
     if (filterObjectSize)
         m_kalman.Update(region.m_brect, true);
@@ -96,11 +132,11 @@ track_t CTrack::CalcDistJaccard(const CRegion& reg) const
 /// \param reg
 /// \return
 ///
-track_t CTrack::CalcDistHist(const CRegion& reg, cv::UMat currFrame) const
+track_t CTrack::CalcDistHist(const CRegion& reg, cv::Mat& hist, cv::UMat currFrame) const
 {
 	track_t res = 1;
 
-	if (reg.m_hist.empty())
+    if (hist.empty())
 	{
 		int bins = 64;
 		std::vector<int> histSize;
@@ -116,39 +152,36 @@ track_t CTrack::CalcDistHist(const CRegion& reg, cv::UMat currFrame) const
 		}
 
 		std::vector<cv::UMat> regROI = { currFrame(reg.m_brect) };
-		cv::calcHist(regROI, channels, cv::Mat(), reg.m_hist, histSize, ranges, false);
-		cv::normalize(reg.m_hist, reg.m_hist, 0, 1, cv::NORM_MINMAX, -1, cv::Mat());
+        cv::calcHist(regROI, channels, cv::Mat(), hist, histSize, ranges, false);
+        cv::normalize(hist, hist, 0, 1, cv::NORM_MINMAX, -1, cv::Mat());
 	}
-	if (!reg.m_hist.empty() && !m_lastRegion.m_hist.empty())
+    if (!hist.empty() && !m_regionEmbedding.m_hist.empty())
 	{
 #if (((CV_VERSION_MAJOR == 4) && (CV_VERSION_MINOR < 1)) || (CV_VERSION_MAJOR == 3))
 		res = static_cast<track_t>(cv::compareHist(reg.m_hist, m_lastRegion.m_hist, CV_COMP_BHATTACHARYYA));
-		//res = 1.f - static_cast<track_t>(cv::compareHist(reg.m_hist, m_lastRegion.m_hist, CV_COMP_CORREL));
+        //res = 1.f - static_cast<track_t>(cv::compareHist(hist, m_regionEmbedding.m_hist, CV_COMP_CORREL));
 #else
-		res = static_cast<track_t>(cv::compareHist(reg.m_hist, m_lastRegion.m_hist, cv::HISTCMP_BHATTACHARYYA));
+        res = static_cast<track_t>(cv::compareHist(hist, m_regionEmbedding.m_hist, cv::HISTCMP_BHATTACHARYYA));
 #endif
 	}
-
 	return res;
 }
 
 ///
 /// \brief CTrack::Update
-/// \*param region
+/// \param region
 /// \param dataCorrect
 /// \param max_trace_length
 /// \param prevFrame
 /// \param currFrame
 /// \param trajLen
 ///
-void CTrack::Update(
-        const CRegion& region,
-        bool dataCorrect,
-        size_t max_trace_length,
-        cv::UMat prevFrame,
-        cv::UMat currFrame,
-        int trajLen
-        )
+void CTrack::Update(const CRegion& region,
+                    bool dataCorrect,
+                    size_t max_trace_length,
+                    cv::UMat prevFrame,
+                    cv::UMat currFrame,
+                    int trajLen)
 {
     if (m_filterObjectSize) // Kalman filter for object coordinates and size
         RectUpdate(region, dataCorrect, prevFrame, currFrame);
@@ -161,6 +194,49 @@ void CTrack::Update(
 
         m_lastRegion = region;
         m_trace.push_back(m_predictionPoint, region.m_rrect.center);
+
+        CheckStatic(trajLen, currFrame, region);
+    }
+    else
+    {
+        m_trace.push_back(m_predictionPoint);
+    }
+
+    if (m_trace.size() > max_trace_length)
+        m_trace.pop_front(m_trace.size() - max_trace_length);
+}
+
+///
+/// \brief CTrack::Update
+/// \param region
+/// \param regionEmbedding
+/// \param dataCorrect
+/// \param max_trace_length
+/// \param prevFrame
+/// \param currFrame
+/// \param trajLen
+///
+void CTrack::Update(const CRegion& region,
+                    const RegionEmbedding& regionEmbedding,
+                    bool dataCorrect,
+                    size_t max_trace_length,
+                    cv::UMat prevFrame,
+                    cv::UMat currFrame,
+                    int trajLen)
+{
+    m_regionEmbedding = regionEmbedding;
+
+    if (m_filterObjectSize) // Kalman filter for object coordinates and size
+        RectUpdate(region, dataCorrect, prevFrame, currFrame);
+    else // Kalman filter only for object center
+        PointUpdate(region.m_rrect.center, region.m_rrect.size, dataCorrect, currFrame.size());
+
+    if (dataCorrect)
+    {
+        //std::cout << m_lastRegion.m_brect << " - " << region.m_brect << std::endl;
+
+        m_lastRegion = region;
+        m_trace.push_back(m_predictionPoint, m_lastRegion.m_rrect.center);
 
         CheckStatic(trajLen, currFrame, region);
     }

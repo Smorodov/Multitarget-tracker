@@ -251,6 +251,6 @@ private:
 
     std::unique_ptr<ShortPathCalculator> m_SPCalculator;
 
-    void CreateDistaceMatrix(const regions_t& regions, distMatrix_t& costMatrix, track_t maxPossibleCost, track_t& maxCost, cv::UMat currFrame);
+    void CreateDistaceMatrix(const regions_t& regions, std::vector<RegionEmbedding>& regionEmbeddings, distMatrix_t& costMatrix, track_t maxPossibleCost, track_t& maxCost, cv::UMat currFrame);
     void UpdateTrackingState(const regions_t& regions, cv::UMat currFrame, float fps);
 };
