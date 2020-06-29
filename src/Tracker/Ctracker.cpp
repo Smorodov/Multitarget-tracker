@@ -66,13 +66,15 @@ void CTracker::UpdateTrackingState(
 
     assignments_t assignment(N, -1); // Assignments regions -> tracks
 
+    std::vector<RegionEmbedding> regionEmbeddings;
+
     if (!m_tracks.empty())
     {
         // Distance matrix between all tracks to all regions
         distMatrix_t costMatrix(N * M);
         const track_t maxPossibleCost = static_cast<track_t>(currFrame.cols * currFrame.rows);
         track_t maxCost = 0;
-        CreateDistaceMatrix(regions, costMatrix, maxPossibleCost, maxCost, currFrame);
+        CreateDistaceMatrix(regions, regionEmbeddings, costMatrix, maxPossibleCost, maxCost, currFrame);
 
         // Solving assignment problem (shortest paths)
         m_SPCalculator->Solve(costMatrix, N, M, assignment, maxCost);
@@ -117,14 +119,25 @@ void CTracker::UpdateTrackingState(
     {
         if (find(assignment.begin(), assignment.end(), i) == assignment.end())
         {
-            m_tracks.push_back(std::make_unique<CTrack>(regions[i],
-                                                      m_settings.m_kalmanType,
-                                                      m_settings.m_dt,
-                                                      m_settings.m_accelNoiseMag,
-                                                      m_settings.m_useAcceleration,
-                                                      m_nextTrackID++,
-                                                      m_settings.m_filterGoal == tracking::FilterRect,
-                                                      m_settings.m_lostTrackType));
+            if (regionEmbeddings.empty())
+                m_tracks.push_back(std::make_unique<CTrack>(regions[i],
+                                                            m_settings.m_kalmanType,
+                                                            m_settings.m_dt,
+                                                            m_settings.m_accelNoiseMag,
+                                                            m_settings.m_useAcceleration,
+                                                            m_nextTrackID++,
+                                                            m_settings.m_filterGoal == tracking::FilterRect,
+                                                            m_settings.m_lostTrackType));
+            else
+                m_tracks.push_back(std::make_unique<CTrack>(regions[i],
+                                                            regionEmbeddings[i],
+                                                            m_settings.m_kalmanType,
+                                                            m_settings.m_dt,
+                                                            m_settings.m_accelNoiseMag,
+                                                            m_settings.m_useAcceleration,
+                                                            m_nextTrackID++,
+                                                            m_settings.m_filterGoal == tracking::FilterRect,
+                                                            m_settings.m_lostTrackType));
         }
     }
 
@@ -137,11 +150,16 @@ void CTracker::UpdateTrackingState(
         if (assignment[i] != -1) // If we have assigned detect, then update using its coordinates,
         {
             m_tracks[i]->SkippedFrames() = 0;
-            m_tracks[i]->Update(
-                        regions[assignment[i]], true,
-                    m_settings.m_maxTraceLength,
-                    m_prevFrame, currFrame,
-                    m_settings.m_useAbandonedDetection ? cvRound(m_settings.m_minStaticTime * fps) : 0);
+            if (regionEmbeddings.empty())
+                m_tracks[i]->Update(regions[assignment[i]],
+                        true, m_settings.m_maxTraceLength,
+                        m_prevFrame, currFrame,
+                        m_settings.m_useAbandonedDetection ? cvRound(m_settings.m_minStaticTime * fps) : 0);
+            else
+                m_tracks[i]->Update(regions[assignment[i]], regionEmbeddings[assignment[i]],
+                        true, m_settings.m_maxTraceLength,
+                        m_prevFrame, currFrame,
+                        m_settings.m_useAbandonedDetection ? cvRound(m_settings.m_minStaticTime * fps) : 0);
         }
         else				     // if not continue using predictions
         {
@@ -157,7 +175,7 @@ void CTracker::UpdateTrackingState(
 /// \param maxPossibleCost
 /// \param maxCost
 ///
-void CTracker::CreateDistaceMatrix(const regions_t& regions, distMatrix_t& costMatrix, track_t maxPossibleCost, track_t& maxCost, cv::UMat currFrame)
+void CTracker::CreateDistaceMatrix(const regions_t& regions, std::vector<RegionEmbedding>& regionEmbeddings, distMatrix_t& costMatrix, track_t maxPossibleCost, track_t& maxCost, cv::UMat currFrame)
 {
     const size_t N = m_tracks.size();	// Tracking objects
     maxCost = 0;
@@ -230,7 +248,11 @@ void CTracker::CreateDistaceMatrix(const regions_t& regions, distMatrix_t& costM
 				++ind;
 
 				if (m_settings.m_distType[ind] > 0.0f && ind == tracking::DistHist)
-					dist += m_settings.m_distType[ind] * track->CalcDistHist(reg, currFrame);
+                {
+                    if (regionEmbeddings.empty())
+                        regionEmbeddings.resize(regions.size());
+                    dist += m_settings.m_distType[ind] * track->CalcDistHist(reg, regionEmbeddings[j].m_hist, currFrame);
+                }
 				++ind;
 				assert(ind == tracking::DistsCount);
 			}
