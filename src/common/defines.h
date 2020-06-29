@@ -46,18 +46,17 @@ public:
     }
 
     CRegion(const cv::Rect& rect, const std::string& type, float confidence)
-        : m_brect(rect), m_type(type), m_confidence(confidence)
+        : m_type(type), m_brect(rect), m_confidence(confidence)
     {
         B2RRect();
     }
 
+	mutable cv::Mat m_hist;
+
+	std::string m_type;
     cv::RotatedRect m_rrect;
     cv::Rect m_brect;
-
-    std::string m_type;
-    float m_confidence = -1;
-
-	mutable cv::Mat m_hist;
+	float m_confidence = -1;
 
 private:
     ///

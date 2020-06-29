@@ -29,29 +29,28 @@ public:
 	cv::Vec<track_t, 2> GetVelocity() const;
 
 private:
-    tracking::KalmanType m_type = tracking::KalmanLinear;
     cv::KalmanFilter m_linearKalman;
 #ifdef USE_OCV_UKF
     cv::Ptr<cv::tracking::UnscentedKalmanFilter> m_uncsentedKalman;
 #endif
 
-    std::deque<Point_t> m_initialPoints;
-    std::deque<cv::Rect> m_initialRects;
-    static const size_t MIN_INIT_VALS = 4;
+    static constexpr size_t MIN_INIT_VALS = 4;
+    std::vector<Point_t> m_initialPoints;
+    std::vector<cv::Rect> m_initialRects;
 
-    Point_t m_lastPointResult;
     cv::Rect_<track_t> m_lastRectResult;
     cv::Rect_<track_t> m_lastRect;
-
-    bool m_initialized = false;
+    Point_t m_lastPointResult;
+    track_t m_accelNoiseMag = 0.5f;
     track_t m_deltaTime = 0.2f;
     track_t m_deltaTimeMin = 0.2f;
     track_t m_deltaTimeMax = 2 * 0.2f;
     track_t m_lastDist = 0;
     track_t m_deltaStep = 0;
-    static const int m_deltaStepsCount = 20;
-    track_t m_accelNoiseMag = 0.5f;
-	bool m_useAcceleration = false; // If set true then will be used motion model x(t) = x0 + v0 * t + a * t^2 / 2
+    static constexpr int m_deltaStepsCount = 20;
+    tracking::KalmanType m_type = tracking::KalmanLinear;
+    bool m_useAcceleration = false; // If set true then will be used motion model x(t) = x0 + v0 * t + a * t^2 / 2
+    bool m_initialized = false;
 
 	// Constant velocity model
     void CreateLinear(Point_t xy0, Point_t xyv0);

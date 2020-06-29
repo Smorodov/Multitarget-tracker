@@ -10,14 +10,14 @@ TKalmanFilter::TKalmanFilter(
         track_t accelNoiseMag
         )
     :
-      m_type(type),
-      m_initialized(false),
       m_deltaTime(deltaTime),
       m_deltaTimeMin(deltaTime),
       m_deltaTimeMax(2 * deltaTime),
       m_lastDist(0),
       m_accelNoiseMag(accelNoiseMag),
-	  m_useAcceleration(useAcceleration)
+      m_type(type),
+      m_useAcceleration(useAcceleration),
+      m_initialized(false)
 {
     m_deltaStep = (m_deltaTimeMax - m_deltaTimeMin) / m_deltaStepsCount;
 }
@@ -65,6 +65,8 @@ void TKalmanFilter::CreateLinear(Point_t xy0, Point_t xyv0)
     cv::setIdentity(m_linearKalman.measurementNoiseCov, cv::Scalar::all(0.1));
 
     cv::setIdentity(m_linearKalman.errorCovPost, cv::Scalar::all(.1));
+
+	m_initialPoints.reserve(MIN_INIT_VALS);
 
     m_initialized = true;
 }
@@ -130,6 +132,8 @@ void TKalmanFilter::CreateLinear(cv::Rect_<track_t> rect0, Point_t rectv0)
 
     cv::setIdentity(m_linearKalman.errorCovPost, cv::Scalar::all(.1));
 
+	m_initialRects.reserve(MIN_INIT_VALS);
+
     m_initialized = true;
 }
 
@@ -183,6 +187,8 @@ void TKalmanFilter::CreateLinearAcceleration(Point_t xy0, Point_t xyv0)
 	cv::setIdentity(m_linearKalman.measurementNoiseCov, cv::Scalar::all(0.1));
 
 	cv::setIdentity(m_linearKalman.errorCovPost, cv::Scalar::all(.1));
+
+	m_initialPoints.reserve(MIN_INIT_VALS);
 
 	m_initialized = true;
 }
@@ -259,6 +265,8 @@ void TKalmanFilter::CreateLinearAcceleration(cv::Rect_<track_t> rect0, Point_t r
 	cv::setIdentity(m_linearKalman.measurementNoiseCov, cv::Scalar::all(0.1));
 
 	cv::setIdentity(m_linearKalman.errorCovPost, cv::Scalar::all(.1));
+
+	m_initialRects.reserve(MIN_INIT_VALS);
 
 	m_initialized = true;
 }
