@@ -158,7 +158,7 @@ track_t CTrack::CalcDistHist(const CRegion& reg, cv::Mat& hist, cv::UMat currFra
     if (!hist.empty() && !m_regionEmbedding.m_hist.empty())
 	{
 #if (((CV_VERSION_MAJOR == 4) && (CV_VERSION_MINOR < 1)) || (CV_VERSION_MAJOR == 3))
-		res = static_cast<track_t>(cv::compareHist(reg.m_hist, m_lastRegion.m_hist, CV_COMP_BHATTACHARYYA));
+		res = static_cast<track_t>(cv::compareHist(hist, m_regionEmbedding.m_hist, CV_COMP_BHATTACHARYYA));
         //res = 1.f - static_cast<track_t>(cv::compareHist(hist, m_regionEmbedding.m_hist, CV_COMP_CORREL));
 #else
         res = static_cast<track_t>(cv::compareHist(hist, m_regionEmbedding.m_hist, cv::HISTCMP_BHATTACHARYYA));
