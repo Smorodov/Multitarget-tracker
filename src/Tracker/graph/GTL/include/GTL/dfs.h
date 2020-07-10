@@ -99,7 +99,7 @@ public:
      */
     virtual ~dfs ();
     
-    int run (graph& G);
+    int run (GTL::graph& G);
 
     /**
      * @brief Checks whether the preconditions for DFS are
@@ -112,7 +112,7 @@ public:
      * @retval algorithm::GTL_OK if %algorithm can be applied
      * @retval algorithm::GTL_ERROR otherwise.
      */
-    virtual int check (graph& G);
+    virtual int check (GTL::graph& G);
 
     virtual void reset ();
 
@@ -417,14 +417,14 @@ public:
      *
      * @param G %graph for which DFS was invoked.
      */
-    virtual void init_handler (graph& /*G*/) {}
+    virtual void init_handler (GTL::graph& /*G*/) {}
     
     /**
      * @brief Handler called at the end of DFS.
      *
      * @param G %graph for which DFS was invoked.
      */
-    virtual void end_handler (graph& /*G*/) {}
+    virtual void end_handler (GTL::graph& /*G*/) {}
 
     /**
      * @brief Handler called when touching %node @a n.
@@ -433,7 +433,7 @@ public:
      * @param n actual %node.
      * @param f predecessor.
      */
-    virtual void entry_handler (graph& /*G*/, node& /*n*/, node& /*f*/) {}
+    virtual void entry_handler (GTL::graph& /*G*/, GTL::node& /*n*/, GTL::node& /*f*/) {}
 
     /**
      * @brief Handler called after all the adjacent edges of @a n
@@ -443,7 +443,7 @@ public:
      * @param n actual %node.
      * @param f predecessor.
      */
-    virtual void leave_handler (graph& /*G*/, node& /*n*/, node& /*f*/) {}
+    virtual void leave_handler (GTL::graph& /*G*/, GTL::node& /*n*/, GTL::node& /*f*/) {}
 
     /**
      * @brief Handler called when a unused %node @a n connected to the
@@ -453,7 +453,7 @@ public:
      * @param e %edge connecting the actual %node to the unused one.
      * @param n unused %node.
      */
-    virtual void before_recursive_call_handler (graph& /*G*/, edge& /*e*/, node& /*n*/) {}
+    virtual void before_recursive_call_handler (GTL::graph& /*G*/, GTL::edge& /*e*/, GTL::node& /*n*/) {}
     
     /**
      * @brief Handler called after the %algorithm returns from the
@@ -464,7 +464,7 @@ public:
      * @param e %edge connecting the actual %node to the unused one.
      * @param n unused %node.
      */
-    virtual void after_recursive_call_handler (graph& /*G*/, edge& /*e*/, node& /*n*/) {}
+    virtual void after_recursive_call_handler (GTL::graph& /*G*/, GTL::edge& /*e*/, GTL::node& /*n*/) {}
     
     /**
      * @brief Handler called when a already marked %node @a n connected 
@@ -475,7 +475,7 @@ public:
      * @param e %edge connecting the actual %node to the old one.
      * @param n used %node.
      */
-    virtual void old_adj_node_handler (graph& /*G*/, edge& /*e*/, node& /*n*/) {}
+    virtual void old_adj_node_handler (GTL::graph& /*G*/, GTL::edge& /*e*/, GTL::node& /*n*/) {}
 
     /**
      * @brief Called when DFS is started with start-%node @a
@@ -487,14 +487,14 @@ public:
      * @param G %graph for which DFS was invoked.
      * @param n start-%node.
      */
-    virtual void new_start_handler (graph& /*G*/, node& /*n*/) { };
+    virtual void new_start_handler (GTL::graph& /*G*/, GTL::node& /*n*/) { };
 
 private:
 
     /**
      * @internal
      */
-    void dfs_sub (graph&, node&, node&);
+    void dfs_sub (GTL::graph&, GTL::node&, GTL::node&);
 
 protected:    
 

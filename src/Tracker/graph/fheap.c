@@ -321,7 +321,7 @@ printf("meld: ");
     do {
 
 #if FHEAP_DUMP
-printf("%d, ", node_ptr->vertex_no);
+printf("%d, ", GTL::node_ptr->vertex_no);
 #endif
 
         /* Keep a pointer to the next node and remove sibling and parent links
@@ -331,7 +331,7 @@ printf("%d, ", node_ptr->vertex_no);
         node_ptr->right = node_ptr->left = node_ptr;
         node_ptr->parent = NULL;
 
-        /* We merge the current node, node_ptr, by inserting it into the
+        /* We merge the current node, GTL::node_ptr, by inserting it into the
          * root level of the heap.
          */
         new_root = node_ptr;

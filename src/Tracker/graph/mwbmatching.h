@@ -7,7 +7,7 @@
 #include <map>
 #include "fheap.h"
 
-class GTL_EXTERN mwbmatching : public algorithm
+class GTL_EXTERN mwbmatching : public GTL::algorithm
 {
 public:
 	mwbmatching ();
@@ -18,7 +18,7 @@ public:
      *
      * @param <code>edge_weight</code> weight of every edge.
      */
-	void set_vars(const edge_map<int>& edge_weight);
+	void set_vars(const GTL::edge_map<int>& edge_weight);
 	
     /**
      * Finds a maximum weight bipartite matching of G. 
@@ -28,7 +28,7 @@ public:
      * <code>algorithm::GTL_ERROR</code> otherwise.
      * @see algorithm#run
      */
-    int run (graph& G);
+    int run (GTL::graph& G);
 
 
     /**
@@ -39,7 +39,7 @@ public:
      * <code>algorithm::GTL_ERROR</code> otherwise.
      * @see algorithm#check
      */
-    virtual int check (graph& G);
+    virtual int check (GTL::graph& G);
 	
     /**
      * Reset. 
@@ -63,7 +63,7 @@ public:
 	 * @return list of edges in maximum weight bipartite matching 
 	 *
 	 */
-	edges_t get_match() { return result; };
+	GTL::edges_t get_match() { return result; };
 	
 protected:
     /**
@@ -79,24 +79,21 @@ protected:
     /**
      * @internal
      */
-    edge_map<int> edge_weight;
+	GTL::edge_map<int> edge_weight;
     
-	edges_t result;
+	GTL::edges_t result;
     
-	node_map<long> pot;
-	node_map<bool> free;
-	node_map<long> dist;
-	node_map<long> pred;
-	std::map <int, node, std::less<int> > node_from_id;
-	std::map <int, edge, std::less<int> > edge_from_id;
+	GTL::node_map<long> pot;
+	GTL::node_map<bool> free;
+	GTL::node_map<long> dist;
+	GTL::node_map<long> pred;
+	std::map <int, GTL::node, std::less<int> > node_from_id;
+	std::map <int, GTL::edge, std::less<int> > edge_from_id;
 	
     fheap_t *pq;
 	
-	int augment(graph& G, node a);
-	inline void augment_path_to (graph &G, node v);
-
-
-
+	int augment(GTL::graph& G, GTL::node a);
+	inline void augment_path_to (GTL::graph &G, GTL::node v);
 };
 
 
@@ -107,7 +104,7 @@ protected:
  * how to partition the nodes.
  *
  */
-edges_t MAX_WEIGHT_BIPARTITE_MATCHING(graph &G, edge_map<int> weights);
+GTL::edges_t MAX_WEIGHT_BIPARTITE_MATCHING(GTL::graph &G, GTL::edge_map<int> weights);
 
 
 

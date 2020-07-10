@@ -22,7 +22,7 @@ void topsort::reset ()
     top_order.erase (top_order.begin(), top_order.end());;
 }
 
-int topsort::check (graph& G) 
+int topsort::check (GTL::graph& G) 
 {
     return G.is_directed() ? GTL_OK : GTL_ERROR;
 }
@@ -34,14 +34,14 @@ int topsort::check (graph& G)
 //--------------------------------------------------------------------------
 
 
-void topsort::init_handler (graph& G) 
+void topsort::init_handler (GTL::graph& G) 
 {
     top_numbers.init (G, 0);
     act_top_num = G.number_of_nodes();
 }
 
 
-void topsort::leave_handler (graph& /*G*/, node& n, node& /*f*/) 
+void topsort::leave_handler (GTL::graph& /*G*/, GTL::node& n, GTL::node& /*f*/) 
 {
     top_numbers[n] = act_top_num;
     act_top_num--;
@@ -49,7 +49,7 @@ void topsort::leave_handler (graph& /*G*/, node& n, node& /*f*/)
 }
 
 
-void topsort::old_adj_node_handler (graph& /*G*/, edge& /*adj*/, node& opp)
+void topsort::old_adj_node_handler (GTL::graph& /*G*/, GTL::edge& /*adj*/, GTL::node& opp)
 {
     if (top_numbers[opp] == 0) {
 	acyclic = false;

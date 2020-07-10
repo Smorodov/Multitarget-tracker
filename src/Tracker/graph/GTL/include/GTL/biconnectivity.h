@@ -63,7 +63,7 @@ public:
      * be applied to @a G.
      * @sa dfs::scan_whole_graph, dfs::store_preds
      */
-    virtual int check (graph& G);
+    virtual int check (GTL::graph& G);
 
     virtual void reset ();
 
@@ -220,42 +220,42 @@ public:
     /**
      * @internal
      */
-    virtual void init_handler (graph&);
+    virtual void init_handler (GTL::graph&);
 
     /**
      * @internal
      */
-    virtual void entry_handler (graph&, node&, node&);
+    virtual void entry_handler (GTL::graph&, GTL::node&, GTL::node&);
 
     /**
      * @internal
      */
-    virtual void before_recursive_call_handler (graph&, edge&, node&);
+    virtual void before_recursive_call_handler (GTL::graph&, GTL::edge&, GTL::node&);
 
     /**
      * @internal
      */
-    virtual void after_recursive_call_handler (graph&, edge&, node&);
+    virtual void after_recursive_call_handler (GTL::graph&, GTL::edge&, GTL::node&);
 
     /**
      * @internal
      */
-    virtual void old_adj_node_handler (graph&, edge&, node&);
+    virtual void old_adj_node_handler (GTL::graph&, GTL::edge&, GTL::node&);
 
     /**
      * @internal
      */
-    virtual void new_start_handler (graph&, node&);    
+    virtual void new_start_handler (GTL::graph&, GTL::node&);    
 
     /**
      * @internal
      */
-    virtual void leave_handler (graph&, node&, node&);    
+    virtual void leave_handler (GTL::graph&, GTL::node&, GTL::node&);    
 
     /**
      * @internal
      */
-    virtual void end_handler (graph&);    
+    virtual void end_handler (GTL::graph&);    
 
 
 protected:

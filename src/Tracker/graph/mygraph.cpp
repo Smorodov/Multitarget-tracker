@@ -10,23 +10,23 @@
 #include <sstream>
 #include <cstring>
 
-void MyGraph::load_edge_info_handler (edge e, GML_pair* list)
+void MyGraph::load_edge_info_handler (GTL::edge e, GTL::GML_pair* list)
 {
 	if (list)
 	{
 		// Iterate over the list of GML_pair values
-		struct GML_pair *p = list;
+		struct GTL::GML_pair *p = list;
 		while (p)
 		{
 			switch (p->kind)
 			{
-				case GML_STRING:
+				case GTL::GML_STRING:
 					store_edge_string (e, p->key, p->value.str);
 					break;
-				case GML_INT:
+				case GTL::GML_INT:
 					store_edge_integer (e, p->key, p->value.integer);
 					break;
-				case GML_DOUBLE:
+				case GTL::GML_DOUBLE:
 					store_edge_double (e, p->key, p->value.floating);
 					break;
 				default:
@@ -37,12 +37,12 @@ void MyGraph::load_edge_info_handler (edge e, GML_pair* list)
 	}
 }
 
-void MyGraph::store_edge_double (edge /*e*/, char * /*key*/, double /*value*/)
+void MyGraph::store_edge_double (GTL::edge /*e*/, char * /*key*/, double /*value*/)
 {
 }
 
 
-void MyGraph::store_edge_integer (edge e, char *key, int value)
+void MyGraph::store_edge_integer (GTL::edge e, char *key, int value)
 {
 	if (strcmp (key, "weight") == 0)
 	{
@@ -51,7 +51,7 @@ void MyGraph::store_edge_integer (edge e, char *key, int value)
 
 }
 
-void MyGraph::store_edge_string (edge e, char *key, char *value)
+void MyGraph::store_edge_string (GTL::edge e, char *key, char *value)
 {
 	if (strcmp (key, "label") == 0)
 	{
@@ -70,23 +70,23 @@ void MyGraph::store_edge_string (edge e, char *key, char *value)
 }
 
 
-void MyGraph::load_node_info_handler(node n, GML_pair* list )
+void MyGraph::load_node_info_handler(GTL::node n, GTL::GML_pair* list )
 {
 	if (list)
 	{
 		// Iterate over the list of GML_pair values
-		struct GML_pair *p = list;
+		struct GTL::GML_pair *p = list;
 		while (p)
 		{
 			switch (p->kind)
 			{
-				case GML_STRING:
+				case GTL::GML_STRING:
 					store_node_string (n, p->key, p->value.str);
 					break;
-				case GML_INT:
+				case GTL::GML_INT:
 					store_node_integer (n, p->key, p->value.integer);
 					break;
-				case GML_DOUBLE:
+				case GTL::GML_DOUBLE:
 					store_node_double (n, p->key, p->value.floating);
 					break;
 				default:
@@ -97,16 +97,16 @@ void MyGraph::load_node_info_handler(node n, GML_pair* list )
 	}
 }
 
-void MyGraph::store_node_double (node /*n*/, char * /*key*/, double /*value*/)
+void MyGraph::store_node_double (GTL::node /*n*/, char * /*key*/, double /*value*/)
 {
 }
 
 
-void MyGraph::store_node_integer (node /*n*/, char * /*key*/, int /*value*/)
+void MyGraph::store_node_integer (GTL::node /*n*/, char * /*key*/, int /*value*/)
 {
 }
 
-void MyGraph::store_node_string (node n, char *key, char *value)
+void MyGraph::store_node_string (GTL::node n, char *key, char *value)
 {
 	if (strcmp (key, "label") == 0)
 	{
@@ -116,7 +116,7 @@ void MyGraph::store_node_string (node n, char *key, char *value)
 
 
 //------------------------------------------------------------------------------
-void MyGraph::save_edge_info_handler(std::ostream *os, edge e) const
+void MyGraph::save_edge_info_handler(std::ostream *os, GTL::edge e) const
 {
 	graph::save_edge_info_handler (os, e);	
 	*os << "weight " << weight[e] << std::endl;
@@ -135,7 +135,7 @@ void MyGraph::save_edge_info_handler(std::ostream *os, edge e) const
 }
 
 //------------------------------------------------------------------------------
-void MyGraph::save_node_info_handler(std::ostream *os, node n) const
+void MyGraph::save_node_info_handler(std::ostream *os, GTL::node n) const
 {
 	graph::save_node_info_handler (os, n);
 	if (label[n] != "")	
@@ -161,7 +161,7 @@ void MyGraph::save_dot (char *fname, bool weights)
 //------------------------------------------------------------------------------
 void MyGraph::save_dot(std::ostream &f, bool weights)
 {
-	node_map <int> index;
+	GTL::node_map <int> index;
 	graph::node_iterator nit = nodes_begin();
 	graph::node_iterator nend = nodes_end();
 	int count = 0;
@@ -234,7 +234,7 @@ void MyGraph::save_dot(std::ostream &f, bool weights)
 }
 
 //------------------------------------------------------------------------------
-bool MyGraph::edge_exists (node n1, node n2)
+bool MyGraph::edge_exists (GTL::node n1, GTL::node n2)
 {
 	bool result = false;
 	
@@ -242,9 +242,9 @@ bool MyGraph::edge_exists (node n1, node n2)
 	{	
 		// Visit all edges adjacent to n1 and ask whether any
 		// is connect to n2
-		node::adj_edges_iterator eit = n1.adj_edges_begin();
-		node::adj_edges_iterator eend = n1.adj_edges_end();
-		node found = n1;
+		GTL::node::adj_edges_iterator eit = n1.adj_edges_begin();
+		GTL::node::adj_edges_iterator eend = n1.adj_edges_end();
+		GTL::node found = n1;
 		while ((found == n1) && (eit != eend))
 		{
 			if (n1.opposite (*eit) == n2)
@@ -261,9 +261,9 @@ bool MyGraph::edge_exists (node n1, node n2)
 	{
 		// Visit all edges that have n1 as their source and ask 
 		// whether any is connected to n2
-		node::out_edges_iterator eit = n1.out_edges_begin();
-		node::out_edges_iterator eend = n1.out_edges_end();
-		node found = n1;
+		GTL::node::out_edges_iterator eit = n1.out_edges_begin();
+		GTL::node::out_edges_iterator eend = n1.out_edges_end();
+		GTL::node found = n1;
 		while ((found == n1) && (eit != eend))
 		{
 			if (n1.opposite (*eit) == n2)
@@ -281,18 +281,18 @@ bool MyGraph::edge_exists (node n1, node n2)
 }
 
 //------------------------------------------------------------------------------
-void MyGraph::delete_edge (node n1, node n2)
+void MyGraph::delete_edge (GTL::node n1, GTL::node n2)
 {
-	edge e;
+	GTL::edge e;
 	bool exists = false;
 	
 	if (is_undirected ())
 	{	
 		// Visit all edges adjacent to n1 and ask whether any
 		// is connect to n2
-		node::adj_edges_iterator eit = n1.adj_edges_begin();
-		node::adj_edges_iterator eend = n1.adj_edges_end();
-		node found = n1;
+		GTL::node::adj_edges_iterator eit = n1.adj_edges_begin();
+		GTL::node::adj_edges_iterator eend = n1.adj_edges_end();
+		GTL::node found = n1;
 		while ((found == n1) && (eit != eend))
 		{
 			if (n1.opposite (*eit) == n2)
@@ -309,9 +309,9 @@ void MyGraph::delete_edge (node n1, node n2)
 	{
 		// Visit all edges that have n1 as their source and ask 
 		// whether any is connected to n2
-		node::out_edges_iterator eit = n1.out_edges_begin();
-		node::out_edges_iterator eend = n1.out_edges_end();
-		node found = n1;
+		GTL::node::out_edges_iterator eit = n1.out_edges_begin();
+		GTL::node::out_edges_iterator eend = n1.out_edges_end();
+		GTL::node found = n1;
 		while ((found == n1) && (eit != eend))
 		{
 			if (n1.opposite (*eit) == n2)
@@ -330,7 +330,7 @@ void MyGraph::delete_edge (node n1, node n2)
 }
 
 
-double MyGraph::node_cliqueishness (node &n)
+double MyGraph::node_cliqueishness (GTL::node &n)
 {
 	double c = 1.0;
 	
@@ -340,23 +340,23 @@ double MyGraph::node_cliqueishness (node &n)
 	if (possconnections > 0)
 	{
 		// Build list of all nodes adjacent to n (n's neighbours)
-		nodes_t neighbours;
+		GTL::nodes_t neighbours;
 		
-		node::adj_nodes_iterator nit = n.adj_nodes_begin ();
-		node::adj_nodes_iterator nend = n.adj_nodes_end ();
+		GTL::node::adj_nodes_iterator nit = n.adj_nodes_begin ();
+		GTL::node::adj_nodes_iterator nend = n.adj_nodes_end ();
 		while (nit != nend)
 		{
-			node ne = (*nit);
+			GTL::node ne = (*nit);
 			neighbours.push_back (ne);
 			nit++;
 		}
 		
 		// Count number of edges between neighbours
-		nodes_t::iterator i = neighbours.begin();
-		nodes_t::iterator iend = neighbours.end();
+		GTL::nodes_t::iterator i = neighbours.begin();
+		GTL::nodes_t::iterator iend = neighbours.end();
 		while (i != iend)
 		{
-			nodes_t::iterator j = i;
+			GTL::nodes_t::iterator j = i;
 			j++;
 			
 			while (j != iend)
@@ -380,7 +380,7 @@ double MyGraph::cliqueishness ()
 	
 	while (nit != nend)
 	{	
-		node n = (*nit);
+		GTL::node n = (*nit);
 		sum += node_cliqueishness (n);
 		nit++;
 	}

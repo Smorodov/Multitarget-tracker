@@ -55,9 +55,9 @@ public:
      * @retval algorithm::GTL_OK if %algorithm can be applied
      * @retval algorithm::GTL_ERROR otherwise.
      */
-    int check (graph& G);
+    int check (GTL::graph& G);
 
-    int run (graph& G);
+    int run (GTL::graph& G);
 
     /**
      * @brief Resets the algorithm. 
@@ -70,7 +70,7 @@ public:
     /**
      * @brief Sets source. 
      * 
-     * The default source is the invalid %node (node::node()),
+     * The default source is the invalid %node (GTL::node::node()),
      * in this case an arbitrary %node is chosen and stored when
      * this algorithm is run.
      *

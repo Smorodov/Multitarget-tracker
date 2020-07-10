@@ -20,17 +20,17 @@
  * with weighted edges. 
  *
  */
-class MyGraph : public graph
+class MyGraph : public GTL::graph
 {
 public:
 	MyGraph () { labels_as_weights = false; };
 	
-	int get_edge_weight (edge e) const { return weight[e]; };	
-	void set_edge_weight (edge e, int w) { weight[e] = w; };
+	int get_edge_weight (GTL::edge e) const { return weight[e]; };
+	void set_edge_weight (GTL::edge e, int w) { weight[e] = w; };
 
 
-	std::string get_edge_label(edge e) const { return edge_label[e]; };
-	void set_edge_label(edge e, std::string s) { edge_label[e] = s; };
+	std::string get_edge_label(GTL::edge e) const { return edge_label[e]; };
+	void set_edge_label(GTL::edge e, std::string s) { edge_label[e] = s; };
 	
 	/**
 	 * Returns true if an edge exists between a pair of nodes.
@@ -38,7 +38,7 @@ public:
      * @param <code>n1</code> a node.
      * @param <code>n2</code> another node.
      */
-	virtual bool edge_exists (node n1, node n2);
+	virtual bool edge_exists (GTL::node n1, GTL::node n2);
 	
 	
 	/**
@@ -47,7 +47,7 @@ public:
      * @param <code>n1</code> a node.
      * @param <code>n2</code> another node.
      */
-	virtual void delete_edge (node n1, node n2);
+	virtual void delete_edge (GTL::node n1, GTL::node n2);
 
 	
 	/**
@@ -71,9 +71,9 @@ public:
      * @see graph#load_edge_info_handler 
      */
 	
-    virtual void load_edge_info_handler (edge e, GML_pair* list);
+    virtual void load_edge_info_handler (GTL::edge e, GTL::GML_pair* list);
     
-	virtual void store_edge_double (edge e, char *key, double value);
+	virtual void store_edge_double (GTL::edge e, char *key, double value);
 	
 	/**
 	 * Handles an integer value associated with an edge. By default, it
@@ -85,7 +85,7 @@ public:
 	 * @param value the contents of the key (e.g., "5")
 	 *
 	 */
-	virtual void store_edge_integer (edge e, char *key, int value);
+	virtual void store_edge_integer (GTL::edge e, char *key, int value);
 	/**
 	 * Handles a string value associated with an edge. By default, it
 	 * process the "label" key by storing <code>value</code> in the
@@ -98,7 +98,7 @@ public:
 	 * @param value the contents of the key (e.g., "branch")
 	 *
 	 */
-	virtual void store_edge_string (edge e, char *key, char *value);
+	virtual void store_edge_string (GTL::edge e, char *key, char *value);
 
 	
     /**
@@ -108,7 +108,7 @@ public:
      * @param <code>e</code> created edge 
      * @see graph#new_edge
      */
-    virtual void post_new_edge_handler(edge /*e*/) {
+    virtual void post_new_edge_handler(GTL::edge /*e*/) {
 		//weight[e] = 1;
 		//edge_label[e] = "";
 		//edge_colour[e] = "black";
@@ -121,7 +121,7 @@ public:
 	 * @param e the edge
 	 * 
 	 */
-	virtual void save_edge_info_handler(std::ostream *os, edge e) const;
+	virtual void save_edge_info_handler(std::ostream *os, GTL::edge e) const;
 
 
 	/**
@@ -134,12 +134,12 @@ public:
 	 * @param list pointer to the list of paired values
 	 * 
 	 */
-	virtual void load_node_info_handler(node n, GML_pair* list );
+	virtual void load_node_info_handler(GTL::node n, GTL::GML_pair* list );
 	
 	
-	virtual void store_node_double (node n, char *key, double value);
+	virtual void store_node_double (GTL::node n, char *key, double value);
 	
-	virtual void store_node_integer (node n, char *key, int value);
+	virtual void store_node_integer (GTL::node n, char *key, int value);
 	/**
 	 * Handles a string value associated with a node. By default, it
 	 * process the "label" key by storing <code>value</code> in the
@@ -150,7 +150,7 @@ public:
 	 * @param value the contents of the key (e.g., "root")
 	 *
 	 */
-	virtual void store_node_string (node n, char *key, char *value);
+	virtual void store_node_string (GTL::node n, char *key, char *value);
 
     /**
      * Extends graph::post_new_node_handler to ensure by default node label is "". 
@@ -158,13 +158,13 @@ public:
      * @param <code>n</code> created node 
      * @see graph#new_node
      */
-    virtual void post_new_node_handler(node /*n*/)
+    virtual void post_new_node_handler(GTL::node /*n*/)
 	{
 		//label[n] = "";
 		//node_colour[n] = "white";
 	}
 
-	virtual void save_node_info_handler(std::ostream *os, node n) const;
+	virtual void save_node_info_handler(std::ostream *os, GTL::node n) const;
 	
 	/**
 	 * @param f output stream
@@ -184,14 +184,14 @@ public:
 	 */
 	virtual void save_dot (char *fname, bool weights = false);
 	
-	std::string get_node_label(node n) { return label[n]; };
-	void set_node_label(node n, std::string s) { label[n] = s; };
+	std::string get_node_label(GTL::node n) { return label[n]; };
+	void set_node_label(GTL::node n, std::string s) { label[n] = s; };
 	
-	void set_edge_colour(edge e, std::string colour) { edge_colour[e] = colour; };
-	void set_node_colour(node n, std::string colour) { node_colour[n] = colour; };
+	void set_edge_colour(GTL::edge e, std::string colour) { edge_colour[e] = colour; };
+	void set_node_colour(GTL::node n, std::string colour) { node_colour[n] = colour; };
 
 
-	double node_cliqueishness (node &n);
+	double node_cliqueishness (GTL::node &n);
 	double cliqueishness ();
 
 			
@@ -201,18 +201,15 @@ protected:
 	 * in the graph. 
 	 *
 	 */
-	edge_map<int> weight;
-	edge_map<std::string> edge_label;
-	node_map<std::string> label;
+	GTL::edge_map<int> weight;
+	GTL::edge_map<std::string> edge_label;
+	GTL::node_map<std::string> label;
 	
 	bool labels_as_weights;
 	
 	// Styles
-	node_map<std::string> node_colour;
-	edge_map<std::string> edge_colour;
-
-
-	
+	GTL::node_map<std::string> node_colour;
+	GTL::edge_map<std::string> edge_colour;
 };	
 
 #endif

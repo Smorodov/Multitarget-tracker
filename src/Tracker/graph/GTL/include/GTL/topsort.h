@@ -92,7 +92,7 @@ public:
      * <code>G</code>. 
      * @see dfs#check
      */
-    virtual int check (graph& G);
+    virtual int check (GTL::graph& G);
 
     /**
      * Reset
@@ -103,17 +103,17 @@ public:
     /**
      * @internal
      */
-    virtual void init_handler (graph& G);
+    virtual void init_handler (GTL::graph& G);
 
     /**
      * @internal 
      */
-    virtual void leave_handler (graph&, node&, node&);
+    virtual void leave_handler (GTL::graph&, GTL::node&, GTL::node&);
 
     /**
      * @internal 
      */
-    virtual void old_adj_node_handler (graph&, edge&, node&);
+    virtual void old_adj_node_handler (GTL::graph&, GTL::edge&, GTL::node&);
 
 protected:
     /**

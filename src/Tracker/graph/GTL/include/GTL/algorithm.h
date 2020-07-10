@@ -59,7 +59,7 @@ public:
      * @retval algorithm::GTL_OK on success
      * @retval algorithm::GTL_ERROR otherwise
      */
-    virtual int run (graph& g) = 0;
+    virtual int run (GTL::graph& g) = 0;
     
     /**
      * @brief Checks whether all preconditions are satisfied.
@@ -72,7 +72,7 @@ public:
      * @retval algorithm::GTL_OK if %algorithm can be applied
      * @retval algorithm::GTL_ERROR otherwise.
      */
-    virtual int check (graph& g) = 0;
+    virtual int check (GTL::graph& g) = 0;
     
     /**
      * @brief Resets %algorithm 

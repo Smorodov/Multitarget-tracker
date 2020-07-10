@@ -43,7 +43,7 @@ void biconnectivity::reset()
 	num_of_components = 0;
 }
 
-int biconnectivity::check(graph& G)
+int biconnectivity::check(GTL::graph& G)
 {
 	return G.is_undirected() && preds &&
 		dfs::check(G) == GTL_OK ? GTL_OK : GTL_ERROR;
@@ -55,7 +55,7 @@ int biconnectivity::check(graph& G)
 //--------------------------------------------------------------------------
 
 
-void biconnectivity::init_handler(graph& G)
+void biconnectivity::init_handler(GTL::graph& G)
 {
 	if (add_edges) {
 		dfs D;
@@ -73,7 +73,7 @@ void biconnectivity::init_handler(graph& G)
 			additional.push_back(G.new_edge(start, *(*it)));
 		}
 
-		first_child.init(G, node());
+		first_child.init(G, GTL::node());
 	}
 
 	low_num.init(G);
@@ -98,7 +98,7 @@ void biconnectivity::init_handler(graph& G)
 	}
 }
 
-void biconnectivity::entry_handler(graph& /*G*/, node& curr, node& father)
+void biconnectivity::entry_handler(GTL::graph& /*G*/, GTL::node& curr, GTL::node& father)
 {
 	if (add_edges) {
 		if (father != node()) {
@@ -111,7 +111,7 @@ void biconnectivity::entry_handler(graph& /*G*/, node& curr, node& father)
 	low_num[curr] = dfs_number[curr];
 }
 
-void biconnectivity::new_start_handler(graph& /*G*/, node& st)
+void biconnectivity::new_start_handler(GTL::graph& /*G*/, GTL::node& st)
 {
 	cut_count[st] = -1;
 
@@ -138,7 +138,7 @@ void biconnectivity::new_start_handler(graph& /*G*/, node& st)
 	}
 }
 
-void biconnectivity::before_recursive_call_handler(graph& /*G*/, edge& /*e*/, node& n)
+void biconnectivity::before_recursive_call_handler(GTL::graph& /*G*/, GTL::edge& /*e*/, GTL::node& n)
 {
 	if (store_comp) {
 		node_stack.push(n);
@@ -146,7 +146,7 @@ void biconnectivity::before_recursive_call_handler(graph& /*G*/, edge& /*e*/, no
 }
 
 
-void biconnectivity::after_recursive_call_handler(graph& G, edge& e, node& n)
+void biconnectivity::after_recursive_call_handler(GTL::graph& G, GTL::edge& e, GTL::node& n)
 {
 	node curr = n.opposite(e);
 
@@ -227,7 +227,7 @@ void biconnectivity::after_recursive_call_handler(graph& G, edge& e, node& n)
 	}
 }
 
-void biconnectivity::old_adj_node_handler(graph& /*G*/, edge& e, node& n)
+void biconnectivity::old_adj_node_handler(GTL::graph& /*G*/, GTL::edge& e, GTL::node& n)
 {
 	node curr = n.opposite(e);
 
@@ -246,7 +246,7 @@ void biconnectivity::old_adj_node_handler(graph& /*G*/, edge& e, node& n)
 	}
 }
 
-void biconnectivity::leave_handler(graph& /*G*/, node& n, node& /*f*/)
+void biconnectivity::leave_handler(GTL::graph& /*G*/, GTL::node& n, GTL::node& /*f*/)
 {
 	if (cut_count[n] > 0)
 	{
@@ -254,7 +254,7 @@ void biconnectivity::leave_handler(graph& /*G*/, node& n, node& /*f*/)
 	}
 }
 
-void biconnectivity::end_handler(graph& G)
+void biconnectivity::end_handler(GTL::graph& G)
 {
 	edges_t::iterator it = self_loops.begin();
 	edges_t::iterator end = self_loops.end();

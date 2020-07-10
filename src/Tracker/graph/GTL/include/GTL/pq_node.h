@@ -48,7 +48,7 @@ protected:
     /**
      * @internal
      */
-    pq_node (node n_, int id_) :  pert_children(0),
+    pq_node (GTL::node n_, int id_) :  pert_children(0),
 				  pert_leaves(0),
 				  mark (UNMARKED),
 				  n (n_),
@@ -271,12 +271,12 @@ private:
     /**
      * @internal
      */
-    p_node(node, int);
+    p_node(GTL::node, int);
 
     /**
      * @internal
      */
-    p_node(node, int, symlist<pq_node*>&);
+    p_node(GTL::node, int, symlist<pq_node*>&);
     
     //
     // pq_node interface
@@ -422,7 +422,7 @@ private:
     /**
      * @internal
      */
-    q_node (node, int);
+    q_node (GTL::node, int);
 
     //
     // pq_node interface
@@ -593,7 +593,7 @@ public:
     /**
      * @internal
      */
-    pq_leaf (int, int, edge, node);
+    pq_leaf (int, int, GTL::edge, GTL::node);
 private:
     /**
      * @internal
@@ -692,7 +692,7 @@ private:
     /**
      * @internal
      */
-    direction_indicator (node n_, int id_) : pq_node (n_, id_) { };
+    direction_indicator (GTL::node n_, int id_) : pq_node (n_, id_) { };
 
     //
     // pq_node interface

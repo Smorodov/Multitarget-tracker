@@ -199,7 +199,7 @@ public:
      * @see fm_partition#set_vars
      * @see algorithm#check
      */
-    virtual int check(graph& G);
+    virtual int check(GTL::graph& G);
 
     /**
      * Computes a partitioning with <code>G</code>, that means a
@@ -211,7 +211,7 @@ public:
      * <code>algorithm::GTL_ERROR</code> otherwise
      * @see algorithm#run
      */
-    int run(graph& G);
+    int run(GTL::graph& G);
 
     /**
      * Gets the size of the cut after bi-partitioning.
@@ -564,7 +564,7 @@ protected:
      * @internal
      * Hides self loops of <code>G</code>.
      */
-    void hide_self_loops(graph& G);
+    void hide_self_loops(GTL::graph& G);
 
     /**
      * @internal
@@ -605,7 +605,7 @@ protected:
      * @internal
      * Copies side node maps.
      */
-    void copy_side_node_map(const graph& G, node_map<side_type>& dest,
+    void copy_side_node_map(const graph& G, GTL::node_map<side_type>& dest,
 	const node_map<side_type> source) const;
 			
     /**
@@ -647,7 +647,7 @@ protected:
      * @return <code>true</code> if vertex stored in parameter <code>
      * moved_node</code> has been found
      */
-    bool move_vertex(const graph& G, node& moved_node);
+    bool move_vertex(const graph& G, GTL::node& moved_node);
 
     /**
      * @internal

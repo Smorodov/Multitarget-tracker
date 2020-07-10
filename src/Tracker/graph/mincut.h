@@ -11,9 +11,9 @@
  * A pair of nodes
  */
 
-typedef std::pair<node, node> node_pair;
+typedef std::pair<GTL::node, GTL::node> node_pair;
 
-class GTL_EXTERN mincut : public algorithm
+class GTL_EXTERN mincut : public GTL::algorithm
 {
 public:
 	mincut ();
@@ -24,7 +24,7 @@ public:
      *
      * @param <code>edge_weight</code> weight of every edge.
      */
-	void set_vars(const edge_map<int>& edge_weight);
+	void set_vars(const GTL::edge_map<int>& edge_weight);
 	
     /**
      * Finds a mincut of G. 
@@ -34,7 +34,7 @@ public:
      * <code>algorithm::GTL_ERROR</code> otherwise.
      * @see algorithm#run
      */
-    int run (graph& G);
+    int run (GTL::graph& G);
 
 
     /**
@@ -45,7 +45,7 @@ public:
      * <code>algorithm::GTL_ERROR</code> otherwise.
      * @see algorithm#check
      */
-    virtual int check (graph& G);
+    virtual int check (GTL::graph& G);
 	
     /**
      * Reset. 
@@ -76,17 +76,12 @@ protected:
     /**
      * @internal
      */
-    edge_map<int> edge_weight;
+	GTL::edge_map<int> edge_weight;
 	
     /**
      * @internal
      */
 	std::list<node_pair> st_list;
-
-
-
-
 };
-
 
 #endif

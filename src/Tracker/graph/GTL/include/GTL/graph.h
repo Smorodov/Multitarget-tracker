@@ -131,7 +131,7 @@ public:
      *   reverse edge.
      * @return true iff every edge has a reverse edge.  
      */
-    bool is_bidirected(edge_map<edge>& rev) const;
+    bool is_bidirected(GTL::edge_map<edge>& rev) const;
 
     /**
      * Test whether the graph is connected
@@ -192,7 +192,7 @@ public:
      * @param <code>t</code> target of new edge 
      * @return new edge. 
      */
-    virtual edge new_edge(node s, node t);
+    virtual edge new_edge(GTL::node s, GTL::node t);
 
     /**
      * @internal
@@ -211,7 +211,7 @@ public:
      *
      * @param <code>n</code> visible node to be deleted 
      */
-    void del_node(node n);
+    void del_node(GTL::node n);
 
     /**
      * @deprecated
@@ -228,7 +228,7 @@ public:
      *
      * @param <code>e</code> edge to be deleted
      */
-    void del_edge(edge e);
+    void del_edge(GTL::edge e);
 
     /**
      * @deprecated
@@ -309,7 +309,7 @@ public:
      *
      * @param <code>e</code> edge to be hidden
      */
-    void hide_edge (edge e);
+    void hide_edge (GTL::edge e);
     
     /**
      * Restores a hidden edge
@@ -319,7 +319,7 @@ public:
      *
      * @param <code>e</code> hidden edge 
      */
-    void restore_edge (edge e);
+    void restore_edge (GTL::edge e);
 
     /**
      * Hides a node. <em>Please note:</em> all the edges incident with 
@@ -332,7 +332,7 @@ public:
      * @param <code>e</code> node to be hidden
      * @return list of implicitly hidden, incident edges
      */
-	edges_t hide_node(node n);
+	edges_t hide_node(GTL::node n);
 
     /**
      * Restores a hidden node. This only restores the node itself. It
@@ -344,7 +344,7 @@ public:
      * <em>Precondition:</em> <code>n</code> is a valid node in this graph
      * @param <code>n</code> hidden node
      */
-    void restore_node (node n);
+    void restore_node (GTL::node n);
 
     /**
      * Hides all nodes <em>not</em> contained in <code>subgraph_nodes</code>, i.e.
@@ -455,7 +455,7 @@ public:
      * @param <code>n</code> created node
      * @see graph#new_node
      */
-    virtual void post_new_node_handler(node /*n*/) {}
+    virtual void post_new_node_handler(GTL::node /*n*/) {}
 
     /**
      * Virtual function called before a node is deleted;
@@ -464,7 +464,7 @@ public:
      * @param <code>n</code> node deleted afterwards 
      * @see graph#del_node 
      */
-    virtual void pre_del_node_handler(node /*n*/) {}     	
+    virtual void pre_del_node_handler(GTL::node /*n*/) {}     	
 
     /**
      * Virtual function called after a node was deleted;
@@ -481,7 +481,7 @@ public:
      * @param <code>n</code> node to be hidden
      * @see graph#hide_node
      */
-    virtual void pre_hide_node_handler(node /*n*/) {}          
+    virtual void pre_hide_node_handler(GTL::node /*n*/) {}          
 
     /**
      * Virtual function called after a node got hidden;
@@ -490,7 +490,7 @@ public:
      * @param <code>n</code> hidden node
      * @see graph#hide_node
      */
-    virtual void post_hide_node_handler(node /*n*/) {}         
+    virtual void post_hide_node_handler(GTL::node /*n*/) {}         
 
     /**
      * Virtual function called before a node is restored;
@@ -499,7 +499,7 @@ public:
      * @param <code>n</code> node to be restored
      * @see graph#restore_node
      */
-    virtual void pre_restore_node_handler(node /*n*/) {}       
+    virtual void pre_restore_node_handler(GTL::node /*n*/) {}       
  
     /**
      * Virtual function called after a node was restored;
@@ -508,7 +508,7 @@ public:
      * @param <code>n</code> restored node
      * @see graph#restore_node
      */
-   virtual void post_restore_node_handler(node /*n*/) {}
+   virtual void post_restore_node_handler(GTL::node /*n*/) {}
 
    //================================================== Edge handlers
 
@@ -520,7 +520,7 @@ public:
      * @param <code>t</code> target of edge created afterwards
      * @see graph#new_edge
      */
-    virtual void pre_new_edge_handler(node /*s*/, node /*t*/) {}    
+    virtual void pre_new_edge_handler(GTL::node /*s*/, GTL::node /*t*/) {}    
 
     /**
      * Virtual function called after a new edge was inserted;
@@ -529,7 +529,7 @@ public:
      * @param <code>e</code> created edge 
      * @see graph#new_edge
      */
-    virtual void post_new_edge_handler(edge /*e*/) {}          
+    virtual void post_new_edge_handler(GTL::edge /*e*/) {}          
 
     /**
      * Virtual function called before a edge is deleted;
@@ -538,7 +538,7 @@ public:
      * @param <code>e</code> edge to be deleted
      * @see graph#del_edge
      */
-    virtual void pre_del_edge_handler(edge /*e*/) {}           
+    virtual void pre_del_edge_handler(GTL::edge /*e*/) {}           
 
     /**
      * Virtual function called after a edge was deleted;
@@ -548,7 +548,7 @@ public:
      * @param <code>t</code> target of edge deleted
      * @see graph#del_edge
      */
-    virtual void post_del_edge_handler(node, node) {}
+    virtual void post_del_edge_handler(GTL::node, GTL::node) {}
     
     /**
      * Virtual function called before a edge gets hidden; 
@@ -557,7 +557,7 @@ public:
      * @param <code>e</code> edge to be hidden
      * @see graph#hide_edge
      */
-    virtual void pre_hide_edge_handler(edge /*e*/) {}          
+    virtual void pre_hide_edge_handler(GTL::edge /*e*/) {}          
 
     /**
      * Virtual function called after a edge got hidden;
@@ -566,7 +566,7 @@ public:
      * @param <code>e</code> hidden edge
      * @see graph#hide_edge
      */
-    virtual void post_hide_edge_handler(edge /*e*/) {}         
+    virtual void post_hide_edge_handler(GTL::edge /*e*/) {}         
 
     /**
      * Virtual function called before a edge is restored;
@@ -575,7 +575,7 @@ public:
      * @param <code>e</code> edge to be restored
      * @see graph#restore_edge
      */
-    virtual void pre_restore_edge_handler(edge /*e*/) {}       
+    virtual void pre_restore_edge_handler(GTL::edge /*e*/) {}       
  
     /**
      * Virtual function called after a edge was restored;
@@ -584,7 +584,7 @@ public:
      * @param <code>e</code> restored edge
      * @see graph#restore_edge
      */
-   virtual void post_restore_edge_handler(edge /*e*/) {}
+   virtual void post_restore_edge_handler(GTL::edge /*e*/) {}
 
     //================================================== Global handlers
     
@@ -681,7 +681,7 @@ public:
      * @param <code>os</code> output stream.
      * @see graph#save 
      */
-	virtual void save_node_info_handler(std::ostream*, node) const { };
+	virtual void save_node_info_handler(std::ostream*, GTL::node) const { };
 
     /**
      * Called before the closing bracket of the list belonging to the key
@@ -692,7 +692,7 @@ public:
      * @param <code>os</code> output stream.
      * @see graph#save
      */
-	virtual void save_edge_info_handler(std::ostream*, edge) const { };
+	virtual void save_edge_info_handler(std::ostream*, GTL::edge) const { };
 
     /**
      * Called after writing the graph key to <code>os</code>. This can be
@@ -725,7 +725,7 @@ public:
      *                          this node.
      * @see graph#load 
      */
-    virtual void load_node_info_handler (node n, GML_pair* list );
+    virtual void load_node_info_handler (GTL::node n, GML_pair* list );
     
     /**
      * Called after an edge is created. The whole list of key-value-pairs 
@@ -737,7 +737,7 @@ public:
      *                          this edge.
      * @see graph#load 
      */
-    virtual void load_edge_info_handler (edge e, GML_pair* list);
+    virtual void load_edge_info_handler (GTL::edge e, GML_pair* list);
 
     /**
      * Called after the graph is completely built. The whole list for 
@@ -782,12 +782,12 @@ public: // needs to be public, because template friends are not possible
     /**
      * @internal
      */
-    int number_of_ids(node) const;
+    int number_of_ids(GTL::node) const;
     
     /**
      * @internal
      */
-    int number_of_ids(edge) const;
+    int number_of_ids(GTL::edge) const;
     
 private:
 	std::list<int> free_node_ids;
@@ -808,8 +808,8 @@ __GTL_END_NAMESPACE
 //   Iteration
 //--------------------------------------------------------------------------
 
-#define forall_nodes(v,g) GTL_FORALL(v,g,graph::node_iterator,nodes_)
-#define forall_edges(v,g) GTL_FORALL(v,g,graph::edge_iterator,edges_)
+#define forall_nodes(v,g) GTL_FORALL(v,g,GTL::graph::node_iterator,nodes_)
+#define forall_edges(v,g) GTL_FORALL(v,g,GTL::graph::edge_iterator,edges_)
     
 #endif // GTL_GRAPH_H
 

@@ -61,7 +61,7 @@ planar_embedding::operator= (const planar_embedding& em)
 
 
 void 
-planar_embedding::init (graph& my_G) 
+planar_embedding::init (GTL::graph& my_G) 
 {
     adj.init (my_G);
 
@@ -81,21 +81,21 @@ planar_embedding::init (graph& my_G)
 
 
 symlist<edge>::iterator 
-planar_embedding::push_back (node n, edge e) 
+planar_embedding::push_back (GTL::node n, GTL::edge e) 
 {
     return adj[n].insert (adj[n].end(), e);
 }
 
 
 symlist<edge>::iterator 
-planar_embedding::push_front (node n, edge e) 
+planar_embedding::push_front (GTL::node n, GTL::edge e) 
 {
     return adj[n].insert (adj[n].begin(), e);
 }
 
 
 symlist<edge>::iterator& 
-planar_embedding::pos (node n, edge e)
+planar_embedding::pos (GTL::node n, GTL::edge e)
 {
     if (e.source() == n) {
 	return s_pos[e];
@@ -110,7 +110,7 @@ planar_embedding::pos (node n, edge e)
 
 
 void 
-planar_embedding::insert_selfloop (edge e) 
+planar_embedding::insert_selfloop (GTL::edge e) 
 {
     node n = e.source();
     s_pos[e] = t_pos[e] = adj[n].insert (adj[n].begin(), e);
@@ -118,14 +118,14 @@ planar_embedding::insert_selfloop (edge e)
 
 
 void 
-planar_embedding::turn (node n)
+planar_embedding::turn (GTL::node n)
 {
     adj[n].reverse();
 }
 
 
 edge 
-planar_embedding::cyclic_next (node n, edge e)
+planar_embedding::cyclic_next (GTL::node n, GTL::edge e)
 {
     iterator it = pos (n, e);    
     ++it;
@@ -139,7 +139,7 @@ planar_embedding::cyclic_next (node n, edge e)
 
 
 edge 
-planar_embedding::cyclic_prev (node n, edge e)
+planar_embedding::cyclic_prev (GTL::node n, GTL::edge e)
 {
     iterator it = pos (n, e);
     --it;

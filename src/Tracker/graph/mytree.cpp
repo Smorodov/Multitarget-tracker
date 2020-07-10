@@ -6,35 +6,35 @@
 #include <vector>
 #include <stack>
 
-bool is_tree (const graph& G)
+bool is_tree (const GTL::graph& G)
 { 
-  node v;
-  forall_nodes(v,G)
+	GTL::node v;
+	forall_nodes(v,G)
     if ( v.indeg () > 1 ) return false; // nonunique parent
   return ( G.number_of_nodes() == G.number_of_edges() + 1
     && G.is_connected() );
 }
 
-bool MyTree::is_root( const node v ) const
+bool MyTree::is_root( const GTL::node v ) const
 {
 	return (v.indeg() == 0);
 }
 
-bool MyTree::is_leaf( const node v ) const 
+bool MyTree::is_leaf( const GTL::node v ) const
 {
 	return (v.outdeg() == 0);
 }
 
-node MyTree::parent( const node v ) const 
+GTL::node MyTree::parent( const GTL::node v ) const
 {
 	if (v.indeg() == 0) return v;
-	edge e = (*v.in_edges_begin());
+	GTL::edge e = (*v.in_edges_begin());
 	return e.source();
 }
 
-node MyTree::root() const 
+GTL::node MyTree::root() const
 {
-	node v = (*nodes_begin());
+	GTL::node v = (*nodes_begin());
 	while (!is_root(v))
 		v = parent(v);
 	return v;
@@ -42,11 +42,11 @@ node MyTree::root() const
 
 void MyTree::postorder_traversal()
 { 
-	std::stack < node, std::vector<node> > S;
+	std::stack < GTL::node, std::vector<GTL::node> > S;
 	S.push (root());
 	int num = 1;
 	do {
-		node v = S.top();
+		GTL::node v = S.top();
 		S.pop();
 		int n = number_of_nodes() - num++ + 1; // order in which node is visited in postorder
 		order[v] = n; 
@@ -58,8 +58,8 @@ void MyTree::postorder_traversal()
 		
 		
 		
-		node::adj_nodes_iterator it = v.adj_nodes_begin();
-		node::adj_nodes_iterator end = v.adj_nodes_end();
+		GTL::node::adj_nodes_iterator it = v.adj_nodes_begin();
+		GTL::node::adj_nodes_iterator end = v.adj_nodes_end();
 		while (it != end)
 		{
 			S.push (*it);
@@ -70,16 +70,16 @@ void MyTree::postorder_traversal()
 
 
 
-node MyTree::get_left_child(const node v) const 
+GTL::node MyTree::get_left_child(const GTL::node v) const
 {
 	return (*(v.adj_nodes_begin()));
 }
 
-node MyTree::get_right_child(const node v) const 
+GTL::node MyTree::get_right_child(const GTL::node v) const
 {
-	node right;
-	node::adj_nodes_iterator it = v.adj_nodes_begin();
-	node::adj_nodes_iterator end = v.adj_nodes_end();
+	GTL::node right;
+	GTL::node::adj_nodes_iterator it = v.adj_nodes_begin();
+	GTL::node::adj_nodes_iterator end = v.adj_nodes_end();
 	while (it != end)
 	{
 		right = *it;

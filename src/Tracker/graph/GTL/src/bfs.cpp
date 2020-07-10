@@ -87,7 +87,7 @@ void bfs::reset ()
 }
 
 
-int bfs::run (graph& G) {
+int bfs::run (GTL::graph& G) {
     
     bfs_number.init (G, 0);
 
@@ -96,7 +96,7 @@ int bfs::run (graph& G) {
     }
 
     if (preds) {
-	preds->init (G, node());
+	preds->init (G, GTL::node());
     }
 
     edge_map<int> *used = 0;
@@ -148,7 +148,7 @@ int bfs::run (graph& G) {
 //--------------------------------------------------------------------------
 
 
-void bfs::bfs_sub (graph& G, const node& st, edge_map<int>* used) 
+void bfs::bfs_sub (GTL::graph& G, const node& st, GTL::edge_map<int>* used) 
 {
     qu.push_back (st);
     bfs_number[st] = act_bfs_num;

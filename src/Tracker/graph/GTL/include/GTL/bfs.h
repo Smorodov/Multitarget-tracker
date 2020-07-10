@@ -98,7 +98,7 @@ public:
      */
     virtual ~bfs ();
 
-    int run (graph& G);
+    int run (GTL::graph& G);
 
     /**
      * @brief Checks whether the preconditions for BFS are satisfied. 
@@ -109,7 +109,7 @@ public:
      * @retval algorithm::GTL_OK if %algorithm can be applied
      * @retval algorithm::GTL_ERROR otherwise.
      */
-    virtual int check (graph& /*G*/) { return GTL_OK; }
+    virtual int check (GTL::graph& /*G*/) { return GTL_OK; }
 
     virtual void reset ();
     
@@ -120,7 +120,7 @@ public:
     /**
      * @brief Sets start-%node for BFS. 
      * 
-     * The default start-%node is the invalid %node (node::node()),
+     * The default start-%node is the invalid %node (GTL::node::node()),
      * in this case an arbitrary %node is chosen and stored when
      * BFS is run.
      *
@@ -420,14 +420,14 @@ public:
      *
      * @param G %graph for which BFS was invoked.
      */
-    virtual void init_handler (graph& /*G*/) { };
+    virtual void init_handler (GTL::graph& /*G*/) { };
 
     /**
      * @brief Called right before the end of BFS.
      *
      * @param G %graph for which BFS was invoked.
      */
-    virtual void end_handler (graph& /*G*/) { };
+    virtual void end_handler (GTL::graph& /*G*/) { };
 
     /**
      * @brief Called after the %node @a n was taken out of the queue.
@@ -435,7 +435,7 @@ public:
      * @param G %graph for which BFS was invoked.
      * @param n %node taken out of the queue.
      */
-    virtual void popped_node_handler (graph& /*G*/, node& /*n*/) { };
+    virtual void popped_node_handler (GTL::graph& /*G*/, GTL::node& /*n*/) { };
 
     /**
      * @brief Called when finished with the %node @a n.
@@ -446,7 +446,7 @@ public:
      * @param G %graph for which BFS was invoked.
      * @param n finished %node.
      */
-    virtual void finished_node_handler (graph& /*G*/, node& /*n*/) { };
+    virtual void finished_node_handler (GTL::graph& /*G*/, GTL::node& /*n*/) { };
 
     /**
      * @brief Called when an unused %node @a n was discovered. 
@@ -458,7 +458,7 @@ public:
      * @param n unused %node.
      * @param f actual %node.
      */
-    virtual void unused_node_handler (graph& /*G*/, node& /*n*/, node& /*f*/) { };
+    virtual void unused_node_handler (GTL::graph& /*G*/, GTL::node& /*n*/, GTL::node& /*f*/) { };
 
     /**
      * @brief Called when an used %node @a n was found. 
@@ -470,7 +470,7 @@ public:
      * @param n used %node.
      * @param f actual %node.
      */
-    virtual void used_node_handler (graph& /*G*/, node& /*n*/, node& /*f*/) { };
+    virtual void used_node_handler (GTL::graph& /*G*/, GTL::node& /*n*/, GTL::node& /*f*/) { };
 
     /**
      * @brief Called when BFS is started with start-%node
@@ -483,11 +483,11 @@ public:
      * @param n start-%node.
      * @sa bfs::scan_whole_graph
      */
-    virtual void new_start_handler (graph& /*G*/, node& /*n*/) { };
+    virtual void new_start_handler (GTL::graph& /*G*/, GTL::node& /*n*/) { };
 
 private:
 
-    void bfs_sub (graph&, const node&, edge_map<int>*);
+    void bfs_sub (GTL::graph&, const node&, GTL::edge_map<int>*);
 
 protected:
 

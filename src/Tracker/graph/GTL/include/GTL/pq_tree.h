@@ -54,7 +54,7 @@ public:
      * @param n node in the %graph to which the P-node refers
      * @param le list of children
      */
-	pq_tree(int id, node n, const std::list<pq_leaf*>& le);
+	pq_tree(int id, GTL::node n, const std::list<pq_leaf*>& le);
 
     /**
      * @brief Deletes PQ-tree.

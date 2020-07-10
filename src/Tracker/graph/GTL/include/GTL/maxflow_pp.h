@@ -78,7 +78,7 @@ public:
      * otherwise
      * @see algorithm#check
      */
-    virtual int check(graph& G);
+    virtual int check(GTL::graph& G);
 
     /**
      * Computes maximum flow of graph <code>G</code>.
@@ -88,7 +88,7 @@ public:
      * <code>algorithm::GTL_ERROR</code> otherwise 
      * @see algorithm#run
      */
-    int run(graph& G);
+    int run(GTL::graph& G);
 
     /**
      * Returns the maximum flow of an edge.
@@ -203,7 +203,7 @@ protected:
     /**
      * @internal
      */
-    void create_artif_source_target(graph& G);
+    void create_artif_source_target(GTL::graph& G);
 
     /**
      * @internal
@@ -213,12 +213,12 @@ protected:
     /**
      * @internal
      */
-    int leveling(graph& G);
+    int leveling(GTL::graph& G);
 
     /**
      * @internal
      */
-    void hide_unreachable_nodes(graph& G);
+    void hide_unreachable_nodes(GTL::graph& G);
 
     /**
      * @internal
@@ -228,7 +228,7 @@ protected:
     /**
      * @internal
      */
-    void min_throughput_node(const graph& G, node& min_tp_node, double& min_value);
+    void min_throughput_node(const graph& G, GTL::node& min_tp_node, double& min_value);
 
     /**
      * @internal
@@ -250,22 +250,22 @@ protected:
     /**
      * @internal
      */
-    void push(graph& G, const node& start_node, const double flow_value);
+    void push(GTL::graph& G, const node& start_node, const double flow_value);
 
     /**
      * @internal
      */
-    void pull(graph& G, const node& start_node, const double flow_value);
+    void pull(GTL::graph& G, const node& start_node, const double flow_value);
 
     /**
      * @internal
      */
-    void comp_rem_net(graph& G);
+    void comp_rem_net(GTL::graph& G);
 
     /**
      * @internal
      */
-    void single_edge_update(graph& G, edge cur_edge);
+    void single_edge_update(GTL::graph& G, GTL::edge cur_edge);
 
     /**
      * @internal
@@ -282,7 +282,7 @@ protected:
     /**
      * @internal
      */
-    void create_back_edge(graph& G, const edge& org_edge);
+    void create_back_edge(GTL::graph& G, const edge& org_edge);
 
     /**
      * @internal
@@ -292,7 +292,7 @@ protected:
     /**
      * @internal
      */
-    void restore_graph(graph& G);
+    void restore_graph(GTL::graph& G);
 private:
 };
 

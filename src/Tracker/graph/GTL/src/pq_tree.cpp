@@ -16,7 +16,7 @@
 
 __GTL_BEGIN_NAMESPACE
 
-pq_tree::pq_tree (int id, node n, const std::list<pq_leaf*>& li)
+pq_tree::pq_tree (int id, GTL::node n, const std::list<pq_leaf*>& li)
 {
 #ifdef _DEBUG  
     GTL_debug::init_debug();
@@ -406,7 +406,7 @@ bool pq_tree::reduce (std::list<pq_leaf*>& leaves)
 	clear_me.erase (tmp->lpos);
 
 	if (tmp->mark == pq_node::BLOCKED) {
-	    pseudo = new q_node (node(), 0);	    
+	    pseudo = new q_node (GTL::node(), 0);	    
 	    sons_iterator past = tmp->pos;
 			
 	    //
@@ -703,7 +703,7 @@ void pq_tree::dfs (pq_node* act, planar_embedding& em,
 }
 
 
-void pq_tree::replace_pert (int id, node _n, const std::list<pq_leaf*>& li,
+void pq_tree::replace_pert (int id, GTL::node _n, const std::list<pq_leaf*>& li,
 			    planar_embedding* em, std::list<direction_indicator>* dirs) 
 {
     assert (pert_root);

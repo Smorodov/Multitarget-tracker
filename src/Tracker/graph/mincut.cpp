@@ -16,7 +16,7 @@
 
 #include "fheap.h"
 
-mincut::mincut () : algorithm () 
+mincut::mincut () : GTL::algorithm () 
 {
 	set_vars_executed = false;
 }
@@ -26,23 +26,21 @@ mincut::~mincut ()
 {
 }
 
-void mincut::set_vars(const edge_map<int>& edge_weight)
+void mincut::set_vars(const GTL::edge_map<int>& edge_weight)
 {
     this->edge_weight = edge_weight;
 	min_cut = 0;
     set_vars_executed = true;
 }
 
-int mincut::check (graph& G) 
+int mincut::check (GTL::graph& G) 
 {
 	if (!set_vars_executed)
-    {
 		return(GTL_ERROR);
-    }
+
     if ((G.number_of_nodes() <= 1) || (!G.is_connected()) || (G.is_directed()))
-    {
 		return(GTL_ERROR);
-    }
+
     return GTL_OK;
 }
 
@@ -51,18 +49,18 @@ void mincut::reset ()
 	st_list.erase (st_list.begin(), st_list.end());
 }
 
-int mincut::run(graph& G)
+int mincut::run(GTL::graph& G)
 {
-	graph g;
+	GTL::graph g;
     g.make_undirected();
 
     // Make a local copy of the graph as mincut modifies the original graph
 
 	// List of nodes in the original graph
-	node_map <node> partner (G);
-	node_map <node> orig (g);
+	GTL::node_map <GTL::node> partner (G);
+	GTL::node_map <GTL::node> orig (g);
 
-	node x;
+	GTL::node x;
 	forall_nodes (x, G)
 	{
 		partner[x] = g.new_node(); 
@@ -70,39 +68,39 @@ int mincut::run(graph& G)
 	}
 
 	// Create edges and associated weights
-	edge_map<int> w(g, 0);
-	edge e;
+	GTL::edge_map<int> w(g, 0);
+	GTL::edge e;
 	forall_edges (e, G)
 	{
 		if (e.source() != e.target())
 		{
-			edge ec = g.new_edge (partner[e.source()], partner[e.target()]);
+			GTL::edge ec = g.new_edge (partner[e.source()], partner[e.target()]);
 			w[ec] = edge_weight[e];
 		}
 	}
 
 	// Start of algorithm. $a$ is an arbitrary single node in $g$. The set $A$
 	// of nodes initially comprises $a$
-	graph::node_iterator na = g.nodes_begin();
-	node a = *na;
+	GTL::graph::node_iterator na = g.nodes_begin();
+	GTL::node a = *na;
 	int n = g.number_of_nodes();
 	int cut_weight = std::numeric_limits<int>::max();
 	int best_value = std::numeric_limits<int>::max();
 	while (n >= 2 )
 	{
-		node t = a;
-		node s, v;
-		edge e;
-   		node::adj_edges_iterator it;
-		node::adj_edges_iterator end;
+		GTL::node t = a;
+		GTL::node s, v;
+		GTL::edge e;
+   		GTL::node::adj_edges_iterator it;
+		GTL::node::adj_edges_iterator end;
 		
 		fheap_t *pq = fh_alloc (n);
-		node_map<int> vertex_number (g, 0);
-		std::map <int, node, std::less<int> > nv;
+		GTL::node_map<int> vertex_number (g, 0);
+		std::map <int, GTL::node, std::less<int> > nv;
 		int vertex_count = 0;
 			
 		// Nodes in $A$ are not in the queue
-		node_map<bool> in_PQ(g, false);
+		GTL::node_map<bool> in_PQ(g, false);
 		forall_nodes (v, g)
 		{
 			vertex_number[v] = vertex_count;
@@ -114,7 +112,7 @@ int mincut::run(graph& G)
 				fh_insert (pq, vertex_number[v], 0);	
 			}
 		}
-		node_map<int> inf (g, 0); 
+		GTL::node_map<int> inf (g, 0);
 		// Get weight of edges adjacent to $a$
 		it = a.adj_edges_begin();
 		end = a.adj_edges_end();
@@ -177,8 +175,8 @@ int mincut::run(graph& G)
 		//cout << "s=" << s << " t=" << t << endl;
 
 		// Get list of edges adjacent to s
-		edge dummy;
-		node_map<edge> s_edge(g, dummy);
+		GTL::edge dummy;
+		GTL::node_map<GTL::edge> s_edge(g, dummy);
 		it = s.adj_edges_begin();
 		end = s.adj_edges_end();
 		while (it != end)
@@ -190,7 +188,6 @@ int mincut::run(graph& G)
 		// Merge s and t
    		it = t.adj_edges_begin();
     	end = t.adj_edges_end();
-
 
 		// Iterate over edges adjacent to t. If a node v adjacent to
 		// t is also adjacent to s, then add w(it) to e(s,v)
@@ -205,12 +202,10 @@ int mincut::run(graph& G)
 			}
 			else if (s != v)
 			{
-				edge ne = g.new_edge (s, v);
+				GTL::edge ne = g.new_edge (s, v);
 				w[ne] = w[*it];
 			}				
-			it++;
-
-			
+			++it;
 		}
 
 		// Delete node t from graph

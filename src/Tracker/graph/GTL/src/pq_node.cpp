@@ -24,11 +24,11 @@ pq_node::~pq_node ()
 //   P-NODE
 //--------------------------------------------------------------------------
 
-p_node::p_node (node n_, int id_) : pq_node (n_, id_), partial_count (0), full_count (0)
+p_node::p_node (GTL::node n_, int id_) : pq_node (n_, id_), partial_count (0), full_count (0)
 {
 }
 
-p_node::p_node (node n_, int id_, symlist<pq_node*>& s) : 
+p_node::p_node (GTL::node n_, int id_, symlist<pq_node*>& s) : 
 	pq_node (n_, id_), child_count (0), partial_count (0), full_count (0)
 {
     sons.splice (sons.end(), s.begin(), s.end());
@@ -88,7 +88,7 @@ inline void p_node::write(std::ostream& os, int _id)
 //   Q-NODE
 //--------------------------------------------------------------------------
 
-q_node::q_node (node n_, int id_) : pq_node (n_, id_), partial_count (0), full_count (0)
+q_node::q_node (GTL::node n_, int id_) : pq_node (n_, id_), partial_count (0), full_count (0)
 { 
 }
 
@@ -313,7 +313,7 @@ void q_node::turn ()
 //--------------------------------------------------------------------------
 
 
-pq_leaf::pq_leaf (int id_, int other_, edge e_, node n_) : pq_node (n_, id_) 
+pq_leaf::pq_leaf (int id_, int other_, GTL::edge e_, GTL::node n_) : pq_node (n_, id_) 
 {
     up_id = other_;
     up = n_.opposite (e_);

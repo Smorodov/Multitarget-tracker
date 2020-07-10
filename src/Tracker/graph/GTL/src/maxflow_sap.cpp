@@ -46,7 +46,7 @@ void maxflow_sap::set_vars(const edge_map<double>& edge_capacity,
 }
 
 
-int maxflow_sap::check(graph& G)
+int maxflow_sap::check(GTL::graph& G)
 {
     if (!set_vars_executed)
     {
@@ -94,15 +94,13 @@ int maxflow_sap::check(graph& G)
     else
     {
 		if (net_source == net_target)
-		{
 		    return(GTL_ERROR);
-		}
     }
     return(GTL_OK);	// everything ok
 }
 
 
-int maxflow_sap::run(graph& G)
+int maxflow_sap::run(GTL::graph& G)
 {
     // init
     if (artif_source_target)
@@ -166,7 +164,7 @@ void maxflow_sap::reset()
 }
 
 
-void maxflow_sap::create_artif_source_target(graph& G)
+void maxflow_sap::create_artif_source_target(GTL::graph& G)
 {
     net_source = G.new_node();
     net_target = G.new_node();
@@ -265,7 +263,7 @@ bool maxflow_sap::has_an_admissible_arc(const node cur_node)
 }
 
 
-void maxflow_sap::advance(node& cur_node, node_map<edge>& last_edge)
+void maxflow_sap::advance(GTL::node& cur_node, GTL::node_map<edge>& last_edge)
 {
 	node::out_edges_iterator out_edge_it = cur_node.out_edges_begin();
 	node::out_edges_iterator out_edges_end = cur_node.out_edges_end();
@@ -281,7 +279,7 @@ void maxflow_sap::advance(node& cur_node, node_map<edge>& last_edge)
 }
 
 
-void maxflow_sap::augment(graph& G, const node_map<edge>& last_edge)
+void maxflow_sap::augment(GTL::graph& G, const node_map<edge>& last_edge)
 {
     double additional_flow = free_capacity(last_edge);
 	node cur_node = net_target;
@@ -386,7 +384,7 @@ double maxflow_sap::free_capacity(const node_map<edge>& last_edge) const
 }
 
 
-void maxflow_sap::create_back_edge(graph& G, const edge& org_edge)
+void maxflow_sap::create_back_edge(GTL::graph& G, const edge& org_edge)
 {
     edge be = G.new_edge(org_edge.target(), org_edge.source());
     edge_org[be] = false;
@@ -414,7 +412,7 @@ void maxflow_sap::comp_max_flow(const graph& /*G*/)
 }
 
 
-void maxflow_sap::restore_graph(graph& G)
+void maxflow_sap::restore_graph(GTL::graph& G)
 {
     G.restore_graph();	// hidden edges can not be deleted!
     while (!edges_not_org.empty())

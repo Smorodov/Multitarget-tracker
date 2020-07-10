@@ -78,7 +78,7 @@ public:
      *
      * @sa algorithm#check
      */
-    int check(graph& G);
+    int check(GTL::graph& G);
     
     /**
      * @brief Runs planarity test on @p G.
@@ -96,7 +96,7 @@ public:
      *
      * @sa algorithm::run
      */
-    int run(graph& G);
+    int run(GTL::graph& G);
     
     /**
      * @brief Resets algorithm object, such that it can  be applied to
@@ -261,7 +261,7 @@ private:
      *
      * @retval true if @c G is planar
      */ 
-    bool run_on_biconnected(graph& G, planar_embedding& em);
+    bool run_on_biconnected(GTL::graph& G, planar_embedding& em);
 
     /**
      * @internal
@@ -271,7 +271,7 @@ private:
      * @param G biconnected graph 
      * @param em embedding obtained through testing @p G
      */
-    void add_to_embedding(graph& G, planar_embedding& em);
+    void add_to_embedding(GTL::graph& G, planar_embedding& em);
 
     /**
      * @internal
@@ -321,7 +321,7 @@ private:
      *
      * @sa graph::hide
      */
-    void switch_to_component(graph& G,
+    void switch_to_component(GTL::graph& G,
 			     biconnectivity::component_iterator it);
  
     /**
@@ -341,7 +341,7 @@ private:
      *        matchings stopped
      * @param PQ tree
      */
-    void examine_obstruction(graph& G,
+    void examine_obstruction(GTL::graph& G,
 			     st_number& st,
 			     node act,
 			     pq_node* fail,
@@ -364,7 +364,7 @@ private:
      * @param stop lowest st-number of virtual nodes
      * @param to_father stores the edge to predecessor of each node
      */
-    void dfs_bushform(node act,
+    void dfs_bushform(GTL::node act,
 		      node_map<int>& mark,
 		      st_number& st,
 		      int stop,
@@ -383,7 +383,7 @@ private:
      * @param n node with lowest st-number in biconnected component 
      * @param em planar embedding (at least for this component)
      */
-    void attachment_cycle (node n, planar_embedding& em);
+    void attachment_cycle (GTL::node n, planar_embedding& em);
 
     /**
      * @internal
@@ -396,7 +396,7 @@ private:
      * @param n root of subtree
      * @param mark edges in subtree recieve 1, all other are unchanged.
      */
-    void mark_all_neighbors_of_leaves (pq_node* act, node_map<int>& mark);
+    void mark_all_neighbors_of_leaves (pq_node* act, GTL::node_map<int>& mark);
     
     /**
      * @internal
@@ -426,7 +426,7 @@ private:
      *
      * @return marked node
      */
-    node up_until_marked(node act,
+    node up_until_marked(GTL::node act,
 			 node_map<int>& mark,
 			 node_map<edge>& to_father);
 
@@ -441,7 +441,7 @@ private:
      *
      * @return marked node
      */
-    node up_until_marked(node act,
+    node up_until_marked(GTL::node act,
 			 node_map<int>& mark,
 			 st_number& st);
 
@@ -513,7 +513,7 @@ private:
      * @param G graph tested
      * @param q_fail Q-node at which reduction failed
      */
-    void case_C(node* nodes,
+    void case_C(GTL::node* nodes,
 		pq_leaf** leaves,
 		st_number& _st,
 		node_map<edge> to_father,
@@ -534,7 +534,7 @@ private:
      * @param G graph tested
      * @param q_fail Q-node at which reduction failed
      */
-    void case_D(node* nodes,
+    void case_D(GTL::node* nodes,
 		pq_leaf** leaves,
 		st_number& _st,
 		node_map<edge> to_father,
@@ -555,7 +555,7 @@ private:
      * @param G graph tested
      * @param q_fail Q-node at which reduction failed
      */
-    void case_E(node* nodes,
+    void case_E(GTL::node* nodes,
 		pq_leaf** leaves,
 		st_number& _st,
 		node_map<edge> to_father,
@@ -566,7 +566,7 @@ private:
     /**
      * @internal
      */
-    void write_bushform(graph& G, st_number& _st, int k, const char* name,
+    void write_bushform(GTL::graph& G, st_number& _st, int k, const char* name,
                         const node_map<int>& mark, const node_map<edge>& to_father);
 
     /**

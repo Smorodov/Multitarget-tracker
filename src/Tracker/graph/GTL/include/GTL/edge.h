@@ -79,14 +79,14 @@ public:
      * 
      * @param <code>n</code> new source 
      */
-    void change_source (node n);
+    void change_source (GTL::node n);
 
     /**
      * Makes <code>n</code> the target of this edge. Takes O(1) time. 
      * 
      * @param <code>n</code> new target 
      */
-    void change_target (node n);
+    void change_target (GTL::node n);
 
     /**
      * Returns the node opposite to <code>n</code> referring to
@@ -94,7 +94,7 @@ public:
      * 
      * @param <code>n</code> a node incident to this edge
      */
-    const node& opposite(node n) const;
+    const node& opposite(GTL::node n) const;
 
     /**
      * @internal
@@ -132,9 +132,9 @@ private:
     friend class graph;
     friend class node;
     
-    GTL_EXTERN friend bool operator==(edge, edge);
-    GTL_EXTERN friend bool operator!=(edge, edge);
-    GTL_EXTERN friend bool operator<(edge, edge);
+    GTL_EXTERN friend bool operator==(GTL::edge, GTL::edge);
+    GTL_EXTERN friend bool operator!=(GTL::edge, GTL::edge);
+    GTL_EXTERN friend bool operator<(GTL::edge, GTL::edge);
 	GTL_EXTERN friend std::ostream& operator<< (std::ostream& os, const edge& e);
 };
 
