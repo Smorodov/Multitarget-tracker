@@ -70,9 +70,8 @@ public:
 		std::lock_guard<std::mutex> lock(m_mutex);
 
 		if (!maxQueueSize || (maxQueueSize > 0 && m_que.size() < maxQueueSize))
-		{
 			m_que.push_back(frameInfo);
-		}
+
 #if SHOW_QUE_LOG
 		QUE_LOG << "AddNewFrame end: " << frameInfo->m_dt << ", frameInd " << frameInfo->m_frameInd << ", queue size " << m_que.size() << std::endl;
 #endif
@@ -91,21 +90,14 @@ public:
         for (auto it : m_que)
         {
             if (it->m_inDetector.load() && it->m_inTracker.load())
-            {
                 std::cout << i << " d" << it->m_inDetector.load() << " t" << it->m_inTracker.load() << "; ";
-            }
             else if (it->m_inDetector.load())
-            {
                 std::cout << i << " d" << it->m_inDetector.load() << "; ";
-            }
             else if (it->m_inTracker.load())
-            {
                 std::cout << i << " t" << it->m_inTracker.load() << "; ";
-            }
             else
-            {
                 std::cout << i << "; ";
-            }
+
             ++i;
         }
         std::cout << std::endl;
@@ -124,9 +116,7 @@ public:
         while (m_que.empty() || m_que.back()->m_inDetector.load())
         {
             if (m_break.load())
-            {
                 break;
-            }
 
             m_cond.wait(lock);
             //PrintQue();
@@ -155,9 +145,8 @@ public:
         for (queue_t::iterator it = m_que.begin(); it != m_que.end(); ++it)
         {
             if ((*it)->m_inDetector.load() == 1)
-            {
                 break;
-            }
+
             else if ((*it)->m_inTracker.load() == 0)
             {
                 res_it = it;
@@ -181,9 +170,7 @@ public:
         while (it == m_que.end())
         {
             if (m_break.load())
-            {
                 break;
-            }
 
             m_cond.wait(lock);
             it = SearchUntracked();
@@ -216,9 +203,7 @@ public:
         while (m_que.empty() || m_que.front()->m_inTracker.load() != 2)
         {
             if (m_break.load())
-            {
                 break;
-            }
 
             m_cond.wait(lock);
             //PrintQue();

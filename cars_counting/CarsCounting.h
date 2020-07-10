@@ -288,13 +288,10 @@ private:
         if (trivial1)
         {
             if (trivial2)
-            {
                 isIntersect = (fabs(m_pt1.x - pt1.x) < eps);
-            }
             else
-            {
                 intersectPt.x = m_pt1.x;
-            }
+
             intersectPt.y = a2 * intersectPt.x + b2;
         }
         else
@@ -306,13 +303,9 @@ private:
             else
             {
                 if (fabs(a2 - a1) > eps)
-                {
                     intersectPt.x = (b1 - b2) / (a2 - a1);
-                }
                 else
-                {
                     isIntersect = false;
-                }
             }
             intersectPt.y = a1 * intersectPt.x + b1;
         }

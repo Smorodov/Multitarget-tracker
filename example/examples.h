@@ -161,9 +161,7 @@ protected:
 		m_tracks = m_tracker->GetTracks();
 
         if (m_showLogs)
-        {
             std::cout << "Frame " << framesCounter << ": tracks = " << m_tracks.size() << ", time = " << currTime << std::endl;
-        }
 
         for (const auto& track : m_tracks)
         {
@@ -203,14 +201,10 @@ protected:
             {
                 if (track.IsRobust(cvRound(m_fps / 4),          // Minimal trajectory size
                                     0.7f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
-                                    cv::Size2f(0.1f, 8.0f))      // Min and max ratio: width / height
-                        )
-                {
+                                    cv::Size2f(0.1f, 8.0f)))      // Min and max ratio: width / height
                     DrawTrack(frame, 1, track, true);
-                }
             }
         }
-
         m_detector->CalcMotionMap(frame);
     }
 
@@ -293,21 +287,15 @@ protected:
 		m_tracks = m_tracker->GetTracks();
 
         if (m_showLogs)
-        {
             std::cout << "Frame " << framesCounter << ": tracks = " << m_tracks.size() << ", time = " << currTime << std::endl;
-        }
 
         for (const auto& track : m_tracks)
         {
             if (track.IsRobust(8,                           // Minimal trajectory size
                                 0.4f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
-                                cv::Size2f(0.1f, 8.0f))      // Min and max ratio: width / height
-                    )
-            {
+                                cv::Size2f(0.1f, 8.0f)))      // Min and max ratio: width / height
                 DrawTrack(frame, 1, track);
-            }
         }
-
         m_detector->CalcMotionMap(frame);
     }
 };
@@ -390,21 +378,15 @@ protected:
 		m_tracks = m_tracker->GetTracks();
 
         if (m_showLogs)
-        {
             std::cout << "Frame " << framesCounter << ": tracks = " << m_tracks.size() << ", time = " << currTime << std::endl;
-        }
 
         for (const auto& track : m_tracks)
         {
 			if (track.IsRobust(cvRound(m_fps / 2),          // Minimal trajectory size
                                 0.4f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
-                                cv::Size2f(0.1f, 8.0f))      // Min and max ratio: width / height
-                    )
-            {
+                                cv::Size2f(0.1f, 8.0f)))      // Min and max ratio: width / height
                 DrawTrack(frame, 1, track);
-            }
         }
-
         m_detector->CalcMotionMap(frame);
     }
 };
@@ -488,16 +470,13 @@ protected:
 		m_tracks = m_tracker->GetTracks();
 
         if (m_showLogs)
-        {
             std::cout << "Frame " << framesCounter << ": tracks = " << m_tracks.size() << ", time = " << currTime << std::endl;
-        }
 
         for (const auto& track : m_tracks)
         {
             if (track.IsRobust(5,                           // Minimal trajectory size
                                 0.2f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
-                                cv::Size2f(0.1f, 8.0f))      // Min and max ratio: width / height
-                    )
+                                cv::Size2f(0.1f, 8.0f)))      // Min and max ratio: width / height
             {
                 DrawTrack(frame, 1, track);
 
@@ -510,7 +489,6 @@ protected:
                 cv::putText(frame, label, brect.tl(), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 0, 0));
             }
         }
-
         m_detector->CalcMotionMap(frame);
     }
 };
@@ -609,16 +587,13 @@ protected:
 		m_tracks = m_tracker->GetTracks();
 
         if (m_showLogs)
-        {
             std::cout << "Frame " << framesCounter << ": tracks = " << m_tracks.size() << ", time = " << currTime << std::endl;
-        }
 
         for (const auto& track : m_tracks)
         {
             if (track.IsRobust(1,                           // Minimal trajectory size
                                 0.1f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
-                                cv::Size2f(0.1f, 8.0f))      // Min and max ratio: width / height
-                    )
+                                cv::Size2f(0.1f, 8.0f)))      // Min and max ratio: width / height
             {
                 DrawTrack(frame, 1, track);
 
@@ -762,16 +737,13 @@ protected:
 		m_tracks = m_tracker->GetTracks();
 
 		if (m_showLogs)
-		{
 			std::cout << "Frame " << framesCounter << ": tracks = " << m_tracks.size() << ", time = " << currTime << std::endl;
-		}
 
 		for (const auto& track : m_tracks)
 		{
             if (track.IsRobust(3,                           // Minimal trajectory size
                 0.7f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
-				cv::Size2f(0.1f, 8.0f))      // Min and max ratio: width / height
-				)
+				cv::Size2f(0.1f, 8.0f)))      // Min and max ratio: width / height
 			{
 				DrawTrack(frame, 1, track, false);
 
@@ -918,16 +890,13 @@ protected:
 		m_tracks = m_tracker->GetTracks();
 
 		if (m_showLogs)
-		{
 			std::cout << "Frame " << framesCounter << ": tracks = " << m_tracks.size() << ", time = " << currTime << std::endl;
-		}
 
 		for (const auto& track : m_tracks)
 		{
 			if (track.IsRobust(2,                           // Minimal trajectory size
 				0.5f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
-				cv::Size2f(0.1f, 8.0f))      // Min and max ratio: width / height
-				)
+				cv::Size2f(0.1f, 8.0f)))      // Min and max ratio: width / height
 			{
 				DrawTrack(frame, 1, track);
 
