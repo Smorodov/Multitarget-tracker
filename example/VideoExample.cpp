@@ -71,9 +71,7 @@ void VideoExample::SyncProcess()
     {
         capture >> frame;
         if (frame.empty())
-        {
             break;
-        }
 
 		if (!m_isDetectorInitialized || !m_isTrackerInitialized)
 		{
@@ -117,13 +115,9 @@ void VideoExample::SyncProcess()
 		int waitTime = manualMode ? 0 : 1;// std::max<int>(1, cvRound(1000 / m_fps - currTime));
         int k = cv::waitKey(waitTime);
         if (k == 27)
-        {
             break;
-        }
         else if (k == 'm' || k == 'M')
-        {
             manualMode = !manualMode;
-        }
 #else
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
 #endif
@@ -229,9 +223,8 @@ void VideoExample::AsyncProcess()
         frameInfo.m_cond.notify_one();
 
         if (k == 27)
-        {
             break;
-        }
+
         ++framesCounter;
         if (m_endFrame && framesCounter > m_endFrame)
         {
@@ -243,9 +236,7 @@ void VideoExample::AsyncProcess()
     stopCapture = true;
 
     if (thCapDet.joinable())
-    {
         thCapDet.join();
-    }
 
     int64 stopLoopTime = cv::getTickCount();
 
@@ -358,13 +349,9 @@ void VideoExample::Tracking(cv::Mat frame, const regions_t& regions)
 {
  	cv::UMat uframe;
 	if (m_tracker->CanColorFrameToTrack())
-	{
 		uframe = frame.getUMat(cv::ACCESS_READ);
-	}
 	else
-	{
 		cv::cvtColor(frame, uframe, cv::COLOR_BGR2GRAY);
-	}
 
     m_tracker->Update(regions, uframe, m_fps);
 }
@@ -379,8 +366,7 @@ void VideoExample::Tracking(cv::Mat frame, const regions_t& regions)
 void VideoExample::DrawTrack(cv::Mat frame,
                              int resizeCoeff,
                              const TrackingObject& track,
-                             bool drawTrajectory
-                             )
+                             bool drawTrajectory)
 {
     auto ResizePoint = [resizeCoeff](const cv::Point& pt) -> cv::Point
     {
@@ -506,9 +492,8 @@ bool VideoExample::WriteFrame(cv::VideoWriter& writer, const cv::Mat& frame)
     if (!m_outFile.empty())
     {
         if (!writer.isOpened())
-        {
             writer.open(m_outFile, m_fourcc, m_fps, frame.size(), true);
-        }
+
         if (writer.isOpened())
         {
             writer << frame;

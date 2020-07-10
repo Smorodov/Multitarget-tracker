@@ -106,13 +106,9 @@ void AsyncDetector::Process()
         DrawData(processedFrame, framesCounter, currTime);
 
         if (!m_outFile.empty() && !writer.isOpened())
-        {
             writer.open(m_outFile, cv::VideoWriter::fourcc('H', 'F', 'Y', 'U'), m_fps, processedFrame->m_frame.size(), true);
-        }
         if (writer.isOpened())
-        {
             writer << processedFrame->m_frame;
-        }
 
 #ifndef SILENT_WORK
         cv::imshow("Video", processedFrame->m_frame);
@@ -120,9 +116,7 @@ void AsyncDetector::Process()
 		int waitTime = 1;// std::max<int>(1, cvRound(1000 / m_fps - currTime));
         int k = cv::waitKey(waitTime);
         if (k == 27)
-        {
             break;
-        }
 #else
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 #endif
@@ -140,9 +134,7 @@ void AsyncDetector::Process()
     m_framesQue.SetBreak(true);
 
     if (thCapture.joinable())
-    {
         thCapture.join();
-    }
 
     std::cout << "work time = " << (allTime / freq) << std::endl;
 #ifndef SILENT_WORK
@@ -161,8 +153,7 @@ void AsyncDetector::Process()
 void AsyncDetector::DrawTrack(cv::Mat frame,
                              int resizeCoeff,
                              const TrackingObject& track,
-                             bool drawTrajectory
-                             )
+                             bool drawTrajectory)
 {
     auto ResizeRect = [&](const cv::Rect& r) -> cv::Rect
     {
@@ -226,9 +217,7 @@ void AsyncDetector::DrawData(frame_ptr frameInfo, int framesCounter, int currTim
 		std::cout << "Frame " << framesCounter << ": ";
         int id = frameInfo->m_inDetector.load();
         if (id > 0)
-		{
             std::cout << "(" << id << ") detects = " << frameInfo->m_regions.size() << ", ";
-		}
 		std::cout << "tracks = " << frameInfo->m_tracks.size() << ", time = " << currTime << std::endl;
     }
 
@@ -242,8 +231,7 @@ void AsyncDetector::DrawData(frame_ptr frameInfo, int framesCounter, int currTim
         {
             if (track.IsRobust(1,          // Minimal trajectory size
                                0.3f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
-                               cv::Size2f(0.1f, 8.0f))      // Min and max ratio: width / height
-                    )
+                               cv::Size2f(0.1f, 8.0f)))      // Min and max ratio: width / height
             {
 				//std::cout << track.m_type << " - " << track.m_rect << std::endl;
 
@@ -271,13 +259,10 @@ void AsyncDetector::CaptureThread(std::string fileName, int startFrame, float* f
 {
     cv::VideoCapture capture;
     if (fileName.size() == 1)
-    {
         capture.open(atoi(fileName.c_str()));
-    }
     else
-    {
         capture.open(fileName);
-    }
+
     if (!capture.isOpened())
     {
         *stopFlag = true;
@@ -372,9 +357,7 @@ void AsyncDetector::CaptureThread(std::string fileName, int startFrame, float* f
             break;
         }
 		if (frameInfo->m_clFrame.empty())
-		{
 			frameInfo->m_clFrame = frameInfo->m_frame.getUMat(cv::ACCESS_READ);
-		}
 
         framesQue->AddNewFrame(frameInfo, 15);
 
@@ -389,14 +372,12 @@ void AsyncDetector::CaptureThread(std::string fileName, int startFrame, float* f
 
     framesQue->SetBreak(true);
     if (thTracking.joinable())
-    {
         thTracking.join();
-    }
+
     framesQue->SetBreak(true);
     if (thDetection.joinable())
-    {
         thDetection.join();
-    }
+
     framesQue->SetBreak(true);
 }
 
