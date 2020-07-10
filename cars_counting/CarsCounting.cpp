@@ -91,13 +91,10 @@ void CarsCounting::Process()
 
     cv::VideoCapture capture;
     if (m_inFile.size() == 1)
-    {
         capture.open(atoi(m_inFile.c_str()));
-    }
     else
-    {
         capture.open(m_inFile);
-    }
+
     if (!capture.isOpened())
     {
         std::cerr << "Can't open " << m_inFile << std::endl;
@@ -138,13 +135,9 @@ void CarsCounting::Process()
 
         cv::UMat uframe;
         if (!m_detector->CanGrayProcessing() || m_tracker->CanColorFrameToTrack())
-        {
             uframe = colorFrame.getUMat(cv::ACCESS_READ);
-        }
 		else
-		{
 			cv::cvtColor(colorFrame, uframe, cv::COLOR_BGR2GRAY);
-		}
 
         m_detector->Detect(uframe);
 
@@ -165,25 +158,18 @@ void CarsCounting::Process()
 		int waitTime = manualMode ? 0 : 1;// std::max<int>(1, cvRound(1000 / m_fps - currTime));
         k = cv::waitKey(waitTime);
         if (k == 'm' || k == 'M')
-        {
             manualMode = !manualMode;
-        }
         else if (k == 27)
-        {
             break;
-        }
+
 #else
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 #endif
 
 		if (!m_outFile.empty() && !writer.isOpened())
-		{
 			writer.open(m_outFile, cv::VideoWriter::fourcc('H', 'F', 'Y', 'U'), m_fps, colorFrame.size(), true);
-		}
         if (writer.isOpened())
-        {
             writer << colorFrame;
-        }
 
         ++framesCounter;
         if (m_endFrame && framesCounter > m_endFrame)
@@ -350,7 +336,7 @@ bool CarsCounting::InitTracker(cv::UMat frame)
 	config.emplace("confidenceThreshold", "0.5");
 	config.emplace("nmsThreshold", "0.4");
 	config.emplace("swapRB", "0");
-	config.emplace("maxCropRatio", "-1");
+    config.emplace("maxCropRatio", "-1");
 
 	config.emplace("white_list", "person");
 	config.emplace("white_list", "car");
@@ -516,13 +502,9 @@ bool CarsCounting::RemoveLine(unsigned int lineUid)
     for (auto it = std::begin(m_lines); it != std::end(m_lines);)
     {
         if (it->m_uid == lineUid)
-        {
             it = m_lines.erase(it);
-        }
         else
-        {
             ++it;
-        }
     }
     return false;
 }

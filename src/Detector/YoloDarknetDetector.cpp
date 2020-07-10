@@ -100,18 +100,16 @@ void YoloDarknetDetector::Detect(cv::UMat& colorFrame)
 
 		if (colorFrame.cols / (float)colorFrame.rows > m_WHRatio)
 		{
-			if (m_maxCropRatio <= 0 || cropHeight >= colorFrame.rows)
-			{
+            if (cropHeight >= colorFrame.rows)
 				cropHeight = colorFrame.rows;
-			}
+
 			cropWidth = cvRound(cropHeight * m_WHRatio);
 		}
 		else
 		{
-			if (m_maxCropRatio <= 0 || cropWidth >= colorFrame.cols)
-			{
+            if (cropWidth >= colorFrame.cols)
 				cropWidth = colorFrame.cols;
-			}
+
 			cropHeight = cvRound(colorFrame.cols / m_WHRatio);
 		}
 
@@ -143,14 +141,10 @@ void YoloDarknetDetector::Detect(cv::UMat& colorFrame)
 				DetectInCrop(colorMat, crop, tmpRegions);
 
 				if (needBreakX)
-				{
 					break;
-				}
 			}
 			if (needBreakY)
-			{
 				break;
-			}
 		}
 
 		//std::cout << "nms for " << tmpRegions.size() << " objects" << std::endl;
@@ -185,9 +179,7 @@ void YoloDarknetDetector::DetectInCrop(cv::Mat colorFrame, const cv::Rect& crop,
 	for (const bbox_t& bbox : detects)
 	{
 		if (m_classesWhiteList.empty() || m_classesWhiteList.find(m_classNames[bbox.obj_id]) != std::end(m_classesWhiteList))
-		{
 			tmpRegions.emplace_back(cv::Rect(bbox.x + crop.x, bbox.y + crop.y, bbox.w, bbox.h), m_classNames[bbox.obj_id], bbox.prob);
-		}
 	}
 	std::cout << "Detected " << detects.size() << " objects" << std::endl;
 }
@@ -213,9 +205,7 @@ void YoloDarknetDetector::Detect(cv::Mat colorFrame, regions_t& tmpRegions)
 	for (const bbox_t& bbox : detects)
 	{
 		if (m_classesWhiteList.empty() || m_classesWhiteList.find(m_classNames[bbox.obj_id]) != std::end(m_classesWhiteList))
-		{
 			tmpRegions.emplace_back(cv::Rect(bbox.x, bbox.y, bbox.w, bbox.h), m_classNames[bbox.obj_id], bbox.prob);
-		}
 	}
 	std::cout << "Detected " << detects.size() << " objects" << std::endl;
 }

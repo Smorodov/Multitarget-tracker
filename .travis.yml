@@ -31,9 +31,9 @@ install:
   - sudo apt-get install -y --allow-unauthenticated python-dev python-numpy libtbb2 libtbb-dev libjpeg-dev libpng-dev libtiff-dev libjasper-dev libdc1394-22-dev
 
   # Download v3.0.0 .zip file and extract.
-  - curl -sL https://github.com/opencv/opencv/archive/3.4.10.zip > opencv.zip
+  - curl -sL https://github.com/opencv/opencv/archive/4.3.0.zip > opencv.zip
   - unzip opencv.zip
-  - cd opencv-3.4.10
+  - cd opencv-4.3.0
   
   # Create a new 'build' folder.
   - mkdir build
@@ -55,7 +55,7 @@ install:
 
   
   # Run 'make' with four threads.
-  - make -j4
+  - make -j
   
   # Install to OS.
   - sudo make install
@@ -71,4 +71,4 @@ install:
 
 script:
   - cmake .
-  - make -j4
+  - make -j
