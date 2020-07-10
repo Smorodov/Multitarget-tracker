@@ -102,7 +102,8 @@ enum Detectors
     SSD_MobileNet,
     Yolo_OCV,
 	Yolo_Darknet,
-	Yolo_TensorRT
+    Yolo_TensorRT,
+    DNN_OCV
 };
 
 ///

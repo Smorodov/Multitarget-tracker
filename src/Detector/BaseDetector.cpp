@@ -4,6 +4,7 @@
 #include "PedestrianDetector.h"
 #include "SSDMobileNetDetector.h"
 #include "YoloDetector.h"
+#include "OCVDNNDetector.h"
 
 #ifdef BUILD_YOLO_LIB
 #include "YoloDarknetDetector.h"
@@ -71,6 +72,10 @@ BaseDetector* CreateDetector(
 
     case tracking::Yolo_OCV:
         detector = new YoloOCVDetector(frame);
+        break;
+
+    case tracking::DNN_OCV:
+        detector = new OCVDNNDetector(frame);
         break;
 
 	case tracking::Yolo_Darknet:
