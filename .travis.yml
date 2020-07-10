@@ -55,7 +55,7 @@ install:
 
   
   # Run 'make' with four threads.
-  - make -j
+  - make -j6
   
   # Install to OS.
   - sudo make install
@@ -71,4 +71,4 @@ install:
 
 script:
   - cmake .
-  - make -j
+  - make -j6
