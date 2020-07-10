@@ -29,29 +29,29 @@
 
 
 // Test whether graph is a tree
-bool is_tree (const graph& G);
+bool is_tree (const GTL::graph& G);
 
 class MyTree : public MyGraph
 {
 public:
 	MyTree () { };
 
-	node parent( const node v ) const;
-	node root() const;
+	GTL::node parent( const GTL::node v ) const;
+	GTL::node root() const;
 	
-	bool is_root( const node v ) const;
-	bool is_leaf( const node v ) const;
+	bool is_root( const GTL::node v ) const;
+	bool is_leaf( const GTL::node v ) const;
 
-	node get_left_child(const node v) const;
-	node get_right_child(const node v) const;
+	GTL::node get_left_child(const GTL::node v) const;
+	GTL::node get_right_child(const GTL::node v) const;
 
 	void postorder_traversal();
 	
-	int postorder (const node v) const { return order[v]; };
+	int postorder (const GTL::node v) const { return order[v]; };
 	
 protected:
-	node_map<int> order;
-	std::map <int, node, std::less <int> > number;
+	GTL::node_map<int> order;
+	std::map <int, GTL::node, std::less <int> > number;
 };
 
 

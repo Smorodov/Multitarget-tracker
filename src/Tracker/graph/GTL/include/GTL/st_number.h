@@ -31,7 +31,7 @@ public:
     /**
      * @internal
      */
-    pathfinder(const graph& G, edge st, node s);    
+    pathfinder(const graph& G, GTL::edge st, GTL::node s);    
 	
     /**
      * @internal
@@ -59,7 +59,7 @@ public:
         /**
 	 * @internal
 	 */
-	const_iterator(pathfinder& _pf, node n);	
+	const_iterator(pathfinder& _pf, GTL::node n);	
 		
         /**
 	 * @internal
@@ -117,7 +117,7 @@ public:
     /**
      * @internal
      */
-    const_iterator path(node n)
+    const_iterator path(GTL::node n)
     {
 	return const_iterator(*this, n);
     }
@@ -136,7 +136,7 @@ private:
     /**
      * @internal
      */
-    void dfs_sub (node&, node&);
+    void dfs_sub (GTL::node&, GTL::node&);
 		
     //-------------------------------------------------------------- MEMBERS 
 		
@@ -256,7 +256,7 @@ public:
      *
      * @param e edge @a st
      */
-    void st_edge(edge e)
+    void st_edge(GTL::edge e)
     {
 	st = e;
     }
@@ -280,7 +280,7 @@ public:
      *
      * @param n node @a s
      */
-    void s_node(node n) 
+    void s_node(GTL::node n) 
     {
 	s = n;
     }
@@ -377,7 +377,7 @@ public:
      *
      * @sa algorithm::check
      */
-    int check(graph& G);
+    int check(GTL::graph& G);
 
 
     /**
@@ -392,7 +392,7 @@ public:
      *
      * @sa algorithm::run
      */
-    int run(graph& G);
+    int run(GTL::graph& G);
 
 
     /**

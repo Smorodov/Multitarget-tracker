@@ -32,8 +32,8 @@ class node_data;
 #ifdef __GTL_USE_NAMESPACES
 
 class node;
-typedef std::iterator<std::bidirectional_iterator_tag, edge> bi_iter_edge;
-typedef std::iterator<std::bidirectional_iterator_tag, node> bi_iter_node;
+typedef std::iterator<std::bidirectional_iterator_tag, GTL::edge> bi_iter_edge;
+typedef std::iterator<std::bidirectional_iterator_tag, GTL::node> bi_iter_node;
 
 #else
 
@@ -94,12 +94,12 @@ public:
      * 
      * @param e an edge incident to the node
      */
-    const node& opposite(edge e) const;
+    const node& opposite(GTL::edge e) const;
     
     /**
      * @internal
      */
-    nodes_t opposites(edge) const;
+    nodes_t opposites(GTL::edge) const;
 
     /**
      * Returns true iff node is hidden.
@@ -228,9 +228,9 @@ private:
     friend class edge;
     friend class adj_edges_iterator;
 
-    GTL_EXTERN friend bool operator==(node, node);
-    GTL_EXTERN friend bool operator!=(node, node);
-    GTL_EXTERN friend bool operator<(node, node);
+    GTL_EXTERN friend bool operator==(GTL::node, GTL::node);
+    GTL_EXTERN friend bool operator!=(GTL::node, GTL::node);
+    GTL_EXTERN friend bool operator<(GTL::node, GTL::node);
 	GTL_EXTERN friend std::ostream& operator<< (std::ostream& os, const node& n);
 };
 
@@ -243,7 +243,7 @@ public:
 	
     // constructor
     adj_edges_iterator();
-    adj_edges_iterator(node, bool);
+    adj_edges_iterator(GTL::node, bool);
 
     // comparibility
     bool operator==(const adj_edges_iterator&) const;
@@ -274,7 +274,7 @@ public:
 
     // constructor
     inout_edges_iterator();
-    inout_edges_iterator(node n, bool start);
+    inout_edges_iterator(GTL::node n, bool start);
 
     // comparibility
     bool operator==(const inout_edges_iterator&) const;
@@ -333,10 +333,10 @@ __GTL_END_NAMESPACE
 //--------------------------------------------------------------------------
 
 // #define forall_adj_nodes(v,w)	GTL_FORALL(v,w,node::adj_nodes_iterator,adj_nodes_)
-#define forall_out_edges(e,v)	GTL_FORALL(e,v,node::out_edges_iterator,out_edges_)
-#define forall_in_edges(e,v)	GTL_FORALL(e,v,node::in_edges_iterator,in_edges_)
-#define forall_inout_edges(e,v)	GTL_FORALL(e,v,node::inout_edges_iterator,inout_edges_)
-#define forall_adj_edges(e,v)	GTL_FORALL(e,v,node::adj_edges_iterator,adj_edges_)
+#define forall_out_edges(e,v)	GTL_FORALL(e,v,GTL::node::out_edges_iterator,out_edges_)
+#define forall_in_edges(e,v)	GTL_FORALL(e,v,GTL::node::in_edges_iterator,in_edges_)
+#define forall_inout_edges(e,v)	GTL_FORALL(e,v,GTL::node::inout_edges_iterator,inout_edges_)
+#define forall_adj_edges(e,v)	GTL_FORALL(e,v,GTL::node::adj_edges_iterator,adj_edges_)
     
 #endif // GTL_NODE_H
 

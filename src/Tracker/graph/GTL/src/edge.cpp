@@ -45,7 +45,7 @@ const node& edge::target_() const
 	return data->nodes[1].front();
 }
 
-void edge::change_source (node new_source)
+void edge::change_source (GTL::node new_source)
 {
     //
     // First delete this edge from source's adjacency list
@@ -85,7 +85,7 @@ void edge::change_source (node new_source)
 }
 
 
-void edge::change_target (node new_target) {
+void edge::change_target (GTL::node new_target) {
     //
     // First delete this edge from target's adjacency list
     // and clear the list of targets
@@ -232,7 +232,7 @@ void edge::remove_from(int where) const
 	}
 }
 
-const node& edge::opposite(node n) const
+const node& edge::opposite(GTL::node n) const
 {
     // not implemented for hypergraphs
     assert(data);
@@ -244,17 +244,17 @@ const node& edge::opposite(node n) const
 	return s;
 }
 
-GTL_EXTERN bool operator==(edge e1, edge e2)
+GTL_EXTERN bool operator==(GTL::edge e1, GTL::edge e2)
 {
     return e1.data == e2.data;
 }
 
-GTL_EXTERN bool operator!=(edge e1, edge e2)
+GTL_EXTERN bool operator!=(GTL::edge e1, GTL::edge e2)
 {
     return e1.data != e2.data;
 }
 
-GTL_EXTERN bool operator<(edge e1, edge e2)
+GTL_EXTERN bool operator<(GTL::edge e1, GTL::edge e2)
 {
     return e1.data < e2.data;
 }

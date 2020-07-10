@@ -16,6 +16,7 @@ project(mdetection)
              pedestrians/c4-pedestrian-detector.cpp
              SSDMobileNetDetector.cpp
              YoloDetector.cpp
+             OCVDNNDetector.cpp
 
              BaseDetector.h
              MotionDetector.h
@@ -32,6 +33,7 @@ project(mdetection)
              pedestrians/c4-pedestrian-detector.h
              SSDMobileNetDetector.h
              YoloDetector.h
+             OCVDNNDetector.h
 )
 
 if (BUILD_YOLO_LIB)

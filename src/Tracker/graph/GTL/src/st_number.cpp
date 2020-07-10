@@ -12,7 +12,7 @@
 
 __GTL_BEGIN_NAMESPACE
 
-pathfinder::pathfinder (const graph& G, edge st, node s) 
+pathfinder::pathfinder (const graph& G, GTL::edge st, GTL::node s) 
 {
     node t = s.opposite (st);
     dfs_num.init (G, 0);
@@ -57,7 +57,7 @@ pathfinder::pathfinder (const graph& G, edge st, node s)
 }
 
 
-void pathfinder::dfs_sub (node& curr, node& father) 
+void pathfinder::dfs_sub (GTL::node& curr, GTL::node& father) 
 {
     low_num[curr] = dfs_num[curr] = act_dfs_num++;
     new_nodes--;
@@ -105,7 +105,7 @@ void pathfinder::dfs_sub (node& curr, node& father)
 //   ITERATOR
 //--------------------------------------------------------------------------
 
-pathfinder::const_iterator::const_iterator (pathfinder& _pf, node n) : 
+pathfinder::const_iterator::const_iterator (pathfinder& _pf, GTL::node n) : 
 	pf (_pf) 
 {
     if (!pf.back[n].empty()) {
@@ -198,7 +198,7 @@ pathfinder::const_iterator pathfinder::const_iterator::operator++ (int)
 //   ST-NUMBER
 //--------------------------------------------------------------------------
 
-int st_number::check (graph& G)
+int st_number::check (GTL::graph& G)
 {
     if (G.is_directed()) return GTL_ERROR;
     
@@ -208,7 +208,7 @@ int st_number::check (graph& G)
 }
 
 
-int st_number::run (graph& /*G*/) 
+int st_number::run (GTL::graph& /*G*/) 
 {
 	nodes_t order;
     node t = s.opposite (st);

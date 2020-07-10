@@ -23,7 +23,7 @@ void components::reset ()
     num_of_components = 0;
 }
 
-int components::check (graph& G) 
+int components::check (GTL::graph& G) 
 {
     return G.is_undirected() && whole_graph && 
 	dfs::check (G) == GTL_OK ? GTL_OK : GTL_ERROR;
@@ -35,21 +35,21 @@ int components::check (graph& G)
 //--------------------------------------------------------------------------
 
 
-void components::new_start_handler (graph& /*G*/, node& st) 
+void components::new_start_handler (GTL::graph& /*G*/, GTL::node& st) 
 {
 	li = comp.insert(comp.end(), std::pair<nodes_t, edges_t>(nodes_t(), edges_t()));
     li->first.push_back(st);
     ++num_of_components;
 }
 
-void components::before_recursive_call_handler (graph& /*G*/, edge& /*e*/, node& n)
+void components::before_recursive_call_handler (GTL::graph& /*G*/, GTL::edge& /*e*/, GTL::node& n)
 {
     li->first.push_back(n);
     // li->second.push_back(e);    
 }
 
 
-void components::old_adj_node_handler (graph& /*G*/, edge& e, node& n) 
+void components::old_adj_node_handler (GTL::graph& /*G*/, GTL::edge& e, GTL::node& n) 
 {
     node curr = n.opposite (e);
 

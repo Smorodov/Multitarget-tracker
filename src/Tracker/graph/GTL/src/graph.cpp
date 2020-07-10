@@ -76,7 +76,7 @@ void graph::copy (const graph& G,
 	nodes_t::const_iterator it,
 	nodes_t::const_iterator end)
 {
-    node_map<node> copy (G, node());    
+    node_map<node> copy (G, GTL::node());    
 	nodes_t::const_iterator n_it;
 	nodes_t::const_iterator n_end;
 
@@ -195,7 +195,7 @@ node graph::new_node()
     return n;
 }
 
-edge graph::new_edge(node source, node target)
+edge graph::new_edge(GTL::node source, GTL::node target)
 {
     assert(source.data);
     assert(target.data);
@@ -251,7 +251,7 @@ edge graph::new_edge(const nodes_t &/*sources*/, const nodes_t &/*targets*/)
 //   Deletion
 //--------------------------------------------------------------------------
 
-void graph::del_node(node n)
+void graph::del_node(GTL::node n)
 {
     assert (n.data);
     assert (n.data->owner == this);
@@ -304,7 +304,7 @@ void graph::del_node(node n)
     post_del_node_handler();
 }
 
-void graph::del_edge(edge e)
+void graph::del_edge(GTL::edge e)
 {
     assert (e.data->owner == this);
     assert (e.data->owner == this);
@@ -382,7 +382,7 @@ void graph::del_all_edges()
 
 
 
-bool graph::is_bidirected(edge_map<edge>& rev) const {
+bool graph::is_bidirected(GTL::edge_map<edge>& rev) const {
     edge e1;
     node target, source;
     bool bidirected = true;
@@ -509,7 +509,7 @@ edges_t graph::all_edges() const
 //   hidden for the second time
 //--------------------------------------------------------------------------
 
-void graph::hide_edge (edge e) 
+void graph::hide_edge (GTL::edge e) 
 {
     assert (e.data->owner == this);
     assert (e.data->owner == this);
@@ -553,7 +553,7 @@ void graph::hide_edge (edge e)
 //   An edge will be restored only if it is hidden (sounds wise, hmm ...)
 //--------------------------------------------------------------------------
 
-void graph::restore_edge (edge e)
+void graph::restore_edge (GTL::edge e)
 {
     assert (e.data->owner == this);
     assert (e.data->owner == this);
@@ -606,7 +606,7 @@ void graph::restore_edge (edge e)
 //   Note: also all adjacent edges will be hidden
 //--------------------------------------------------------------------------
 
-edges_t graph::hide_node(node n)
+edges_t graph::hide_node(GTL::node n)
 {
     assert (n.data->owner == this);
 
@@ -645,7 +645,7 @@ edges_t graph::hide_node(node n)
 //   connected nodes won't be restored automatically !
 //--------------------------------------------------------------------------
 
-void graph::restore_node (node n)
+void graph::restore_node (GTL::node n)
 {
     assert (n.data->owner == this);
 
@@ -726,14 +726,14 @@ void graph::restore_graph ()
 //   Node/edge numbering
 //--------------------------------------------------------------------------
 
-int graph::number_of_ids(node) const
+int graph::number_of_ids(GTL::node) const
 {
     return
 	free_node_ids_count +
 	nodes_count;
 }
 
-int graph::number_of_ids(edge) const
+int graph::number_of_ids(GTL::edge) const
 {
     return
 	free_edge_ids_count +
@@ -968,7 +968,7 @@ GML_error graph::load (const char* filename, bool preserve_ids) {
     // make this graph the graph decribed in list
     //
 
-	std::map<int, node> id_2_node;
+	std::map<int, GTL::node> id_2_node;
     node source, target;
     node tmp_node;
     edge tmp_edge;
@@ -999,7 +999,7 @@ GML_error graph::load (const char* filename, bool preserve_ids) {
     load_graph_info_handler (graph_list);
     top_level_key_handler (orig_list);
 
-    sort(node_ids.begin(),node_ids.end());
+    std::sort(node_ids.begin(),node_ids.end());
 
 	std::vector<int>::iterator iit, iend;
     int prev = 0;
@@ -1020,11 +1020,11 @@ GML_error graph::load (const char* filename, bool preserve_ids) {
     return stat.err;
 }
 
-void graph::load_node_info_handler (node /*n*/, GML_pair* /*li*/) {
+void graph::load_node_info_handler (GTL::node /*n*/, GML_pair* /*li*/) {
 }
 
 
-void graph::load_edge_info_handler (edge /*e*/, GML_pair* /*li*/) {
+void graph::load_edge_info_handler (GTL::edge /*e*/, GML_pair* /*li*/) {
 }
 
 void graph::load_graph_info_handler (GML_pair* /*li*/) {
@@ -1095,7 +1095,7 @@ int graph::save (const char* filename) const {
 //     }
 // }
 
-// void graph::load_node_info_handler (node n, GML_pair_list::const_iterator it,
+// void graph::load_node_info_handler (GTL::node n, GML_pair_list::const_iterator it,
 //     GML_pair_list::const_iterator end)
 // {
 //     cout << "NODE_INFO_HANDLER for " << n << endl;
@@ -1105,7 +1105,7 @@ int graph::save (const char* filename) const {
 //     }
 // }
 
-// void graph::load_edge_info_handler (edge e, GML_pair_list::const_iterator it,
+// void graph::load_edge_info_handler (GTL::edge e, GML_pair_list::const_iterator it,
 //     GML_pair_list::const_iterator end)
 // {
 //     cout << "EDGE_INFO_HANDLER for " << e.source() << "-->" 

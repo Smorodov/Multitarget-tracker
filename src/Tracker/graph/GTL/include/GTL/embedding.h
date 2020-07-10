@@ -82,7 +82,7 @@ private:
      * 
      * @param G graph 
      */
-    void init(graph& G);
+    void init(GTL::graph& G);
 
     /**
      * @internal
@@ -90,7 +90,7 @@ private:
      *
      * @param n node.
      */
-    void turn(node n);
+    void turn(GTL::node n);
 
     /**
      * @internal
@@ -101,7 +101,7 @@ private:
      *
      * @return iterator to position of insertion
      */
-    iterator push_back(node n, edge e);
+    iterator push_back(GTL::node n, GTL::edge e);
 
     /**
      * @internal
@@ -112,7 +112,7 @@ private:
      *
      * @return iterator to position of insertion
      */
-    iterator push_front(node n, edge e);
+    iterator push_front(GTL::node n, GTL::edge e);
 
     /**
      * @internal
@@ -120,7 +120,7 @@ private:
      *
      * @param @p e selfloop 
      */
-    void insert_selfloop (edge e);
+    void insert_selfloop (GTL::edge e);
 
     /**
      * @internal
@@ -131,7 +131,7 @@ private:
      *
      * @return position of @p e
      */
-    iterator& pos (node, edge);
+    iterator& pos (GTL::node, GTL::edge);
 public:
     /**
      * 
@@ -141,7 +141,7 @@ public:
      *
      * @return ordered adjacency list
      */
-    adj_list& adjacency(node n)
+    adj_list& adjacency(GTL::node n)
     {
 	return adj[n];
     }
@@ -154,7 +154,7 @@ public:
      *
      * @return ordered adjacency list
      */
-    const adj_list& adjacency(node n) const
+    const adj_list& adjacency(GTL::node n) const
     {
 	return adj[n];
     }
@@ -167,7 +167,7 @@ public:
      *
      * @return start iterator
      */
-    iterator adj_edges_begin(node n)
+    iterator adj_edges_begin(GTL::node n)
     {
 	return adj[n].begin();
     } 
@@ -180,7 +180,7 @@ public:
      *
      * @return one-past the end iterator
      */
-    iterator adj_edges_end(node n)
+    iterator adj_edges_end(GTL::node n)
     {
 	return adj[n].end();
     }
@@ -195,7 +195,7 @@ public:
      *
      * @return edge following @p e in adjacency of @p n
      */
-    edge cyclic_next(node n, edge e);
+    edge cyclic_next(GTL::node n, GTL::edge e);
 
     /**
      * 
@@ -207,7 +207,7 @@ public:
      *
      * @return edge preceding @p e in adjacency of @p n
      */
-    edge cyclic_prev(node n, edge e);
+    edge cyclic_prev(GTL::node n, GTL::edge e);
 
 
     /**
@@ -342,7 +342,7 @@ private:
 // class face
 // {    
 // public:
-//     face (planar_embedding& em, node n, edge e) : embed (em),
+//     face (planar_embedding& em, GTL::node n, GTL::edge e) : embed (em),
 // 	start (n), first (e) { }
 //     virtual ~face () { }
 

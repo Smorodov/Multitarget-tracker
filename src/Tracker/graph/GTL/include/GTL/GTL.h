@@ -133,7 +133,6 @@ for (iter_t GTL_FORALL_VAR(__LINE__) = (cont).iter##begin();    \
 #ifdef __GTL_USE_NAMESPACES
 
 namespace GTL {}
-using namespace GTL;
 
 #endif // __GTL_USE_NAMESPACES
 

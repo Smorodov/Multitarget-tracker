@@ -351,6 +351,12 @@ public:
     bool RemoveLine(unsigned int lineUid);
 
 protected:
+
+	std::string m_weightsFile;
+	std::string m_configFile;
+	std::string m_namesFile;
+	tracking::Detectors m_detectorType = tracking::Detectors::Yolo_Darknet;
+
     std::unique_ptr<BaseDetector> m_detector;
     std::unique_ptr<CTracker> m_tracker;
 

@@ -86,7 +86,7 @@ public:
      * <code>algorithm::GTL_ERROR</code> otherwise
      * @see algorithm#check
      */
-    virtual int check(graph& G);
+    virtual int check(GTL::graph& G);
 	    
     /**
      * Computes maximum flow of graph <code>G</code>.
@@ -96,7 +96,7 @@ public:
      * <code>algorithm::GTL_ERROR</code> otherwise
      * @see algorithm#run
      */
-    int run(graph& G);
+    int run(GTL::graph& G);
 		
     /**
      * Returns the maximum flow of an edge.
@@ -197,7 +197,7 @@ protected:
     /**
      * @internal
      */
-    void create_artif_source_target(graph& G);
+    void create_artif_source_target(GTL::graph& G);
 
     /**
      * @internal
@@ -217,12 +217,12 @@ protected:
     /**
      * @internal
      */
-	void advance(node& cur_node, node_map<edge>& last_edge);
+	void advance(GTL::node& cur_node, GTL::node_map<edge>& last_edge);
 
     /**
      * @internal
      */
-	void augment(graph& G, const node_map<edge>& last_edge);
+	void augment(GTL::graph& G, const node_map<edge>& last_edge);
 
     /**
      * @internal
@@ -246,7 +246,7 @@ protected:
     /**
      * @internal
      */
-    void create_back_edge(graph& G, const edge& org_edge);
+    void create_back_edge(GTL::graph& G, const edge& org_edge);
 
     /**
      * @internal
@@ -256,7 +256,7 @@ protected:
     /**
      * @internal
      */
-    void restore_graph(graph& G);
+    void restore_graph(GTL::graph& G);
 };
 
 __GTL_END_NAMESPACE

@@ -47,7 +47,7 @@ public:
      * @return algorithm::GTL_OK if connected components can be computed for G.
      * @sa dfs::scan_whole_graph
      */
-    virtual int check (graph& G);
+    virtual int check (GTL::graph& G);
 
     virtual void reset ();
 
@@ -95,17 +95,17 @@ public:
     /**
      * @internal
      */
-    virtual void before_recursive_call_handler (graph&, edge&, node&);
+    virtual void before_recursive_call_handler (GTL::graph&, GTL::edge&, GTL::node&);
 
     /**
      * @internal
      */
-    virtual void old_adj_node_handler (graph&, edge&, node&);
+    virtual void old_adj_node_handler (GTL::graph&, GTL::edge&, GTL::node&);
 
     /**
      * @internal
      */
-    virtual void new_start_handler (graph&, node&);    
+    virtual void new_start_handler (GTL::graph&, GTL::node&);    
 
 
 protected:

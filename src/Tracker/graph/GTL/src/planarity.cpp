@@ -39,12 +39,12 @@ planarity::~planarity()
 }
 
 
-int planarity::check (graph& /*G*/) 
+int planarity::check (GTL::graph& /*G*/) 
 {
     return algorithm::GTL_OK;
 }
 
-bool planarity::run_on_biconnected (graph& G, planar_embedding& em)
+bool planarity::run_on_biconnected (GTL::graph& G, planar_embedding& em)
 {
 
     if (G.number_of_edges() == 0) return algorithm::GTL_OK;
@@ -318,7 +318,7 @@ bool planarity::run_on_biconnected (graph& G, planar_embedding& em)
 }
 
 
-int planarity::run (graph& G) 
+int planarity::run (GTL::graph& G) 
 {	   
     bool directed = false;
     
@@ -417,7 +417,7 @@ int planarity::run (graph& G)
     return algorithm::GTL_OK;
 }
 
-void planarity::add_to_embedding (graph& G, planar_embedding& em) 
+void planarity::add_to_embedding (GTL::graph& G, planar_embedding& em) 
 {
     node n;
     forall_nodes (n, G) {
@@ -514,7 +514,7 @@ void planarity::extend_embedding (
     }
 }
 
-void planarity::switch_to_component (graph& G, 
+void planarity::switch_to_component (GTL::graph& G, 
 				     biconnectivity::component_iterator c_it)
 {
     //
@@ -547,7 +547,7 @@ void planarity::switch_to_component (graph& G,
     }
 }
 
-void planarity::examine_obstruction (graph& G, 
+void planarity::examine_obstruction (GTL::graph& G, 
 				     st_number& st_, 
 				     node act, 
 				     pq_node* fail, 
@@ -1050,7 +1050,7 @@ void planarity::case_B (p_node* p_fail,
 }
 
 
-void planarity::case_C (node* nodes,
+void planarity::case_C (GTL::node* nodes,
 			pq_leaf** leaves,
 			st_number& st_, 
 			node_map<edge> to_father, 
@@ -1088,7 +1088,7 @@ void planarity::case_C (node* nodes,
 }
 
 
-void planarity::case_D (node* nodes,
+void planarity::case_D (GTL::node* nodes,
 			pq_leaf** leaves,
 			st_number& st_, 
 			node_map<edge> to_father, 
@@ -1215,7 +1215,7 @@ void planarity::case_D (node* nodes,
 }
 
 
-void planarity::case_E (node* nodes,
+void planarity::case_E (GTL::node* nodes,
 			pq_leaf** leaves,
 			st_number& st_, 
 			node_map<edge> to_father, 
@@ -1501,7 +1501,7 @@ pq_leaf* planarity::search_empty_leaf (pq_node* n)
 
 
 
-void planarity::mark_all_neighbors_of_leaves (pq_node* act, node_map<int>& mark)
+void planarity::mark_all_neighbors_of_leaves (pq_node* act, GTL::node_map<int>& mark)
 {
     if (act->kind() == pq_node::LEAF) {
         mark[((pq_leaf*)act)->e.opposite(((pq_leaf*)act)->n)] = 1;
@@ -1515,7 +1515,7 @@ void planarity::mark_all_neighbors_of_leaves (pq_node* act, node_map<int>& mark)
 }
 
 
-pq_leaf* planarity::run_through_partial (q_node* part, node_map<int>& mark, node_map<edge>& to_father, node v) 
+pq_leaf* planarity::run_through_partial (q_node* part, GTL::node_map<int>& mark, GTL::node_map<edge>& to_father, GTL::node v) 
 {
     pq_leaf* tmp = search_full_leaf (part);
     edge tmp_edge = tmp->e;
@@ -1535,7 +1535,7 @@ pq_leaf* planarity::run_through_partial (q_node* part, node_map<int>& mark, node
 }
 
 
-node planarity::up_until_marked (node act, node_map<int>& mark, node_map<edge>& to_father) 
+node planarity::up_until_marked (GTL::node act, GTL::node_map<int>& mark, GTL::node_map<edge>& to_father) 
 {
     while (mark[act] == 0) {
 	mark[act] = 1;
@@ -1547,7 +1547,7 @@ node planarity::up_until_marked (node act, node_map<int>& mark, node_map<edge>& 
     return act;
 }
 
-node planarity::up_until_marked (node act, node_map<int>& mark, st_number& st_) 
+node planarity::up_until_marked (GTL::node act, GTL::node_map<int>& mark, st_number& st_) 
 {
     while (mark[act] == 0) {
 	mark[act] = 1;
@@ -1569,7 +1569,7 @@ node planarity::up_until_marked (node act, node_map<int>& mark, st_number& st_)
     return act;
 }
 
-void planarity::attachment_cycle (node start, planar_embedding& em) 
+void planarity::attachment_cycle (GTL::node start, planar_embedding& em) 
 {
     edge act = em.adjacency(start).front();
     node next = start.opposite (act);
@@ -1583,7 +1583,7 @@ void planarity::attachment_cycle (node start, planar_embedding& em)
 }
 
 
-void planarity::dfs_bushform (node n, 
+void planarity::dfs_bushform (GTL::node n, 
 			      node_map<int>& used, 
 			      st_number& st_, 
 			      int stop, 
@@ -1618,7 +1618,7 @@ void planarity::write_node(std::ostream& os, int id, int label, int mark) {
 #endif
 
 #ifdef _DEBUG
-void planarity::write_bushform(graph& G, st_number& st_, int k, const char* name, const node_map<int>& mark,
+void planarity::write_bushform(GTL::graph& G, st_number& st_, int k, const char* name, const node_map<int>& mark,
                                const node_map<edge>& to_father) 
 {
     // create the bushform Bk for the k where the test failed 

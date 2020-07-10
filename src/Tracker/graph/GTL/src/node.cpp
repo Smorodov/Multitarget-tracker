@@ -109,7 +109,7 @@ bool node::is_undirected() const
     return data->owner->is_undirected();
 }
 
-const node& node::opposite(edge e) const
+const node& node::opposite(GTL::edge e) const
 {
     // not implemented for hypergraphs
     assert(e.data);
@@ -121,7 +121,7 @@ const node& node::opposite(edge e) const
 	return s;
 }
 
-nodes_t node::opposites(edge) const
+nodes_t node::opposites(GTL::edge) const
 {
     // not implemented yet
 	return nodes_t(); // to avoid compiler warnings
@@ -144,17 +144,17 @@ int node::excentricity() const
     return b.level(last_node);
 }
 
-GTL_EXTERN bool operator==(node v1, node v2)
+GTL_EXTERN bool operator==(GTL::node v1, GTL::node v2)
 {
     return v1.data == v2.data;
 }
 
-GTL_EXTERN bool operator!=(node v1, node v2)
+GTL_EXTERN bool operator!=(GTL::node v1, GTL::node v2)
 {
     return v1.data != v2.data;
 }
 
-GTL_EXTERN bool operator<(node v1, node v2)
+GTL_EXTERN bool operator<(GTL::node v1, GTL::node v2)
 {
     return v1.data < v2.data;
 }
@@ -167,7 +167,7 @@ node::adj_edges_iterator::adj_edges_iterator()
 {
 }
 
-node::adj_edges_iterator::adj_edges_iterator(node n, bool start)
+node::adj_edges_iterator::adj_edges_iterator(GTL::node n, bool start)
 {
     // iterators that are used everytime
     last_edge[0] = n.out_edges_end();
@@ -281,7 +281,7 @@ node::inout_edges_iterator::inout_edges_iterator()
 {
 }
 
-node::inout_edges_iterator::inout_edges_iterator(node n, bool start)
+node::inout_edges_iterator::inout_edges_iterator(GTL::node n, bool start)
 {
     // iterators that are used everytime
     last_edge = n.in_edges_end();

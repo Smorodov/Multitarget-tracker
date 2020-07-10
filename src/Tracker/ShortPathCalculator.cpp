@@ -18,14 +18,14 @@ void SPBipart::Solve(const distMatrix_t& costMatrix, size_t N, size_t M, assignm
     MyGraph G;
     G.make_directed();
 
-    std::vector<node> nodes(N + M);
+    std::vector<GTL::node> nodes(N + M);
 
     for (size_t i = 0; i < nodes.size(); ++i)
     {
         nodes[i] = G.new_node();
     }
 
-    edge_map<int> weights(G, 100);
+	GTL::edge_map<int> weights(G, 100);
     for (size_t i = 0; i < N; i++)
     {
         bool hasZeroEdge = false;
@@ -34,7 +34,7 @@ void SPBipart::Solve(const distMatrix_t& costMatrix, size_t N, size_t M, assignm
         {
             track_t currCost = costMatrix[i + j * N];
 
-            edge e = G.new_edge(nodes[i], nodes[N + j]);
+			GTL::edge e = G.new_edge(nodes[i], nodes[N + j]);
 
             if (currCost < m_settings.m_distThres)
             {
@@ -54,11 +54,11 @@ void SPBipart::Solve(const distMatrix_t& costMatrix, size_t N, size_t M, assignm
         }
     }
 
-    edges_t L = MAX_WEIGHT_BIPARTITE_MATCHING(G, weights);
-    for (edges_t::iterator it = L.begin(); it != L.end(); ++it)
+	GTL::edges_t L = MAX_WEIGHT_BIPARTITE_MATCHING(G, weights);
+    for (GTL::edges_t::iterator it = L.begin(); it != L.end(); ++it)
     {
-        node a = it->source();
-        node b = it->target();
+        GTL::node a = it->source();
+        GTL::node b = it->target();
         assignment[b.id()] = static_cast<assignments_t::value_type>(a.id() - N);
     }
 }

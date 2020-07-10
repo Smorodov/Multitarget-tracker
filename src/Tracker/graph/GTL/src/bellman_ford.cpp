@@ -32,7 +32,7 @@ void bellman_ford::store_preds (bool set)
 }
 
 
-int bellman_ford::check(graph& G)
+int bellman_ford::check(GTL::graph& G)
 {
     if (!vars_set) 
     {
@@ -47,7 +47,7 @@ int bellman_ford::check(graph& G)
     return algorithm::GTL_OK;
 }
 
-int bellman_ford::run(graph& G)
+int bellman_ford::run(GTL::graph& G)
 {
     if (s == node()) 
     {
@@ -61,7 +61,7 @@ int bellman_ford::run(graph& G)
     inf.init (G, true);
     
     if (preds) {
-	preds->init (G, edge());
+	preds->init (G, GTL::edge());
     }
 
     inf[s] = false;

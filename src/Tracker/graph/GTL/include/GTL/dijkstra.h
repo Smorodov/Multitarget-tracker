@@ -64,7 +64,7 @@ public:
     /**
      * @brief Sets source %node.
      * 
-     * The default source is the invalid %node (node::node()),
+     * The default source is the invalid %node (GTL::node::node()),
      * in this case an arbitrary %node is chosen and stored when
      * this algorithm is run.
      *
@@ -123,7 +123,7 @@ public:
      * @sa dijkstra::weights
      * @sa algorithm::check
      */
-    virtual int check(graph& G);
+    virtual int check(GTL::graph& G);
 	    
     /**
      * @brief Runs shortest path %algorithm on @p G.
@@ -139,7 +139,7 @@ public:
      *
      * @sa algorithm::run
      */
-    int run(graph& G);
+    int run(GTL::graph& G);
 
     /**
      * @brief Returns source %node.
@@ -395,7 +395,7 @@ private:
      * @internal
      * Inits data structure.
      */
-    void init(graph& G);
+    void init(GTL::graph& G);
 
     /**
      * @internal
