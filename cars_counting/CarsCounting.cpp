@@ -13,12 +13,42 @@ CarsCounting::CarsCounting(const cv::CommandLineParser& parser)
       m_endFrame(0),
       m_finishDelay(0)
 {
+#ifdef _WIN32
+	std::string pathToModel = "../../data/";
+#else
+	std::string pathToModel = "../data/";
+#endif
+
+
     m_inFile = parser.get<std::string>(0);
     m_outFile = parser.get<std::string>("out");
     m_showLogs = parser.get<int>("show_logs") != 0;
     m_startFrame = parser.get<int>("start_frame");
     m_endFrame = parser.get<int>("end_frame");
     m_finishDelay = parser.get<int>("end_delay");
+
+	m_weightsFile = parser.get<std::string>("weights");
+	m_configFile = parser.get<std::string>("config");
+	m_namesFile = parser.get<std::string>("names");
+	if (m_weightsFile.empty() && m_configFile.empty())
+	{
+		m_weightsFile = pathToModel + "yolov4.weights";
+		m_configFile = pathToModel + "yolov4.cfg";
+	}
+	if (m_namesFile.empty())
+		m_namesFile = pathToModel + "coco.names";
+
+	std::map<std::string, tracking::Detectors> infMap;
+	infMap.emplace("darknet", tracking::Detectors::Yolo_Darknet);
+	infMap.emplace("ocvdnn", tracking::Detectors::DNN_OCV);
+	std::string inference = parser.get<std::string>("inference");
+	auto infType = infMap.find(inference);
+	if (infType != std::end(infMap))
+		m_detectorType = infType->second;
+	else
+		m_detectorType = tracking::Detectors::Yolo_Darknet;
+
+	std::cout << "Inference framework set " << inference << " used " << m_detectorType << ", weights: " << m_weightsFile << ", config: " << m_configFile << ", names: " << m_namesFile << std::endl;
 
     m_colors.push_back(cv::Scalar(255, 0, 0));
     m_colors.push_back(cv::Scalar(0, 255, 0));
@@ -294,17 +324,32 @@ bool CarsCounting::InitTracker(cv::UMat frame)
 
     config_t config;
 
-#if 1 // YOLO
-#ifdef _WIN32
-	std::string pathToModel = "../../data/";
-#else
-	std::string pathToModel = "../data/";
-#endif
+#if 1
+	switch (m_detectorType)
+	{
+	case tracking::Detectors::Yolo_Darknet:
+		break;
 
-	config.emplace("modelConfiguration", pathToModel + "yolov4.cfg");
-	config.emplace("modelBinary", pathToModel + "yolov4.weights");
-	config.emplace("confidenceThreshold", "0.7");
-	config.emplace("classNames", pathToModel + "coco.names");
+	case tracking::Detectors::DNN_OCV:
+#if 1
+		config.emplace("dnnTarget", "DNN_TARGET_CPU");
+		config.emplace("dnnBackend", "DNN_BACKEND_OPENCV");
+#else
+		config.emplace("dnnTarget", "DNN_TARGET_CUDA");
+		config.emplace("dnnBackend", "DNN_BACKEND_CUDA");
+#endif
+		break;
+
+	default:
+		break;
+	}
+
+	config.emplace("modelConfiguration", m_configFile);
+	config.emplace("modelBinary", m_weightsFile);
+	config.emplace("classNames", m_namesFile);
+	config.emplace("confidenceThreshold", "0.5");
+	config.emplace("nmsThreshold", "0.4");
+	config.emplace("swapRB", "0");
 	config.emplace("maxCropRatio", "-1");
 
 	config.emplace("white_list", "person");
@@ -316,7 +361,7 @@ bool CarsCounting::InitTracker(cv::UMat frame)
 	//config.emplace("white_list", "traffic light");
 	//config.emplace("white_list", "stop sign");
 
-	m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Yolo_Darknet, config, frame));
+	m_detector = std::unique_ptr<BaseDetector>(CreateDetector(m_detectorType, config, frame));
 
 #else // Background subtraction
 

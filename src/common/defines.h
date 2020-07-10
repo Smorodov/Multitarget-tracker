@@ -89,21 +89,21 @@ namespace tracking
 ///
 enum Detectors
 {
-    Motion_VIBE,
-    Motion_MOG,
-    Motion_GMG,
-    Motion_CNT,
-    Motion_SuBSENSE,
-    Motion_LOBSTER,
-    Motion_MOG2,
-    Face_HAAR,
-    Pedestrian_HOG,
-    Pedestrian_C4,
-    SSD_MobileNet,
-    Yolo_OCV,
-	Yolo_Darknet,
-    Yolo_TensorRT,
-    DNN_OCV
+    Motion_VIBE = 0,
+    Motion_MOG = 1,
+    Motion_GMG = 2,
+    Motion_CNT = 3,
+    Motion_SuBSENSE = 4,
+    Motion_LOBSTER = 5,
+    Motion_MOG2 = 6,
+    Face_HAAR = 7,
+    Pedestrian_HOG = 8,
+    Pedestrian_C4 = 9,
+    SSD_MobileNet = 10,
+    Yolo_OCV = 11,
+	Yolo_Darknet = 12,
+    Yolo_TensorRT = 13,
+    DNN_OCV = 14
 };
 
 ///

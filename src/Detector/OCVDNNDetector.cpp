@@ -249,7 +249,7 @@ void OCVDNNDetector::Detect(cv::UMat& colorFrame)
 void OCVDNNDetector::DetectInCrop(cv::Mat colorFrame, const cv::Rect& crop, regions_t& tmpRegions)
 {
     //Convert Mat to batch of images
-    cv::dnn::blobFromImage(cv::Mat(colorFrame, crop), m_inputBlob, m_inScaleFactor, cv::Size(m_inWidth, m_inHeight), m_meanVal, m_swapRB, false, CV_8U);
+    cv::dnn::blobFromImage(cv::Mat(colorFrame, crop), m_inputBlob, 1.0, cv::Size(m_inWidth, m_inHeight), m_meanVal, m_swapRB, false, CV_8U);
 
     m_net.setInput(m_inputBlob, "", m_inScaleFactor, m_meanVal); //set the network input
 

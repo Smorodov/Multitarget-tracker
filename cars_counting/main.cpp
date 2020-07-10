@@ -19,6 +19,10 @@ static void Help()
 const char* keys =
 {
     "{ @1             |../data/atrium.avi  | movie file | }"
+	"{ inf inference  |darknet             | Type of inference framework: darknet, ocvdnn | }"
+	"{ w weights      |                    | Weights of neural network: yolov4.weights | }"
+	"{ c config       |                    | Config file of neural network: yolov4.cfg | }"
+	"{ n names        |                    | File with classes names: coco.names | }"
     "{ sf start_frame |0                   | Start a video from this position | }"
     "{ ef end_frame   |0                   | Play a video to this position (if 0 then played to the end of file) | }"
     "{ ed end_delay   |0                   | Delay in milliseconds after video ending | }"
