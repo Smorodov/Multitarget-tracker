@@ -819,15 +819,35 @@ protected:
 #else
 		std::string pathToModel = "../data/";
 #endif
-#if 0
-		config.emplace("modelConfiguration", pathToModel + "yolov3-tiny.cfg");
-		config.emplace("modelBinary", pathToModel + "yolov3-tiny.weights");
-		config.emplace("confidenceThreshold", "0.5");
-#else
-		config.emplace("modelConfiguration", pathToModel + "yolov3.cfg");
-		config.emplace("modelBinary", pathToModel + "yolov3.weights");
-		config.emplace("confidenceThreshold", "0.7");
-#endif
+
+        enum class YOLOModels
+        {
+            TinyYOLOv3 = 0,
+            YOLOv3,
+            YOLOv4
+        };
+        YOLOModels usedModel = YOLOModels::YOLOv3;
+        switch (usedModel)
+        {
+        case YOLOModels::TinyYOLOv3:
+            config.emplace("modelConfiguration", pathToModel + "yolov3-tiny.cfg");
+            config.emplace("modelBinary", pathToModel + "yolov3-tiny.weights");
+            config.emplace("confidenceThreshold", "0.5");
+            break;
+
+        case YOLOModels::YOLOv3:
+            config.emplace("modelConfiguration", pathToModel + "yolov3.cfg");
+            config.emplace("modelBinary", pathToModel + "yolov3.weights");
+            config.emplace("confidenceThreshold", "0.7");
+            break;
+
+        case YOLOModels::YOLOv4:
+            config.emplace("modelConfiguration", pathToModel + "yolov4.cfg");
+            config.emplace("modelBinary", pathToModel + "yolov4.weights");
+            config.emplace("confidenceThreshold", "0.5");
+            break;
+        }
+
 		config.emplace("classNames", pathToModel + "coco.names");
 		config.emplace("maxCropRatio", "-1");
 

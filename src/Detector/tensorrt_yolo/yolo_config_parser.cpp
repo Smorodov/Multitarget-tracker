@@ -28,8 +28,6 @@ SOFTWARE.
 #include <assert.h>
 #include <iostream>
 
-#include <gflags/gflags.h>
-
 DEFINE_string(network_type, "not-specified",
               "[REQUIRED] Type of network architecture. Choose from yolov2, yolov2-tiny, "
               "yolov3 and yolov3-tiny");

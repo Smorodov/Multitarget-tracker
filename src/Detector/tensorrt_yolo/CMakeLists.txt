@@ -57,6 +57,10 @@ cuda_add_library(${libname_rt} SHARED
     ${TENSORRT_HEADER_FILES}
 )
 
+#message("TensorRT OpenCV libraries:")
+#message("${OpenCV_LIBS}")
+#message(${OpenCV_DIR})
+
 set(TENSORRT_LIBS
     ${OpenCV_LIBS}
     #${CUDA_LIBRARIES}

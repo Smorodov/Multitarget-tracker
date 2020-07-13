@@ -29,6 +29,7 @@ SOFTWARE.
 #include "yolo.h"
 
 #include <ctime>
+#include <gflags/gflags.h>
 
 // Init to be called at the very beginning to verify all config params are valid
 void yoloConfigParserInit(int argc, char** argv);

@@ -24,10 +24,12 @@ SOFTWARE.
 */
 
 #include "trt_utils.h"
-
+#include <NvInferRuntimeCommon.h>
 #include <experimental/filesystem>
 #include <fstream>
 #include <iomanip>
+using namespace nvinfer1;
+REGISTER_TENSORRT_PLUGIN(MishPluginCreator);
 
 cv::Mat blobFromDsImages(const std::vector<DsImage>& inputImages,
 						const int& inputH,
@@ -175,8 +177,11 @@ std::vector<std::string> loadImageList(const std::string filename, const std::st
     return fileList;
 }
 
-std::vector<BBoxInfo> nmsAllClasses(const float nmsThresh, std::vector<BBoxInfo>& binfo,
-                                    const uint32_t numClasses)
+
+std::vector<BBoxInfo> nmsAllClasses(const float nmsThresh,
+	std::vector<BBoxInfo>& binfo,
+	const uint32_t numClasses,
+	const std::string &model_type)
 {
     std::vector<BBoxInfo> result;
     std::vector<std::vector<BBoxInfo>> splitBoxes(numClasses);
@@ -187,16 +192,91 @@ std::vector<BBoxInfo> nmsAllClasses(const float nmsThresh, std::vector<BBoxInfo>
 
     for (auto& boxes : splitBoxes)
     {
-        boxes = nonMaximumSuppression(nmsThresh, boxes);
+		if (("yolov4" == model_type)||("yolov4-tiny"== model_type))
+		{
+			boxes =	diou_nms(nmsThresh, boxes);
+		}
+		else
+		{
+			boxes = nonMaximumSuppression(nmsThresh, boxes);
+		}
         result.insert(result.end(), boxes.begin(), boxes.end());
     }
 
     return result;
 }
 
+
+std::vector<BBoxInfo> diou_nms(const float nmsThresh, std::vector<BBoxInfo> binfo)
+{
+	auto overlap1D = [](float x1min, float x1max, float x2min, float x2max) -> float
+	{
+		if (x1min > x2min)
+		{
+			std::swap(x1min, x2min);
+			std::swap(x1max, x2max);
+		}
+		return x1max < x2min ? 0 : std::min(x1max, x2max) - x2min;
+	};
+	auto computeIoU = [&overlap1D](BBox& bbox1, BBox& bbox2) -> float
+	{
+		float overlapX = overlap1D(bbox1.x1, bbox1.x2, bbox2.x1, bbox2.x2);
+		float overlapY = overlap1D(bbox1.y1, bbox1.y2, bbox2.y1, bbox2.y2);
+		float area1 = (bbox1.x2 - bbox1.x1) * (bbox1.y2 - bbox1.y1);
+		float area2 = (bbox2.x2 - bbox2.x1) * (bbox2.y2 - bbox2.y1);
+		float overlap2D = overlapX * overlapY;
+		float u = area1 + area2 - overlap2D;
+		return u == 0 ? 0 : overlap2D / u;
+	};
+
+	//https://arxiv.org/pdf/1911.08287.pdf
+	auto R = [](BBox &bbox1,BBox &bbox2) ->float
+	{
+		float center1_x = (bbox1.x1 + bbox1.x2) / 2.f;
+		float center1_y = (bbox1.y1 + bbox1.y2) / 2.f;
+		float center2_x = (bbox2.x1 + bbox2.x2) / 2.f;
+		float center2_y = (bbox2.y1 + bbox2.y2) / 2.f;
+
+		float d_center = (center1_x - center2_x)* (center1_x - center2_x) 
+						+ (center1_y - center2_y)*(center1_y - center2_y);
+		//smallest_enclosing box
+		float box_x1 = std::min({ bbox1.x1, bbox1.x2, bbox2.x1, bbox2.x2 });
+		float box_y1 = std::min({ bbox1.y1, bbox1.y2, bbox2.y1, bbox2.y2 });
+		float box_x2 = std::max({ bbox1.x1, bbox1.x2, bbox2.x1, bbox2.x2 });
+		float box_y2 = std::max({ bbox1.y1, bbox1.y2, bbox2.y1, bbox2.y2 });
+
+		float d_diagonal = (box_x1 - box_x2) * (box_x1 - box_x2) +
+						   (box_y1 - box_y2) * (box_y1 - box_y2);
+
+		return d_center / d_diagonal;
+	};
+	std::stable_sort(binfo.begin(), binfo.end(),
+		[](const BBoxInfo& b1, const BBoxInfo& b2) { return b1.prob > b2.prob; });
+	std::vector<BBoxInfo> out;
+	for (auto& i : binfo)
+	{
+		bool keep = true;
+		for (auto& j : out)
+		{
+			if (keep)
+			{
+				float overlap = computeIoU(i.box, j.box);
+				float r = R(i.box, j.box);
+				keep = (overlap-r) <= nmsThresh;
+			}
+			else
+				break;
+		}
+		if (keep) out.push_back(i);
+	}
+	return out;
+}
+
+
 std::vector<BBoxInfo> nonMaximumSuppression(const float nmsThresh, std::vector<BBoxInfo> binfo)
 {
-    auto overlap1D = [](float x1min, float x1max, float x2min, float x2max) -> float {
+    auto overlap1D = [](float x1min, float x1max, float x2min, float x2max) -> float 
+	{
         if (x1min > x2min)
         {
             std::swap(x1min, x2min);
@@ -204,7 +284,8 @@ std::vector<BBoxInfo> nonMaximumSuppression(const float nmsThresh, std::vector<B
         }
         return x1max < x2min ? 0 : std::min(x1max, x2max) - x2min;
     };
-    auto computeIoU = [&overlap1D](BBox& bbox1, BBox& bbox2) -> float {
+    auto computeIoU = [&overlap1D](BBox& bbox1, BBox& bbox2) -> float 
+	{
         float overlapX = overlap1D(bbox1.x1, bbox1.x2, bbox2.x1, bbox2.x2);
         float overlapY = overlap1D(bbox1.y1, bbox1.y2, bbox2.y1, bbox2.y2);
         float area1 = (bbox1.x2 - bbox1.x1) * (bbox1.y2 - bbox1.y1);
@@ -281,26 +362,11 @@ nvinfer1::ICudaEngine* loadTRTEngine(const std::string planFilePath, PluginFacto
 //		file.ignore(15);
 //	}
 //}
-std::vector<float> loadWeights(const std::string weightsFilePath, const std::string& networkType)
+std::vector<float> loadWeights(const std::string weightsFilePath, const std::string& /*networkType*/)
 {
     assert(fileExists(weightsFilePath));
     std::cout << "Loading pre-trained weights..." << std::endl;
-    //std::ifstream file(weightsFilePath, std::ios_base::binary);
-    //assert(file.good());
-    //std::string line;
-
-    //if (networkType == "yolov2")
-    //{
-    //    // Remove 4 int32 bytes of data from the stream belonging to the header
-    //    file.ignore(4 * 4);
-    //}
-    //else if ((networkType == "yolov3") || (networkType == "yolov3-tiny")
-    //         || (networkType == "yolov2-tiny"))
-    //{
-    //    // Remove 5 int32 bytes of data from the stream belonging to the header
-    //    file.ignore(4 * 5);
-    //}
-	std::ifstream file(weightsFilePath, std::ios_base::binary);
+    std::ifstream file(weightsFilePath, std::ios_base::binary);
 	assert(file.good());
 	std::string line;
 	file.ignore(4);
@@ -390,10 +456,12 @@ nvinfer1::ILayer* netAddMaxpool(int layerIdx, std::map<std::string, std::string>
     int stride = std::stoi(block.at("stride"));
 
     nvinfer1::IPoolingLayer* pool
-        = network->addPooling(*input, nvinfer1::PoolingType::kMAX, nvinfer1::DimsHW{size, size});
+        = network->addPoolingNd(*input, nvinfer1::PoolingType::kMAX, nvinfer1::DimsHW{size, size});
     assert(pool);
     std::string maxpoolLayerName = "maxpool_" + std::to_string(layerIdx);
-    pool->setStride(nvinfer1::DimsHW{stride, stride});
+	int pad = (size - 1) / 2;
+	pool->setPaddingNd(nvinfer1::DimsHW{pad,pad});
+    pool->setStrideNd(nvinfer1::DimsHW{stride, stride});
     pool->setName(maxpoolLayerName.c_str());
 
     return pool;
@@ -452,6 +520,146 @@ nvinfer1::ILayer* netAddConvLinear(int layerIdx, std::map<std::string, std::stri
     conv->setPadding(nvinfer1::DimsHW{pad, pad});
 
     return conv;
+}
+
+nvinfer1::ILayer* net_conv_bn_mish(int layerIdx, 
+	std::map<std::string, std::string>& block,
+	std::vector<float>& weights,
+	std::vector<nvinfer1::Weights>& trtWeights,
+	int& weightPtr,
+	int& inputChannels,
+	nvinfer1::ITensor* input,
+	nvinfer1::INetworkDefinition* network)
+{
+	assert(block.at("type") == "convolutional");
+	assert(block.find("batch_normalize") != block.end());
+	assert(block.at("batch_normalize") == "1");
+	assert(block.at("activation") == "mish");
+	assert(block.find("filters") != block.end());
+	assert(block.find("pad") != block.end());
+	assert(block.find("size") != block.end());
+	assert(block.find("stride") != block.end());
+
+	bool batchNormalize, bias;
+	if (block.find("batch_normalize") != block.end())
+	{
+		batchNormalize = (block.at("batch_normalize") == "1");
+		bias = false;
+	}
+	else
+	{
+		batchNormalize = false;
+		bias = true;
+	}
+	// all conv_bn_leaky layers assume bias is false
+	assert(batchNormalize == true && bias == false);
+
+	int filters = std::stoi(block.at("filters"));
+	int padding = std::stoi(block.at("pad"));
+	int kernelSize = std::stoi(block.at("size"));
+	int stride = std::stoi(block.at("stride"));
+	int pad;
+	if (padding)
+		pad = (kernelSize - 1) / 2;
+	else
+		pad = 0;
+
+	/***** CONVOLUTION LAYER *****/
+	/*****************************/
+	// batch norm weights are before the conv layer
+	// load BN biases (bn_biases)
+	std::vector<float> bnBiases;
+	for (int i = 0; i < filters; ++i)
+	{
+		bnBiases.push_back(weights[weightPtr]);
+		weightPtr++;
+	}
+	// load BN weights
+	std::vector<float> bnWeights;
+	for (int i = 0; i < filters; ++i)
+	{
+		bnWeights.push_back(weights[weightPtr]);
+		weightPtr++;
+	}
+	// load BN running_mean
+	std::vector<float> bnRunningMean;
+	for (int i = 0; i < filters; ++i)
+	{
+		bnRunningMean.push_back(weights[weightPtr]);
+		weightPtr++;
+	}
+	// load BN running_var
+	std::vector<float> bnRunningVar;
+	for (int i = 0; i < filters; ++i)
+	{
+		// 1e-05 for numerical stability
+		bnRunningVar.push_back(sqrt(weights[weightPtr] + 1.0e-5));
+		weightPtr++;
+	}
+	// load Conv layer weights (GKCRS)
+	int size = filters * inputChannels * kernelSize * kernelSize;
+	nvinfer1::Weights convWt{ nvinfer1::DataType::kFLOAT, nullptr, size };
+	float* val = new float[size];
+	for (int i = 0; i < size; ++i)
+	{
+		val[i] = weights[weightPtr];
+		weightPtr++;
+	}
+	convWt.values = val;
+	trtWeights.push_back(convWt);
+	nvinfer1::Weights convBias{ nvinfer1::DataType::kFLOAT, nullptr, 0 };
+	trtWeights.push_back(convBias);
+	nvinfer1::IConvolutionLayer* conv = network->addConvolution(
+		*input, filters, nvinfer1::DimsHW{ kernelSize, kernelSize }, convWt, convBias);
+	assert(conv != nullptr);
+	std::string convLayerName = "conv_" + std::to_string(layerIdx);
+	conv->setName(convLayerName.c_str());
+	conv->setStride(nvinfer1::DimsHW{ stride, stride });
+	conv->setPadding(nvinfer1::DimsHW{ pad, pad });
+
+	/***** BATCHNORM LAYER *****/
+	/***************************/
+	size = filters;
+	// create the weights
+	nvinfer1::Weights shift{ nvinfer1::DataType::kFLOAT, nullptr, size };
+	nvinfer1::Weights scale{ nvinfer1::DataType::kFLOAT, nullptr, size };
+	nvinfer1::Weights power{ nvinfer1::DataType::kFLOAT, nullptr, size };
+	float* shiftWt = new float[size];
+	for (int i = 0; i < size; ++i)
+	{
+		shiftWt[i]
+			= bnBiases.at(i) - ((bnRunningMean.at(i) * bnWeights.at(i)) / bnRunningVar.at(i));
+	}
+	shift.values = shiftWt;
+	float* scaleWt = new float[size];
+	for (int i = 0; i < size; ++i)
+	{
+		scaleWt[i] = bnWeights.at(i) / bnRunningVar[i];
+	}
+	scale.values = scaleWt;
+	float* powerWt = new float[size];
+	for (int i = 0; i < size; ++i)
+	{
+		powerWt[i] = 1.0;
+	}
+	power.values = powerWt;
+	trtWeights.push_back(shift);
+	trtWeights.push_back(scale);
+	trtWeights.push_back(power);
+	// Add the batch norm layers
+	nvinfer1::IScaleLayer* bn = network->addScale(
+		*conv->getOutput(0), nvinfer1::ScaleMode::kCHANNEL, shift, scale, power);
+	assert(bn != nullptr);
+	std::string bnLayerName = "batch_norm_" + std::to_string(layerIdx);
+	bn->setName(bnLayerName.c_str());
+	/***** ACTIVATION LAYER *****/
+	/****************************/
+	auto creator = getPluginRegistry()->getPluginCreator("Mish_TRT", "1");
+	const nvinfer1::PluginFieldCollection* pluginData = creator->getFieldNames();
+	nvinfer1::IPluginV2 *pluginObj = creator->createPlugin(("mish" + std::to_string(layerIdx)).c_str(), pluginData);
+	nvinfer1::ITensor* inputTensors[] = { bn->getOutput(0) };
+	auto mish = network->addPluginV2(&inputTensors[0], 1, *pluginObj);
+	return mish;
 }
 
 nvinfer1::ILayer* netAddConvBNLeaky(int layerIdx, std::map<std::string, std::string>& block,
@@ -583,20 +791,22 @@ nvinfer1::ILayer* netAddConvBNLeaky(int layerIdx, std::map<std::string, std::str
     bn->setName(bnLayerName.c_str());
     /***** ACTIVATION LAYER *****/
     /****************************/
-    nvinfer1::IPlugin* leakyRELU = nvinfer1::plugin::createPReLUPlugin(0.1);
-    assert(leakyRELU != nullptr);
-    nvinfer1::ITensor* bnOutput = bn->getOutput(0);
-    nvinfer1::IPluginLayer* leaky = network->addPlugin(&bnOutput, 1, *leakyRELU);
-    assert(leaky != nullptr);
-    std::string leakyLayerName = "leaky_" + std::to_string(layerIdx);
-    leaky->setName(leakyLayerName.c_str());
+	auto leaky = network->addActivation(*bn->getOutput(0),nvinfer1::ActivationType::kLEAKY_RELU);
+	leaky->setAlpha(0.1);
+	/*nvinfer1::IPlugin* leakyRELU = nvinfer1::plugin::createPReLUPlugin(0.1);
+	assert(leakyRELU != nullptr);
+	nvinfer1::ITensor* bnOutput = bn->getOutput(0);
+	nvinfer1::IPluginLayer* leaky = network->addPlugin(&bnOutput, 1, *leakyRELU);*/
+	assert(leaky != nullptr);
+	std::string leakyLayerName = "leaky_" + std::to_string(layerIdx);
+	leaky->setName(leakyLayerName.c_str());
 
     return leaky;
 }
 
 nvinfer1::ILayer* netAddUpsample(int layerIdx, std::map<std::string, std::string>& block,
-                                 std::vector<float>& weights,
-                                 std::vector<nvinfer1::Weights>& trtWeights, int& inputChannels,
+                                 std::vector<float>& /*weights*/,
+                                 std::vector<nvinfer1::Weights>& trtWeights, int& /*inputChannels*/,
                                  nvinfer1::ITensor* input, nvinfer1::INetworkDefinition* network)
 {
     assert(block.at("type") == "upsample");

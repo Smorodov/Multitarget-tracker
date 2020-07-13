@@ -38,8 +38,9 @@ static void decodeBatchDetections(const YoloPluginCtx* ctx, std::vector<YoloPlug
         YoloPluginOutput* out = new YoloPluginOutput;
         std::vector<BBoxInfo> binfo = ctx->inferenceNetwork->decodeDetections(
             p, ctx->initParams.processingHeight, ctx->initParams.processingWidth);
-        std::vector<BBoxInfo> remaining = nmsAllClasses(
-            ctx->inferenceNetwork->getNMSThresh(), binfo, ctx->inferenceNetwork->getNumClasses());
+		std::vector<BBoxInfo> remaining;
+		/*std::vector<BBoxInfo> remaining = nmsAllClasses(
+			ctx->inferenceNetwork->getNMSThresh(), binfo, ctx->inferenceNetwork->getNumClasses(),);*/
         out->numObjects = remaining.size();
         assert(out->numObjects <= MAX_OBJECTS_PER_FRAME);
         for (uint32_t j = 0; j < remaining.size(); ++j)
