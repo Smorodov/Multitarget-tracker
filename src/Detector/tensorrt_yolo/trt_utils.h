@@ -35,13 +35,14 @@ SOFTWARE.
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
+#include "mish.h"
 #include <set>
 
 #include "NvInfer.h"
 
 #include "ds_image.h"
 #include "plugin_factory.h"
-
+//#include "logging.h"
 class DsImage;
 struct BBox
 {
@@ -59,7 +60,21 @@ struct BBoxInfo
 class Logger : public nvinfer1::ILogger
 {
 public:
-    void log(nvinfer1::ILogger::Severity severity, const char* msg) override
+	Logger(Severity severity = Severity::kWARNING)
+	{
+        severity = severity;
+	}
+
+	~Logger()
+	{
+
+	}
+	nvinfer1::ILogger& getTRTLogger()
+	{
+		return *this;
+	}
+
+    void log(nvinfer1::ILogger::Severity severity, const char* /*msg*/) override
     {
         // suppress info-level messages
         if (severity == Severity::kINFO) return;
@@ -70,9 +85,9 @@ public:
         case Severity::kERROR: std::cerr << "ERROR: "; break;
         case Severity::kWARNING: std::cerr << "WARNING: "; break;
         case Severity::kINFO: std::cerr << "INFO: "; break;
-        default: std::cerr << "UNKNOWN: "; break;
+       // default: std::cerr << "UNKNOWN: "; break;
         }
-        std::cerr << msg << std::endl;
+      //  std::cerr << msg << std::endl;
     }
 };
 
@@ -84,7 +99,7 @@ private:
 
     nvinfer1::DimsHW compute(nvinfer1::DimsHW inputDims, nvinfer1::DimsHW kernelSize,
                              nvinfer1::DimsHW stride, nvinfer1::DimsHW padding,
-                             nvinfer1::DimsHW dilation, const char* layerName) const override
+                             nvinfer1::DimsHW /*dilation*/, const char* layerName) const override
     {
         assert(inputDims.d[0] == inputDims.d[1]);
         assert(kernelSize.d[0] == kernelSize.d[1]);
@@ -128,8 +143,9 @@ void convertBBoxImgRes(const float scalingFactor,
 void printPredictions(const BBoxInfo& info, const std::string& className);
 std::vector<std::string> loadListFromTextFile(const std::string filename);
 std::vector<std::string> loadImageList(const std::string filename, const std::string prefix);
+std::vector<BBoxInfo> diou_nms(const float numThresh, std::vector<BBoxInfo> binfo);
 std::vector<BBoxInfo> nmsAllClasses(const float nmsThresh, std::vector<BBoxInfo>& binfo,
-                                    const uint32_t numClasses);
+                                    const uint32_t numClasses, const std::string &model_type);
 std::vector<BBoxInfo> nonMaximumSuppression(const float nmsThresh, std::vector<BBoxInfo> binfo);
 nvinfer1::ICudaEngine* loadTRTEngine(const std::string planFilePath, PluginFactory* pluginFactory,
                                      Logger& logger);
@@ -147,6 +163,16 @@ nvinfer1::ILayer* netAddConvLinear(int layerIdx, std::map<std::string, std::stri
                                    std::vector<nvinfer1::Weights>& trtWeights, int& weightPtr,
                                    int& inputChannels, nvinfer1::ITensor* input,
                                    nvinfer1::INetworkDefinition* network);
+
+nvinfer1::ILayer* net_conv_bn_mish(int layerIdx,
+	std::map<std::string, std::string>& block,
+	std::vector<float>& weights,
+	std::vector<nvinfer1::Weights>& trtWeights,
+	int& weightPtr,
+	int& inputChannels,
+	nvinfer1::ITensor* input,
+	nvinfer1::INetworkDefinition* network);
+
 nvinfer1::ILayer* netAddConvBNLeaky(int layerIdx, std::map<std::string, std::string>& block,
                                     std::vector<float>& weights,
                                     std::vector<nvinfer1::Weights>& trtWeights, int& weightPtr,

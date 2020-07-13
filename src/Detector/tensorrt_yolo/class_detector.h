@@ -19,7 +19,8 @@ namespace tensor_rt
 		YOLOV2 = 0,
 		YOLOV3,
 		YOLOV2_TINY,
-		YOLOV3_TINY
+		YOLOV3_TINY,
+		YOLOV4
 	};
 
 	enum Precision
@@ -62,7 +63,7 @@ namespace tensor_rt
 		Detector(const Detector &);
 		const Detector &operator =(const Detector &);
 		class Impl;
-		Impl *_impl;
+		Impl *_impl = nullptr;
 	};
 }
 #endif // !CLASS_QH_DETECTOR_H_

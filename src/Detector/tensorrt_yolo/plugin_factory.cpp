@@ -39,23 +39,23 @@ nvinfer1::IPlugin* PluginFactory::createPlugin(const char* layerName, const void
     {
         assert(m_LeakyReLUCount >= 0 && m_LeakyReLUCount <= m_MaxLeakyLayers);
         assert(m_LeakyReLULayers[m_LeakyReLUCount] == nullptr);
-        m_LeakyReLULayers[m_LeakyReLUCount]
-            = unique_ptr_INvPlugin(nvinfer1::plugin::createPReLUPlugin(serialData, serialLength));
+		/*m_LeakyReLULayers[m_LeakyReLUCount]
+			= unique_ptr_INvPlugin(nvinfer1::plugin::createPReLUPlugin(serialData, serialLength));*/
         ++m_LeakyReLUCount;
         return m_LeakyReLULayers[m_LeakyReLUCount - 1].get();
     }
     else if (std::string(layerName).find("reorg") != std::string::npos)
     {
         assert(m_ReorgLayer == nullptr);
-        m_ReorgLayer = unique_ptr_INvPlugin(
-            nvinfer1::plugin::createYOLOReorgPlugin(serialData, serialLength));
+        /*m_ReorgLayer = unique_ptr_INvPlugin(
+            nvinfer1::plugin::createYOLOReorgPlugin(serialData, serialLength));*/
         return m_ReorgLayer.get();
     }
     else if (std::string(layerName).find("region") != std::string::npos)
     {
         assert(m_RegionLayer == nullptr);
-        m_RegionLayer = unique_ptr_INvPlugin(
-            nvinfer1::plugin::createYOLORegionPlugin(serialData, serialLength));
+		/*m_RegionLayer = unique_ptr_INvPlugin(
+			 nvinfer1::plugin::createYOLORegionPlugin(serialData, serialLength));*/
         return m_RegionLayer.get();
     }
     else if (std::string(layerName).find("yolo") != std::string::npos)
@@ -136,7 +136,7 @@ nvinfer1::Dims YoloLayerV3::getOutputDimensions(int index, const nvinfer1::Dims*
 }
 
 void YoloLayerV3::configure(const nvinfer1::Dims* inputDims, int nbInputs,
-                            const nvinfer1::Dims* outputDims, int nbOutputs, int maxBatchSize)
+                            const nvinfer1::Dims* /*outputDims*/, int /*nbOutputs*/, int /*maxBatchSize*/)
 {
     assert(nbInputs == 1);
     assert(inputDims != nullptr);
