@@ -537,7 +537,7 @@ void CTrack::RectUpdate(
         {
             cv::Rect brect = m_predictionRect.boundingRect();
 
-            cv::Size roiSize(std::max(2 * brect.width, currFrame.cols / 4), std::max(2 * brect.height, currFrame.rows / 4));
+            cv::Size roiSize(std::max(3 * brect.width, currFrame.cols / 4), std::max(3 * brect.height, currFrame.rows / 4));
             if (roiSize.width > currFrame.cols)
                 roiSize.width = currFrame.cols;
 
@@ -578,9 +578,13 @@ void CTrack::RectUpdate(
                         m_tracker->init(cv::UMat(m_staticFrame, roiRect), lastRect);
 #if 0
 #ifndef SILENT_WORK
-                    cv::Mat tmp = cv::UMat(prevFrame, roiRect).getMat(cv::ACCESS_READ).clone();
+                    cv::Mat tmp;
+                    if (m_staticFrame.empty())
+                        tmp = cv::UMat(prevFrame, roiRect).getMat(cv::ACCESS_READ).clone();
+                    else
+                        tmp = cv::UMat(m_staticFrame, roiRect).getMat(cv::ACCESS_READ).clone();
                     cv::rectangle(tmp, lastRect, cv::Scalar(255, 255, 255), 2);
-                    cv::imshow("init", tmp);
+                    cv::imshow("init " + std::to_string(m_trackID), tmp);
 #endif
 #endif
 
@@ -600,7 +604,7 @@ void CTrack::RectUpdate(
 #ifndef SILENT_WORK
                 cv::Mat tmp2 = cv::UMat(currFrame, roiRect).getMat(cv::ACCESS_READ).clone();
                 cv::rectangle(tmp2, newRect, cv::Scalar(255, 255, 255), 2);
-                cv::imshow("track", tmp2);
+                cv::imshow("track " + std::to_string(m_trackID), tmp2);
 #endif
 #endif
 
@@ -613,8 +617,8 @@ void CTrack::RectUpdate(
         }
         else
         {
-            if (m_tracker && !m_tracker.empty())
-                m_tracker.release();
+            if (m_tracker)
+                m_tracker = nullptr;
         }
 #else
         std::cerr << "KCF tracker was disabled in CMAKE! Set lostTrackType = TrackNone in constructor." << std::endl;
