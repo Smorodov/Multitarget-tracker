@@ -697,9 +697,9 @@ protected:
     bool InitTracker(cv::UMat frame)
 	{
 		TrackerSettings settings;
-        settings.SetDistance(tracking::DistRects);
+        settings.SetDistance(tracking::DistCenters);
 		settings.m_kalmanType = tracking::KalmanLinear;
-        settings.m_filterGoal = tracking::FilterCenter;
+        settings.m_filterGoal = tracking::FilterRect;
         settings.m_lostTrackType = tracking::TrackCSRT;      // Use visual objects tracker for collisions resolving
 		settings.m_matchType = tracking::MatchHungrian;
 		settings.m_useAcceleration = false;                   // Use constant acceleration motion model
@@ -742,7 +742,7 @@ protected:
 		for (const auto& track : m_tracks)
 		{
             if (track.IsRobust(3,                           // Minimal trajectory size
-                0.7f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
+                0.5f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
 				cv::Size2f(0.1f, 8.0f)))      // Min and max ratio: width / height
 			{
 				DrawTrack(frame, 1, track, false);
