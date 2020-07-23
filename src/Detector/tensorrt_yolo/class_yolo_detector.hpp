@@ -149,7 +149,7 @@ private:
 		{
 			_p_net = std::unique_ptr<Yolo>{ new YoloV3(1, _yolo_info, _infer_param) };
 		}
-		else if (_config.net_type == tensor_rt::YOLOV4) 
+		else if ((_config.net_type == tensor_rt::YOLOV4) || (_config.net_type == tensor_rt::YOLOV4_TINY))
 		{
 			_p_net = std::unique_ptr<Yolo>{ new YoloV4(1,_yolo_info,_infer_param) };
 		}

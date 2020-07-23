@@ -30,6 +30,7 @@ SOFTWARE.
 #include <iomanip>
 using namespace nvinfer1;
 REGISTER_TENSORRT_PLUGIN(MishPluginCreator);
+REGISTER_TENSORRT_PLUGIN(ChunkPluginCreator);
 
 cv::Mat blobFromDsImages(const std::vector<DsImage>& inputImages,
 						const int& inputH,
@@ -660,6 +661,17 @@ nvinfer1::ILayer* net_conv_bn_mish(int layerIdx,
 	nvinfer1::ITensor* inputTensors[] = { bn->getOutput(0) };
 	auto mish = network->addPluginV2(&inputTensors[0], 1, *pluginObj);
 	return mish;
+}
+
+nvinfer1::ILayer * layer_split(const int n_layer_index_,
+	nvinfer1::ITensor *input_,
+	nvinfer1::INetworkDefinition* network)
+{
+	auto creator = getPluginRegistry()->getPluginCreator("CHUNK_TRT", "1.0");
+	const nvinfer1::PluginFieldCollection* pluginData = creator->getFieldNames();
+	nvinfer1::IPluginV2 *pluginObj = creator->createPlugin(("chunk" + std::to_string(n_layer_index_)).c_str(), pluginData);
+	auto chunk = network->addPluginV2(&input_, 1, *pluginObj);
+	return chunk;
 }
 
 nvinfer1::ILayer* netAddConvBNLeaky(int layerIdx, std::map<std::string, std::string>& block,
