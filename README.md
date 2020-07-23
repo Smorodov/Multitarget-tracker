@@ -7,10 +7,6 @@
 [![Vehicles speed:](https://img.youtube.com/vi/qOHYvDwpsO0/0.jpg)](https://youtu.be/qOHYvDwpsO0)
 
 
-* Traffic counting with YOLO v3
-
-[![Traffic counting:](https://img.youtube.com/vi/LzCv6Dr46kw/0.jpg)](https://youtu.be/LzCv6Dr46kw)
-
 * First step to ADAS with YOLO v4
 
 [![Simple ADAS:](https://img.youtube.com/vi/5cgg5fy90Xg/0.jpg)](https://youtu.be/5cgg5fy90Xg)
@@ -91,10 +87,6 @@ This pipeline can used with slow but accuracy DNN and track objects in intermedi
 Also you can read [Wiki in Russian](https://github.com/Smorodov/Multitarget-tracker/wiki).
 
 #### Demo Videos
-
-* MobileNet SSD and tracking for low resolution and low quality videos from car DVR:
-
-[![Tracking:](https://img.youtube.com/vi/Qssz6tVGoOc/0.jpg)](https://youtu.be/Qssz6tVGoOc)
 
 * Mouse tracking:
 
