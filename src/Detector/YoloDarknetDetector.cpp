@@ -100,16 +100,14 @@ void YoloDarknetDetector::Detect(cv::UMat& colorFrame)
 
 		if (colorFrame.cols / (float)colorFrame.rows > m_WHRatio)
 		{
-            if (cropHeight >= colorFrame.rows)
+			if (cropHeight >= colorFrame.rows)
 				cropHeight = colorFrame.rows;
-
 			cropWidth = cvRound(cropHeight * m_WHRatio);
 		}
 		else
 		{
-            if (cropWidth >= colorFrame.cols)
+			if (cropWidth >= colorFrame.cols)
 				cropWidth = colorFrame.cols;
-
 			cropHeight = cvRound(colorFrame.cols / m_WHRatio);
 		}
 

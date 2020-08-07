@@ -113,11 +113,14 @@ void YoloTensorRTDetector::Detect(cv::UMat& colorFrame)
 {
     m_regions.clear();
 
-    cv::Mat colorMat = colorFrame.getMat(cv::ACCESS_READ);
-	std::vector<tensor_rt::Result> detects;
-	m_detector->detect(colorMat, detects);
-	for (const tensor_rt::Result& bbox : detects)
+	std::vector<cv::Mat> batch = { colorFrame.getMat(cv::ACCESS_READ)  };
+	std::vector<tensor_rt::BatchResult> detects;
+	m_detector->detect(batch, detects);
+	for (const tensor_rt::BatchResult& dets : detects)
 	{
-		m_regions.emplace_back(bbox.rect, m_classNames[bbox.id], bbox.prob);
+		for (const tensor_rt::Result& bbox : dets)
+		{
+			m_regions.emplace_back(bbox.rect, m_classNames[bbox.id], bbox.prob);
+		}
 	}
 }
