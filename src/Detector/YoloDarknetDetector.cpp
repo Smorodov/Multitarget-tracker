@@ -34,12 +34,17 @@ bool YoloDarknetDetector::Init(const config_t& config)
 {
     auto modelConfiguration = config.find("modelConfiguration");
     auto modelBinary = config.find("modelBinary");
-    if (modelConfiguration != config.end() && modelBinary != config.end())
-    {
-        m_detector = std::make_unique<Detector>(modelConfiguration->second, modelBinary->second);
-		m_detector->nms = 0.2f;
-		m_WHRatio = static_cast<float>(m_detector->get_net_width()) / static_cast<float>(m_detector->get_net_height());
-    }
+	if (modelConfiguration == config.end() || modelBinary == config.end())
+		return false;
+
+	int currGPUID = 0;
+	auto gpuId = config.find("gpuId");
+	if (gpuId != config.end())
+		currGPUID = std::max(0, std::stoi(gpuId->second));
+
+	m_detector = std::make_unique<Detector>(modelConfiguration->second, modelBinary->second, currGPUID);
+	m_detector->nms = 0.2f;
+	m_WHRatio = static_cast<float>(m_detector->get_net_width()) / static_cast<float>(m_detector->get_net_height());
 
     auto classNames = config.find("classNames");
     if (classNames != config.end())
@@ -59,22 +64,16 @@ bool YoloDarknetDetector::Init(const config_t& config)
 
     auto confidenceThreshold = config.find("confidenceThreshold");
     if (confidenceThreshold != config.end())
-    {
         m_confidenceThreshold = std::stof(confidenceThreshold->second);
-    }
 
     auto maxCropRatio = config.find("maxCropRatio");
     if (maxCropRatio != config.end())
-    {
         m_maxCropRatio = std::stof(maxCropRatio->second);
-    }
 
 	m_classesWhiteList.clear();
 	auto whiteRange = config.equal_range("white_list");
 	for (auto it = whiteRange.first; it != whiteRange.second; ++it)
-	{
 		m_classesWhiteList.insert(it->second);
-	}
 
 	bool correct = m_detector.get() != nullptr;
     return correct;
