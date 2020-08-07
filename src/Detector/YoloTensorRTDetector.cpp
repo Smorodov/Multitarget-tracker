@@ -105,11 +105,7 @@ bool YoloTensorRTDetector::Init(const config_t& config)
 
 	auto maxCropRatio = config.find("maxCropRatio");
 	if (maxCropRatio != config.end())
-	{
 		m_maxCropRatio = std::stof(maxCropRatio->second);
-		if (m_maxCropRatio < 1.f)
-			m_maxCropRatio = 1.f;
-	}
 
 	m_detector = std::make_unique<tensor_rt::Detector>();
 	m_detector->init(m_localConfig);

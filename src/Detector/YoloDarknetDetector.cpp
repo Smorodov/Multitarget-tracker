@@ -32,6 +32,8 @@ YoloDarknetDetector::~YoloDarknetDetector(void)
 ///
 bool YoloDarknetDetector::Init(const config_t& config)
 {
+	m_detector.reset();
+
     auto modelConfiguration = config.find("modelConfiguration");
     auto modelBinary = config.find("modelBinary");
 	if (modelConfiguration == config.end() || modelBinary == config.end())
