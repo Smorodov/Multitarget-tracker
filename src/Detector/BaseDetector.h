@@ -13,7 +13,7 @@ public:
     /// \brief BaseDetector
     /// \param frame
     ///
-    BaseDetector(cv::UMat& frame)
+    BaseDetector(const cv::UMat& frame)
     {
         m_minObjectSize.width = std::max(5, frame.cols / 100);
         m_minObjectSize.height = m_minObjectSize.width;
@@ -35,7 +35,7 @@ public:
     /// \brief Detect
     /// \param frame
     ///
-    virtual void Detect(cv::UMat& frame) = 0;
+    virtual void Detect(const cv::UMat& frame) = 0;
 
 	///
 	/// \brief ResetModel
@@ -73,7 +73,7 @@ public:
     /// \brief CalcMotionMap
     /// \param frame
     ///
-    virtual void CalcMotionMap(cv::Mat frame)
+    virtual void CalcMotionMap(cv::Mat& frame)
     {
         if (m_motionMap.size() != frame.size())
         {
@@ -101,7 +101,7 @@ public:
         for (int y = 0; y < frame.rows; ++y)
         {
             uchar* imgPtr = frame.ptr(y);
-            float* moPtr = reinterpret_cast<float*>(m_motionMap.ptr(y));
+            const float* moPtr = reinterpret_cast<float*>(m_motionMap.ptr(y));
             for (int x = 0; x < frame.cols; ++x)
             {
                 for (int ci = chans - 1; ci < chans; ++ci)

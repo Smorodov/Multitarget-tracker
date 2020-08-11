@@ -6,7 +6,7 @@
 /// \brief OCVDNNDetector::OCVDNNDetector
 /// \param gray
 ///
-OCVDNNDetector::OCVDNNDetector(cv::UMat& colorFrame)
+OCVDNNDetector::OCVDNNDetector(const cv::UMat& colorFrame)
     : BaseDetector(colorFrame)
 
 {
@@ -183,25 +183,23 @@ bool OCVDNNDetector::Init(const config_t& config)
 /// \brief OCVDNNDetector::Detect
 /// \param gray
 ///
-void OCVDNNDetector::Detect(cv::UMat& colorFrame)
+void OCVDNNDetector::Detect(const cv::UMat& colorFrame)
 {
     m_regions.clear();
 
-    cv::Mat colorMat = colorFrame.getMat(cv::ACCESS_READ);
-
     if (m_maxCropRatio <= 0)
     {
-        DetectInCrop(colorMat, cv::Rect(0, 0, colorMat.cols, colorMat.rows), m_regions);
+        DetectInCrop(colorFrame, cv::Rect(0, 0, colorFrame.cols, colorFrame.rows), m_regions);
     }
     else
     {
-		std::vector<cv::Rect> crops = GetCrops(m_maxCropRatio, cv::Size(m_inWidth, m_inHeight), colorMat.size());
+		std::vector<cv::Rect> crops = GetCrops(m_maxCropRatio, cv::Size(m_inWidth, m_inHeight), colorFrame.size());
 		regions_t tmpRegions;
 		for (size_t i = 0; i < crops.size(); ++i)
 		{
 			const auto& crop = crops[i];
 			//std::cout << "Crop " << i << ": " << crop << std::endl;
-			DetectInCrop(colorMat, crop, tmpRegions);
+			DetectInCrop(colorFrame, crop, tmpRegions);
 		}
 
 		if (crops.size() > 1)
@@ -222,10 +220,10 @@ void OCVDNNDetector::Detect(cv::UMat& colorFrame)
 /// \param crop
 /// \param tmpRegions
 ///
-void OCVDNNDetector::DetectInCrop(cv::Mat colorFrame, const cv::Rect& crop, regions_t& tmpRegions)
+void OCVDNNDetector::DetectInCrop(const cv::UMat& colorFrame, const cv::Rect& crop, regions_t& tmpRegions)
 {
     //Convert Mat to batch of images
-    cv::dnn::blobFromImage(cv::Mat(colorFrame, crop), m_inputBlob, 1.0, cv::Size(m_inWidth, m_inHeight), m_meanVal, m_swapRB, false, CV_8U);
+    cv::dnn::blobFromImage(cv::UMat(colorFrame, crop), m_inputBlob, 1.0, cv::Size(m_inWidth, m_inHeight), m_meanVal, m_swapRB, false, CV_8U);
 
     m_net.setInput(m_inputBlob, "", m_inScaleFactor, m_meanVal); //set the network input
 

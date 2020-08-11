@@ -15,12 +15,12 @@
 class YoloDarknetDetector : public BaseDetector
 {
 public:
-    YoloDarknetDetector(cv::UMat& colorFrame);
+    YoloDarknetDetector(const cv::UMat& colorFrame);
 	~YoloDarknetDetector(void);
 
 	bool Init(const config_t& config);
 
-	void Detect(cv::UMat& colorFrame);
+	void Detect(const cv::UMat& colorFrame);
 
 	bool CanGrayProcessing() const
 	{
@@ -35,8 +35,8 @@ private:
 	std::vector<std::string> m_classNames;
 	std::set<std::string> m_classesWhiteList;
 
-	void DetectInCrop(cv::Mat colorFrame, const cv::Rect& crop, regions_t& tmpRegions);
-	void Detect(cv::Mat colorFrame, regions_t& tmpRegions);
+	void DetectInCrop(const cv::Mat& colorFrame, const cv::Rect& crop, regions_t& tmpRegions);
+	void Detect(const cv::Mat& colorFrame, regions_t& tmpRegions);
 	void FillImg(image_t& detImage);
 
 	cv::Mat m_tmpImg;

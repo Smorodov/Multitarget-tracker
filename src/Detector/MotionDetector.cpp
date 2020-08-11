@@ -76,7 +76,7 @@ void MotionDetector::DetectContour()
 /// \brief MotionDetector::Detect
 /// \param gray
 ///
-void MotionDetector::Detect(cv::UMat& gray)
+void MotionDetector::Detect(const cv::UMat& gray)
 {
     m_backgroundSubst->Subtract(gray, m_fg);
 
@@ -97,7 +97,7 @@ void MotionDetector::ResetModel(const cv::UMat& img, const cv::Rect& roiRect)
 /// \brief MotionDetector::CalcMotionMap
 /// \param frame
 ///
-void MotionDetector::CalcMotionMap(cv::Mat frame)
+void MotionDetector::CalcMotionMap(cv::Mat& frame)
 {
 	if (m_motionMap.size() != frame.size())
 	{

@@ -6,9 +6,7 @@
 /// \brief SSDMobileNetDetector::SSDMobileNetDetector
 /// \param gray
 ///
-SSDMobileNetDetector::SSDMobileNetDetector(
-    cv::UMat& colorFrame
-	)
+SSDMobileNetDetector::SSDMobileNetDetector(const cv::UMat& colorFrame)
     :
       BaseDetector(colorFrame),
       m_WHRatio(m_inWidth / (float)m_inHeight),
@@ -122,19 +120,17 @@ bool SSDMobileNetDetector::Init(const config_t& config)
 /// \brief SSDMobileNetDetector::Detect
 /// \param gray
 ///
-void SSDMobileNetDetector::Detect(cv::UMat& colorFrame)
+void SSDMobileNetDetector::Detect(const cv::UMat& colorFrame)
 {
     m_regions.clear();
 
-    cv::Mat colorMat = colorFrame.getMat(cv::ACCESS_READ);
-
-	std::vector<cv::Rect> crops = GetCrops(m_maxCropRatio, cv::Size(m_inWidth, m_inHeight), colorMat.size());
+	std::vector<cv::Rect> crops = GetCrops(m_maxCropRatio, cv::Size(m_inWidth, m_inHeight), colorFrame.size());
 	regions_t tmpRegions;
 	for (size_t i = 0; i < crops.size(); ++i)
 	{
 		const auto& crop = crops[i];
 		//std::cout << "Crop " << i << ": " << crop << std::endl;
-		DetectInCrop(colorMat, crop, tmpRegions);
+		DetectInCrop(colorFrame, crop, tmpRegions);
 	}
 
 	if (crops.size() > 1)
@@ -154,11 +150,11 @@ void SSDMobileNetDetector::Detect(cv::UMat& colorFrame)
 /// \param crop
 /// \param tmpRegions
 ///
-void SSDMobileNetDetector::DetectInCrop(cv::Mat colorFrame, const cv::Rect& crop, regions_t& tmpRegions)
+void SSDMobileNetDetector::DetectInCrop(const cv::UMat& colorFrame, const cv::Rect& crop, regions_t& tmpRegions)
 {
-    cv::Mat inputBlob = cv::dnn::blobFromImage(cv::Mat(colorFrame, crop), m_inScaleFactor, cv::Size(m_inWidth, m_inHeight), m_meanVal, false, true);
+    cv::dnn::blobFromImage(cv::UMat(colorFrame, crop), m_inputBlob, m_inScaleFactor, cv::Size(m_inWidth, m_inHeight), m_meanVal, false, true);
 
-    m_net.setInput(inputBlob, "data"); //set the network input
+    m_net.setInput(m_inputBlob, "data"); //set the network input
 
     cv::Mat detection = m_net.forward("detection_out"); //compute output
 

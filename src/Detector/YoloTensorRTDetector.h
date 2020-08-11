@@ -9,12 +9,12 @@
 class YoloTensorRTDetector : public BaseDetector
 {
 public:
-	YoloTensorRTDetector(cv::UMat& colorFrame);
+	YoloTensorRTDetector(const cv::UMat& colorFrame);
 	~YoloTensorRTDetector(void);
 
 	bool Init(const config_t& config);
 
-	void Detect(cv::UMat& colorFrame);
+	void Detect(const cv::UMat& colorFrame);
 
 	bool CanGrayProcessing() const
 	{

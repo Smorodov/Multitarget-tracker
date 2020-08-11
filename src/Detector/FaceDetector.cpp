@@ -4,9 +4,7 @@
 /// \brief FaceDetector::FaceDetector
 /// \param gray
 ///
-FaceDetector::FaceDetector(
-    cv::UMat& gray
-	)
+FaceDetector::FaceDetector(const cv::UMat& gray)
     : BaseDetector(gray)
 {
 }
@@ -39,7 +37,7 @@ bool FaceDetector::Init(const config_t& config)
 /// \brief FaceDetector::Detect
 /// \param gray
 ///
-void FaceDetector::Detect(cv::UMat& gray)
+void FaceDetector::Detect(const cv::UMat& gray)
 {
     bool findLargestObject = false;
     bool filterRects = true;

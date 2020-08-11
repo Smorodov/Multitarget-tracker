@@ -6,9 +6,7 @@
 /// \brief YoloTensorRTDetector::YoloTensorRTDetector
 /// \param gray
 ///
-YoloTensorRTDetector::YoloTensorRTDetector(
-    cv::UMat& colorFrame
-	)
+YoloTensorRTDetector::YoloTensorRTDetector(const cv::UMat& colorFrame)
     : BaseDetector(colorFrame)
 {
     m_classNames = { "background",
@@ -117,7 +115,7 @@ bool YoloTensorRTDetector::Init(const config_t& config)
 /// \brief YoloTensorRTDetector::Detect
 /// \param gray
 ///
-void YoloTensorRTDetector::Detect(cv::UMat& colorFrame)
+void YoloTensorRTDetector::Detect(const cv::UMat& colorFrame)
 {
     m_regions.clear();
 	cv::Mat colorMat = colorFrame.getMat(cv::ACCESS_READ);

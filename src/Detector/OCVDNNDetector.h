@@ -11,12 +11,12 @@
 class OCVDNNDetector : public BaseDetector
 {
 public:
-    OCVDNNDetector(cv::UMat& colorFrame);
+    OCVDNNDetector(const cv::UMat& colorFrame);
     ~OCVDNNDetector(void);
 
     bool Init(const config_t& config);
 
-    void Detect(cv::UMat& colorFrame);
+    void Detect(const cv::UMat& colorFrame);
 
 	bool CanGrayProcessing() const
 	{
@@ -26,7 +26,7 @@ public:
 private:
     cv::dnn::Net m_net;
 
-    void DetectInCrop(cv::Mat colorFrame, const cv::Rect& crop, regions_t& tmpRegions);
+    void DetectInCrop(const cv::UMat& colorFrame, const cv::Rect& crop, regions_t& tmpRegions);
 
     int m_inWidth = 608;
     int m_inHeight = 608;
@@ -42,5 +42,5 @@ private:
     std::vector<std::string> m_outNames;
 	std::vector<int> m_outLayers;
 	std::string m_outLayerType;
-    cv::Mat m_inputBlob;
+    cv::UMat m_inputBlob;
 };
