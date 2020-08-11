@@ -100,16 +100,19 @@ void YoloDarknetDetector::Detect(cv::UMat& colorFrame)
         for (size_t i = 0; i < crops.size(); ++i)
         {
             const auto& crop = crops[i];
-            std::cout << "Crop " << i << ": " << crop << std::endl;
+            //std::cout << "Crop " << i << ": " << crop << std::endl;
             DetectInCrop(colorMat, crop, tmpRegions);
         }
 
-		//std::cout << "nms for " << tmpRegions.size() << " objects" << std::endl;
-		nms3<CRegion>(tmpRegions, m_regions, 0.4f,
-			[](const CRegion& reg) { return reg.m_brect; },
-			[](const CRegion& reg) { return reg.m_confidence; },
-			[](const CRegion& reg) { return reg.m_type; },
-			0, 0.f);
+		if (crops.size() > 1)
+		{
+			nms3<CRegion>(tmpRegions, m_regions, 0.4f,
+				[](const CRegion& reg) { return reg.m_brect; },
+				[](const CRegion& reg) { return reg.m_confidence; },
+				[](const CRegion& reg) { return reg.m_type; },
+				0, 0.f);
+			//std::cout << "nms for " << tmpRegions.size() << " objects - result " << m_regions.size() << std::endl;
+		}
 	}
 	//std::cout << "Finally " << m_regions.size() << " objects" << std::endl;
 }

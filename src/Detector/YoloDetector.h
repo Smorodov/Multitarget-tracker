@@ -33,8 +33,8 @@ private:
 
     void DetectInCrop(cv::Mat colorFrame, const cv::Rect& crop, regions_t& tmpRegions);
 
-    static const int InWidth = 416;
-    static const int InHeight = 416;
+    int m_inWidth = 416;
+    int m_inHeight = 416;
 
     float m_WHRatio = 1.f;
     float m_inScaleFactor = 0.003921f;
