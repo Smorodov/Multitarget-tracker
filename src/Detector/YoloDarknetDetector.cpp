@@ -46,7 +46,6 @@ bool YoloDarknetDetector::Init(const config_t& config)
 
 	m_detector = std::make_unique<Detector>(modelConfiguration->second, modelBinary->second, currGPUID);
 	m_detector->nms = 0.2f;
-	m_WHRatio = static_cast<float>(m_detector->get_net_width()) / static_cast<float>(m_detector->get_net_height());
 
     auto classNames = config.find("classNames");
     if (classNames != config.end())
@@ -96,61 +95,20 @@ void YoloDarknetDetector::Detect(cv::UMat& colorFrame)
 	}
 	else
 	{
-		int cropHeight = cvRound(m_maxCropRatio * m_detector->get_net_height());
-		int cropWidth = cvRound(m_maxCropRatio * m_detector->get_net_width());
-
-		if (colorFrame.cols / (float)colorFrame.rows > m_WHRatio)
-		{
-			if (cropHeight >= colorFrame.rows)
-				cropHeight = colorFrame.rows;
-			cropWidth = cvRound(cropHeight * m_WHRatio);
-		}
-		else
-		{
-			if (cropWidth >= colorFrame.cols)
-				cropWidth = colorFrame.cols;
-			cropHeight = cvRound(colorFrame.cols / m_WHRatio);
-		}
-
-		//std::cout << "Frame size " << colorFrame.size() << ", crop size = " << cv::Size(cropWidth, cropHeight) << ", ratio = " << m_maxCropRatio << std::endl;
-
-		cv::Rect crop(0, 0, cropWidth, cropHeight);
-		regions_t tmpRegions;
-		size_t cropsCount = 0;
-		int stepX = 3 * crop.width / 4;
-		int stepY = 3 * crop.height / 4;
-		for (; crop.y < colorMat.rows; crop.y += stepY)
-		{
-			bool needBreakY = false;
-			if (crop.y + crop.height >= colorMat.rows)
-			{
-				crop.y = colorMat.rows - crop.height;
-				needBreakY = true;
-			}
-			for (crop.x = 0; crop.x < colorMat.cols; crop.x += stepX)
-			{
-				bool needBreakX = false;
-				if (crop.x + crop.width >= colorMat.cols)
-				{
-					crop.x = colorMat.cols - crop.width;
-					needBreakX = true;
-				}
-
-				std::cout << "Crop " << cropsCount++ << ": " << crop << std::endl;
-				DetectInCrop(colorMat, crop, tmpRegions);
-
-				if (needBreakX)
-					break;
-			}
-			if (needBreakY)
-				break;
-		}
+        std::vector<cv::Rect> crops = GetCrops(m_maxCropRatio, cv::Size(m_detector->get_net_width(), m_detector->get_net_height()), colorMat.size());
+        regions_t tmpRegions;
+        for (size_t i = 0; i < crops.size(); ++i)
+        {
+            const auto& crop = crops[i];
+            std::cout << "Crop " << i << ": " << crop << std::endl;
+            DetectInCrop(colorMat, crop, tmpRegions);
+        }
 
 		//std::cout << "nms for " << tmpRegions.size() << " objects" << std::endl;
 		nms3<CRegion>(tmpRegions, m_regions, 0.4f,
-			[](const CRegion& reg) -> cv::Rect { return reg.m_brect; },
-			[](const CRegion& reg) -> float { return reg.m_confidence; },
-			[](const CRegion& reg) -> std::string { return reg.m_type; },
+			[](const CRegion& reg) { return reg.m_brect; },
+			[](const CRegion& reg) { return reg.m_confidence; },
+			[](const CRegion& reg) { return reg.m_type; },
 			0, 0.f);
 	}
 	//std::cout << "Finally " << m_regions.size() << " objects" << std::endl;

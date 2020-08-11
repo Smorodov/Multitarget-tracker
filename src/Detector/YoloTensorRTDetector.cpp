@@ -1,5 +1,6 @@
 #include <fstream>
 #include "YoloTensorRTDetector.h"
+#include "nms.h"
 
 ///
 /// \brief YoloTensorRTDetector::YoloTensorRTDetector
@@ -119,15 +120,55 @@ bool YoloTensorRTDetector::Init(const config_t& config)
 void YoloTensorRTDetector::Detect(cv::UMat& colorFrame)
 {
     m_regions.clear();
+	cv::Mat colorMat = colorFrame.getMat(cv::ACCESS_READ);
 
-	std::vector<cv::Mat> batch = { colorFrame.getMat(cv::ACCESS_READ)  };
-	std::vector<tensor_rt::BatchResult> detects;
-	m_detector->detect(batch, detects);
-	for (const tensor_rt::BatchResult& dets : detects)
-	{
-		for (const tensor_rt::Result& bbox : dets)
-		{
-			m_regions.emplace_back(bbox.rect, m_classNames[bbox.id], bbox.prob);
-		}
-	}
+    if (m_maxCropRatio <= 0)
+    {
+        std::vector<cv::Mat> batch = { colorMat };
+        std::vector<tensor_rt::BatchResult> detects;
+        m_detector->detect(batch, detects);
+        for (const tensor_rt::BatchResult& dets : detects)
+        {
+            for (const tensor_rt::Result& bbox : dets)
+            {
+                m_regions.emplace_back(bbox.rect, m_classNames[bbox.id], bbox.prob);
+            }
+        }
+    }
+    else
+    {
+        std::vector<cv::Rect> crops = GetCrops(m_maxCropRatio, m_detector->get_input_size(), colorMat.size());
+        regions_t tmpRegions;
+        for (size_t i = 0; i < crops.size();)
+        {
+			size_t batchsize = std::min(static_cast<size_t>(m_localConfig.n_max_batch), crops.size() - i);
+			std::vector<cv::Mat> batch;
+			batch.reserve(batchsize);
+			for (size_t j = 0; j < batchsize; ++j)
+			{
+				batch.emplace_back(colorMat, crops[i + j]);
+			}
+			std::vector<tensor_rt::BatchResult> detects;
+			m_detector->detect(batch, detects);
+			
+			for (size_t j = 0; j < batchsize; ++j)
+			{
+				const auto& crop = crops[i + j];
+				//std::cout << "Crop " << (i + j) << ": " << crop << std::endl;
+
+				for (const tensor_rt::Result& bbox : detects[j])
+				{
+					tmpRegions.emplace_back(cv::Rect(bbox.rect.x + crop.x, bbox.rect.y + crop.y, bbox.rect.width, bbox.rect.height), m_classNames[bbox.id], bbox.prob);
+				}
+			}
+			i += batchsize;
+        }
+
+		nms3<CRegion>(tmpRegions, m_regions, 0.4f,
+			[](const CRegion& reg) { return reg.m_brect; },
+			[](const CRegion& reg) { return reg.m_confidence; },
+			[](const CRegion& reg) { return reg.m_type; },
+			0, 0.f);
+		//std::cout << "nms for " << tmpRegions.size() << " objects - result " << m_regions.size() << std::endl;
+    }
 }

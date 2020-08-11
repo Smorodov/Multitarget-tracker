@@ -81,14 +81,15 @@ public:
 	{
 		std::vector<DsImage> vec_ds_images;
 		vec_batch_result.clear();
-		vec_batch_result.resize(vec_image.size());
+		if (vec_batch_result.capacity() < vec_image.size())
+			vec_batch_result.reserve(vec_image.size());
 		for (const auto &img:vec_image)
 		{
 			vec_ds_images.emplace_back(img, _p_net->getInputH(), _p_net->getInputW());
 		}
 		cv::Mat trtInput = blobFromDsImages(vec_ds_images, _p_net->getInputH(),_p_net->getInputW());
 		_p_net->doInference(trtInput.data, vec_ds_images.size());
-		for (uint32_t i = 0; i < vec_ds_images.size(); ++i)
+		for (size_t i = 0; i < vec_ds_images.size(); ++i)
 		{
 			auto curImage = vec_ds_images.at(i);
 			auto binfo = _p_net->decodeDetections(i, curImage.getImageHeight(), curImage.getImageWidth());
@@ -96,25 +97,27 @@ public:
 				binfo,
 				_p_net->getNumClasses(),
 				_vec_net_type[_config.net_type]);
-			if (0 == remaining.size())
+
+			std::vector<tensor_rt::Result> vec_result;
+			if (!remaining.empty())
 			{
-				continue;
+				vec_result.reserve(remaining.size());
+				for (const auto &b : remaining)
+				{
+					const int x = cvRound(b.box.x1);
+					const int y = cvRound(b.box.y1);
+					const int w = cvRound(b.box.x2 - b.box.x1);
+					const int h = cvRound(b.box.y2 - b.box.y1);
+					vec_result.emplace_back(b.label, b.prob, cv::Rect(x, y, w, h));
+				}
 			}
-			std::vector<tensor_rt::Result> vec_result(0);
-			for (const auto &b : remaining)
-			{
-				tensor_rt::Result res;
-				res.id = b.label;
-				res.prob = b.prob;
-				const int x = b.box.x1;
-				const int y = b.box.y1;
-				const int w = b.box.x2 - b.box.x1;
-				const int h = b.box.y2 - b.box.y1;
-				res.rect = cv::Rect(x, y, w, h);
-				vec_result.push_back(res);
-			}
-			vec_batch_result[i] = vec_result;
+			vec_batch_result.emplace_back(vec_result);
 		}
+	}
+
+	cv::Size get_input_size() const
+	{
+		return cv::Size(_p_net->getInputH(), _p_net->getInputW());
 	}
 
 private:

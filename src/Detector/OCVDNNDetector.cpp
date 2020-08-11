@@ -244,12 +244,12 @@ void OCVDNNDetector::Detect(cv::UMat& colorFrame)
         }
 
         std::cout << "cropsCount = " << cropsCount << std::endl;
-        if (cropsCount > 1)
-            nms3<CRegion>(tmpRegions, m_regions, m_nmsThreshold,
-                          [](const CRegion& reg) -> cv::Rect { return reg.m_brect; },
-            [](const CRegion& reg) -> float { return reg.m_confidence; },
-            [](const CRegion& reg) -> std::string { return reg.m_type; },
-            0, 0.f);
+		if (cropsCount > 1)
+			nms3<CRegion>(tmpRegions, m_regions, m_nmsThreshold,
+				[](const CRegion& reg) { return reg.m_brect; },
+				[](const CRegion& reg) { return reg.m_confidence; },
+				[](const CRegion& reg) { return reg.m_type; },
+				0, 0.f);
     }
 }
 

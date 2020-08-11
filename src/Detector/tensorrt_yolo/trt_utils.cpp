@@ -881,7 +881,7 @@ nvinfer1::ILayer* netAddUpsample(int layerIdx, std::map<std::string, std::string
     {
         for (int j = 0; j < stride * w; ++j, ++idx)
         {
-            postWt[idx] = (j / stride == i) ? 1.0 : 0.0;
+            postWt[idx] = (j / stride == i) ? 1.0f : 0.0f;
         }
     }
     postMul.values = postWt;

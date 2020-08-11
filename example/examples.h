@@ -645,9 +645,10 @@ protected:
 		{
 			TinyYOLOv3 = 0,
 			YOLOv3,
-			YOLOv4
+            YOLOv4,
+            TinyYOLOv4
 		};
-		YOLOModels usedModel = YOLOModels::YOLOv4;
+        YOLOModels usedModel = YOLOModels::YOLOv4;
 		switch (usedModel)
 		{
 		case YOLOModels::TinyYOLOv3:
@@ -667,9 +668,15 @@ protected:
 			config.emplace("modelBinary", pathToModel + "yolov4.weights");
 			config.emplace("confidenceThreshold", "0.5");
 			break;
+
+        case YOLOModels::TinyYOLOv4:
+            config.emplace("modelConfiguration", pathToModel + "yolov4-tiny.cfg");
+            config.emplace("modelBinary", pathToModel + "yolov4-tiny.weights");
+            config.emplace("confidenceThreshold", "0.5");
+            break;
 		}
         config.emplace("classNames", pathToModel + "coco.names");
-        config.emplace("maxCropRatio", "-1");
+        config.emplace("maxCropRatio", "1");
 
         config.emplace("white_list", "person");
         config.emplace("white_list", "car");
@@ -836,6 +843,7 @@ protected:
             config.emplace("confidenceThreshold", "0.5");
             config.emplace("inference_precison", "FP32");
             config.emplace("net_type", "YOLOV3_TINY");
+			config.emplace("maxBatch", "4");
             break;
 
         case YOLOModels::YOLOv3:
@@ -844,14 +852,16 @@ protected:
             config.emplace("confidenceThreshold", "0.7");
             config.emplace("inference_precison", "FP32");
             config.emplace("net_type", "YOLOV3");
+			config.emplace("maxBatch", "2");
             break;
 
         case YOLOModels::YOLOv4:
             config.emplace("modelConfiguration", pathToModel + "yolov4.cfg");
             config.emplace("modelBinary", pathToModel + "yolov4.weights");
-            config.emplace("confidenceThreshold", "0.5");
+            config.emplace("confidenceThreshold", "0.8");
             config.emplace("inference_precison", "FP32");
             config.emplace("net_type", "YOLOV4");
+			config.emplace("maxBatch", "1");
             break;
 
         case YOLOModels::TinyYOLOv4:
@@ -860,11 +870,12 @@ protected:
             config.emplace("confidenceThreshold", "0.5");
             config.emplace("inference_precison", "FP32");
             config.emplace("net_type", "YOLOV4_TINY");
+			config.emplace("maxBatch", "4");
             break;
         }
 
 		config.emplace("classNames", pathToModel + "coco.names");
-		config.emplace("maxCropRatio", "-1");
+		config.emplace("maxCropRatio", "2");
 
 		config.emplace("white_list", "person");
 		config.emplace("white_list", "car");

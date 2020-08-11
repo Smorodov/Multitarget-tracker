@@ -95,6 +95,8 @@ Yolo::Yolo(const uint32_t batchSize, const NetworkInfo& networkInfo, const Infer
     m_InputBindingIndex = m_Engine->getBindingIndex(m_InputBlobName.c_str());
     assert(m_InputBindingIndex != -1);
     assert(m_BatchSize <= static_cast<uint32_t>(m_Engine->getMaxBatchSize()));
+	if (m_BatchSize != static_cast<uint32_t>(m_Engine->getMaxBatchSize()))
+		std::cout << "Warning: m_BatchSize (" << m_BatchSize << ") != m_Engine->getMaxBatchSize() (" << m_Engine->getMaxBatchSize() << ")" << std::endl;
     allocateBuffers();
     NV_CUDA_CHECK(cudaStreamCreate(&m_CudaStream));
     assert(verifyYoloEngine());
@@ -682,7 +684,7 @@ void Yolo::parseConfigBlocks()
             outputTensor.numClasses = std::stoul(block.at("classes"));
             if (m_ClassNames.empty())
             {
-                for (int i=0;i< outputTensor.numClasses;++i)
+                for (uint32_t i=0;i< outputTensor.numClasses;++i)
                 {
                     m_ClassNames.push_back(std::to_string(i));
                 }

@@ -183,10 +183,10 @@ void SSDMobileNetDetector::Detect(cv::UMat& colorFrame)
     }
 
     nms3<CRegion>(tmpRegions, m_regions, 0.4f,
-         [](const CRegion& reg) -> cv::Rect { return reg.m_brect; },
-    [](const CRegion& reg) -> float { return reg.m_confidence; },
-    [](const CRegion& reg) -> std::string { return reg.m_type; },
-    0, 0.f);
+		[](const CRegion& reg) { return reg.m_brect; },
+		[](const CRegion& reg) { return reg.m_confidence; },
+		[](const CRegion& reg) { return reg.m_type; },
+		0, 0.f);
 }
 
 ///

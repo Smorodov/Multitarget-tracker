@@ -62,7 +62,7 @@ public:
 private:
     static const int m_MaxLeakyLayers = 72;
     static const int m_ReorgStride = 2;
-    static constexpr float m_LeakyNegSlope = 0.1;
+    static constexpr float m_LeakyNegSlope = 0.1f;
     static const int m_NumBoxes = 5;
     static const int m_NumCoords = 4;
     static const int m_NumClasses = 80;

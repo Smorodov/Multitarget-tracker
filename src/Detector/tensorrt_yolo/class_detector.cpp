@@ -37,4 +37,9 @@ namespace tensor_rt
 	{
 		_impl->_detector.detect(mat_image, vec_batch_result);
 	}
+
+	cv::Size Detector::get_input_size() const
+	{
+		return _impl->_detector.get_input_size();
+	}
 }
