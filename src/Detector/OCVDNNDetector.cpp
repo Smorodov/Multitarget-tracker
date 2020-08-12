@@ -6,7 +6,7 @@
 /// \brief OCVDNNDetector::OCVDNNDetector
 /// \param gray
 ///
-OCVDNNDetector::OCVDNNDetector(cv::UMat& colorFrame)
+OCVDNNDetector::OCVDNNDetector(const cv::UMat& colorFrame)
     : BaseDetector(colorFrame)
 
 {
@@ -183,73 +183,34 @@ bool OCVDNNDetector::Init(const config_t& config)
 /// \brief OCVDNNDetector::Detect
 /// \param gray
 ///
-void OCVDNNDetector::Detect(cv::UMat& colorFrame)
+void OCVDNNDetector::Detect(const cv::UMat& colorFrame)
 {
     m_regions.clear();
 
-    cv::Mat colorMat = colorFrame.getMat(cv::ACCESS_READ);
-
     if (m_maxCropRatio <= 0)
     {
-        DetectInCrop(colorMat, cv::Rect(0, 0, colorMat.cols, colorMat.rows), m_regions);
+        DetectInCrop(colorFrame, cv::Rect(0, 0, colorFrame.cols, colorFrame.rows), m_regions);
     }
     else
     {
-        int cropHeight = cvRound(m_maxCropRatio * m_inHeight);
-        int cropWidth = cvRound(m_maxCropRatio * m_inWidth);
+		std::vector<cv::Rect> crops = GetCrops(m_maxCropRatio, cv::Size(m_inWidth, m_inHeight), colorFrame.size());
+		regions_t tmpRegions;
+		for (size_t i = 0; i < crops.size(); ++i)
+		{
+			const auto& crop = crops[i];
+			//std::cout << "Crop " << i << ": " << crop << std::endl;
+			DetectInCrop(colorFrame, crop, tmpRegions);
+		}
 
-        if (colorFrame.cols / (float)colorFrame.rows > m_WHRatio)
-        {
-            if (cropHeight >= colorFrame.rows)
-                cropHeight = colorFrame.rows;
-
-            cropWidth = cvRound(cropHeight * m_WHRatio);
-        }
-        else
-        {
-            if (cropWidth >= colorFrame.cols)
-                cropWidth = colorFrame.cols;
-
-            cropHeight = cvRound(colorFrame.cols / m_WHRatio);
-        }
-
-        cv::Rect crop(0, 0, cropWidth, cropHeight);
-        regions_t tmpRegions;
-        size_t cropsCount = 0;
-        for (; crop.y < colorMat.rows; crop.y += crop.height / 2)
-        {
-            bool needBreakY = false;
-            if (crop.y + crop.height >= colorMat.rows)
-            {
-                crop.y = colorMat.rows - crop.height;
-                needBreakY = true;
-            }
-            for (crop.x = 0; crop.x < colorMat.cols; crop.x += crop.width / 2)
-            {
-                bool needBreakX = false;
-                if (crop.x + crop.width >= colorMat.cols)
-                {
-                    crop.x = colorMat.cols - crop.width;
-                    needBreakX = true;
-                }
-
-                DetectInCrop(colorMat, crop, tmpRegions);
-                ++cropsCount;
-
-                if (needBreakX)
-                    break;
-            }
-            if (needBreakY)
-                break;
-        }
-
-        std::cout << "cropsCount = " << cropsCount << std::endl;
-        if (cropsCount > 1)
-            nms3<CRegion>(tmpRegions, m_regions, m_nmsThreshold,
-                          [](const CRegion& reg) -> cv::Rect { return reg.m_brect; },
-            [](const CRegion& reg) -> float { return reg.m_confidence; },
-            [](const CRegion& reg) -> std::string { return reg.m_type; },
-            0, 0.f);
+		if (crops.size() > 1)
+		{
+			nms3<CRegion>(tmpRegions, m_regions, m_nmsThreshold,
+				[](const CRegion& reg) { return reg.m_brect; },
+				[](const CRegion& reg) { return reg.m_confidence; },
+				[](const CRegion& reg) { return reg.m_type; },
+				0, 0.f);
+			//std::cout << "nms for " << tmpRegions.size() << " objects - result " << m_regions.size() << std::endl;
+		}
     }
 }
 
@@ -259,10 +220,10 @@ void OCVDNNDetector::Detect(cv::UMat& colorFrame)
 /// \param crop
 /// \param tmpRegions
 ///
-void OCVDNNDetector::DetectInCrop(cv::Mat colorFrame, const cv::Rect& crop, regions_t& tmpRegions)
+void OCVDNNDetector::DetectInCrop(const cv::UMat& colorFrame, const cv::Rect& crop, regions_t& tmpRegions)
 {
     //Convert Mat to batch of images
-    cv::dnn::blobFromImage(cv::Mat(colorFrame, crop), m_inputBlob, 1.0, cv::Size(m_inWidth, m_inHeight), m_meanVal, m_swapRB, false, CV_8U);
+    cv::dnn::blobFromImage(cv::UMat(colorFrame, crop), m_inputBlob, 1.0, cv::Size(m_inWidth, m_inHeight), m_meanVal, m_swapRB, false, CV_8U);
 
     m_net.setInput(m_inputBlob, "", m_inScaleFactor, m_meanVal); //set the network input
 

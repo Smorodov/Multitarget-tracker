@@ -9,12 +9,12 @@
 class YoloTensorRTDetector : public BaseDetector
 {
 public:
-	YoloTensorRTDetector(cv::UMat& colorFrame);
+	YoloTensorRTDetector(const cv::UMat& colorFrame);
 	~YoloTensorRTDetector(void);
 
 	bool Init(const config_t& config);
 
-	void Detect(cv::UMat& colorFrame);
+	void Detect(const cv::UMat& colorFrame);
 
 	bool CanGrayProcessing() const
 	{
@@ -24,7 +24,7 @@ public:
 private:
 	std::unique_ptr<tensor_rt::Detector> m_detector;
 
-    float m_confidenceThreshold = 0.5f;
     float m_maxCropRatio = 3.0f;
 	std::vector<std::string> m_classNames;
+	tensor_rt::Config m_localConfig;
 };

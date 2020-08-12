@@ -92,15 +92,15 @@ BBox convertBBoxNetRes(const float& bx, const float& by, const float& bw, const 
     b.y1 = y - bh / 2;
     b.y2 = y + bh / 2;
 
-    b.x1 = clamp(b.x1, 0, netW);
-    b.x2 = clamp(b.x2, 0, netW);
-    b.y1 = clamp(b.y1, 0, netH);
-    b.y2 = clamp(b.y2, 0, netH);
+    b.x1 = clamp(b.x1, 0.f, static_cast<float>(netW));
+    b.x2 = clamp(b.x2, 0.f, static_cast<float>(netW));
+    b.y1 = clamp(b.y1, 0.f, static_cast<float>(netH));
+    b.y2 = clamp(b.y2, 0.f, static_cast<float>(netH));
 
     return b;
 }
 
-void convertBBoxImgRes(const float scalingFactor,
+void convertBBoxImgRes(const float /*scalingFactor*/,
 	//const float& xOffset,
 //	const float& yOffset,
 	const uint32_t &input_w_,
@@ -365,42 +365,44 @@ nvinfer1::ICudaEngine* loadTRTEngine(const std::string planFilePath, PluginFacto
 //}
 std::vector<float> loadWeights(const std::string weightsFilePath, const std::string& /*networkType*/)
 {
-    assert(fileExists(weightsFilePath));
-    std::cout << "Loading pre-trained weights..." << std::endl;
-    std::ifstream file(weightsFilePath, std::ios_base::binary);
-	assert(file.good());
-	std::string line;
-	file.ignore(4);
-	char buf[2];
-	file.read(buf, 1);
-	if ((int)(unsigned char)buf[0] == 1)
-	{
-		file.ignore(11);
-	}
-	else if ((int)(unsigned char)buf[0] == 2)
-	{
-		file.ignore(15);
-	}
-    else
-    {
-        std::cout << "Invalid network type" << std::endl;
-        assert(0);
-    }
+	std::vector<float> weights;
 
-    std::vector<float> weights;
-    char* floatWeight = new char[4];
-    while (!file.eof())
-    {
-        file.read(floatWeight, 4);
-        assert(file.gcount() == 4);
-        weights.push_back(*reinterpret_cast<float*>(floatWeight));
-        if (file.peek() == std::istream::traits_type::eof()) break;
-    }
-    std::cout << "Loading complete!" << std::endl;
-    delete[] floatWeight;
+	assert(fileExists(weightsFilePath));
+	std::cout << "Loading pre-trained weights ( " << weightsFilePath << " )..." << std::endl;
+	std::ifstream file(weightsFilePath, std::ios_base::binary);
+	if (file.good())
+	{
+		std::string line;
+		file.ignore(4);
+		char buf[2];
+		file.read(buf, 1);
+		if ((int)(unsigned char)buf[0] == 1)
+		{
+			file.ignore(11);
+		}
+		else if ((int)(unsigned char)buf[0] == 2)
+		{
+			file.ignore(15);
+		}
+		else
+		{
+			std::cout << "Invalid network type" << std::endl;
+			assert(0);
+		}
 
-   // std::cout << "Total Number of weights read : " << weights.size() << std::endl;
-    return weights;
+		char floatWeight[4] = { 0 };
+		while (!file.eof())
+		{
+			file.read(floatWeight, 4);
+			assert(file.gcount() == 4);
+			weights.push_back(*reinterpret_cast<float*>(floatWeight));
+			if (file.peek() == std::istream::traits_type::eof())
+				break;
+		}
+		std::cout << "Loading complete!" << std::endl;
+	}
+	// std::cout << "Total Number of weights read : " << weights.size() << std::endl;
+	return weights;
 }
 
 std::string dimsToString(const nvinfer1::Dims d)
@@ -594,7 +596,7 @@ nvinfer1::ILayer* net_conv_bn_mish(int layerIdx,
 	for (int i = 0; i < filters; ++i)
 	{
 		// 1e-05 for numerical stability
-		bnRunningVar.push_back(sqrt(weights[weightPtr] + 1.0e-5));
+		bnRunningVar.push_back(sqrt(weights[weightPtr] + 1.0e-5f));
 		weightPtr++;
 	}
 	// load Conv layer weights (GKCRS)
@@ -742,7 +744,7 @@ nvinfer1::ILayer* netAddConvBNLeaky(int layerIdx, std::map<std::string, std::str
     for (int i = 0; i < filters; ++i)
     {
         // 1e-05 for numerical stability
-        bnRunningVar.push_back(sqrt(weights[weightPtr] + 1.0e-5));
+        bnRunningVar.push_back(sqrt(weights[weightPtr] + 1.0e-5f));
         weightPtr++;
     }
     // load Conv layer weights (GKCRS)
@@ -804,7 +806,7 @@ nvinfer1::ILayer* netAddConvBNLeaky(int layerIdx, std::map<std::string, std::str
     /***** ACTIVATION LAYER *****/
     /****************************/
 	auto leaky = network->addActivation(*bn->getOutput(0),nvinfer1::ActivationType::kLEAKY_RELU);
-	leaky->setAlpha(0.1);
+	leaky->setAlpha(0.1f);
 	/*nvinfer1::IPlugin* leakyRELU = nvinfer1::plugin::createPReLUPlugin(0.1);
 	assert(leakyRELU != nullptr);
 	nvinfer1::ITensor* bnOutput = bn->getOutput(0);
@@ -852,7 +854,7 @@ nvinfer1::ILayer* netAddUpsample(int layerIdx, std::map<std::string, std::string
         {
             for (int j = 0; j < w; ++j, ++idx)
             {
-                preWt[idx] = (i == j) ? 1.0 : 0.0;
+                preWt[idx] = (i == j) ? 1.0f : 0.0f;
             }
         }
     }
@@ -881,7 +883,7 @@ nvinfer1::ILayer* netAddUpsample(int layerIdx, std::map<std::string, std::string
     {
         for (int j = 0; j < stride * w; ++j, ++idx)
         {
-            postWt[idx] = (j / stride == i) ? 1.0 : 0.0;
+            postWt[idx] = (j / stride == i) ? 1.0f : 0.0f;
         }
     }
     postMul.values = postWt;

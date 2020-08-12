@@ -75,20 +75,24 @@ public:
 		return *this;
 	}
 
-    void log(nvinfer1::ILogger::Severity severity, const char* /*msg*/) override
+    void log(nvinfer1::ILogger::Severity severity, const char* msg) override
     {
         // suppress info-level messages
         if (severity == Severity::kINFO) return;
 
         switch (severity)
         {
-        case Severity::kINTERNAL_ERROR: std::cerr << "INTERNAL_ERROR: "; break;
-        case Severity::kERROR: std::cerr << "ERROR: "; break;
+        case Severity::kINTERNAL_ERROR:
+			std::cerr << "INTERNAL_ERROR: ";
+			break;
+        case Severity::kERROR:
+			std::cerr << "ERROR: ";
+			break;
         case Severity::kWARNING: std::cerr << "WARNING: "; break;
         case Severity::kINFO: std::cerr << "INFO: "; break;
        // default: std::cerr << "UNKNOWN: "; break;
         }
-      //  std::cerr << msg << std::endl;
+        //std::cerr << msg << std::endl;
     }
 };
 

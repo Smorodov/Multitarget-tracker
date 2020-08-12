@@ -8,12 +8,12 @@
 class FaceDetector : public BaseDetector
 {
 public:
-    FaceDetector(cv::UMat& gray);
+    FaceDetector(const cv::UMat& gray);
     ~FaceDetector(void);
 
     bool Init(const config_t& config);
 
-    void Detect(cv::UMat& gray);
+    void Detect(const cv::UMat& gray);
 
 	bool CanGrayProcessing() const
 	{

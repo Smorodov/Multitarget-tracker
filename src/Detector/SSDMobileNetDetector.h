@@ -15,12 +15,12 @@
 class SSDMobileNetDetector : public BaseDetector
 {
 public:
-    SSDMobileNetDetector(cv::UMat& colorFrame);
+    SSDMobileNetDetector(const cv::UMat& colorFrame);
     ~SSDMobileNetDetector(void);
 
     bool Init(const config_t& config);
 
-    void Detect(cv::UMat& colorFrame);
+    void Detect(const cv::UMat& colorFrame);
 
 	bool CanGrayProcessing() const
 	{
@@ -30,10 +30,12 @@ public:
 private:
     cv::dnn::Net m_net;
 
-    void DetectInCrop(cv::Mat colorFrame, const cv::Rect& crop, regions_t& tmpRegions);
+    void DetectInCrop(const cv::UMat& colorFrame, const cv::Rect& crop, regions_t& tmpRegions);
 
-    static const int InWidth = 300;
-    static const int InHeight = 300;
+	cv::UMat m_inputBlob;
+
+    static const int m_inWidth = 300;
+    static const int m_inHeight = 300;
 
     float m_WHRatio = 1.f;
     float m_inScaleFactor = 0.007843f;

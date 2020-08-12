@@ -13,7 +13,7 @@ public:
     /// \brief BaseDetector
     /// \param frame
     ///
-    BaseDetector(cv::UMat& frame)
+    BaseDetector(const cv::UMat& frame)
     {
         m_minObjectSize.width = std::max(5, frame.cols / 100);
         m_minObjectSize.height = m_minObjectSize.width;
@@ -35,7 +35,7 @@ public:
     /// \brief Detect
     /// \param frame
     ///
-    virtual void Detect(cv::UMat& frame) = 0;
+    virtual void Detect(const cv::UMat& frame) = 0;
 
 	///
 	/// \brief ResetModel
@@ -73,7 +73,7 @@ public:
     /// \brief CalcMotionMap
     /// \param frame
     ///
-    virtual void CalcMotionMap(cv::Mat frame)
+    virtual void CalcMotionMap(cv::Mat& frame)
     {
         if (m_motionMap.size() != frame.size())
         {
@@ -101,7 +101,7 @@ public:
         for (int y = 0; y < frame.rows; ++y)
         {
             uchar* imgPtr = frame.ptr(y);
-            float* moPtr = reinterpret_cast<float*>(m_motionMap.ptr(y));
+            const float* moPtr = reinterpret_cast<float*>(m_motionMap.ptr(y));
             for (int x = 0; x < frame.cols; ++x)
             {
                 for (int ci = chans - 1; ci < chans; ++ci)
@@ -120,6 +120,57 @@ protected:
     cv::Size m_minObjectSize;
 
     cv::Mat m_motionMap;
+
+    std::vector<cv::Rect> GetCrops(float maxCropRatio, cv::Size netSize, cv::Size imgSize) const
+    {
+        std::vector<cv::Rect> crops;
+
+        const float whRatio = static_cast<float>(netSize.width) / static_cast<float>(netSize.height);
+        int cropHeight = cvRound(maxCropRatio * netSize.height);
+        int cropWidth = cvRound(maxCropRatio * netSize.width);
+
+        if (imgSize.width / (float)imgSize.height > whRatio)
+        {
+            if (cropHeight >= imgSize.height)
+                cropHeight = imgSize.height;
+            cropWidth = cvRound(cropHeight * whRatio);
+        }
+        else
+        {
+            if (cropWidth >= imgSize.width)
+                cropWidth = imgSize.width;
+            cropHeight = cvRound(cropWidth / whRatio);
+        }
+
+        //std::cout << "Frame size " << imgSize << ", crop size = " << cv::Size(cropWidth, cropHeight) << ", ratio = " << maxCropRatio << std::endl;
+
+        const int stepX = 3 * cropWidth / 4;
+        const int stepY = 3 * cropHeight / 4;
+        for (int y = 0; y < imgSize.height; y += stepY)
+        {
+            bool needBreakY = false;
+            if (y + cropHeight >= imgSize.height)
+            {
+                y = imgSize.height - cropHeight;
+                needBreakY = true;
+            }
+            for (int x = 0; x < imgSize.width; x += stepX)
+            {
+                bool needBreakX = false;
+                if (x + cropWidth >= imgSize.width)
+                {
+                    x = imgSize.width - cropWidth;
+                    needBreakX = true;
+                }
+                crops.emplace_back(x, y, cropWidth, cropHeight);
+                if (needBreakX)
+                    break;
+            }
+            if (needBreakY)
+                break;
+        }
+        return crops;
+    };
 };
 
 

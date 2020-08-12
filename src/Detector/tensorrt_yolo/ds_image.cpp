@@ -117,9 +117,9 @@ DsImage::DsImage(const std::string& path, const int& inputH, const int& inputW) 
     m_Width = m_OrigImage.cols;
 
     // resize the DsImage with scale
-    float dim = std::max(m_Height, m_Width);
-    int resizeH = ((m_Height / dim) * inputH);
-    int resizeW = ((m_Width / dim) * inputW);
+    int dim = std::max(m_Height, m_Width);
+    int resizeH = (m_Height * inputH) / dim;
+    int resizeW = (m_Width * inputW) / dim;
     m_ScalingFactor = static_cast<float>(resizeH) / static_cast<float>(m_Height);
 
     // Additional checks for images with non even dims
@@ -146,10 +146,10 @@ DsImage::DsImage(const std::string& path, const int& inputH, const int& inputW) 
 void DsImage::addBBox(BBoxInfo box, const std::string& labelName)
 {
     m_Bboxes.push_back(box);
-    const int x = box.box.x1;
-    const int y = box.box.y1;
-    const int w = box.box.x2 - box.box.x1;
-    const int h = box.box.y2 - box.box.y1;
+    const int x = cvRound(box.box.x1);
+    const int y = cvRound(box.box.y1);
+    const int w = cvRound(box.box.x2 - box.box.x1);
+    const int h = cvRound(box.box.y2 - box.box.y1);
     const cv::Scalar color
         = cv::Scalar(m_RNG.uniform(0, 255), m_RNG.uniform(0, 255), m_RNG.uniform(0, 255));
 

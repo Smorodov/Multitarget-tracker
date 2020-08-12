@@ -16,12 +16,12 @@
 class YoloOCVDetector : public BaseDetector
 {
 public:
-    YoloOCVDetector(cv::UMat& colorFrame);
+    YoloOCVDetector(const cv::UMat& colorFrame);
     ~YoloOCVDetector(void);
 
     bool Init(const config_t& config);
 
-    void Detect(cv::UMat& colorFrame);
+    void Detect(const cv::UMat& colorFrame);
 
 	bool CanGrayProcessing() const
 	{
@@ -31,10 +31,12 @@ public:
 private:
     cv::dnn::Net m_net;
 
-    void DetectInCrop(cv::Mat colorFrame, const cv::Rect& crop, regions_t& tmpRegions);
+    void DetectInCrop(const cv::UMat& colorFrame, const cv::Rect& crop, regions_t& tmpRegions);
 
-    static const int InWidth = 416;
-    static const int InHeight = 416;
+	cv::UMat m_inputBlob;
+
+    int m_inWidth = 416;
+    int m_inHeight = 416;
 
     float m_WHRatio = 1.f;
     float m_inScaleFactor = 0.003921f;

@@ -14,14 +14,14 @@ public:
 
     bool Init(const config_t& config);
 
-    void Detect(cv::UMat& gray);
+    void Detect(const cv::UMat& gray);
 
 	bool CanGrayProcessing() const
 	{
 		return true;
 	}
 
-	void CalcMotionMap(cv::Mat frame);
+	void CalcMotionMap(cv::Mat& frame);
 
 	void ResetModel(const cv::UMat& img, const cv::Rect& roiRect);
 

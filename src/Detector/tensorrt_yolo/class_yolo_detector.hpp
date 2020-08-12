@@ -76,32 +76,48 @@ public:
 		this->build_net();
 	}
 
-	void detect(const cv::Mat		&mat_image,
-				std::vector<tensor_rt::Result> &vec_result)
+	void detect(const std::vector<cv::Mat>	&vec_image,
+				std::vector<tensor_rt::BatchResult> &vec_batch_result)
 	{
 		std::vector<DsImage> vec_ds_images;
-		vec_result.clear();
-		vec_ds_images.emplace_back(mat_image, _p_net->getInputH(), _p_net->getInputW());
+		vec_batch_result.clear();
+		if (vec_batch_result.capacity() < vec_image.size())
+			vec_batch_result.reserve(vec_image.size());
+		for (const auto &img:vec_image)
+		{
+			vec_ds_images.emplace_back(img, _p_net->getInputH(), _p_net->getInputW());
+		}
 		cv::Mat trtInput = blobFromDsImages(vec_ds_images, _p_net->getInputH(),_p_net->getInputW());
 		_p_net->doInference(trtInput.data, vec_ds_images.size());
-		for (uint32_t i = 0; i < vec_ds_images.size(); ++i)
+		for (size_t i = 0; i < vec_ds_images.size(); ++i)
 		{
 			auto curImage = vec_ds_images.at(i);
 			auto binfo = _p_net->decodeDetections(i, curImage.getImageHeight(), curImage.getImageWidth());
-			auto remaining = nmsAllClasses(_p_net->getNMSThresh(), binfo, _p_net->getNumClasses(), _vec_net_type[_config.net_type]);
-			for (const auto &b : remaining)
+			auto remaining = nmsAllClasses(_p_net->getNMSThresh(),
+				binfo,
+				_p_net->getNumClasses(),
+				_vec_net_type[_config.net_type]);
+
+			std::vector<tensor_rt::Result> vec_result;
+			if (!remaining.empty())
 			{
-				tensor_rt::Result res;
-				res.id = b.label;
-				res.prob = b.prob;
-				const int x = b.box.x1;
-				const int y = b.box.y1;
-				const int w = b.box.x2 - b.box.x1;
-				const int h = b.box.y2 - b.box.y1;
-				res.rect = cv::Rect(x, y, w, h);
-				vec_result.push_back(res);
+				vec_result.reserve(remaining.size());
+				for (const auto &b : remaining)
+				{
+					const int x = cvRound(b.box.x1);
+					const int y = cvRound(b.box.y1);
+					const int w = cvRound(b.box.x2 - b.box.x1);
+					const int h = cvRound(b.box.y2 - b.box.y1);
+					vec_result.emplace_back(b.label, b.prob, cv::Rect(x, y, w, h));
+				}
 			}
+			vec_batch_result.emplace_back(vec_result);
 		}
+	}
+
+	cv::Size get_input_size() const
+	{
+		return cv::Size(_p_net->getInputH(), _p_net->getInputW());
 	}
 
 private:
@@ -143,15 +159,15 @@ private:
 	{
 		if ((_config.net_type == tensor_rt::YOLOV2) || (_config.net_type == tensor_rt::YOLOV2_TINY))
 		{
-			_p_net = std::unique_ptr<Yolo>{ new YoloV2(1, _yolo_info, _infer_param) };
+			_p_net = std::unique_ptr<Yolo>{ new YoloV2(_config.n_max_batch, _yolo_info, _infer_param) };
 		}
 		else if ((_config.net_type == tensor_rt::YOLOV3) || (_config.net_type == tensor_rt::YOLOV3_TINY))
 		{
-			_p_net = std::unique_ptr<Yolo>{ new YoloV3(1, _yolo_info, _infer_param) };
+			_p_net = std::unique_ptr<Yolo>{ new YoloV3(_config.n_max_batch, _yolo_info, _infer_param) };
 		}
 		else if ((_config.net_type == tensor_rt::YOLOV4) || (_config.net_type == tensor_rt::YOLOV4_TINY))
 		{
-			_p_net = std::unique_ptr<Yolo>{ new YoloV4(1,_yolo_info,_infer_param) };
+			_p_net = std::unique_ptr<Yolo>{ new YoloV4(_config.n_max_batch,_yolo_info,_infer_param) };
 		}
 		else
 		{
@@ -163,7 +179,6 @@ private:
 	tensor_rt::Config _config;
 	NetworkInfo _yolo_info;
 	InferParams _infer_param;
-
 	std::vector<std::string> _vec_net_type{ "yolov2","yolov3","yolov2-tiny","yolov3-tiny","yolov4","yolov4-tiny" };
 	std::vector<std::string> _vec_precision{ "kINT8","kHALF","kFLOAT" };
 	std::unique_ptr<Yolo> _p_net = nullptr;

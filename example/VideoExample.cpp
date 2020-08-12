@@ -101,7 +101,6 @@ void VideoExample::SyncProcess()
         regions_t regions;
         Detection(frame, regions);
         Tracking(frame, regions);
-
         int64 t2 = cv::getTickCount();
 
         allTime += t2 - t1;

@@ -12,7 +12,14 @@ namespace tensor_rt
 		int		 id = -1;
 		float	 prob = 0.f;
 		cv::Rect rect;
+
+		Result(int id_, float prob_, cv::Rect r)
+			: id(id_), prob(prob_), rect(r)
+		{
+		}
 	};
+	
+	typedef std::vector<Result> BatchResult;
 
 	enum ModelType
 	{
@@ -37,7 +44,7 @@ namespace tensor_rt
 
 		std::string file_model_weights = "configs/yolov3.weights";
 
-		float detect_thresh = 0.9;
+		float detect_thresh = 0.9f;
 
 		ModelType	net_type = YOLOV3;
 
@@ -46,6 +53,8 @@ namespace tensor_rt
 		int	gpu_id = 0;
 
 		std::string calibration_image_list_file_txt = "configs/calibration_images.txt";
+
+		int n_max_batch = 4;
 	};
 
 	class API Detector
@@ -57,7 +66,9 @@ namespace tensor_rt
 
 		void init(const Config &config);
 
-		void detect(const cv::Mat &mat_image, std::vector<Result> &vec_result);
+		void detect(const std::vector<cv::Mat> &mat_image, std::vector<BatchResult> &vec_batch_result);
+
+		cv::Size get_input_size() const;
 
 	private:
 

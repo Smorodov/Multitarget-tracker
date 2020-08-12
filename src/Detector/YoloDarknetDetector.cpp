@@ -6,9 +6,7 @@
 /// \brief YoloDarknetDetector::YoloDarknetDetector
 /// \param gray
 ///
-YoloDarknetDetector::YoloDarknetDetector(
-    cv::UMat& colorFrame
-	)
+YoloDarknetDetector::YoloDarknetDetector(const cv::UMat& colorFrame)
     : BaseDetector(colorFrame)
 {
     m_classNames = { "background",
@@ -32,14 +30,20 @@ YoloDarknetDetector::~YoloDarknetDetector(void)
 ///
 bool YoloDarknetDetector::Init(const config_t& config)
 {
+	m_detector.reset();
+
     auto modelConfiguration = config.find("modelConfiguration");
     auto modelBinary = config.find("modelBinary");
-    if (modelConfiguration != config.end() && modelBinary != config.end())
-    {
-        m_detector = std::make_unique<Detector>(modelConfiguration->second, modelBinary->second);
-		m_detector->nms = 0.2f;
-		m_WHRatio = static_cast<float>(m_detector->get_net_width()) / static_cast<float>(m_detector->get_net_height());
-    }
+	if (modelConfiguration == config.end() || modelBinary == config.end())
+		return false;
+
+	int currGPUID = 0;
+	auto gpuId = config.find("gpuId");
+	if (gpuId != config.end())
+		currGPUID = std::max(0, std::stoi(gpuId->second));
+
+	m_detector = std::make_unique<Detector>(modelConfiguration->second, modelBinary->second, currGPUID);
+	m_detector->nms = 0.2f;
 
     auto classNames = config.find("classNames");
     if (classNames != config.end())
@@ -59,22 +63,16 @@ bool YoloDarknetDetector::Init(const config_t& config)
 
     auto confidenceThreshold = config.find("confidenceThreshold");
     if (confidenceThreshold != config.end())
-    {
         m_confidenceThreshold = std::stof(confidenceThreshold->second);
-    }
 
     auto maxCropRatio = config.find("maxCropRatio");
     if (maxCropRatio != config.end())
-    {
         m_maxCropRatio = std::stof(maxCropRatio->second);
-    }
 
 	m_classesWhiteList.clear();
 	auto whiteRange = config.equal_range("white_list");
 	for (auto it = whiteRange.first; it != whiteRange.second; ++it)
-	{
 		m_classesWhiteList.insert(it->second);
-	}
 
 	bool correct = m_detector.get() != nullptr;
     return correct;
@@ -84,7 +82,7 @@ bool YoloDarknetDetector::Init(const config_t& config)
 /// \brief YoloDarknetDetector::Detect
 /// \param gray
 ///
-void YoloDarknetDetector::Detect(cv::UMat& colorFrame)
+void YoloDarknetDetector::Detect(const cv::UMat& colorFrame)
 {
 	m_regions.clear();
 	cv::Mat colorMat = colorFrame.getMat(cv::ACCESS_READ);
@@ -95,66 +93,29 @@ void YoloDarknetDetector::Detect(cv::UMat& colorFrame)
 	}
 	else
 	{
-		int cropHeight = cvRound(m_maxCropRatio * m_detector->get_net_height());
-		int cropWidth = cvRound(m_maxCropRatio * m_detector->get_net_width());
+        std::vector<cv::Rect> crops = GetCrops(m_maxCropRatio, cv::Size(m_detector->get_net_width(), m_detector->get_net_height()), colorMat.size());
+        regions_t tmpRegions;
+        for (size_t i = 0; i < crops.size(); ++i)
+        {
+            const auto& crop = crops[i];
+            //std::cout << "Crop " << i << ": " << crop << std::endl;
+            DetectInCrop(colorMat, crop, tmpRegions);
+        }
 
-		if (colorFrame.cols / (float)colorFrame.rows > m_WHRatio)
+		//det_num_pair* network_predict_batch(network *net, image im, int batch_size, int w, int h, float thresh, float hier, int *map, int relative, int letter);
+		//LIB_API void free_batch_detections(det_num_pair *det_num_pairs, int n);
+
+		if (crops.size() > 1)
 		{
-            if (cropHeight >= colorFrame.rows)
-				cropHeight = colorFrame.rows;
-
-			cropWidth = cvRound(cropHeight * m_WHRatio);
+			nms3<CRegion>(tmpRegions, m_regions, 0.4f,
+				[](const CRegion& reg) { return reg.m_brect; },
+				[](const CRegion& reg) { return reg.m_confidence; },
+				[](const CRegion& reg) { return reg.m_type; },
+				0, 0.f);
+			//std::cout << "nms for " << tmpRegions.size() << " objects - result " << m_regions.size() << std::endl;
 		}
-		else
-		{
-            if (cropWidth >= colorFrame.cols)
-				cropWidth = colorFrame.cols;
-
-			cropHeight = cvRound(colorFrame.cols / m_WHRatio);
-		}
-
-		//std::cout << "Frame size " << colorFrame.size() << ", crop size = " << cv::Size(cropWidth, cropHeight) << ", ratio = " << m_maxCropRatio << std::endl;
-
-		cv::Rect crop(0, 0, cropWidth, cropHeight);
-		regions_t tmpRegions;
-		size_t cropsCount = 0;
-		int stepX = 3 * crop.width / 4;
-		int stepY = 3 * crop.height / 4;
-		for (; crop.y < colorMat.rows; crop.y += stepY)
-		{
-			bool needBreakY = false;
-			if (crop.y + crop.height >= colorMat.rows)
-			{
-				crop.y = colorMat.rows - crop.height;
-				needBreakY = true;
-			}
-			for (crop.x = 0; crop.x < colorMat.cols; crop.x += stepX)
-			{
-				bool needBreakX = false;
-				if (crop.x + crop.width >= colorMat.cols)
-				{
-					crop.x = colorMat.cols - crop.width;
-					needBreakX = true;
-				}
-
-				std::cout << "Crop " << cropsCount++ << ": " << crop << std::endl;
-				DetectInCrop(colorMat, crop, tmpRegions);
-
-				if (needBreakX)
-					break;
-			}
-			if (needBreakY)
-				break;
-		}
-
-		//std::cout << "nms for " << tmpRegions.size() << " objects" << std::endl;
-		nms3<CRegion>(tmpRegions, m_regions, 0.4f,
-			[](const CRegion& reg) -> cv::Rect { return reg.m_brect; },
-			[](const CRegion& reg) -> float { return reg.m_confidence; },
-			[](const CRegion& reg) -> std::string { return reg.m_type; },
-			0, 0.f);
 	}
-	//std::cout << "Finally " << m_regions.size() << " objects" << std::endl;
+	//std::cout << "Finally " << m_regions.size() << " objects, " << colorMat.u->refcount << ", " << colorMat.u->urefcount << std::endl;
 }
 
 ///
@@ -163,7 +124,7 @@ void YoloDarknetDetector::Detect(cv::UMat& colorFrame)
 /// \param crop
 /// \param tmpRegions
 ///
-void YoloDarknetDetector::DetectInCrop(cv::Mat colorFrame, const cv::Rect& crop, regions_t& tmpRegions)
+void YoloDarknetDetector::DetectInCrop(const cv::Mat& colorFrame, const cv::Rect& crop, regions_t& tmpRegions)
 {
 	cv::Size netSize(m_detector->get_net_width(), m_detector->get_net_height());
 
@@ -175,13 +136,19 @@ void YoloDarknetDetector::DetectInCrop(cv::Mat colorFrame, const cv::Rect& crop,
 	image_t detImage;
 	FillImg(detImage);
 
-	std::vector<bbox_t> detects = m_detector->detect_resized(detImage, crop.width, crop.height, m_confidenceThreshold, false);
+	std::vector<bbox_t> detects = m_detector->detect(detImage, m_confidenceThreshold, false);
+
+	float wk = (float)crop.width / detImage.w;
+	float hk = (float)crop.height / detImage.h;
+
 	for (const bbox_t& bbox : detects)
 	{
 		if (m_classesWhiteList.empty() || m_classesWhiteList.find(m_classNames[bbox.obj_id]) != std::end(m_classesWhiteList))
-			tmpRegions.emplace_back(cv::Rect(bbox.x + crop.x, bbox.y + crop.y, bbox.w, bbox.h), m_classNames[bbox.obj_id], bbox.prob);
+			tmpRegions.emplace_back(cv::Rect(cvRound(wk * bbox.x) + crop.x, cvRound(hk * bbox.y) + crop.y, cvRound(wk * bbox.w), cvRound(hk * bbox.h)), m_classNames[bbox.obj_id], bbox.prob);
 	}
-	std::cout << "Detected " << detects.size() << " objects" << std::endl;
+	if (crop.width == netSize.width && crop.height == netSize.height)
+		m_tmpImg.release();
+	//std::cout << "Detected " << detects.size() << " objects" << std::endl;
 }
 
 ///
@@ -190,7 +157,7 @@ void YoloDarknetDetector::DetectInCrop(cv::Mat colorFrame, const cv::Rect& crop,
 /// \param crop
 /// \param tmpRegions
 ///
-void YoloDarknetDetector::Detect(cv::Mat colorFrame, regions_t& tmpRegions)
+void YoloDarknetDetector::Detect(const cv::Mat& colorFrame, regions_t& tmpRegions)
 {
 	cv::Size netSize(m_detector->get_net_width(), m_detector->get_net_height());
 	if (colorFrame.cols == netSize.width && colorFrame.rows == netSize.height)
@@ -201,13 +168,17 @@ void YoloDarknetDetector::Detect(cv::Mat colorFrame, regions_t& tmpRegions)
 	image_t detImage;
 	FillImg(detImage);
 
-	std::vector<bbox_t> detects = m_detector->detect_resized(detImage, colorFrame.cols, colorFrame.rows, m_confidenceThreshold, false);
+	std::vector<bbox_t> detects = m_detector->detect(detImage, m_confidenceThreshold, false);
+
+	float wk = (float)colorFrame.cols / detImage.w;
+	float hk = (float)colorFrame.rows / detImage.h;
+
 	for (const bbox_t& bbox : detects)
 	{
 		if (m_classesWhiteList.empty() || m_classesWhiteList.find(m_classNames[bbox.obj_id]) != std::end(m_classesWhiteList))
-			tmpRegions.emplace_back(cv::Rect(bbox.x, bbox.y, bbox.w, bbox.h), m_classNames[bbox.obj_id], bbox.prob);
+			tmpRegions.emplace_back(cv::Rect(cvRound(wk * bbox.x), cvRound(hk * bbox.y), cvRound(wk * bbox.w), cvRound(hk * bbox.h)), m_classNames[bbox.obj_id], bbox.prob);
 	}
-	std::cout << "Detected " << detects.size() << " objects" << std::endl;
+	//std::cout << "Detected " << detects.size() << " objects" << std::endl;
 }
 
 ///

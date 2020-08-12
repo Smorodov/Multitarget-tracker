@@ -26,6 +26,10 @@ public:
 		reset();
 	}
 
+	double get_duration()const
+	{
+		return elapsed();
+	}
 private:
 	typedef std::chrono::high_resolution_clock clock_;
 	typedef std::chrono::duration<double, std::milli> second_;

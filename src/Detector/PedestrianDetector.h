@@ -15,12 +15,12 @@ public:
         C4
     };
 
-    PedestrianDetector(cv::UMat& gray);
+    PedestrianDetector(const cv::UMat& gray);
     ~PedestrianDetector(void);
 
     bool Init(const config_t& config);
 
-    void Detect(cv::UMat& gray);
+    void Detect(const cv::UMat& gray);
 
 	bool CanGrayProcessing() const
 	{

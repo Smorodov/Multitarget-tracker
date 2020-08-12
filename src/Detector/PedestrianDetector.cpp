@@ -5,9 +5,7 @@
 /// \brief PedestrianDetector::PedestrianDetector
 /// \param gray
 ///
-PedestrianDetector::PedestrianDetector(
-    cv::UMat& gray
-	)
+PedestrianDetector::PedestrianDetector(const cv::UMat& gray)
     :
       BaseDetector(gray),
       m_scannerC4(HUMAN_height, HUMAN_width, HUMAN_xdiv, HUMAN_ydiv, 256, 0.8)
@@ -71,7 +69,7 @@ bool PedestrianDetector::Init(const config_t& config)
 /// \brief PedestrianDetector::Detect
 /// \param gray
 ///
-void PedestrianDetector::Detect(cv::UMat& gray)
+void PedestrianDetector::Detect(const cv::UMat& gray)
 {
     std::vector<cv::Rect> foundRects;
     std::vector<cv::Rect> filteredRects;
