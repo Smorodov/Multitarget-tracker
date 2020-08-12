@@ -844,6 +844,7 @@ protected:
             config.emplace("inference_precison", "FP32");
             config.emplace("net_type", "YOLOV3_TINY");
 			config.emplace("maxBatch", "4");
+			config.emplace("maxCropRatio", "2");
             break;
 
         case YOLOModels::YOLOv3:
@@ -853,6 +854,7 @@ protected:
             config.emplace("inference_precison", "FP32");
             config.emplace("net_type", "YOLOV3");
 			config.emplace("maxBatch", "2");
+			config.emplace("maxCropRatio", "-1");
             break;
 
         case YOLOModels::YOLOv4:
@@ -862,6 +864,7 @@ protected:
             config.emplace("inference_precison", "FP32");
             config.emplace("net_type", "YOLOV4");
 			config.emplace("maxBatch", "1");
+			config.emplace("maxCropRatio", "-1");
             break;
 
         case YOLOModels::TinyYOLOv4:
@@ -871,11 +874,11 @@ protected:
             config.emplace("inference_precison", "FP32");
             config.emplace("net_type", "YOLOV4_TINY");
 			config.emplace("maxBatch", "4");
+			config.emplace("maxCropRatio", "2");
             break;
         }
 
 		config.emplace("classNames", pathToModel + "coco.names");
-		config.emplace("maxCropRatio", "2");
 
 		config.emplace("white_list", "person");
 		config.emplace("white_list", "car");

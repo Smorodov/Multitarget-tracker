@@ -92,7 +92,7 @@ public:
         case Severity::kINFO: std::cerr << "INFO: "; break;
        // default: std::cerr << "UNKNOWN: "; break;
         }
-        std::cerr << msg << std::endl;
+        //std::cerr << msg << std::endl;
     }
 };
 

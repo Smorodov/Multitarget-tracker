@@ -150,8 +150,11 @@ void Yolo::createYOLOEngine(const nvinfer1::DataType dataType, Int8EntropyCalibr
     std::vector<nvinfer1::Weights> trtWeights;
     int weightPtr = 0;
     int channels = m_InputC;
+	//std::cout << "nvinfer1::createInferBuilder..." << std::endl;
 	m_Builder = nvinfer1::createInferBuilder(m_Logger);
+	//std::cout << "builder " << (m_Builder != nullptr) << ", createBuilderConfig..." << std::endl;
 	nvinfer1::IBuilderConfig* config = m_Builder->createBuilderConfig();
+	//std::cout << "config " << (config != nullptr) << ", createNetworkV2..." << std::endl;
     m_Network = m_Builder->createNetworkV2(0U);
     if ((dataType == nvinfer1::DataType::kINT8 && !m_Builder->platformHasFastInt8())
         || (dataType == nvinfer1::DataType::kHALF && !m_Builder->platformHasFastFp16()))
@@ -159,12 +162,13 @@ void Yolo::createYOLOEngine(const nvinfer1::DataType dataType, Int8EntropyCalibr
         std::cout << "Platform doesn't support this precision." << std::endl;
         assert(0);
     }
-
+	//std::cout << "addInput..." << std::endl;
     nvinfer1::ITensor* data = m_Network->addInput(
         m_InputBlobName.c_str(), nvinfer1::DataType::kFLOAT,
         nvinfer1::DimsCHW{static_cast<int>(m_InputC), static_cast<int>(m_InputH),
                           static_cast<int>(m_InputW)});
-    assert(data != nullptr);
+	std::cout << "m_Network->addInput: " << (data != nullptr) << std::endl;
+	assert(data != nullptr);
     // Add elementwise layer to normalize pixel values 0-1
     nvinfer1::Dims divDims{
         3,
@@ -193,6 +197,8 @@ void Yolo::createYOLOEngine(const nvinfer1::DataType dataType, Int8EntropyCalibr
 		assert(m_TinyMaxpoolPaddingFormula && "Tiny maxpool padding formula not created");
 		m_Network->setPoolingOutputDimensionsFormula(m_TinyMaxpoolPaddingFormula.get());
 	}
+
+	std::cout << "build the network using the network API..." << std::endl;
 
     // build the network using the network API
     for (uint32_t i = 0; i < m_configBlocks.size(); ++i)
