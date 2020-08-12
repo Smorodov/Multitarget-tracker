@@ -676,7 +676,7 @@ protected:
             break;
 		}
         config.emplace("classNames", pathToModel + "coco.names");
-        config.emplace("maxCropRatio", "1");
+        config.emplace("maxCropRatio", "-1");
 
         config.emplace("white_list", "person");
         config.emplace("white_list", "car");
