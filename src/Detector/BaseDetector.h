@@ -76,9 +76,7 @@ public:
     virtual void CalcMotionMap(cv::Mat& frame)
     {
         if (m_motionMap.size() != frame.size())
-        {
             m_motionMap = cv::Mat(frame.size(), CV_32FC1, cv::Scalar(0, 0, 0));
-        }
 
         cv::Mat foreground(m_motionMap.size(), CV_8UC1, cv::Scalar(0, 0, 0));
         for (const auto& region : m_regions)
@@ -90,15 +88,15 @@ public:
 #endif
         }
 
-        cv::Mat normFor;
-        cv::normalize(foreground, normFor, 255, 0, cv::NORM_MINMAX, m_motionMap.type());
+        cv::normalize(foreground, m_normFor, 255, 0, cv::NORM_MINMAX, m_motionMap.type());
 
         double alpha = 0.95;
-        cv::addWeighted(m_motionMap, alpha, normFor, 1 - alpha, 0, m_motionMap);
+        cv::addWeighted(m_motionMap, alpha, m_normFor, 1 - alpha, 0, m_motionMap);
 
         const int chans = frame.channels();
-
-        for (int y = 0; y < frame.rows; ++y)
+		const int height = frame.rows;
+#pragma omp parallel for
+        for (int y = 0; y < height; ++y)
         {
             uchar* imgPtr = frame.ptr(y);
             const float* moPtr = reinterpret_cast<float*>(m_motionMap.ptr(y));
@@ -120,6 +118,7 @@ protected:
     cv::Size m_minObjectSize;
 
     cv::Mat m_motionMap;
+	cv::Mat m_normFor;
 
     std::vector<cv::Rect> GetCrops(float maxCropRatio, cv::Size netSize, cv::Size imgSize) const
     {
