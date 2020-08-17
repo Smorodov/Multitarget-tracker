@@ -14,7 +14,7 @@ list *make_list()
 }
 
 /*
-void transfer_node(list *s, list *d, GTL::node *n)
+void transfer_node(list *s, list *d, node *n)
 {
     node *prev, *next;
     prev = n->prev;

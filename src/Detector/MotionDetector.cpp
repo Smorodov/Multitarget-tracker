@@ -33,9 +33,8 @@ bool MotionDetector::Init(const config_t& config)
 {
     auto conf = config.find("useRotatedRect");
     if (conf != config.end())
-    {
         m_useRotatedRect = std::stoi(conf->second) != 0;
-    }
+
     return m_backgroundSubst->Init(config);
 }
 
@@ -100,19 +99,18 @@ void MotionDetector::ResetModel(const cv::UMat& img, const cv::Rect& roiRect)
 void MotionDetector::CalcMotionMap(cv::Mat& frame)
 {
 	if (m_motionMap.size() != frame.size())
-	{
 		m_motionMap = cv::Mat(frame.size(), CV_32FC1, cv::Scalar(0, 0, 0));
-	}
 
-	cv::Mat normFor;
-	cv::normalize(m_fg, normFor, 255, 0, cv::NORM_MINMAX, m_motionMap.type());
+	cv::normalize(m_fg, m_normFor, 255, 0, cv::NORM_MINMAX, m_motionMap.type());
 
 	double alpha = 0.95;
-	cv::addWeighted(m_motionMap, alpha, normFor, 1 - alpha, 0, m_motionMap);
+	cv::addWeighted(m_motionMap, alpha, m_normFor, 1 - alpha, 0, m_motionMap);
 
 	const int chans = frame.channels();
 
-	for (int y = 0; y < frame.rows; ++y)
+	const int height = frame.rows;
+#pragma omp parallel for
+	for (int y = 0; y < height; ++y)
 	{
 		uchar* imgPtr = frame.ptr(y);
 		float* moPtr = reinterpret_cast<float*>(m_motionMap.ptr(y));

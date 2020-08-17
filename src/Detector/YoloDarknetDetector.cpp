@@ -72,7 +72,9 @@ bool YoloDarknetDetector::Init(const config_t& config)
 	m_classesWhiteList.clear();
 	auto whiteRange = config.equal_range("white_list");
 	for (auto it = whiteRange.first; it != whiteRange.second; ++it)
+	{
 		m_classesWhiteList.insert(it->second);
+	}
 
 	bool correct = m_detector.get() != nullptr;
     return correct;
