@@ -392,32 +392,7 @@ private:
 	cv::Mat m_heatMap;
 	cv::Mat m_normHeatMap;
 	cv::Mat m_colorMap;
-	///
-	cv::Mat DrawHeatMap()
-	{
-		cv::Mat res;
-		if (!m_heatMap.empty())
-		{
-			cv::normalize(m_heatMap, m_normHeatMap, 255, 0, cv::NORM_MINMAX, CV_8UC1);
-			cv::applyColorMap(m_normHeatMap, m_colorMap, cv::COLORMAP_HOT);
-			cv::bitwise_or(m_keyFrame, m_colorMap, res);
-		}
-		return res;
-	}
-	///
-	void AddToHeatMap(const cv::Rect& rect)
-	{
-		if (m_heatMap.empty())
-			return;
 
-		constexpr float w = 0.001f;
-		for (int y = 0; y < rect.height; ++y)
-		{
-			float* heatPtr = m_heatMap.ptr<float>(rect.y + y) + rect.x;
-			for (int x = 0; x < rect.width; ++x)
-			{
-				heatPtr[x] += w;
-			}
-		}
-	}
+	void AddToHeatMap(const cv::Rect& rect);
+	cv::Mat DrawHeatMap();
 };
