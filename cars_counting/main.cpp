@@ -29,6 +29,7 @@ const char* keys =
     "{ o  out         |                    | Name of result video file | }"
     "{ sl show_logs   |1                   | Show Trackers logs | }"
     "{ g gpu          |0                   | Use OpenCL acceleration | }"
+	"{ hm heat_map    |0                   | Draw heat map | }"
 };
 
 // ----------------------------------------------------------------------

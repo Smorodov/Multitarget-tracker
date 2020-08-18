@@ -26,6 +26,7 @@ CarsCounting::CarsCounting(const cv::CommandLineParser& parser)
     m_startFrame = parser.get<int>("start_frame");
     m_endFrame = parser.get<int>("end_frame");
     m_finishDelay = parser.get<int>("end_delay");
+	m_drawHeatMap = parser.get<int>("heat_map") != 0;
 
 	m_weightsFile = parser.get<std::string>("weights");
 	m_configFile = parser.get<std::string>("config");
@@ -238,7 +239,8 @@ void CarsCounting::DrawTrack(cv::Mat frame,
 				//std::cout << track.m_type << ": distance " << std::fixed << std::setw(2) << std::setprecision(2) << dist << " on time " << (period / m_fps) << " with velocity " << velocity << " km/h: " << track.m_confidence << std::endl;
 				if (velocity < 1.f || std::isnan(velocity))
 					velocity = 0;
-				label << track.m_type << " " << std::fixed << std::setw(2) << std::setprecision(2) << velocity << " km/h";
+				//label << track.m_type << " " << std::fixed << std::setw(2) << std::setprecision(2) << velocity << " km/h";
+				label << track.m_type << " " << cvRound(velocity) << " km/h";
 
 				int baseLine = 0;
 				double fontScale = 0.5;
@@ -267,6 +269,9 @@ void CarsCounting::DrawTrack(cv::Mat frame,
 				}
 				cv::rectangle(frame, cv::Rect(cv::Point(brect.x, brect.y - labelSize.height), cv::Size(labelSize.width, labelSize.height + baseLine)), cv::Scalar(200, 200, 200), cv::FILLED);
 				cv::putText(frame, label.str(), brect.tl(), cv::FONT_HERSHEY_SIMPLEX, fontScale, cv::Scalar(0, 0, 0));
+
+				if (velocity > 3)
+					AddToHeatMap(brect);
 			}
 		}
     }
@@ -303,6 +308,15 @@ void CarsCounting::DrawTrack(cv::Mat frame,
 bool CarsCounting::InitTracker(cv::UMat frame)
 {
 	bool res = true;
+
+	if (m_drawHeatMap)
+	{
+		if (frame.channels() == 3)
+			m_keyFrame = frame.getMat(cv::ACCESS_READ).clone();
+		else
+			cv::cvtColor(frame, m_keyFrame, cv::COLOR_GRAY2BGR);
+		m_heatMap = cv::Mat(m_keyFrame.size(), CV_32FC1, cv::Scalar::all(0));
+	}
 
     m_minObjWidth = frame.cols / 50;
 
@@ -406,13 +420,16 @@ bool CarsCounting::InitTracker(cv::UMat frame)
 
 		m_tracker = std::make_unique<CTracker>(settings);
 	}
-
+#if 0
 #if 0
 	std::vector<cv::Point> framePoints{ cv::Point(420, 348), cv::Point(509, 283), cv::Point(731, 281), cv::Point(840, 343) };
 	std::vector<cv::Point2f> geoPoints{ cv::Point2f(45.526646, 5.974535), cv::Point2f(45.527566, 5.973849), cv::Point2f(45.527904, 5.974135), cv::Point2f(45.526867, 5.974826) };
+#else
+	std::vector<cv::Point> framePoints{ cv::Point(1665, 746), cv::Point(246, 521), cv::Point(570, 282), cv::Point(1773, 378) };
+	std::vector<cv::Point2f> geoPoints{ cv::Point2f(30.258855, 60.006536), cv::Point2f(30.258051, 60.006855), cv::Point2f(30.258080, 60.007414), cv::Point2f(30.259066, 60.007064) };
+#endif
 	m_geoParams.SetKeyPoints(framePoints, geoPoints);
 #endif
-
     return res;
 }
 
@@ -463,6 +480,10 @@ void CarsCounting::DrawData(cv::Mat frame, int framesCounter, int currTime)
     {
         rl.Draw(frame);
     }
+
+	cv::Mat heatMap = DrawHeatMap();
+	if (!heatMap.empty())
+		cv::imshow("Heat map", heatMap);
 }
 
 ///

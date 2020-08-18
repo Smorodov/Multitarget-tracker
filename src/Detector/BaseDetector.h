@@ -13,10 +13,10 @@ public:
     /// \brief BaseDetector
     /// \param frame
     ///
-    BaseDetector(const cv::UMat& frame)
-    {
-        m_minObjectSize.width = std::max(5, frame.cols / 100);
-        m_minObjectSize.height = m_minObjectSize.width;
+	BaseDetector(const cv::UMat& frame)
+	{
+		m_minObjectSize.width = std::max(5, frame.cols / 100);
+		m_minObjectSize.height = m_minObjectSize.width;
     }
     ///
     /// \brief ~BaseDetector
@@ -117,9 +117,11 @@ protected:
 
     cv::Size m_minObjectSize;
 
+	// Motion map for visualization current detections
     cv::Mat m_motionMap;
 	cv::Mat m_normFor;
 
+	///
     std::vector<cv::Rect> GetCrops(float maxCropRatio, cv::Size netSize, cv::Size imgSize) const
     {
         std::vector<cv::Rect> crops;
