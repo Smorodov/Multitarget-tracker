@@ -37,8 +37,10 @@ SOFTWARE.
 
 #include "mish.h"
 #include "chunk.h"
+#include "hardswish.h"
 #include <set>
-
+#include <math.h>
+#include <algorithm> 
 #include "NvInfer.h"
 
 #include "ds_image.h"
@@ -82,17 +84,12 @@ public:
 
         switch (severity)
         {
-        case Severity::kINTERNAL_ERROR:
-			std::cerr << "INTERNAL_ERROR: ";
-			break;
-        case Severity::kERROR:
-			std::cerr << "ERROR: ";
-			break;
-        case Severity::kWARNING: std::cerr << "WARNING: "; break;
-        case Severity::kINFO: std::cerr << "INFO: "; break;
-       // default: std::cerr << "UNKNOWN: "; break;
+        case Severity::kINTERNAL_ERROR: std::cerr << "INTERNAL_ERROR: " << msg << std::endl; break;
+		case Severity::kERROR: std::cerr << "ERROR: " << msg << std::endl; break;
+        case Severity::kWARNING: std::cerr << "WARNING: " << msg << std::endl; break;
+        case Severity::kINFO: std::cerr << "INFO: " << msg << std::endl; break;
+      //  default: std::cerr <<"UNKNOW:"<< msg << std::endl;break;
         }
-        //std::cerr << msg << std::endl;
     }
 };
 
@@ -133,6 +130,8 @@ public:
 cv::Mat blobFromDsImages(const std::vector<DsImage>& inputImages, const int& inputH,
                          const int& inputW);
 std::string trim(std::string s);
+std::string triml(std::string s, const char* t);
+std::string trimr(std::string s, const char* t);
 float clamp(const float val, const float minVal, const float maxVal);
 bool fileExists(const std::string fileName, bool verbose = true);
 BBox convertBBoxNetRes(const float& bx, const float& by, const float& bw, const float& bh,
@@ -193,4 +192,70 @@ void printLayerInfo(std::string layerIndex, std::string layerName, std::string l
 nvinfer1::ILayer * layer_split(const int n_layer_index_,
 	nvinfer1::ITensor *input_,
 	nvinfer1::INetworkDefinition* network);
+
+std::vector<int> parse_int_list(const std::string s_args_);
+
+nvinfer1::ILayer* layer_focus(std::string s_model_name_,
+	std::map<std::string, std::vector<float>>& map_wts_,
+	nvinfer1::ITensor* input,
+	const int out_channels_,
+	const int kernel_size_,
+	std::vector<nvinfer1::Weights>& trtWeights,
+	nvinfer1::INetworkDefinition* network);
+
+nvinfer1::ILayer * layer_conv_bn_act(
+	const std::string s_layer_name_,
+	std::map<std::string, std::vector<float>> &vec_wts_,//conv-bn
+	nvinfer1::ITensor* input_,
+	nvinfer1::INetworkDefinition* network_,
+	const int n_filters_,
+	const int n_kernel_size_ = 3,
+	const int n_stride_ = 1,
+	const int group_ =1,
+	const bool b_padding_ = true,
+	const bool b_bn_ = true,
+	const std::string s_act_ = "hardswish");
+
+nvinfer1::ILayer * layer_act(nvinfer1::ITensor* input_,
+	nvinfer1::INetworkDefinition* network_,
+	const std::string s_act_ = "hardswish");
+
+nvinfer1::ILayer * layer_bottleneck_csp(
+	std::string s_model_name_,
+	std::map<std::string, std::vector<float>> &map_wts_,
+	nvinfer1::INetworkDefinition* network_,
+	nvinfer1::ITensor* input_,
+	const int c2_,
+	const int n_depth_ = 1,
+	const bool b_short_cut_ = true,
+	const int group_ = 1,
+	const float e_ = 0.5);
+
+nvinfer1::ILayer * layer_spp(std::string s_model_name_,
+	std::map<std::string, std::vector<float>> &map_wts_,
+	nvinfer1::INetworkDefinition* network_,
+	nvinfer1::ITensor* input_,
+	const int c2_,
+	const std::vector<int> &vec_args_);
+
+nvinfer1::ILayer *layer_upsample(std::string s_model_name_,
+	std::map<std::string, std::vector<float>> &map_wts_,
+	nvinfer1::INetworkDefinition* network_,
+	nvinfer1::ITensor* input_,
+	const int n_scale_);
+
+nvinfer1::ILayer * layer_conv(const std::string s_layer_name_,
+	std::map<std::string, std::vector<float>>&vec_wts_,//conv-bn
+	nvinfer1::ITensor* input_,
+	nvinfer1::INetworkDefinition* network_,
+	const int n_filters_,
+	const int n_kernel_size_,
+	const int n_stride_ = 1,
+	const bool b_bias_ = false,
+	const int group_ = 1,
+	const bool b_padding_ = true);
+std::vector<int> dims2chw(const nvinfer1::Dims d);
+
+
+
 #endif

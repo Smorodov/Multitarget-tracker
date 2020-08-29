@@ -353,6 +353,8 @@ protected:
     std::unique_ptr<BaseDetector> m_detector;
     std::unique_ptr<CTracker> m_tracker;
 
+	bool m_drawHeatMap = false;
+
     bool m_showLogs = false;
     float m_fps = 0;
 
@@ -384,4 +386,13 @@ private:
 
 	// Binding frame coordinates to geographical coordinates
 	GeoParams<float> m_geoParams;
+
+	// Heat map for visualization long term detections
+	cv::Mat m_keyFrame;
+	cv::Mat m_heatMap;
+	cv::Mat m_normHeatMap;
+	cv::Mat m_colorMap;
+
+	void AddToHeatMap(const cv::Rect& rect);
+	cv::Mat DrawHeatMap();
 };

@@ -8,12 +8,7 @@
 ///
 YoloOCVDetector::YoloOCVDetector(const cv::UMat& colorFrame)
     :
-      BaseDetector(colorFrame),
-      m_WHRatio(m_inWidth / (float)m_inHeight),
-      m_inScaleFactor(0.003921f),
-      m_meanVal(0),
-      m_confidenceThreshold(0.24f),
-      m_maxCropRatio(2.0f)
+      BaseDetector(colorFrame)
 {
     m_classNames = { "background",
                      "aeroplane", "bicycle", "bird", "boat",
