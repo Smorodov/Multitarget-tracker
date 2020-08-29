@@ -8,6 +8,7 @@
 #include "yolov2.h"
 #include "yolov3.h"
 #include "yolov4.h"
+#include "yolov5.h"
 
 #include <experimental/filesystem>
 #include <fstream>
@@ -16,42 +17,6 @@
 #include <stdio.h>  /* defines FILENAME_MAX */
 
 #include "class_detector.h"
-//struct Result
-//{
-//	int		 id = -1;
-//	float	 prob = 0.f;
-//	cv::Rect rect;
-//};
-//
-//enum ModelType
-//{
-//	YOLOV2 = 0,
-//	YOLOV3,
-//	YOLOV2_TINY,
-//	YOLOV3_TINY
-//};
-//
-//enum Precision
-//{
-//	INT8 = 0,
-//	FP16,
-//	FP32
-//};
-
-//struct Config
-//{
-//	std::string file_model_cfg						= "configs/yolov3.cfg";
-//
-//	std::string file_model_weights					= "configs/yolov3.weights";
-//
-//	float detect_thresh								= 0.9;
-//
-//	ModelType	net_type							= YOLOV3;
-//
-//	Precision	inference_precison					= INT8;
-//
-//	std::string calibration_image_list_file_txt     = "configs/calibration_images.txt";
-//};
 
 class YoloDectector
 {
@@ -169,9 +134,13 @@ private:
 		{
 			_p_net = std::unique_ptr<Yolo>{ new YoloV4(_config.n_max_batch,_yolo_info,_infer_param) };
 		}
+		else if (_config.net_type == tensor_rt::YOLOV5)
+		{
+			_p_net = std::unique_ptr<Yolo>{ new YoloV5(_config.n_max_batch,_yolo_info,_infer_param) };
+		}
 		else
 		{
-			assert(false && "Unrecognised network_type. Network Type has to be one among the following : yolov2, yolov2-tiny, yolov3 and yolov3-tiny");
+			assert(false && "Unrecognised network_type.");
 		}
 	}
 
@@ -179,7 +148,7 @@ private:
 	tensor_rt::Config _config;
 	NetworkInfo _yolo_info;
 	InferParams _infer_param;
-	std::vector<std::string> _vec_net_type{ "yolov2","yolov3","yolov2-tiny","yolov3-tiny","yolov4","yolov4-tiny" };
+	std::vector<std::string> _vec_net_type{ "yolov2", "yolov3", "yolov2-tiny", "yolov3-tiny", "yolov4", "yolov4-tiny", "yolov5" };
 	std::vector<std::string> _vec_precision{ "kINT8","kHALF","kFLOAT" };
 	std::unique_ptr<Yolo> _p_net = nullptr;
 };
