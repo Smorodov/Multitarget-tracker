@@ -172,9 +172,9 @@ More details here: [How to run examples](https://github.com/Smorodov/Multitarget
 * Pedestrians detector: https://github.com/sturkmen72/C4-Real-time-pedestrian-detection
 * Non Maximum Suppression: https://github.com/Nuzhny007/Non-Maximum-Suppression
 * MobileNet SSD models: https://github.com/chuanqi305/MobileNet-SSD
-* YOLO models: https://pjreddie.com/darknet/yolo/
-* Darknet inference: https://github.com/AlexeyAB/darknet
-* NVidia TensorRT inference: https://github.com/enazoe/yolo-tensorrt
+* YOLO v3 models: https://pjreddie.com/darknet/yolo/
+* Darknet inference and YOLO v4 models: https://github.com/AlexeyAB/darknet
+* NVidia TensorRT inference and YOLO v5 models: https://github.com/enazoe/yolo-tensorrt
 * GOTURN models: https://github.com/opencv/opencv_extra/tree/c4219d5eb3105ed8e634278fad312a1a8d2c182d/testdata/tracking
 * DAT tracker: https://github.com/foolwood/DAT
 * STAPLE tracker: https://github.com/xuduo35/STAPLE
