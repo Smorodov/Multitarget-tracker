@@ -53,11 +53,11 @@ public:
 			vec_ds_images.emplace_back(img, _p_net->getInputH(), _p_net->getInputW());
 		}
 		cv::Mat trtInput = blobFromDsImages(vec_ds_images, _p_net->getInputH(),_p_net->getInputW());
-		_p_net->doInference(trtInput.data, vec_ds_images.size());
+		_p_net->doInference(trtInput.data, static_cast<uint32_t>(vec_ds_images.size()));
 		for (size_t i = 0; i < vec_ds_images.size(); ++i)
 		{
 			auto curImage = vec_ds_images.at(i);
-			auto binfo = _p_net->decodeDetections(i, curImage.getImageHeight(), curImage.getImageWidth());
+			auto binfo = _p_net->decodeDetections(static_cast<int>(i), curImage.getImageHeight(), curImage.getImageWidth());
 			auto remaining = nmsAllClasses(_p_net->getNMSThresh(),
 				binfo,
 				_p_net->getNumClasses(),
@@ -104,7 +104,7 @@ private:
 		_yolo_info.wtsFilePath = _config.file_model_weights;
 		_yolo_info.precision = _vec_precision[_config.inference_precison];
 		_yolo_info.deviceType = "kGPU";
-		int npos = _yolo_info.wtsFilePath.find(".weights");
+		auto npos = _yolo_info.wtsFilePath.find(".weights");
 		assert(npos != std::string::npos
 			&& "wts file file not recognised. File needs to be of '.weights' format");
 		std::string dataPath = _yolo_info.wtsFilePath.substr(0, npos);
