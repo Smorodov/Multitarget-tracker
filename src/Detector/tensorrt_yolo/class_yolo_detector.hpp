@@ -17,7 +17,7 @@
 #include <stdio.h>  /* defines FILENAME_MAX */
 
 #include "class_detector.h"
-
+#include "class_timer.hpp"
 class YoloDectector
 {
 public:
@@ -44,6 +44,7 @@ public:
 	void detect(const std::vector<cv::Mat>	&vec_image,
 				std::vector<tensor_rt::BatchResult> &vec_batch_result)
 	{
+		assert((vec_image.size() <= _config.n_max_batch)&&"nedd vec_image.size() <= _config.n_max_batch)");
 		std::vector<DsImage> vec_ds_images;
 		vec_batch_result.clear();
 		if (vec_batch_result.capacity() < vec_image.size())
@@ -109,7 +110,7 @@ private:
 			&& "wts file file not recognised. File needs to be of '.weights' format");
 		std::string dataPath = _yolo_info.wtsFilePath.substr(0, npos);
 		_yolo_info.calibrationTablePath = dataPath + "-calibration.table";
-		_yolo_info.enginePath = dataPath + "-" + _yolo_info.precision + ".engine";
+		_yolo_info.enginePath = dataPath + "-" + _yolo_info.precision +"-batch"+std::to_string(_config.n_max_batch)+ ".engine";
 		_yolo_info.inputBlobName = "data";
 
 		_infer_param.printPerfInfo = false;
@@ -151,6 +152,7 @@ private:
 	std::vector<std::string> _vec_net_type{ "yolov2", "yolov3", "yolov2-tiny", "yolov3-tiny", "yolov4", "yolov4-tiny", "yolov5" };
 	std::vector<std::string> _vec_precision{ "kINT8","kHALF","kFLOAT" };
 	std::unique_ptr<Yolo> _p_net = nullptr;
+	Timer _m_timer;
 };
 
 
