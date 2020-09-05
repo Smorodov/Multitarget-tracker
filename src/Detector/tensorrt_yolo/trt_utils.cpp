@@ -1181,11 +1181,24 @@ nvinfer1::ILayer* netAddUpsample(int layerIdx, std::map<std::string, std::string
     assert(block.at("type") == "upsample");
     nvinfer1::Dims inpDims = input->getDimensions();
     assert(inpDims.nbDims == 3);
-    assert(inpDims.d[1] == inpDims.d[2]);
-    int h = inpDims.d[1];
-    int w = inpDims.d[2];
-    int stride = std::stoi(block.at("stride"));
-    // add pre multiply matrix as a constant
+   // assert(inpDims.d[1] == inpDims.d[2]);
+    int n_scale = std::stoi(block.at("stride"));
+
+	int c1 = inpDims.d[0];
+	float *deval = new float[c1*n_scale*n_scale];
+	for (int i = 0; i < c1*n_scale*n_scale; i++)
+	{
+		deval[i] = 1.0;
+	}
+	nvinfer1::Weights wts{ DataType::kFLOAT, deval, c1*n_scale*n_scale };
+	nvinfer1::Weights bias{ DataType::kFLOAT, nullptr, 0 };
+	IDeconvolutionLayer* upsample = network->addDeconvolutionNd(*input, c1, DimsHW{ n_scale, n_scale }, wts, bias);
+	upsample->setStrideNd(DimsHW{ n_scale, n_scale });
+	upsample->setNbGroups(c1);
+	return upsample;
+
+    #if 0
+// add pre multiply matrix as a constant
     nvinfer1::Dims preDims{3,
                            {1, stride * h, w},
                            {nvinfer1::DimensionType::kCHANNEL, nvinfer1::DimensionType::kSPATIAL,
@@ -1261,7 +1274,10 @@ nvinfer1::ILayer* netAddUpsample(int layerIdx, std::map<std::string, std::string
     std::string mm2LayerName = "mm2_" + std::to_string(layerIdx);
     mm2->setName(mm2LayerName.c_str());
     return mm2;
+#endif
 }
+
+
 
 void printLayerInfo(std::string layerIndex, std::string layerName, std::string layerInput,
                     std::string layerOutput, std::string weightPtr)

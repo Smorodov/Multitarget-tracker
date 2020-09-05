@@ -46,8 +46,9 @@ SOFTWARE.
 
 // Forward declaration of cuda kernels
 cudaError_t cudaYoloLayerV3(const void* input, void* output, const uint32_t& batchSize,
-                            const uint32_t& gridSize, const uint32_t& numOutputClasses,
-                            const uint32_t& numBBoxes, uint64_t outputSize, cudaStream_t stream);
+	const uint32_t& n_grid_h_, const uint32_t& n_grid_w_,
+	const uint32_t& numOutputClasses, const uint32_t& numBBoxes,
+	uint64_t outputSize, cudaStream_t stream);
 
 class PluginFactory : public nvinfer1::IPluginFactory
 {
@@ -104,7 +105,7 @@ class YoloLayerV3 : public nvinfer1::IPlugin
 {
 public:
     YoloLayerV3(const void* data, size_t length);
-    YoloLayerV3(const uint32_t& numBoxes, const uint32_t& numClasses, const uint32_t& gridSize);
+    YoloLayerV3(const uint32_t& numBoxes, const uint32_t& numClasses, const uint32_t& grid_h_,const uint32_t &grid_w_);
     int getNbOutputs() const override;
     nvinfer1::Dims getOutputDimensions(int index, const nvinfer1::Dims* inputs,
                                        int nbInputDims) override;
@@ -136,6 +137,8 @@ private:
     uint32_t m_NumClasses;
     uint32_t m_GridSize;
     uint64_t m_OutputSize;
+	uint32_t _n_grid_h;
+	uint32_t _n_grid_w;
 };
 
 #endif // __PLUGIN_LAYER_H__

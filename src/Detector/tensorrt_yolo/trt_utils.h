@@ -88,6 +88,7 @@ public:
 		case Severity::kERROR: std::cerr << "ERROR: " << msg << std::endl; break;
         case Severity::kWARNING: std::cerr << "WARNING: " << msg << std::endl; break;
         case Severity::kINFO: std::cerr << "INFO: " << msg << std::endl; break;
+        case Severity::kVERBOSE: break;
       //  default: std::cerr <<"UNKNOW:"<< msg << std::endl;break;
         }
     }
@@ -103,23 +104,25 @@ private:
                              nvinfer1::DimsHW stride, nvinfer1::DimsHW padding,
                              nvinfer1::DimsHW /*dilation*/, const char* layerName) const override
     {
-        assert(inputDims.d[0] == inputDims.d[1]);
+     //   assert(inputDims.d[0] == inputDims.d[1]);
         assert(kernelSize.d[0] == kernelSize.d[1]);
         assert(stride.d[0] == stride.d[1]);
         assert(padding.d[0] == padding.d[1]);
 
-        int outputDim;
+		int output_h, output_w;
         // Only layer maxpool_12 makes use of same padding
         if (m_SamePaddingLayers.find(layerName) != m_SamePaddingLayers.end())
         {
-            outputDim = (inputDims.d[0] + 2 * padding.d[0]) / stride.d[0];
+            output_h = (inputDims.d[0] + 2 * padding.d[0]) / stride.d[0];
+            output_w = (inputDims.d[1] + 2 * padding.d[1]) / stride.d[1];
         }
         // Valid Padding
         else
         {
-            outputDim = (inputDims.d[0] - kernelSize.d[0]) / stride.d[0] + 1;
+            output_h = (inputDims.d[0] - kernelSize.d[0]) / stride.d[0] + 1;
+            output_w = (inputDims.d[1] - kernelSize.d[1]) / stride.d[1] + 1;
         }
-        return nvinfer1::DimsHW{outputDim, outputDim};
+        return nvinfer1::DimsHW{output_h, output_w};
     }
 
 public:
