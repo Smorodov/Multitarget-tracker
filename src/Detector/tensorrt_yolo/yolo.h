@@ -197,10 +197,10 @@ protected:
 		b.y1 = y - bh / 2;
 		b.y2 = y + bh / 2;
 
-		b.x1 = clamp(b.x1, 0, netW);
-		b.x2 = clamp(b.x2, 0, netW);
-		b.y1 = clamp(b.y1, 0, netH);
-		b.y2 = clamp(b.y2, 0, netH);
+		b.x1 = clamp(b.x1, 0.f, static_cast<float>(netW));
+		b.x2 = clamp(b.x2, 0.f, static_cast<float>(netW));
+		b.y1 = clamp(b.y1, 0.f, static_cast<float>(netH));
+		b.y2 = clamp(b.y2, 0.f, static_cast<float>(netH));
 
 		return b;
 	}
@@ -236,8 +236,10 @@ private:
     void writePlanFileToDisk();
 
 private:
-	Timer _timer;
-	void load_weights_v5(const std::string s_weights_path_, std::map<std::string, std::vector<float>> &vec_wts_);
+    Timer _timer;
+    void load_weights_v5(const std::string s_weights_path_, std::map<std::string, std::vector<float>> &vec_wts_);
+
+    int _n_yolo_ind = 0;
 };
 
 #endif // _YOLO_H_

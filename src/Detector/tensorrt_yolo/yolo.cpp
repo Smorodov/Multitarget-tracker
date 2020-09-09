@@ -1070,24 +1070,23 @@ void Yolo::parseConfigBlocks()
                     m_ClassNames.push_back(std::to_string(i));
                 }
             }
-			static int ind = 0;
-			outputTensor.blobName = "yolo_" + std::to_string(ind);
-			outputTensor.gridSize = (m_InputH / 32) * pow(2, ind);
-			outputTensor.grid_h = (m_InputH / 32) * pow(2, ind);
-			outputTensor.grid_w = (m_InputW / 32) * pow(2, ind);
+			outputTensor.blobName = "yolo_" + std::to_string(_n_yolo_ind);
+			outputTensor.gridSize = (m_InputH / 32) * pow(2, _n_yolo_ind);
+			outputTensor.grid_h = (m_InputH / 32) * pow(2, _n_yolo_ind);
+			outputTensor.grid_w = (m_InputW / 32) * pow(2, _n_yolo_ind);
 			if (m_NetworkType == "yolov4")//pan
 			{
-				outputTensor.gridSize = (m_InputH / 32) * pow(2, 2-ind);
-				outputTensor.grid_h = (m_InputH / 32) * pow(2, 2-ind);
-				outputTensor.grid_w = (m_InputW / 32) * pow(2, 2-ind);
+				outputTensor.gridSize = (m_InputH / 32) * pow(2, 2-_n_yolo_ind);
+				outputTensor.grid_h = (m_InputH / 32) * pow(2, 2-_n_yolo_ind);
+				outputTensor.grid_w = (m_InputW / 32) * pow(2, 2-_n_yolo_ind);
 			}
 			outputTensor.stride = m_InputH / outputTensor.gridSize;
 			outputTensor.stride_h = m_InputH / outputTensor.grid_h;
 			outputTensor.stride_w = m_InputW / outputTensor.grid_w;
 			outputTensor.volume = outputTensor.grid_h* outputTensor.grid_w
 				*(outputTensor.numBBoxes*(5 + outputTensor.numClasses));
-            m_OutputTensors.push_back(outputTensor);
-			ind++;
+                        m_OutputTensors.push_back(outputTensor);
+			_n_yolo_ind++;
         }
     }
 }
