@@ -59,7 +59,7 @@ struct YoloPluginCtx
     Yolo* inferenceNetwork;
 
     // perf vars
-    float inferTime = 0.0, preTime = 0.0, postTime = 0.0;
+    double inferTime = 0.0, preTime = 0.0, postTime = 0.0;
     uint32_t batchSize = 0;
     uint64_t imageCount = 0;
 };
