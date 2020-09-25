@@ -722,7 +722,8 @@ std::vector<int> dims2chw(const nvinfer1::Dims d)
 	return chw;
 }
 
-nvinfer1::ILayer* layer_bottleneck(std::string s_layer_name_,
+nvinfer1::ILayer* layer_bottleneck(std::vector<nvinfer1::Weights> &trtWeights_,
+	std::string s_layer_name_,
 	std::map<std::string, std::vector<float>> &map_wts_,
 	nvinfer1::INetworkDefinition* network_,
 	nvinfer1::ITensor* input_, 
@@ -732,8 +733,8 @@ nvinfer1::ILayer* layer_bottleneck(std::string s_layer_name_,
 	const float e_ = 0.5)
 {
 	int c_ = int(c2_*e_);
-	auto cv1 = layer_conv_bn_act(s_layer_name_ + ".cv1", map_wts_, input_, network_, c_, 1, 1);
-	auto cv2 = layer_conv_bn_act(s_layer_name_ + ".cv2", map_wts_, cv1->getOutput(0), network_, c2_, 3, 1,gouup_);
+	auto cv1 = layer_conv_bn_act(trtWeights_,s_layer_name_ + ".cv1", map_wts_, input_, network_, c_, 1, 1);
+	auto cv2 = layer_conv_bn_act(trtWeights_,s_layer_name_ + ".cv2", map_wts_, cv1->getOutput(0), network_, c2_, 3, 1,gouup_);
 	if (shortcut_)
 	{
 		nvinfer1::IElementWiseLayer* ew
@@ -759,7 +760,8 @@ nvinfer1::ILayer * layer_concate(nvinfer1::ITensor** concatInputs,
 //	concat->setAxis(n_axis_);
 	return concat;
 }
-nvinfer1::ILayer * layer_bn(const std::string s_layer_name_,
+nvinfer1::ILayer * layer_bn(std::vector<nvinfer1::Weights> &trtWeights_,
+	const std::string s_layer_name_,
 	std::map<std::string, std::vector<float>>&map_wts_,//conv-bn
 	nvinfer1::ITensor* input_,
 	const int n_filters_,
@@ -804,6 +806,9 @@ nvinfer1::ILayer * layer_bn(const std::string s_layer_name_,
 	// Add the batch norm layers
 	auto bn = network_->addScale(*input_, nvinfer1::ScaleMode::kCHANNEL, shift, scale, power);
 	assert(bn != nullptr);
+	trtWeights_.push_back(shift);
+	trtWeights_.push_back(scale);
+	trtWeights_.push_back(power);
 	return bn;
 }
 
@@ -828,7 +833,8 @@ nvinfer1::ILayer * layer_act(nvinfer1::ITensor* input_,
 	return nullptr;
 }
 
-nvinfer1::ILayer * layer_conv(const std::string s_layer_name_,
+nvinfer1::ILayer * layer_conv(std::vector<nvinfer1::Weights> &trtWeights_,
+	const std::string s_layer_name_,
 	std::map<std::string, std::vector<float>>&map_wts_,//conv-bn
 	nvinfer1::ITensor* input_,
 	nvinfer1::INetworkDefinition* network_,
@@ -880,10 +886,12 @@ nvinfer1::ILayer * layer_conv(const std::string s_layer_name_,
 	{
 		conv->setNbGroups(group_);
 	}
+	trtWeights_.push_back(convWt);
+	trtWeights_.push_back(convBias);
 	return conv;
 }
 
-nvinfer1::ILayer * layer_bottleneck_csp(
+nvinfer1::ILayer * layer_bottleneck_csp(std::vector<nvinfer1::Weights> &trtWeights_,
 	std::string s_model_name_,
 	std::map<std::string, std::vector<float>> &map_wts_,
 	nvinfer1::INetworkDefinition* network_,
@@ -899,31 +907,32 @@ nvinfer1::ILayer * layer_bottleneck_csp(
 	int c1 = chw[0];
 	int c_ = int(c2_*0.5);
 	//cv1
-	auto out = layer_conv_bn_act(s_model_name_ +".cv1", map_wts_, input_, network_, c_, 1);
+	auto out = layer_conv_bn_act(trtWeights_, s_model_name_ +".cv1", map_wts_, input_, network_, c_, 1);
 	//m
 	for (int d = 0; d < n_depth_; ++d)
 	{
 		std::string m_name = s_model_name_ + ".m." + std::to_string(d);
-		out = layer_bottleneck(m_name, map_wts_, network_, out->getOutput(0), c_, b_short_cut_, group_, 1.f);
+		out = layer_bottleneck(trtWeights_, m_name, map_wts_, network_, out->getOutput(0), c_, b_short_cut_, group_, 1.f);
 	}
 	//cv3
-	auto cv3 = layer_conv(s_model_name_ + ".cv3", map_wts_, out->getOutput(0), network_, c_, 1);
+	auto cv3 = layer_conv(trtWeights_, s_model_name_ + ".cv3", map_wts_, out->getOutput(0), network_, c_, 1);
 	//cv2
-	auto cv2 = layer_conv(s_model_name_ + ".cv2", map_wts_, input_, network_, c_, 1);
+	auto cv2 = layer_conv(trtWeights_, s_model_name_ + ".cv2", map_wts_, input_, network_, c_, 1);
 	//concate
 	nvinfer1::ITensor** concatInputs
 		= reinterpret_cast<nvinfer1::ITensor**>(malloc(sizeof(nvinfer1::ITensor*) *2));
 	concatInputs[0] = cv3->getOutput(0);
 	concatInputs[1] = cv2->getOutput(0);
 	auto cat = layer_concate(concatInputs, 2, 0,network_);
-	auto bn = layer_bn(s_model_name_, map_wts_, cat->getOutput(0), 2 * c_, network_);
+	auto bn = layer_bn(trtWeights_, s_model_name_, map_wts_, cat->getOutput(0), 2 * c_, network_);
 	auto act = layer_act(bn->getOutput(0), network_);
 	//cv4
-	auto cv4 = layer_conv_bn_act(s_model_name_ + ".cv4", map_wts_, act->getOutput(0), network_, c2_, 1);
+	auto cv4 = layer_conv_bn_act(trtWeights_, s_model_name_ + ".cv4", map_wts_, act->getOutput(0), network_, c2_, 1);
 	return cv4;
 }
 
-nvinfer1::ILayer * layer_spp(std::string s_model_name_,
+nvinfer1::ILayer * layer_spp(std::vector<nvinfer1::Weights> &trtWeights_,
+	std::string s_model_name_,
 	std::map<std::string, std::vector<float>> &map_wts_,
 	nvinfer1::INetworkDefinition* network_,
 	nvinfer1::ITensor* input_,
@@ -933,7 +942,7 @@ nvinfer1::ILayer * layer_spp(std::string s_model_name_,
 	std::vector<int> chw=dims2chw(input_->getDimensions());
 	int c1 = chw[0];//dims2chw(input_->getDimensions())[0];
 	int c_ = c1 / 2;
-	nvinfer1::ILayer * x = layer_conv_bn_act(s_model_name_ + ".cv1", map_wts_, input_, network_, c_, 1);
+	nvinfer1::ILayer * x = layer_conv_bn_act(trtWeights_, s_model_name_ + ".cv1", map_wts_, input_, network_, c_, 1);
 	nvinfer1::ITensor** concatInputs
 		= reinterpret_cast<nvinfer1::ITensor**>(malloc(sizeof(nvinfer1::ITensor*) * (vec_args_.size()+1)));
 	concatInputs[0] = x->getOutput(0);
@@ -952,7 +961,7 @@ nvinfer1::ILayer * layer_spp(std::string s_model_name_,
 	nvinfer1::IConcatenationLayer* concat = network_->addConcatenation(concatInputs, static_cast<int>(vec_args_.size()+1));
 	//concat->setAxis(0);
 	assert(concat != nullptr);
-	nvinfer1::ILayer *cv2 = layer_conv_bn_act(s_model_name_ + ".cv2", map_wts_, concat->getOutput(0), network_, c2_, 1);
+	nvinfer1::ILayer *cv2 = layer_conv_bn_act(trtWeights_, s_model_name_ + ".cv2", map_wts_, concat->getOutput(0), network_, c2_, 1);
 	assert(cv2 != nullptr);
 	return cv2;
 }
@@ -979,7 +988,7 @@ nvinfer1::ILayer *layer_upsample(std::string s_model_name_,
 	return upsample;
 }
 
-nvinfer1::ILayer * layer_conv_bn_act(
+nvinfer1::ILayer * layer_conv_bn_act(std::vector<nvinfer1::Weights> &trtWeights_,
 	const std::string s_layer_name_,
 	std::map<std::string, std::vector<float>>&map_wts_,//conv-bn
 	nvinfer1::ITensor* input_,
@@ -996,15 +1005,16 @@ nvinfer1::ILayer * layer_conv_bn_act(
 	std::vector<int> chw = dims2chw(input_->getDimensions());
 
 	//conv
-	nvinfer1::ILayer *conv = layer_conv(s_layer_name_ + ".conv", map_wts_, input_, network_, n_filters_, n_kernel_size_, n_stride_);
-	nvinfer1::ILayer* bn = layer_bn(s_layer_name_, map_wts_, conv->getOutput(0), n_filters_, network_);
+	nvinfer1::ILayer *conv = layer_conv(trtWeights_, s_layer_name_ + ".conv", map_wts_, input_, network_, n_filters_, n_kernel_size_, n_stride_);
+	nvinfer1::ILayer* bn = layer_bn(trtWeights_, s_layer_name_, map_wts_, conv->getOutput(0), n_filters_, network_);
 	nvinfer1::ILayer * act = layer_act(bn->getOutput(0), network_,s_act_);
 	return act;
 }
 
 
 
-nvinfer1::ILayer* layer_focus(std::string s_model_name_,
+nvinfer1::ILayer* layer_focus(std::vector<nvinfer1::Weights> &trtWeights_,
+	std::string s_model_name_,
 	std::map<std::string,std::vector<float>>& map_wts_,
 	nvinfer1::ITensor* input,
 	const int out_channels_,
@@ -1020,7 +1030,8 @@ nvinfer1::ILayer* layer_focus(std::string s_model_name_,
 	ITensor* inputTensors[] = { s1->getOutput(0), s2->getOutput(0), s3->getOutput(0), s4->getOutput(0) };
 	auto cat = network->addConcatenation(inputTensors, 4);
 	auto cat_out = cat->getOutput(0);
-	auto out = layer_conv_bn_act(s_model_name_ +".conv",
+	auto out = layer_conv_bn_act(trtWeights_,
+		s_model_name_ +".conv",
 		map_wts_,
 		cat_out,
 		network,

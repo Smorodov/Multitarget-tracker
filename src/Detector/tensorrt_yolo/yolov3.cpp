@@ -24,9 +24,9 @@ SOFTWARE.
 */
 #include "yolov3.h"
 
-YoloV3::YoloV3(const uint32_t batchSize, const NetworkInfo& networkInfo,
+YoloV3::YoloV3(const NetworkInfo& networkInfo,
                const InferParams& inferParams) :
-    Yolo(batchSize, networkInfo, inferParams){}
+    Yolo( networkInfo, inferParams){}
 
 std::vector<BBoxInfo> YoloV3::decodeTensor(const int imageIdx,
 										   const int imageH, 

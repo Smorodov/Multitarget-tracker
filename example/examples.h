@@ -835,7 +835,7 @@ protected:
             TinyYOLOv4,
             YOLOv5
         };
-        YOLOModels usedModel = YOLOModels::YOLOv5;
+        YOLOModels usedModel = YOLOModels::YOLOv4;
         switch (usedModel)
         {
         case YOLOModels::TinyYOLOv3:

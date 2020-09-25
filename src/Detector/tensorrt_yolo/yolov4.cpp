@@ -1,10 +1,9 @@
 
 #include "yolov4.h"
 
-YoloV4::YoloV4(const uint32_t batch_size_,
-	const NetworkInfo &network_info_,
+YoloV4::YoloV4(	const NetworkInfo &network_info_,
 	const InferParams &infer_params_) :
-	Yolo(batch_size_, network_info_, infer_params_) {}
+	Yolo(network_info_, infer_params_) {}
 
 std::vector<BBoxInfo> YoloV4::decodeTensor(const int imageIdx, const int imageH, const int imageW, const TensorInfo& tensor)
 {

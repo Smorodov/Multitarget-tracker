@@ -56,6 +56,7 @@ struct NetworkInfo
     std::string calibrationTablePath;
     std::string enginePath;
     std::string inputBlobName;
+	std::string data_path;
 };
 
 /**
@@ -113,7 +114,7 @@ public:
     virtual ~Yolo();
 
 protected:
-    Yolo(const uint32_t batchSize, const NetworkInfo& networkInfo, const InferParams& inferParams);
+    Yolo( const NetworkInfo& networkInfo, const InferParams& inferParams);
     std::string m_EnginePath;
     const std::string m_NetworkType;
     const std::string m_ConfigFilePath;
@@ -147,7 +148,7 @@ protected:
     const bool m_PrintPredictions;
     // TRT specific members
 	//Logger glogger;
-    const uint32_t m_BatchSize;
+    uint32_t m_BatchSize = 1;
     nvinfer1::INetworkDefinition* m_Network;
     nvinfer1::IBuilder* m_Builder ;
     nvinfer1::IHostMemory* m_ModelStream;

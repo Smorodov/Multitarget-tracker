@@ -35,7 +35,7 @@ SOFTWARE.
 class YoloV2 : public Yolo
 {
 public:
-    YoloV2(const uint32_t batchSize, const NetworkInfo& networkInfo, const InferParams& inferParams);
+    YoloV2( const NetworkInfo& networkInfo, const InferParams& inferParams);
 
 private:
     std::vector<BBoxInfo> decodeTensor(const int imageIdx, const int imageH, const int imageW,

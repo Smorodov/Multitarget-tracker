@@ -2,20 +2,16 @@
 #include "yolov5.h"
 
 
-YoloV5::YoloV5(const uint32_t batch_size_,
+YoloV5::YoloV5(
 	const NetworkInfo &network_info_,
 	const InferParams &infer_params_) :
-	Yolo(batch_size_, network_info_, infer_params_) {}
+	Yolo( network_info_, infer_params_) {}
 
 
 
 
 std::vector<BBoxInfo> YoloV5::decodeTensor(const int imageIdx, const int imageH, const int imageW, const TensorInfo& tensor)
 {
-    //float scalingFactor = std::min(static_cast<float>(m_InputW) / imageW, static_cast<float>(m_InputH) / imageH);
-    //float xOffset = (m_InputW - scalingFactor * imageW) / 2;
-    //float yOffset = (m_InputH - scalingFactor * imageH) / 2;
-
 	const float* detections = &tensor.hostBuffer[imageIdx * tensor.volume];
 
 	std::vector<BBoxInfo> binfo;

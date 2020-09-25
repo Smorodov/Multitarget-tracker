@@ -21,7 +21,6 @@ YoloTensorRTDetector::YoloTensorRTDetector(const cv::UMat& colorFrame)
 	m_localConfig.net_type = tensor_rt::YOLOV4;
 	m_localConfig.detect_thresh = 0.5f;
 	m_localConfig.gpu_id = 0;
-	m_localConfig.n_max_batch = 4;
 }
 
 ///
@@ -54,7 +53,7 @@ bool YoloTensorRTDetector::Init(const config_t& config)
 
 	auto maxBatch = config.find("maxBatch");
 	if (maxBatch != config.end())
-		m_localConfig.n_max_batch = std::max(1, std::stoi(maxBatch->second));
+        m_batchSize = std::max(1, std::stoi(maxBatch->second));
 	
 	m_localConfig.file_model_cfg = modelConfiguration->second;
 	m_localConfig.file_model_weights = modelBinary->second;
@@ -140,7 +139,7 @@ void YoloTensorRTDetector::Detect(const cv::UMat& colorFrame)
         regions_t tmpRegions;
         for (size_t i = 0; i < crops.size();)
         {
-			size_t batchsize = std::min(static_cast<size_t>(m_localConfig.n_max_batch), crops.size() - i);
+            size_t batchsize = std::min(static_cast<size_t>(m_batchSize), crops.size() - i);
 			std::vector<cv::Mat> batch;
 			batch.reserve(batchsize);
 			for (size_t j = 0; j < batchsize; ++j)

@@ -9,39 +9,39 @@
 using namespace nvinfer1;
 REGISTER_TENSORRT_PLUGIN(DetectPluginCreator);
 
-Yolo::Yolo(const uint32_t batchSize, const NetworkInfo& networkInfo, const InferParams& inferParams) :
-    m_EnginePath(networkInfo.enginePath),
-    m_NetworkType(networkInfo.networkType),
-    m_ConfigFilePath(networkInfo.configFilePath),
-    m_WtsFilePath(networkInfo.wtsFilePath),
-    m_LabelsFilePath(networkInfo.labelsFilePath),
-    m_Precision(networkInfo.precision),
-    m_DeviceType(networkInfo.deviceType),
-    m_CalibImages(inferParams.calibImages),
-    m_CalibImagesFilePath(inferParams.calibImagesPath),
-    m_CalibTableFilePath(networkInfo.calibrationTablePath),
-    m_InputBlobName(networkInfo.inputBlobName),
-    m_InputH(0),
-    m_InputW(0),
-    m_InputC(0),
-    m_InputSize(0),
-    m_ProbThresh(inferParams.probThresh),
-    m_NMSThresh(inferParams.nmsThresh),
-    m_PrintPerfInfo(inferParams.printPerfInfo),
-    m_PrintPredictions(inferParams.printPredictionInfo),
-    m_Logger(Logger()),
-    m_BatchSize(batchSize),
-    m_Network(nullptr),
-    m_Builder(nullptr),
-    m_ModelStream(nullptr),
-    m_Engine(nullptr),
-    m_Context(nullptr),
-    m_InputBindingIndex(-1),
-    m_CudaStream(nullptr),
-    m_PluginFactory(new PluginFactory),
-    m_TinyMaxpoolPaddingFormula(new YoloTinyMaxpoolPaddingFormula)
+Yolo::Yolo( const NetworkInfo& networkInfo, const InferParams& inferParams) :
+	m_NetworkType(networkInfo.networkType),
+	m_ConfigFilePath(networkInfo.configFilePath),
+	m_WtsFilePath(networkInfo.wtsFilePath),
+	m_LabelsFilePath(networkInfo.labelsFilePath),
+	m_Precision(networkInfo.precision),
+	m_DeviceType(networkInfo.deviceType),
+	m_CalibImages(inferParams.calibImages),
+	m_CalibImagesFilePath(inferParams.calibImagesPath),
+	m_CalibTableFilePath(networkInfo.calibrationTablePath),
+	m_InputBlobName(networkInfo.inputBlobName),
+	m_InputH(0),
+	m_InputW(0),
+	m_InputC(0),
+	m_InputSize(0),
+	m_ProbThresh(inferParams.probThresh),
+	m_NMSThresh(inferParams.nmsThresh),
+	m_PrintPerfInfo(inferParams.printPerfInfo),
+	m_PrintPredictions(inferParams.printPredictionInfo),
+	m_Logger(Logger()),
+	m_Network(nullptr),
+	m_Builder(nullptr),
+	m_ModelStream(nullptr),
+	m_Engine(nullptr),
+	m_Context(nullptr),
+	m_InputBindingIndex(-1),
+	m_CudaStream(nullptr),
+	m_PluginFactory(new PluginFactory),
+	m_TinyMaxpoolPaddingFormula(new YoloTinyMaxpoolPaddingFormula),
+	_n_yolo_ind(0)
 {
-   // m_ClassNames = loadListFromTextFile(m_LabelsFilePath);
+	// m_ClassNames = loadListFromTextFile(m_LabelsFilePath);
+
 	m_configBlocks = parseConfigFile(m_ConfigFilePath);
 	if (m_NetworkType == "yolov5")
 	{
@@ -51,9 +51,9 @@ Yolo::Yolo(const uint32_t batchSize, const NetworkInfo& networkInfo, const Infer
 	{
 		parseConfigBlocks();
 	}
-	
-    if (m_Precision == "kFLOAT")
-    {
+	m_EnginePath = networkInfo.data_path + "-" + m_Precision + "-batch" + std::to_string(m_BatchSize) + ".engine";
+	if (m_Precision == "kFLOAT")
+	{
 		if ("yolov5" == m_NetworkType)
 		{
 
@@ -63,12 +63,12 @@ Yolo::Yolo(const uint32_t batchSize, const NetworkInfo& networkInfo, const Infer
 		{
 			createYOLOEngine();
 		}
-    }
-    else if (m_Precision == "kINT8")
-    {
-        Int8EntropyCalibrator calibrator(m_BatchSize, m_CalibImages, m_CalibImagesFilePath,
-                                         m_CalibTableFilePath, m_InputSize, m_InputH, m_InputW,
-                                         m_InputBlobName);
+	}
+	else if (m_Precision == "kINT8")
+	{
+		Int8EntropyCalibrator calibrator(m_BatchSize, m_CalibImages, m_CalibImagesFilePath,
+			m_CalibTableFilePath, m_InputSize, m_InputH, m_InputW,
+			m_InputBlobName);
 		if ("yolov5" == m_NetworkType)
 		{
 			create_engine_yolov5(nvinfer1::DataType::kINT8, &calibrator);
@@ -77,9 +77,9 @@ Yolo::Yolo(const uint32_t batchSize, const NetworkInfo& networkInfo, const Infer
 		{
 			createYOLOEngine(nvinfer1::DataType::kINT8, &calibrator);
 		}
-    }
-    else if (m_Precision == "kHALF")
-    {
+	}
+	else if (m_Precision == "kHALF")
+	{
 		if ("yolov5" == m_NetworkType)
 		{
 			create_engine_yolov5(nvinfer1::DataType::kHALF, nullptr);
@@ -88,24 +88,24 @@ Yolo::Yolo(const uint32_t batchSize, const NetworkInfo& networkInfo, const Infer
 		{
 			createYOLOEngine(nvinfer1::DataType::kHALF, nullptr);
 		}
-    }
-    else
-    {
-        std::cout << "Unrecognized precision type " << m_Precision << std::endl;
-        assert(0);
-    }
+	}
+	else
+	{
+		std::cout << "Unrecognized precision type " << m_Precision << std::endl;
+		assert(0);
+	}
 
-    assert(m_PluginFactory != nullptr);
-    m_Engine = loadTRTEngine(m_EnginePath, m_PluginFactory, m_Logger);
-    assert(m_Engine != nullptr);
-    m_Context = m_Engine->createExecutionContext();
-    assert(m_Context != nullptr);
-    m_InputBindingIndex = m_Engine->getBindingIndex(m_InputBlobName.c_str());
-    assert(m_InputBindingIndex != -1);
-    assert(m_BatchSize <= static_cast<uint32_t>(m_Engine->getMaxBatchSize()));
-    allocateBuffers();
-    NV_CUDA_CHECK(cudaStreamCreate(&m_CudaStream));
-    assert(verifyYoloEngine());
+	assert(m_PluginFactory != nullptr);
+	m_Engine = loadTRTEngine(m_EnginePath, m_PluginFactory, m_Logger);
+	assert(m_Engine != nullptr);
+	m_Context = m_Engine->createExecutionContext();
+	assert(m_Context != nullptr);
+	m_InputBindingIndex = m_Engine->getBindingIndex(m_InputBlobName.c_str());
+	assert(m_InputBindingIndex != -1);
+	assert(m_BatchSize <= static_cast<uint32_t>(m_Engine->getMaxBatchSize()));
+	allocateBuffers();
+	NV_CUDA_CHECK(cudaStreamCreate(&m_CudaStream));
+	assert(verifyYoloEngine());
 }
 
 Yolo::~Yolo()
@@ -670,7 +670,8 @@ void Yolo::create_engine_yolov5(const nvinfer1::DataType dataType,
 			int filters = args[0];
 			int kernel_size = args[1];
 			filters = (n_output != filters) ? make_division(filters*_f_width_multiple, 8) : filters;
-			nvinfer1::ILayer* out = layer_focus("model." + std::to_string(i - 1),
+			nvinfer1::ILayer* out = layer_focus(trtWeights,
+				"model." + std::to_string(i - 1),
 				model_wts,
 				previous,
 				filters,
@@ -692,7 +693,8 @@ void Yolo::create_engine_yolov5(const nvinfer1::DataType dataType,
 			int kernel_size = args[1];
 			int stride = args[2];
 			int n_out_channel = (n_output != filters) ? make_division(filters*_f_width_multiple, 8) : filters;
-			nvinfer1::ILayer * out = layer_conv_bn_act("model."+std::to_string(i-1), model_wts, previous, m_Network, n_out_channel, kernel_size, stride);
+			nvinfer1::ILayer * out = layer_conv_bn_act(trtWeights,
+				"model."+std::to_string(i-1), model_wts, previous, m_Network, n_out_channel, kernel_size, stride);
 			previous = out->getOutput(0);
 			assert(previous != nullptr);
 			channels = getNumChannels(previous);
@@ -710,7 +712,7 @@ void Yolo::create_engine_yolov5(const nvinfer1::DataType dataType,
 			int n_out_channel = (n_output != filters) ? make_division(filters*_f_width_multiple, 8) : filters;
 			int n_depth = (number > 1) ? (std::max(int(round(_f_depth_multiple *number)), 1)) : number;
 			std::string s_model_name = "model." + std::to_string(i- 1);
-			auto out = layer_bottleneck_csp(s_model_name, model_wts, m_Network, previous, n_out_channel, n_depth, short_cut);
+			auto out = layer_bottleneck_csp(trtWeights,s_model_name, model_wts, m_Network, previous, n_out_channel, n_depth, short_cut);
 			previous = out->getOutput(0);
 			assert(previous != nullptr);
 			channels = getNumChannels(previous);
@@ -726,7 +728,7 @@ void Yolo::create_engine_yolov5(const nvinfer1::DataType dataType,
 			parse_spp_args(m_configBlocks[i]["args"], filters, vec_k);
 			int n_out_channel = (n_output != filters) ? make_division(filters*_f_width_multiple, 8) : filters;
 			std::string s_model_name = "model." + std::to_string(i- 1);
-			auto out = layer_spp(s_model_name, model_wts, m_Network, previous, n_out_channel, vec_k);
+			auto out = layer_spp(trtWeights, s_model_name, model_wts, m_Network, previous, n_out_channel, vec_k);
 			previous = out->getOutput(0);
 			assert(previous != nullptr);
 			channels = getNumChannels(previous);
@@ -788,7 +790,7 @@ void Yolo::create_engine_yolov5(const nvinfer1::DataType dataType,
 			{
 				int n_filters = (5 + _n_classes) * 3;
 				int from = vec_from[ind_from];
-				auto conv = layer_conv(s_model_name+".m."+std::to_string(ind_from),
+				auto conv = layer_conv(trtWeights, s_model_name+".m."+std::to_string(ind_from),
 					model_wts, tensorOutputs[from], m_Network, n_filters,1,1,true);
 
 				auto tensor_conv = conv->getOutput(0);
@@ -1115,6 +1117,7 @@ void Yolo::parse_cfg_blocks_v5(const  std::vector<std::map<std::string, std::str
 			m_InputH = std::stoul(trim(block.at("height")));
 			m_InputW = std::stoul(trim(block.at("width")));
 			m_InputC = std::stoul(trim(block.at("channels")));
+			m_BatchSize = std::stoi(trim(block.at("batch")));
 			_f_depth_multiple = std::stof(trim(block.at("depth_multiple")));
 			_f_width_multiple = std::stof(trim(block.at("width_multiple")));
 			_n_classes = std::stoi(trim(block.at("nc")));
