@@ -4,7 +4,7 @@
 class YoloV5 :public Yolo
 {
 public:
-	YoloV5(const uint32_t batch_size_,
+	YoloV5(
 		const NetworkInfo &network_info_,
 		const InferParams &infer_params_);
 

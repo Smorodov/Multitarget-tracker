@@ -126,12 +126,12 @@ YoloPluginCtx* YoloPluginCtxInit(YoloPluginInitParams* initParams, size_t batchS
     if ((ctx->networkInfo.networkType == "yolov2")
         || (ctx->networkInfo.networkType == "yolov2-tiny"))
     {
-        ctx->inferenceNetwork = new YoloV2(batchSize, ctx->networkInfo, ctx->inferParams);
+        ctx->inferenceNetwork = new YoloV2(ctx->networkInfo, ctx->inferParams);
     }
     else if ((ctx->networkInfo.networkType == "yolov3")
              || (ctx->networkInfo.networkType == "yolov3-tiny"))
     {
-        ctx->inferenceNetwork = new YoloV3(batchSize, ctx->networkInfo, ctx->inferParams);
+        ctx->inferenceNetwork = new YoloV3( ctx->networkInfo, ctx->inferParams);
     }
     else
     {

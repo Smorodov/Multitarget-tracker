@@ -3,7 +3,6 @@
 
 namespace tensor_rt
 {
-
 	class Detector::Impl
 	{
 	public:

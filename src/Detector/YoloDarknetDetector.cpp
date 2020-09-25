@@ -69,7 +69,7 @@ bool YoloDarknetDetector::Init(const config_t& config)
     if (maxCropRatio != config.end())
         m_maxCropRatio = std::stof(maxCropRatio->second);
 
-	m_classesWhiteList.clear();
+    m_classesWhiteList.clear();
 	auto whiteRange = config.equal_range("white_list");
 	for (auto it = whiteRange.first; it != whiteRange.second; ++it)
 	{

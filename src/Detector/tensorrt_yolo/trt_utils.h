@@ -198,7 +198,8 @@ nvinfer1::ILayer * layer_split(const int n_layer_index_,
 
 std::vector<int> parse_int_list(const std::string s_args_);
 
-nvinfer1::ILayer* layer_focus(std::string s_model_name_,
+nvinfer1::ILayer* layer_focus(std::vector<nvinfer1::Weights> &trtWeights_,
+	std::string s_model_name_,
 	std::map<std::string, std::vector<float>>& map_wts_,
 	nvinfer1::ITensor* input,
 	const int out_channels_,
@@ -206,7 +207,7 @@ nvinfer1::ILayer* layer_focus(std::string s_model_name_,
 	std::vector<nvinfer1::Weights>& trtWeights,
 	nvinfer1::INetworkDefinition* network);
 
-nvinfer1::ILayer * layer_conv_bn_act(
+nvinfer1::ILayer * layer_conv_bn_act(std::vector<nvinfer1::Weights> &trtWeights_,
 	const std::string s_layer_name_,
 	std::map<std::string, std::vector<float>> &vec_wts_,//conv-bn
 	nvinfer1::ITensor* input_,
@@ -223,7 +224,7 @@ nvinfer1::ILayer * layer_act(nvinfer1::ITensor* input_,
 	nvinfer1::INetworkDefinition* network_,
 	const std::string s_act_ = "hardswish");
 
-nvinfer1::ILayer * layer_bottleneck_csp(
+nvinfer1::ILayer * layer_bottleneck_csp(std::vector<nvinfer1::Weights> &trtWeights_,
 	std::string s_model_name_,
 	std::map<std::string, std::vector<float>> &map_wts_,
 	nvinfer1::INetworkDefinition* network_,
@@ -234,7 +235,8 @@ nvinfer1::ILayer * layer_bottleneck_csp(
 	const int group_ = 1,
 	const float e_ = 0.5);
 
-nvinfer1::ILayer * layer_spp(std::string s_model_name_,
+nvinfer1::ILayer * layer_spp(std::vector<nvinfer1::Weights> &trtWeights_,
+	std::string s_model_name_,
 	std::map<std::string, std::vector<float>> &map_wts_,
 	nvinfer1::INetworkDefinition* network_,
 	nvinfer1::ITensor* input_,
@@ -247,7 +249,8 @@ nvinfer1::ILayer *layer_upsample(std::string s_model_name_,
 	nvinfer1::ITensor* input_,
 	const int n_scale_);
 
-nvinfer1::ILayer * layer_conv(const std::string s_layer_name_,
+nvinfer1::ILayer * layer_conv(std::vector<nvinfer1::Weights> &trtWeights_,
+	const std::string s_layer_name_,
 	std::map<std::string, std::vector<float>>&vec_wts_,//conv-bn
 	nvinfer1::ITensor* input_,
 	nvinfer1::INetworkDefinition* network_,

@@ -44,7 +44,6 @@ public:
 	void detect(const std::vector<cv::Mat>	&vec_image,
 				std::vector<tensor_rt::BatchResult> &vec_batch_result)
 	{
-		assert((vec_image.size() <= _config.n_max_batch)&&"nedd vec_image.size() <= _config.n_max_batch)");
 		std::vector<DsImage> vec_ds_images;
 		vec_batch_result.clear();
 		if (vec_batch_result.capacity() < vec_image.size())
@@ -108,9 +107,8 @@ private:
 		auto npos = _yolo_info.wtsFilePath.find(".weights");
 		assert(npos != std::string::npos
 			&& "wts file file not recognised. File needs to be of '.weights' format");
-		std::string dataPath = _yolo_info.wtsFilePath.substr(0, npos);
-		_yolo_info.calibrationTablePath = dataPath + "-calibration.table";
-		_yolo_info.enginePath = dataPath + "-" + _yolo_info.precision +"-batch"+std::to_string(_config.n_max_batch)+ ".engine";
+		_yolo_info.data_path = _yolo_info.wtsFilePath.substr(0, npos);
+		_yolo_info.calibrationTablePath = _yolo_info.data_path + "-calibration.table";
 		_yolo_info.inputBlobName = "data";
 
 		_infer_param.printPerfInfo = false;
@@ -125,19 +123,19 @@ private:
 	{
 		if ((_config.net_type == tensor_rt::YOLOV2) || (_config.net_type == tensor_rt::YOLOV2_TINY))
 		{
-			_p_net = std::unique_ptr<Yolo>{ new YoloV2(_config.n_max_batch, _yolo_info, _infer_param) };
+			_p_net = std::unique_ptr<Yolo>{ new YoloV2(_yolo_info, _infer_param) };
 		}
 		else if ((_config.net_type == tensor_rt::YOLOV3) || (_config.net_type == tensor_rt::YOLOV3_TINY))
 		{
-			_p_net = std::unique_ptr<Yolo>{ new YoloV3(_config.n_max_batch, _yolo_info, _infer_param) };
+			_p_net = std::unique_ptr<Yolo>{ new YoloV3(_yolo_info, _infer_param) };
 		}
 		else if ((_config.net_type == tensor_rt::YOLOV4) || (_config.net_type == tensor_rt::YOLOV4_TINY))
 		{
-			_p_net = std::unique_ptr<Yolo>{ new YoloV4(_config.n_max_batch,_yolo_info,_infer_param) };
+			_p_net = std::unique_ptr<Yolo>{ new YoloV4(_yolo_info,_infer_param) };
 		}
 		else if (_config.net_type == tensor_rt::YOLOV5)
 		{
-			_p_net = std::unique_ptr<Yolo>{ new YoloV5(_config.n_max_batch,_yolo_info,_infer_param) };
+			_p_net = std::unique_ptr<Yolo>{ new YoloV5(_yolo_info,_infer_param) };
 		}
 		else
 		{
