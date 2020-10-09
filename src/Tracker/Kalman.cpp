@@ -13,11 +13,9 @@ TKalmanFilter::TKalmanFilter(
       m_deltaTime(deltaTime),
       m_deltaTimeMin(deltaTime),
       m_deltaTimeMax(2 * deltaTime),
-      m_lastDist(0),
       m_accelNoiseMag(accelNoiseMag),
       m_type(type),
-      m_useAcceleration(useAcceleration),
-      m_initialized(false)
+      m_useAcceleration(useAcceleration)
 {
     m_deltaStep = (m_deltaTimeMax - m_deltaTimeMin) / m_deltaStepsCount;
 }
@@ -283,7 +281,6 @@ public:
           m_deltaTime(deltaTime),
           m_rectModel(rectModel)
     {
-
     }
 
     void stateConversionFunction(const cv::Mat& x_k, const cv::Mat& u_k, const cv::Mat& v_k, cv::Mat& x_kplus1)
@@ -309,13 +306,9 @@ public:
         }
 
         if (v_k.size() == u_k.size())
-        {
             x_kplus1 += v_k + u_k;
-        }
         else
-        {
             x_kplus1 += v_k;
-        }
     }
 
     void measurementFunction(const cv::Mat& x_k, const cv::Mat& n_k, cv::Mat& z_k)
@@ -565,10 +558,6 @@ Point_t TKalmanFilter::GetPointPrediction()
 
         m_lastPointResult = Point_t(prediction.at<track_t>(0), prediction.at<track_t>(1));
     }
-    else
-    {
-
-    }
     return m_lastPointResult;
 }
 
@@ -658,13 +647,10 @@ Point_t TKalmanFilter::Update(Point_t pt, bool dataCorrect)
 			{
 				track_t currDist = sqrtf(sqr(estimated.at<track_t>(0) - pt.x) + sqr(estimated.at<track_t>(1) - pt.y));
 				if (currDist > m_lastDist)
-				{
 					m_deltaTime = std::min(m_deltaTime + m_deltaStep, m_deltaTimeMax);
-				}
 				else
-				{
 					m_deltaTime = std::max(m_deltaTime - m_deltaStep, m_deltaTimeMin);
-				}
+
 				m_lastDist = currDist;
 
 				m_linearKalman.transitionMatrix.at<track_t>(0, 2) = m_deltaTime;
@@ -690,9 +676,7 @@ Point_t TKalmanFilter::Update(Point_t pt, bool dataCorrect)
     else
     {
         if (dataCorrect)
-        {
             m_lastPointResult = pt;
-        }
     }
     return m_lastPointResult;
 }
@@ -722,10 +706,6 @@ cv::Rect TKalmanFilter::GetRectPrediction()
         }
 
         m_lastRectResult = cv::Rect_<track_t>(prediction.at<track_t>(0), prediction.at<track_t>(1), prediction.at<track_t>(2), prediction.at<track_t>(3));
-    }
-    else
-    {
-
     }
     return cv::Rect(static_cast<int>(m_lastRectResult.x), static_cast<int>(m_lastRectResult.y), static_cast<int>(m_lastRectResult.width), static_cast<int>(m_lastRectResult.height));
 }
@@ -838,13 +818,10 @@ cv::Rect TKalmanFilter::Update(cv::Rect rect, bool dataCorrect)
 			{
 				track_t currDist = sqrtf(sqr(estimated.at<track_t>(0) - rect.x) + sqr(estimated.at<track_t>(1) - rect.y) + sqr(estimated.at<track_t>(2) - rect.width) + sqr(estimated.at<track_t>(3) - rect.height));
 				if (currDist > m_lastDist)
-				{
 					m_deltaTime = std::min(m_deltaTime + m_deltaStep, m_deltaTimeMax);
-				}
 				else
-				{
 					m_deltaTime = std::max(m_deltaTime - m_deltaStep, m_deltaTimeMin);
-				}
+
 				m_lastDist = currDist;
 
 				m_linearKalman.transitionMatrix.at<track_t>(0, 4) = m_deltaTime;

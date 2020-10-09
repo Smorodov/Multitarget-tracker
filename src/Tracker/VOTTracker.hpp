@@ -6,14 +6,8 @@
 class VOTTracker
 {
 public:
-    VOTTracker()
-    {
-
-    }
-    virtual ~VOTTracker()
-    {
-
-    }
+    VOTTracker() = default;
+    virtual ~VOTTracker() = default;
 
     virtual void Initialize(const cv::Mat &im, cv::Rect region) = 0;
     virtual cv::RotatedRect Update(const cv::Mat &im, float& confidence) = 0;
