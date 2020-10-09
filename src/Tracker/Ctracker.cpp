@@ -38,11 +38,9 @@ CTracker::~CTracker(void)
 /// \param currFrame
 /// \param fps
 ///
-void CTracker::Update(
-        const regions_t& regions,
-        cv::UMat currFrame,
-        float fps
-        )
+void CTracker::Update(const regions_t& regions,
+                      cv::UMat currFrame,
+                      float fps)
 {
     UpdateTrackingState(regions, currFrame, fps);
 
@@ -55,11 +53,9 @@ void CTracker::Update(
 /// \param currFrame
 /// \param fps
 ///
-void CTracker::UpdateTrackingState(
-        const regions_t& regions,
-        cv::UMat currFrame,
-        float fps
-        )
+void CTracker::UpdateTrackingState(const regions_t& regions,
+                                   cv::UMat currFrame,
+                                   float fps)
 {
     const size_t N = m_tracks.size();	// Tracking objects
     const size_t M = regions.size();	// Detections or regions
@@ -175,7 +171,12 @@ void CTracker::UpdateTrackingState(
 /// \param maxPossibleCost
 /// \param maxCost
 ///
-void CTracker::CreateDistaceMatrix(const regions_t& regions, std::vector<RegionEmbedding>& regionEmbeddings, distMatrix_t& costMatrix, track_t maxPossibleCost, track_t& maxCost, cv::UMat currFrame)
+void CTracker::CreateDistaceMatrix(const regions_t& regions,
+                                   std::vector<RegionEmbedding>& regionEmbeddings,
+                                   distMatrix_t& costMatrix,
+                                   track_t maxPossibleCost,
+                                   track_t& maxCost,
+                                   cv::UMat currFrame)
 {
     const size_t N = m_tracks.size();	// Tracking objects
     maxCost = 0;

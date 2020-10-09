@@ -21,11 +21,10 @@ public:
         : m_settings(settings)
     {
     }
-    virtual ~ShortPathCalculator()
-    {
-    }
+    virtual ~ShortPathCalculator() = default;
 
     virtual void Solve(const distMatrix_t& costMatrix, size_t N, size_t M, assignments_t& assignment, track_t maxCost) = 0;
+
 protected:
     SPSettings m_settings;
 };

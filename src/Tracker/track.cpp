@@ -17,13 +17,13 @@
 /// \param externalTrackerForLost
 ///
 CTrack::CTrack(const CRegion& region,
-        tracking::KalmanType kalmanType,
-        track_t deltaTime,
-        track_t accelNoiseMag,
-	    bool useAcceleration,
-        size_t trackID,
-        bool filterObjectSize,
-        tracking::LostTrackType externalTrackerForLost)
+               tracking::KalmanType kalmanType,
+               track_t deltaTime,
+               track_t accelNoiseMag,
+               bool useAcceleration,
+               size_t trackID,
+               bool filterObjectSize,
+               tracking::LostTrackType externalTrackerForLost)
     :
       m_kalman(kalmanType, useAcceleration, deltaTime, accelNoiseMag),
       m_lastRegion(region),
@@ -55,14 +55,14 @@ CTrack::CTrack(const CRegion& region,
 /// \param externalTrackerForLost
 ///
 CTrack::CTrack(const CRegion& region,
-        const RegionEmbedding& regionEmbedding,
-        tracking::KalmanType kalmanType,
-        track_t deltaTime,
-        track_t accelNoiseMag,
-        bool useAcceleration,
-        size_t trackID,
-        bool filterObjectSize,
-        tracking::LostTrackType externalTrackerForLost)
+               const RegionEmbedding& regionEmbedding,
+               tracking::KalmanType kalmanType,
+               track_t deltaTime,
+               track_t accelNoiseMag,
+               bool useAcceleration,
+               size_t trackID,
+               bool filterObjectSize,
+               tracking::LostTrackType externalTrackerForLost)
     :
       m_kalman(kalmanType, useAcceleration, deltaTime, accelNoiseMag),
       m_lastRegion(region),
@@ -410,7 +410,6 @@ bool CTrack::CheckStatic(int trajLen, cv::UMat currFrame, const CRegion& region)
             m_staticFrame = cv::UMat();
         }
     }
-
     return m_isStatic;
 }
 
@@ -421,13 +420,9 @@ bool CTrack::CheckStatic(int trajLen, cv::UMat currFrame, const CRegion& region)
 cv::RotatedRect CTrack::GetLastRect() const
 {
     if (m_filterObjectSize)
-    {
         return m_predictionRect;
-    }
     else
-    {
         return cv::RotatedRect(cv::Point2f(m_predictionPoint.x, m_predictionPoint.y), m_predictionRect.size, m_predictionRect.angle);
-    }
 }
 
 ///
@@ -474,12 +469,10 @@ size_t& CTrack::SkippedFrames()
 /// \param prevFrame
 /// \param currFrame
 ///
-void CTrack::RectUpdate(
-        const CRegion& region,
-        bool dataCorrect,
-        cv::UMat prevFrame,
-        cv::UMat currFrame
-        )
+void CTrack::RectUpdate(const CRegion& region,
+                        bool dataCorrect,
+                        cv::UMat prevFrame,
+                        cv::UMat currFrame)
 {
     m_kalman.GetRectPrediction();
 
@@ -897,12 +890,10 @@ void CTrack::CreateExternalTracker(int channels)
 /// \param pt
 /// \param dataCorrect
 ///
-void CTrack::PointUpdate(
-        const Point_t& pt,
-        const cv::Size& newObjSize,
-        bool dataCorrect,
-        const cv::Size& frameSize
-        )
+void CTrack::PointUpdate(const Point_t& pt,
+                         const cv::Size& newObjSize,
+                         bool dataCorrect,
+                         const cv::Size& frameSize)
 {
     m_kalman.GetPointPrediction();
 
