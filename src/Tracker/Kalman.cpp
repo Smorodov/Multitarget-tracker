@@ -10,10 +10,10 @@ TKalmanFilter::TKalmanFilter(
         track_t accelNoiseMag
         )
     :
+      m_accelNoiseMag(accelNoiseMag),
       m_deltaTime(deltaTime),
       m_deltaTimeMin(deltaTime),
       m_deltaTimeMax(2 * deltaTime),
-      m_accelNoiseMag(accelNoiseMag),
       m_type(type),
       m_useAcceleration(useAcceleration)
 {

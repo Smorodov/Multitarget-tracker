@@ -160,7 +160,7 @@ cv::RotatedRect DAT_TRACKER::Update(const cv::Mat &im, float& confidence)
         candidate_scores.push_back(vote_scores[i] * dist_scores[i]);
     }
     auto maxEl = std::max_element(candidate_scores.begin(), candidate_scores.end());
-    int best_candidate = maxEl - candidate_scores.begin();
+    size_t best_candidate = maxEl - candidate_scores.begin();
     confidence = *maxEl;
 
     target_pos = candidate_centers[best_candidate];
