@@ -39,7 +39,7 @@ private:
 	bool m_swapRB = false;
     float m_maxCropRatio = 2.0f;
     std::vector<std::string> m_classNames;
-    std::vector<std::string> m_outNames;
+    std::vector<cv::String> m_outNames;
 	std::vector<int> m_outLayers;
 	std::string m_outLayerType;
     cv::UMat m_inputBlob;
