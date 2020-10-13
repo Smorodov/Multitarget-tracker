@@ -1,7 +1,7 @@
 cd ..
 md build
 cd build
-cmake.exe . ..  -G "Visual Studio 15 2017 Win64" ^
+cmake.exe . ..  -G "Visual Studio 16 2019" -A "x64" ^
           -DOpenCV_DIR=C:/work/libraries/opencv/opencv_64_cuda ^
           -DUSE_OCV_BGFG=ON ^
           -DUSE_OCV_KCF=ON  ^
@@ -15,6 +15,5 @@ cmake.exe . ..  -G "Visual Studio 15 2017 Win64" ^
           -DCUDNN_LIBRARY=C:/cudnn-10.0-windows10-x64-v7.6.5.32/cuda/lib/x64/cudnn.lib ^
           -DBUILD_YOLO_TENSORRT=ON ^
           -DTensorRT_LIBRARY=C:/TensorRT-5.1.5.0/lib/*.lib ^
-          -DTensorRT_INCLUDE_DIR=C:/TensorRT-5.1.5.0/include ^
-          -Dgflags_DIR=C:/work/libraries/gflags/build_x64
+          -DTensorRT_INCLUDE_DIR=C:/TensorRT-5.1.5.0/include
 cmake.exe --build . -j 6 --config Release

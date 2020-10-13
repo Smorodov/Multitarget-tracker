@@ -353,12 +353,10 @@ void STAPLE_TRACKER::updateHistModel(bool new_model, cv::Mat &patch, double lear
         cv::calcHist(&patch, imgCount, channels, bg_mask_new, bg_hist, dims, sizes, ranges);
         cv::calcHist(&patch, imgCount, channels, fg_mask_new, fg_hist, dims, sizes, ranges);
 
-        int bgtotal = cv::countNonZero(bg_mask_new);
-        (bgtotal == 0) && (bgtotal = 1);
+        int bgtotal = std::max(1, cv::countNonZero(bg_mask_new));
         bg_hist = bg_hist / bgtotal;
 
-        int fgtotal = cv::countNonZero(fg_mask_new);
-        (fgtotal == 0) && (fgtotal = 1);
+        int fgtotal = std::max(1, cv::countNonZero(fg_mask_new));
         fg_hist = fg_hist / fgtotal;
     } else { // update the model
         cv::MatND bg_hist_tmp;
@@ -367,12 +365,10 @@ void STAPLE_TRACKER::updateHistModel(bool new_model, cv::Mat &patch, double lear
         cv::calcHist(&patch, imgCount, channels, bg_mask_new, bg_hist_tmp, dims, sizes, ranges);
         cv::calcHist(&patch, imgCount, channels, fg_mask_new, fg_hist_tmp, dims, sizes, ranges);
 
-        int bgtotal = cv::countNonZero(bg_mask_new);
-        (bgtotal == 0) && (bgtotal = 1);
+        int bgtotal = std::max(1, cv::countNonZero(bg_mask_new));
         bg_hist_tmp = bg_hist_tmp / bgtotal;
 
-        int fgtotal = cv::countNonZero(fg_mask_new);
-        (fgtotal == 0) && (fgtotal = 1);
+        int fgtotal = std::max(1, cv::countNonZero(fg_mask_new));
         fg_hist_tmp = fg_hist_tmp / fgtotal;
 
         // xxx
@@ -1142,8 +1138,8 @@ void STAPLE_TRACKER::getColourMap(const cv::Mat &patch, cv::Mat& output)
 
                 // xxx
                 *pDst = profg / (profg + probg);
-
-                isnan(*pDst) && (*pDst = 0.0);
+                if (isnan(*pDst))
+                    *pDst = 0.0;
 
                 pSrc += d;
                 ++pDst;
@@ -1172,8 +1168,8 @@ void STAPLE_TRACKER::getColourMap(const cv::Mat &patch, cv::Mat& output)
 
                 // xxx
                 *pDst = profg / (profg + probg);
-
-                isnan(*pDst) && (*pDst = 0.0);
+                if (isnan(*pDst))
+                    *pDst = 0.0;
 
                 pSrc += d;
                 ++pDst;
@@ -1325,7 +1321,7 @@ cv::RotatedRect STAPLE_TRACKER::Update(const cv::Mat &im, float& confidence)
     {
         //hf = bsxfun(@rdivide, hf_num, sum(hf_den, 3)+p.lambda);
 
-        std::vector<float> DIM1(w * h, cfg.lambda);
+        std::vector<float> DIM1(static_cast<size_t>(w) * static_cast<size_t>(h), cfg.lambda);
 
         for (int ch = 0; ch < xt_windowed.channels(); ++ch)
         {
@@ -1517,22 +1513,19 @@ cv::RotatedRect STAPLE_TRACKER::Update(const cv::Mat &im, float& confidence)
         }
 
         // use new scale to update bboxes for target, filter, bg and fg models
-        target_sz.width = round(base_target_sz.width * scale_factor);
-        target_sz.height = round(base_target_sz.height * scale_factor);
+        target_sz.width = cvRound(base_target_sz.width * scale_factor);
+        target_sz.height = cvRound(base_target_sz.height * scale_factor);
 
-        float avg_dim = (target_sz.width + target_sz.height)/2.0;
+        float avg_dim = (target_sz.width + target_sz.height) / 2.0f;
 
-        bg_area.width= round(target_sz.width + avg_dim);
-        bg_area.height = round(target_sz.height + avg_dim);
-
-        (bg_area.width > im.cols) && (bg_area.width = im.cols - 1);
-        (bg_area.height > im.rows) && (bg_area.height = im.rows - 1);
+        bg_area.width = std::min(im.cols - 1, cvRound(target_sz.width + avg_dim));
+        bg_area.height = std::min(im.rows - 1, cvRound(target_sz.height + avg_dim));
 
         bg_area.width = bg_area.width - (bg_area.width - target_sz.width) % 2;
         bg_area.height = bg_area.height - (bg_area.height - target_sz.height) % 2;
 
-        fg_area.width = round(target_sz.width - avg_dim * cfg.inner_padding);
-        fg_area.height = round(target_sz.height - avg_dim * cfg.inner_padding);
+        fg_area.width = cvRound(target_sz.width - avg_dim * cfg.inner_padding);
+        fg_area.height = cvRound(target_sz.height - avg_dim * cfg.inner_padding);
 
         fg_area.width = fg_area.width + int(bg_area.width - fg_area.width) % 2;
         fg_area.height = fg_area.height + int(bg_area.height - fg_area.height) % 2;

@@ -10,7 +10,6 @@
 #include "yolov4.h"
 #include "yolov5.h"
 
-#include <experimental/filesystem>
 #include <fstream>
 #include <string>
 #include <chrono>

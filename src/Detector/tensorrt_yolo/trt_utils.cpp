@@ -25,7 +25,15 @@ SOFTWARE.
 
 #include "trt_utils.h"
 #include <NvInferRuntimeCommon.h>
+
+#ifdef _WIN32
+#include <filesystem>
+namespace fs = std::filesystem;
+#else
 #include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
+#endif
+
 #include <fstream>
 #include <iomanip>
 using namespace nvinfer1;
@@ -82,7 +90,7 @@ float clamp(const float val, const float minVal, const float maxVal)
 
 bool fileExists(const std::string fileName, bool verbose)
 {
-    if (!std::experimental::filesystem::exists(std::experimental::filesystem::path(fileName)))
+    if (!fs::exists(fs::path(fileName)))
     {
         if (verbose) std::cout << "File does not exist : " << fileName << std::endl;
         return false;

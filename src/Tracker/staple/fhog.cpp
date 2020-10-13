@@ -74,20 +74,22 @@ float* acosTable() {
 
 // compute gradient magnitude and orientation at each location (uses sse)
 void gradMag( float *I, float *M, float *O, int h, int w, int d, bool full ) {
-    int x, y, y1, c, h4, s; float *Gx, *Gy, *M2; __m128 *_Gx, *_Gy, *_M2, _m;
+    int y;
+    __m128 *_Gx, *_Gy, *_M2, _m;
     float *acost = acosTable(), acMult=10000.0f;
     // allocate memory for storing one column of output (padded so h4%4==0)
-    h4=(h%4==0) ? h : h-(h%4)+4; s=d*h4*sizeof(float);
-    M2=(float*) alMalloc(s,16); _M2=(__m128*) M2;
-    Gx=(float*) alMalloc(s,16); _Gx=(__m128*) Gx;
-    Gy=(float*) alMalloc(s,16); _Gy=(__m128*) Gy;
+    int h4=(h%4==0) ? h : h-(h%4)+4;
+    int s = static_cast<size_t>(d) * static_cast<size_t>(h4) * sizeof(float);
+    float* M2=(float*) alMalloc(s,16); _M2=(__m128*) M2;
+    float* Gx=(float*) alMalloc(s,16); _Gx=(__m128*) Gx;
+    float* Gy=(float*) alMalloc(s,16); _Gy=(__m128*) Gy;
     // compute gradient magnitude and orientation for each column
-    for( x=0; x<w; x++ ) {
+    for(int x=0; x<w; x++ ) {
         // compute gradients (Gx, Gy) with maximum squared magnitude (M2)
-        for(c=0; c<d; c++) {
+        for(int c=0; c<d; c++) {
             grad1( I+x*h+c*w*h, Gx+c*h4, Gy+c*h4, h, w, x );
             for( y=0; y<h4/4; y++ ) {
-                y1=h4/4*c+y;
+                int y1=h4/4*c+y;
                 _M2[y1]=sse::ADD(sse::MUL(_Gx[y1],_Gx[y1]),sse::MUL(_Gy[y1],_Gy[y1]));
                 if( c==0 ) continue; _m = sse::CMPGT( _M2[y1], _M2[y] );
                 _M2[y] = sse::OR( sse::AND(_m,_M2[y1]), sse::ANDNOT(_m,_M2[y]) );
@@ -106,7 +108,7 @@ void gradMag( float *I, float *M, float *O, int h, int w, int d, bool full ) {
         // compute and store gradient orientation (O) via table lookup
         if( O!=0 ) for( y=0; y<h; y++ ) O[x*h+y] = acost[(int)Gx[y]];
         if( O!=0 && full ) {
-            y1=((~size_t(O+x*h)+1)&15)/4; y=0;
+            int y1=((~size_t(O+x*h)+1)&15)/4; y=0;
             for( ; y<y1; y++ ) O[y+x*h]+=(Gy[y]<0)*PI;
             for( ; y<h-4; y+=4 ) sse::STRu( O[y+x*h],
                     sse::ADD( sse::LDu(O[y+x*h]), sse::AND(sse::CMPLT(sse::LDu(Gy[y]),sse::SET(0.f)),sse::SET(PI)) ) );
@@ -256,13 +258,14 @@ void gradHist( float *M, float *O, float *H, int h, int w,
 
 // HOG helper: compute 2x2 block normalization values (padded by 1 pixel)
 float* hogNormMatrix( float *H, int nOrients, int hb, int wb, int bin ) {
-    float *N, *N1, *n; int o, x, y, dx, dy, hb1=hb+1, wb1=wb+1;
+    int o, x, y, dx, dy, hb1=hb+1, wb1=wb+1;
     float eps = 1e-4f/4/bin/bin/bin/bin; // precise backward equality
-    N = (float*) wrCalloc(hb1*wb1,sizeof(float)); N1=N+hb1+1;
+    float* N = (float*) wrCalloc(static_cast<size_t>(hb1) * static_cast<size_t>(wb1), sizeof(float));
+    float* N1=N+hb1+1;
     for( o=0; o<nOrients; o++ ) for( x=0; x<wb; x++ ) for( y=0; y<hb; y++ )
         N1[x*hb1+y] += H[o*wb*hb+x*hb+y]*H[o*wb*hb+x*hb+y];
     for( x=0; x<wb-1; x++ ) for( y=0; y<hb-1; y++ ) {
-        n=N1+x*hb1+y; *n=1/float(sqrt(n[0]+n[1]+n[hb1]+n[hb1+1]+eps)); }
+        float* n=N1+x*hb1+y; *n=1/float(sqrt(n[0]+n[1]+n[hb1]+n[hb1+1]+eps)); }
     x=0;     dx= 1; dy= 1; y=0;                  N[x*hb1+y]=N[(x+dx)*hb1+y+dy];
     x=0;     dx= 1; dy= 0; for(y=0; y<hb1; y++)  N[x*hb1+y]=N[(x+dx)*hb1+y+dy];
     x=0;     dx= 1; dy=-1; y=hb1-1;              N[x*hb1+y]=N[(x+dx)*hb1+y+dy];
@@ -322,16 +325,15 @@ void fhog( float *M, float *O, float *H, int h, int w, int binSize,
            int nOrients, int softBin, float clip )
 {
     const int hb=h/binSize, wb=w/binSize, nb=hb*wb, nbo=nb*nOrients;
-    float *N, *R1, *R2; int o, x;
     // compute unnormalized constrast sensitive histograms
-    R1 = (float*) wrCalloc(wb*hb*nOrients*2 + 2,sizeof(float));
+    float* R1 = (float*) wrCalloc(static_cast<size_t>(wb) * static_cast<size_t>(hb) * static_cast<size_t>(nOrients) * 2 + 2, sizeof(float));
     gradHist( M, O, R1, h, w, binSize, nOrients*2, softBin, true );
     // compute unnormalized contrast insensitive histograms
-    R2 = (float*) wrCalloc(wb*hb*nOrients,sizeof(float));
-    for( o=0; o<nOrients; o++ ) for( x=0; x<nb; x++ )
+    float* R2 = (float*) wrCalloc(static_cast<size_t>(wb) * static_cast<size_t>(hb) * static_cast<size_t>(nOrients), sizeof(float));
+    for(int o=0; o<nOrients; o++ ) for(int x=0; x<nb; x++ )
         R2[o*nb+x] = R1[o*nb+x]+R1[(o+nOrients)*nb+x];
     // compute block normalization values
-    N = hogNormMatrix( R2, nOrients, hb, wb, binSize );
+    float* N = hogNormMatrix( R2, nOrients, hb, wb, binSize );
     // normalized histograms and texture channels
     hogChannels( H+nbo*0, R1, N, hb, wb, nOrients*2, clip, 1 );
     hogChannels( H+nbo*2, R2, N, hb, wb, nOrients*1, clip, 1 );
@@ -456,9 +458,10 @@ float* fhog(float *M,float* O,int height,int width,int /*channel*/,int *h,int *w
     *h = height/binSize;
     *w = width/binSize;
     *d = nOrients*3+5;
+    const size_t allSize = static_cast<size_t>(*h) * static_cast<size_t>(*w) * static_cast<size_t>(*d);
 
-    float* H = new float[(*h)*(*w)*(*d)];
-    memset(H,0,(*h)*(*w)*(*d)*sizeof(float));
+    float* H = new float[allSize];
+    memset(H, 0, allSize * sizeof(float));
 
     fhog( M, O, H, height, width, binSize, nOrients, -1, clip );
 

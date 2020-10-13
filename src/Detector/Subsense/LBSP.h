@@ -102,9 +102,9 @@ public:
 	//! utility function, used to filter out bad pixels in a ROI that would trigger out of bounds error because they're too close to the image border
 	static void validateROI(cv::Mat& oROI);
 	//! utility, specifies the pixel size of the pattern used (width and height)
-	static const size_t PATCH_SIZE = 5;
+	static constexpr size_t PATCH_SIZE = 5;
 	//! utility, specifies the number of bytes per descriptor (should be the same as calling 'descriptorSize()')
-	static const size_t DESC_SIZE = 2;
+	static constexpr size_t DESC_SIZE = 2;
 
 protected:
 	//! classic 'compute' implementation, based on the regular DescriptorExtractor::computeImpl arguments & expected output

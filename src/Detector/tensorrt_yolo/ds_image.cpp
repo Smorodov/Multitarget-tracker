@@ -23,7 +23,14 @@ SOFTWARE.
 *
 */
 #include "ds_image.h"
+
+#ifdef _WIN32
+#include <filesystem>
+namespace fs = std::filesystem;
+#else
 #include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
+#endif
 
 DsImage::DsImage() :
     m_Height(0),
@@ -97,7 +104,7 @@ DsImage::DsImage(const std::string& path, const int& inputH, const int& inputW) 
     m_RNG(cv::RNG(unsigned(std::time(0)))),
     m_ImageName()
 {
-    m_ImageName = std::experimental::filesystem::path(path).stem().string();
+    m_ImageName = fs::path(path).stem().string();
 	m_OrigImage = cv::imread(path, cv::IMREAD_UNCHANGED);
 
     if (!m_OrigImage.data || m_OrigImage.cols <= 0 || m_OrigImage.rows <= 0)

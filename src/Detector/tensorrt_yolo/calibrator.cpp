@@ -27,6 +27,7 @@ SOFTWARE.
 #include <fstream>
 #include <iostream>
 #include <iterator>
+#include <random>
 
 Int8EntropyCalibrator::Int8EntropyCalibrator(const uint32_t& batchSize, const std::string& calibImages,
                                              const std::string& calibImagesPath,
@@ -44,10 +45,12 @@ Int8EntropyCalibrator::Int8EntropyCalibrator(const uint32_t& batchSize, const st
 {
     if (!fileExists(m_CalibTableFilePath, false))
     {
-        m_ImageList = loadImageList(calibImages, calibImagesPath);
-        m_ImageList.resize(static_cast<int>(m_ImageList.size() / m_BatchSize) * m_BatchSize);
-        std::random_shuffle(m_ImageList.begin(), m_ImageList.end(),
-                            [](int i) { return rand() % i; });
+		std::random_device rng;
+		std::mt19937 urng(rng());
+
+		m_ImageList = loadImageList(calibImages, calibImagesPath);
+		m_ImageList.resize(static_cast<int>(m_ImageList.size() / m_BatchSize) * m_BatchSize);
+		std::shuffle(m_ImageList.begin(), m_ImageList.end(), urng);
     }
 
     NV_CUDA_CHECK(cudaMalloc(&m_DeviceInput, m_InputCount * sizeof(float)));

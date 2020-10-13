@@ -1,6 +1,12 @@
 ![travis ci:](https://travis-ci.org/Smorodov/Multitarget-tracker.svg?branch=master)
 [![CodeQL](https://github.com/Smorodov/Multitarget-tracker/workflows/CodeQL/badge.svg?branch=master)](https://github.com/Smorodov/Multitarget-tracker/actions?query=workflow%3ACodeQL)
 
+# Last changes
+
+* Migration to C++17 standart
+
+* Support CodeQL analyzer
+
 # New videos!
 
 * Vehicles speed calculation with YOLO v4 (Thanks [Sam Blake for great idea!](https://medium.com/hal24k-techblog/how-to-track-objects-in-the-real-world-with-tensorflow-sort-and-opencv-a64d9564ccb1))
@@ -131,7 +137,7 @@ Also you can read [Wiki in Russian](https://github.com/Smorodov/Multitarget-trac
            cmake . .. -DUSE_OCV_BGFG=ON -DUSE_OCV_KCF=ON -DUSE_OCV_UKF=ON -DBUILD_YOLO_LIB=ON -DBUILD_YOLO_TENSORRT=ON -DBUILD_ASYNC_DETECTOR=ON -DBUILD_CARS_COUNTING=ON
            make -j
 
-How to run cmake on Windows for Visual Studio 15 2017 Win64: [example](https://github.com/Smorodov/Multitarget-tracker/blob/master/data/cmake.bat). You need to add directory with cmake.exe to PATH and change build params in cmake.bat
+How to run cmake on Windows for Visual Studio 15 2017 Win64: [example](https://github.com/Smorodov/Multitarget-tracker/blob/master/data/cmake_vs2017.bat). You need to add directory with cmake.exe to PATH and change build params in cmake.bat
 
 
 **Usage:**
