@@ -87,7 +87,7 @@ double UseSVM_CD_FastEvaluationStructure(const char* modelfile, const int m, con
 
     // Data
     cv::Mat mat(rows, cols, type);
-    fs.read((char*)mat.data, CV_ELEM_SIZE(type) * rows * cols);
+    fs.read((char*)mat.data, CV_ELEM_SIZE(type) * static_cast<size_t>(rows) * static_cast<size_t>(cols));
 
     int num_dim = m;
 

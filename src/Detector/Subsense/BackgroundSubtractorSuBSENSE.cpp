@@ -297,7 +297,7 @@ void BackgroundSubtractorSuBSENSE::operator()(cv::InputArray _image, cv::OutputA
 	CV_Assert(oInputImg.isContinuous());
 	_fgmask.create(m_oImgSize,CV_8UC1);
 	cv::Mat oCurrFGMask = _fgmask.getMat();
-	memset(oCurrFGMask.data,0,oCurrFGMask.cols*oCurrFGMask.rows);
+	memset(oCurrFGMask.data,0, static_cast<size_t>(oCurrFGMask.cols) * static_cast<size_t>(oCurrFGMask.rows));
 	size_t nNonZeroDescCount = 0;
 	const float fRollAvgFactor_LT = 1.0f/std::min(++m_nFrameIndex,m_nSamplesForMovingAvgs);
 	const float fRollAvgFactor_ST = 1.0f/std::min(m_nFrameIndex,m_nSamplesForMovingAvgs/4);
@@ -716,8 +716,8 @@ void BackgroundSubtractorSuBSENSE::getBackgroundImage(cv::OutputArray background
 	oAvgBGImg.convertTo(backgroundImage,CV_8U);
 }
 
-void BackgroundSubtractorSuBSENSE::getBackgroundDescriptorsImage(cv::OutputArray backgroundDescImage) const {
-	CV_Assert(LBSP::DESC_SIZE==2);
+void BackgroundSubtractorSuBSENSE::getBackgroundDescriptorsImage(cv::OutputArray backgroundDescImage) const
+{
 	CV_Assert(m_bInitialized);
 	cv::Mat oAvgBGDesc = cv::Mat::zeros(m_oImgSize,CV_32FC((int)m_nImgChannels));
 	for(size_t n=0; n<m_voBGDescSamples.size(); ++n) {

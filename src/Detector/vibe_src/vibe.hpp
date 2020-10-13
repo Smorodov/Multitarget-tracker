@@ -4,16 +4,16 @@
 #include <opencv2/core/core.hpp>
 #include <memory>
 
-#define RANDOM_BUFFER_SIZE (65535)
-
 namespace vibe
 {
+    constexpr int RANDOM_BUFFER_SIZE = 65535;
+
 
 class VIBE
 {
 public:
     VIBE(int channels, int samples, int pixel_neighbor, int distance_threshold, int matching_threshold, int update_factor);
-    ~VIBE();
+    ~VIBE() = default;
 
     void update(const cv::Mat& img);
     cv::Mat& getMask();
@@ -42,10 +42,9 @@ private:
     unsigned int m_rng[RANDOM_BUFFER_SIZE];
     int m_rngIdx = 0;
 
-    cv::Vec2i getRndNeighbor(int i, int j);
+    cv::Vec<size_t, 2> getRndNeighbor(int i, int j);
 	void init(const cv::Mat& img);
 };
-
 }
 
 #endif /*__VIBE_HPP__*/
