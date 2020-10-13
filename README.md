@@ -1,5 +1,11 @@
 ![travis ci:](https://travis-ci.org/Smorodov/Multitarget-tracker.svg?branch=master)
 
+# Last changes
+
+* Migration to C++17 standart
+
+* Support CodeQL analyzer
+
 # New videos!
 
 * Vehicles speed calculation with YOLO v4 (Thanks [Sam Blake for great idea!](https://medium.com/hal24k-techblog/how-to-track-objects-in-the-real-world-with-tensorflow-sort-and-opencv-a64d9564ccb1))
