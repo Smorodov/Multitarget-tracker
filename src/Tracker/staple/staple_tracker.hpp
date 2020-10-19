@@ -22,25 +22,25 @@ struct staple_cfg
     int hog_cell_size = 4;
     int fixed_area = 150*150;           // standard area to which we resize the target
     int n_bins = 2*2*2*2*2;             // number of bins for the color histograms (bg and fg models)
-    double learning_rate_pwp = 0.04;    // bg and fg color models learning rate
+    float learning_rate_pwp = 0.04f;    // bg and fg color models learning rate
     const char * feature_type = "fhog"; // "fhog", ""gray""
-    double inner_padding = 0.2;         // defines inner area used to sample colors from the foreground
-    double output_sigma_factor = 1/16.0; // standard deviation for the desired translation filter output
-    double lambda = 1e-3;               // egularization weight
-    double learning_rate_cf = 0.01;     // HOG model learning rate
-    double merge_factor = 0.3;          // fixed interpolation factor - how to linearly combine the two responses
+    float inner_padding = 0.2f;         // defines inner area used to sample colors from the foreground
+    float output_sigma_factor = 1/16.0f; // standard deviation for the desired translation filter output
+    float lambda = 1e-3;               // egularization weight
+    float learning_rate_cf = 0.01f;     // HOG model learning rate
+    float merge_factor = 0.3f;          // fixed interpolation factor - how to linearly combine the two responses
     const char * merge_method = "const_factor";
     bool den_per_channel = false;
 
     // scale related
     bool scale_adaptation = true;
     int hog_scale_cell_size = 4;         // Default DSST=4
-    double learning_rate_scale = 0.025;
-    double scale_sigma_factor = 1/4.0;
+    float learning_rate_scale = 0.025f;
+    float scale_sigma_factor = 1/4.0f;
     int num_scales = 33;
-    double scale_model_factor = 1.0;
-    double scale_step = 1.02;
-    double scale_model_max_area = 32*16;
+    float scale_model_factor = 1.0f;
+    float scale_step = 1.02f;
+    float scale_model_max_area = 32*16;
 
     // debugging stuff
     int visualization = 0;              // show output bbox on frame
@@ -64,14 +64,14 @@ public:
     void Train(const cv::Mat &im, bool first);
 
 protected:
-    staple_cfg default_parameters_staple(staple_cfg cfg);
+    staple_cfg default_parameters_staple();
     void initializeAllAreas(const cv::Mat &im);
 
     void getSubwindow(const cv::Mat &im, cv::Point_<float> centerCoor, cv::Size model_sz, cv::Size scaled_sz, cv::Mat &output);
     void getSubwindowFloor(const cv::Mat &im, cv::Point_<float> centerCoor, cv::Size model_sz, cv::Size scaled_sz, cv::Mat &output);
-    void updateHistModel(bool new_model, cv::Mat &patch, double learning_rate_pwp=0.0);
+    void updateHistModel(bool new_model, cv::Mat &patch, float learning_rate_pwp=0.0f);
     void CalculateHann(cv::Size sz, cv::Mat &output);
-    void gaussianResponse(cv::Size rect_size, double sigma, cv::Mat &output);
+    void gaussianResponse(cv::Size rect_size, float sigma, cv::Mat &output);
     void getFeatureMap(cv::Mat &im_patch, const char *feature_type, cv::MatND &output);
     void cropFilterResponse(const cv::Mat &response_cf, cv::Size response_size, cv::Mat& output);
     void getColourMap(const cv::Mat &patch, cv::Mat& output);
@@ -82,14 +82,14 @@ protected:
     void mexResize(const cv::Mat &im, cv::Mat &output, cv::Size newsz, const char *method);
 
 private:
-    staple_cfg cfg;
+    staple_cfg m_cfg;
 
     cv::Point_<float> pos;
     cv::Size target_sz;
 
     cv::Size bg_area;
     cv::Size fg_area;
-    double area_resize_factor;
+    float area_resize_factor;
     cv::Size cf_response_size;
 
     cv::Size norm_bg_area;
