@@ -44,8 +44,9 @@ namespace vibe
 
 		const size_t imWidth = static_cast<size_t>(m_size.width);
 		const size_t imHeight = static_cast<size_t>(m_size.height);
+		const size_t chanSampl = static_cast<size_t>(m_channels * m_samples);
 
-		m_model.resize(m_channels * m_samples * imWidth * imHeight, 0);
+		m_model.resize(m_channels * static_cast<size_t>(m_samples) * imWidth * imHeight, 0);
 
 		m_mask = cv::Mat(m_size, CV_8UC1, cv::Scalar::all(0));
 
@@ -56,13 +57,13 @@ namespace vibe
 			{
 				for (int c = 0; c < m_channels; c++)
 				{
-					m_model[m_channels * m_samples * imWidth * i + m_channels * m_samples * j + c] = image[m_channels * imWidth * i + m_channels * j + c];
+					m_model[chanSampl * (imWidth * i + j) + c] = image[m_channels * imWidth * i + m_channels * j + c];
 				}
 				for (int s = 1; s < m_samples; s++)
 				{
 					cv::Vec<size_t, 2> rnd_pos = getRndNeighbor(static_cast<int>(i), static_cast<int>(j));
 					size_t img_idx = m_channels * imWidth * rnd_pos[0] + m_channels * rnd_pos[1];
-					size_t model_idx = m_channels * m_samples * imWidth * i + m_channels * m_samples * j + m_channels * s;
+					size_t model_idx = chanSampl * (imWidth * i + j) + m_channels * s;
 					for (int c = 0; c < m_channels; c++)
 					{
 						m_model[model_idx + c] = image[img_idx + c];
