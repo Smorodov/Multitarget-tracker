@@ -20,7 +20,7 @@
 ///
 STAPLE_TRACKER::STAPLE_TRACKER()
 {
-    cfg = default_parameters_staple(cfg);
+    m_cfg = default_parameters_staple();
     frameno = 0;
 }
 
@@ -41,7 +41,7 @@ STAPLE_TRACKER::~STAPLE_TRACKER()
 /// \param newsz
 /// \param method
 ///
-void STAPLE_TRACKER::mexResize(const cv::Mat &im, cv::Mat &output, cv::Size newsz, const char *method)
+void STAPLE_TRACKER::mexResize(const cv::Mat &im, cv::Mat &output, cv::Size newsz, const char* /*method*/)
 {
     int interpolation = cv::INTER_LINEAR;
 
@@ -67,11 +67,11 @@ void STAPLE_TRACKER::mexResize(const cv::Mat &im, cv::Mat &output, cv::Size news
 
 ///
 /// \brief STAPLE_TRACKER::default_parameters_staple
-/// \param cfg
 /// \return
 ///
-staple_cfg STAPLE_TRACKER::default_parameters_staple(staple_cfg cfg)
+staple_cfg STAPLE_TRACKER::default_parameters_staple()
 {
+	staple_cfg cfg;
     return cfg;
 }
 
@@ -82,14 +82,14 @@ staple_cfg STAPLE_TRACKER::default_parameters_staple(staple_cfg cfg)
 void STAPLE_TRACKER::initializeAllAreas(const cv::Mat &im)
 {
     // we want a regular frame surrounding the object
-    double avg_dim = (cfg.target_sz.width + cfg.target_sz.height) / 2.0;
+    double avg_dim = (m_cfg.target_sz.width + m_cfg.target_sz.height) / 2.0;
 
-    bg_area.width = round(cfg.target_sz.width + avg_dim);
-    bg_area.height = round(cfg.target_sz.height + avg_dim);
+    bg_area.width = cvRound(m_cfg.target_sz.width + avg_dim);
+    bg_area.height = cvRound(m_cfg.target_sz.height + avg_dim);
 
     // pick a "safe" region smaller than bbox to avoid mislabeling
-    fg_area.width = round(cfg.target_sz.width - avg_dim * cfg.inner_padding);
-    fg_area.height = round(cfg.target_sz.height - avg_dim * cfg.inner_padding);
+    fg_area.width = cvRound(m_cfg.target_sz.width - avg_dim * m_cfg.inner_padding);
+    fg_area.height = cvRound(m_cfg.target_sz.height - avg_dim * m_cfg.inner_padding);
 
     // saturate to image size
     cv::Size imsize = im.size();
@@ -98,8 +98,8 @@ void STAPLE_TRACKER::initializeAllAreas(const cv::Mat &im)
     bg_area.height = std::min(bg_area.height, imsize.height - 1);
 
     // make sure the differences are a multiple of 2 (makes things easier later in color histograms)
-    bg_area.width = bg_area.width - (bg_area.width - cfg.target_sz.width) % 2;
-    bg_area.height = bg_area.height - (bg_area.height - cfg.target_sz.height) % 2;
+    bg_area.width = bg_area.width - (bg_area.width - m_cfg.target_sz.width) % 2;
+    bg_area.height = bg_area.height - (bg_area.height - m_cfg.target_sz.height) % 2;
 
     fg_area.width = fg_area.width + (bg_area.width - fg_area.width) % 2;
     fg_area.height = fg_area.height + (bg_area.height - fg_area.width) % 2;
@@ -110,16 +110,16 @@ void STAPLE_TRACKER::initializeAllAreas(const cv::Mat &im)
     // Compute the rectangle with (or close to) params.fixedArea
     // and same aspect ratio as the target bbox
 
-    area_resize_factor = sqrt(cfg.fixed_area / double(bg_area.width * bg_area.height));
-    norm_bg_area.width = round(bg_area.width * area_resize_factor);
-    norm_bg_area.height = round(bg_area.height * area_resize_factor);
+    area_resize_factor = sqrt(m_cfg.fixed_area / float(bg_area.width * bg_area.height));
+    norm_bg_area.width = cvRound(bg_area.width * area_resize_factor);
+    norm_bg_area.height = cvRound(bg_area.height * area_resize_factor);
 
     //std::cout << "area_resize_factor " << area_resize_factor << " norm_bg_area.width " << norm_bg_area.width << " norm_bg_area.height " << norm_bg_area.height << std::endl;
 
     // Correlation Filter (HOG) feature space
     // It smaller that the norm bg area if HOG cell size is > 1
-    cf_response_size.width = floor(norm_bg_area.width / cfg.hog_cell_size);
-    cf_response_size.height = floor(norm_bg_area.height / cfg.hog_cell_size);
+    cf_response_size.width = norm_bg_area.width / m_cfg.hog_cell_size;
+    cf_response_size.height = norm_bg_area.height / m_cfg.hog_cell_size;
 
     // given the norm BG area, which is the corresponding target w and h?
     double norm_target_sz_w = 0.75*norm_bg_area.width - 0.25*norm_bg_area.height;
@@ -127,18 +127,18 @@ void STAPLE_TRACKER::initializeAllAreas(const cv::Mat &im)
 
     // norm_target_sz_w = params.target_sz(2) * params.norm_bg_area(2) / bg_area(2);
     // norm_target_sz_h = params.target_sz(1) * params.norm_bg_area(1) / bg_area(1);
-    norm_target_sz.width = round(norm_target_sz_w);
-    norm_target_sz.height = round(norm_target_sz_h);
+    norm_target_sz.width = cvRound(norm_target_sz_w);
+    norm_target_sz.height = cvRound(norm_target_sz_h);
 
     //std::cout << "norm_target_sz.width " << norm_target_sz.width << " norm_target_sz.height " << norm_target_sz.height << std::endl;
 
     // distance (on one side) between target and bg area
     cv::Size norm_pad;
 
-    norm_pad.width = floor((norm_bg_area.width - norm_target_sz.width) / 2.0);
-    norm_pad.height = floor((norm_bg_area.height - norm_target_sz.height) / 2.0);
+    norm_pad.width = (norm_bg_area.width - norm_target_sz.width) / 2;
+    norm_pad.height = (norm_bg_area.height - norm_target_sz.height) / 2;
 
-    int radius = floor(fmin(norm_pad.width, norm_pad.height));
+    int radius = std::min(norm_pad.width, norm_pad.height);
 
     // norm_delta_area is the number of rectangles that are considered.
     // it is the "sampling space" and the dimension of the final merged resposne
@@ -170,8 +170,8 @@ void STAPLE_TRACKER::getSubwindow(const cv::Mat &im, cv::Point_<float> centerCoo
     cv::Size sz = scaled_sz; // scale adaptation
 
     // make sure the size is not to small
-    sz.width = fmax(sz.width, 2);
-    sz.height = fmax(sz.height, 2);
+    sz.width = std::max(sz.width, 2);
+    sz.height = std::max(sz.height, 2);
 
     cv::Mat subWindow;
 
@@ -221,7 +221,7 @@ void STAPLE_TRACKER::getSubwindow(const cv::Mat &im, cv::Point_<float> centerCoo
 /// \param patch
 /// \param learning_rate_pwp
 ///
-void STAPLE_TRACKER::updateHistModel(bool new_model, cv::Mat &patch, double learning_rate_pwp)
+void STAPLE_TRACKER::updateHistModel(bool new_model, cv::Mat &patch, float learning_rate_pwp)
 {
     // Get BG (frame around target_sz) and FG masks (inner portion of target_sz)
 
@@ -245,8 +245,8 @@ void STAPLE_TRACKER::updateHistModel(bool new_model, cv::Mat &patch, double lear
         assert(0);
     }
 
-    pad_offset1.width = fmax(pad_offset1.width, 1);
-    pad_offset1.height = fmax(pad_offset1.height, 1);
+    pad_offset1.width = std::max(pad_offset1.width, 1);
+    pad_offset1.height = std::max(pad_offset1.height, 1);
 
     //std::cout << "pad_offset1 " << pad_offset1 << std::endl;
 
@@ -281,8 +281,8 @@ void STAPLE_TRACKER::updateHistModel(bool new_model, cv::Mat &patch, double lear
         assert(0);
     }
 
-    pad_offset2.width = fmax(pad_offset2.width, 1);
-    pad_offset2.height = fmax(pad_offset2.height, 1);
+    pad_offset2.width = std::max(pad_offset2.width, 1);
+    pad_offset2.height = std::max(pad_offset2.height, 1);
 
     cv::Mat fg_mask(bg_area, CV_8UC1, cv::Scalar(0)); // init fg_mask
 
@@ -337,19 +337,19 @@ void STAPLE_TRACKER::updateHistModel(bool new_model, cv::Mat &patch, double lear
 
     int imgCount = 1;
     int dims = 3;
-    const int sizes[] = { cfg.n_bins, cfg.n_bins, cfg.n_bins };
+    const int sizes[] = { m_cfg.n_bins, m_cfg.n_bins, m_cfg.n_bins };
     const int channels[] = { 0, 1, 2 };
     float bRange[] = { 0, 256 };
     float gRange[] = { 0, 256 };
     float rRange[] = { 0, 256 };
     const float *ranges[] = { bRange, gRange, rRange };
 
-    if (cfg.grayscale_sequence) {
+    if (m_cfg.grayscale_sequence)
         dims = 1;
-    }
 
     // (TRAIN) BUILD THE MODEL
-    if (new_model) {
+    if (new_model)
+	{
         cv::calcHist(&patch, imgCount, channels, bg_mask_new, bg_hist, dims, sizes, ranges);
         cv::calcHist(&patch, imgCount, channels, fg_mask_new, fg_hist, dims, sizes, ranges);
 
@@ -358,7 +358,9 @@ void STAPLE_TRACKER::updateHistModel(bool new_model, cv::Mat &patch, double lear
 
         int fgtotal = std::max(1, cv::countNonZero(fg_mask_new));
         fg_hist = fg_hist / fgtotal;
-    } else { // update the model
+    }
+	else
+	{ // update the model
         cv::MatND bg_hist_tmp;
         cv::MatND fg_hist_tmp;
 
@@ -391,10 +393,10 @@ void STAPLE_TRACKER::CalculateHann(cv::Size sz, cv::Mat &output)
     float *p2 = temp2.ptr<float>(0);
 
     for (int i = 0; i < sz.width; ++i)
-        p1[i] = 0.5*(1 - cos(CV_2PI*i / (sz.width - 1)));
+        p1[i] = static_cast<float>(0.5 * (1 - cos(CV_2PI*i / (sz.width - 1))));
 
     for (int i = 0; i < sz.height; ++i)
-        p2[i] = 0.5*(1 - cos(CV_2PI*i / (sz.height - 1)));
+        p2[i] = static_cast<float>(0.5 * (1 - cos(CV_2PI*i / (sz.height - 1))));
 
     output = temp2.t()*temp1;
 }
@@ -418,8 +420,8 @@ void meshgrid(const cv::Range xr, const cv::Range yr, cv::Mat &outX, cv::Mat &ou
     for (int i = yr.start; i <= yr.end; i++)
         y.push_back(i);
 
-    repeat(cv::Mat(x).t(), y.size(), 1, outX);
-    repeat(cv::Mat(y), 1, x.size(), outY);
+    repeat(cv::Mat(x).t(), static_cast<int>(y.size()), 1, outX);
+    repeat(cv::Mat(y), 1, static_cast<int>(x.size()), outY);
 }
 
 ///
@@ -429,7 +431,7 @@ void meshgrid(const cv::Range xr, const cv::Range yr, cv::Mat &outX, cv::Mat &ou
 /// \param sigma
 /// \param output
 ///
-void STAPLE_TRACKER::gaussianResponse(cv::Size rect_size, double sigma, cv::Mat &output)
+void STAPLE_TRACKER::gaussianResponse(cv::Size rect_size, float sigma, cv::Mat &output)
 {
     // half = floor((rect_size-1) / 2);
     // i_range = -half(1):half(1);
@@ -437,8 +439,8 @@ void STAPLE_TRACKER::gaussianResponse(cv::Size rect_size, double sigma, cv::Mat 
     // [i, j] = ndgrid(i_range, j_range);
     cv::Size half;
 
-    half.width = floor((rect_size.width - 1) / 2);
-    half.height = floor((rect_size.height - 1) / 2);
+    half.width = (rect_size.width - 1) / 2;
+    half.height = (rect_size.height - 1) / 2;
 
     cv::Range i_range(-half.width, rect_size.width - (1 + half.width));
     cv::Range j_range(-half.height, rect_size.height - (1 + half.height));
@@ -493,28 +495,25 @@ void STAPLE_TRACKER::gaussianResponse(cv::Size rect_size, double sigma, cv::Mat 
 void STAPLE_TRACKER::Initialize(const cv::Mat &im, cv::Rect region)
 {
     int n = im.channels();
-
-    if (n == 1) {
-        cfg.grayscale_sequence = true;
-    }
+    if (n == 1)
+        m_cfg.grayscale_sequence = true;
 
     // xxx: only support 3 channels, TODO: fix updateHistModel
     //assert(!cfg.grayscale_sequence);
 
-    cfg.init_pos.x = region.x + region.width / 2.0;
-    cfg.init_pos.y = region.y + region.height / 2.0;
+    m_cfg.init_pos.x = region.x + region.width / 2.0f;
+    m_cfg.init_pos.y = region.y + region.height / 2.0f;
 
-    cfg.target_sz.width = region.width;
-    cfg.target_sz.height = region.height;
+    m_cfg.target_sz.width = region.width;
+    m_cfg.target_sz.height = region.height;
 
     initializeAllAreas(im);
 
-    pos = cfg.init_pos;
-    target_sz = cfg.target_sz;
+    pos = m_cfg.init_pos;
+    target_sz = m_cfg.target_sz;
 
     // patch of the target + padding
     cv::Mat patch_padded;
-
     getSubwindow(im, pos, norm_bg_area, bg_area, patch_padded);
 
     // initialize hist model
@@ -524,24 +523,25 @@ void STAPLE_TRACKER::Initialize(const cv::Mat &im, cv::Rect region)
 
     // gaussian-shaped desired response, centred in (1,1)
     // bandwidth proportional to target size
-    double output_sigma = sqrt(norm_target_sz.width * norm_target_sz.height) * cfg.output_sigma_factor / cfg.hog_cell_size;
+    float output_sigma = sqrt(static_cast<float>(norm_target_sz.width * norm_target_sz.height)) * m_cfg.output_sigma_factor / m_cfg.hog_cell_size;
 
     cv::Mat y;
     gaussianResponse(cf_response_size, output_sigma, y);
     cv::dft(y, yf);
 
     // SCALE ADAPTATION INITIALIZATION
-    if (cfg.scale_adaptation) {
+    if (m_cfg.scale_adaptation)
+	{
         // Code from DSST
         scale_factor = 1;
         base_target_sz = target_sz; // xxx
-        float scale_sigma = sqrt(cfg.num_scales) * cfg.scale_sigma_factor;
+        float scale_sigma = sqrt(static_cast<float>(m_cfg.num_scales)) * m_cfg.scale_sigma_factor;
 
-        cv::Mat ys = cv::Mat(1, cfg.num_scales, CV_32FC2);
-        for (int i = 0; i < cfg.num_scales; i++)
+        cv::Mat ys = cv::Mat(1, m_cfg.num_scales, CV_32FC2);
+        for (int i = 0; i < m_cfg.num_scales; i++)
         {
-            cv::Vec2f val((i + 1) - ceil(cfg.num_scales/2.0f), 0.f);
-            val[0] = exp(-0.5 * (val[0] * val[0]) / (scale_sigma * scale_sigma));
+            cv::Vec2f val((i + 1) - ceil(m_cfg.num_scales/2.0f), 0.f);
+            val[0] = exp(-0.5f * (val[0] * val[0]) / (scale_sigma * scale_sigma));
             ys.at<cv::Vec2f>(i) = val;
 
             // SS = (1:p.num_scales) - ceil(p.num_scales/2);
@@ -551,29 +551,28 @@ void STAPLE_TRACKER::Initialize(const cv::Mat &im, cv::Rect region)
         cv::dft(ys, ysf, cv::DFT_ROWS);
         //std::cout << ysf << std::endl;
 
-        scale_window = cv::Mat(1, cfg.num_scales, CV_32FC1);
-        if (cfg.num_scales % 2 == 0)
+        scale_window = cv::Mat(1, m_cfg.num_scales, CV_32FC1);
+        if (m_cfg.num_scales % 2 == 0)
         {
-            for (int i = 0; i < cfg.num_scales + 1; ++i)
+            for (int i = 0; i < m_cfg.num_scales + 1; ++i)
             {
-                if (i > 0) {
-                    scale_window.at<float>(i - 1) = 0.5*(1 - cos(CV_2PI*i / (cfg.num_scales + 1 - 1)));
-                }
+                if (i > 0)
+                    scale_window.at<float>(i - 1) = 0.5f * (1 - cos(static_cast<float>(CV_2PI) * i / (m_cfg.num_scales + 1 - 1)));
             }
         }
         else
         {
-            for (int i = 0; i < cfg.num_scales; ++i)
+            for (int i = 0; i < m_cfg.num_scales; ++i)
             {
-                scale_window.at<float>(i) = 0.5*(1 - cos(CV_2PI*i / (cfg.num_scales - 1)));
+                scale_window.at<float>(i) = 0.5f * (1 - cos(static_cast<float>(CV_2PI) * i / (m_cfg.num_scales - 1)));
             }
         }
 
 
-        scale_factors = cv::Mat(1, cfg.num_scales, CV_32FC1);
-        for (int i = 0; i < cfg.num_scales; i++)
+        scale_factors = cv::Mat(1, m_cfg.num_scales, CV_32FC1);
+        for (int i = 0; i < m_cfg.num_scales; i++)
         {
-            scale_factors.at<float>(i) = pow(cfg.scale_step, (ceil(cfg.num_scales/2.0)  - (i+1)));
+            scale_factors.at<float>(i) = pow(m_cfg.scale_step, (ceil(m_cfg.num_scales/2.0f)  - (i+1)));
         }
 
         //std::cout << scale_factors << std::endl;
@@ -581,21 +580,20 @@ void STAPLE_TRACKER::Initialize(const cv::Mat &im, cv::Rect region)
         //ss = 1:p.num_scales;
         //scale_factors = p.scale_step.^(ceil(p.num_scales/2) - ss);
 
-        if ((cfg.scale_model_factor*cfg.scale_model_factor) * (norm_target_sz.width*norm_target_sz.height) > cfg.scale_model_max_area) {
-            cfg.scale_model_factor = sqrt(cfg.scale_model_max_area/(norm_target_sz.width*norm_target_sz.height));
-        }
+        if ((m_cfg.scale_model_factor * m_cfg.scale_model_factor) * (norm_target_sz.width * norm_target_sz.height) > m_cfg.scale_model_max_area)
+            m_cfg.scale_model_factor = sqrt(m_cfg.scale_model_max_area / (norm_target_sz.width * norm_target_sz.height));
 
         //std::cout << cfg.scale_model_factor << std::endl;
 
-        scale_model_sz.width = floor(norm_target_sz.width * cfg.scale_model_factor);
-        scale_model_sz.height = floor(norm_target_sz.height * cfg.scale_model_factor);
+        scale_model_sz.width = static_cast<int>(norm_target_sz.width * m_cfg.scale_model_factor);
+        scale_model_sz.height = static_cast<int>(norm_target_sz.height * m_cfg.scale_model_factor);
         //scale_model_sz = floor(p.norm_target_sz * p.scale_model_factor);
 
         //std::cout << scale_model_sz << std::endl;
 
         // find maximum and minimum scales
-        min_scale_factor = pow(cfg.scale_step, ceil(log(std::max(5.0/bg_area.width, 5.0/bg_area.height))/log(cfg.scale_step)));
-        max_scale_factor = pow(cfg.scale_step, floor(log(std::min(im.cols/(float)target_sz.width, im.rows/(float)target_sz.height))/log(cfg.scale_step)));
+        min_scale_factor = pow(m_cfg.scale_step, ceil(log(std::max(5.0f / bg_area.width, 5.0f / bg_area.height)) / log(m_cfg.scale_step)));
+        max_scale_factor = pow(m_cfg.scale_step, floor(log(std::min(im.cols / (float)target_sz.width, im.rows / (float)target_sz.height)) / log(m_cfg.scale_step)));
 
         //min_scale_factor = p.scale_step ^ ceil(log(max(5 ./ bg_area)) / log(p.scale_step));
         //max_scale_factor = p.scale_step ^ floor(log(min([size(im,1) size(im,2)] ./ target_sz)) / log(p.scale_step));
@@ -611,7 +609,7 @@ void STAPLE_TRACKER::Initialize(const cv::Mat &im, cv::Rect region)
 /// \param feature_type
 /// \param output
 ///
-void STAPLE_TRACKER::getFeatureMap(cv::Mat &im_patch, const char *feature_type, cv::MatND &output)
+void STAPLE_TRACKER::getFeatureMap(cv::Mat &im_patch, const char* feature_type, cv::MatND &output)
 {
     assert(!strcmp(feature_type, "fhog"));
 
@@ -621,7 +619,7 @@ void STAPLE_TRACKER::getFeatureMap(cv::Mat &im_patch, const char *feature_type, 
     im_patch.convertTo(tmp_image, CV_32FC1);
     fhog28(output, tmp_image, cfg.hog_cell_size, 9);
 #else
-    fhog28(output, im_patch, cfg.hog_cell_size, 9);
+    fhog28(output, im_patch, m_cfg.hog_cell_size, 9);
 #endif
     int w = cf_response_size.width;
     int h = cf_response_size.height;
@@ -632,26 +630,22 @@ void STAPLE_TRACKER::getFeatureMap(cv::Mat &im_patch, const char *feature_type, 
 
     cv::Mat new_im_patch;
 
-    if (cfg.hog_cell_size > 1) {
-        cv::Size newsz(w, h);
-
-        mexResize(im_patch, new_im_patch, newsz, "auto");
-    } else {
+    if (m_cfg.hog_cell_size > 1)
+        mexResize(im_patch, new_im_patch, cv::Size(w, h), "auto");
+    else
         new_im_patch = im_patch;
-    }
 
     cv::Mat grayimg;
 
-    if (new_im_patch.channels() > 1) {
+    if (new_im_patch.channels() > 1)
         cv::cvtColor(new_im_patch, grayimg, cv::COLOR_BGR2GRAY);
-    } else {
+    else
         grayimg = new_im_patch;
-    }
 
     // out(:,:,1) = single(im_patch)/255 - 0.5;
 
-    float alpha = 1. / 255.0;
-    float betta = 0.5;
+    float alpha = 1. / 255.0f;
+    float betta = 0.5f;
 
     typedef cv::Vec<float, 28> Vecf28;
 
@@ -729,8 +723,8 @@ void STAPLE_TRACKER::getSubwindowFloor(const cv::Mat &im, cv::Point_<float> cent
     cv::Size sz = scaled_sz; // scale adaptation
 
     // make sure the size is not to small
-    sz.width = fmax(sz.width, 2);
-    sz.height = fmax(sz.height, 2);
+    sz.width = std::max(sz.width, 2);
+    sz.height = std::max(sz.height, 2);
 
     cv::Mat subWindow;
 
@@ -778,7 +772,7 @@ void STAPLE_TRACKER::getScaleSubwindow(const cv::Mat &im, cv::Point_<float> cent
     int ch = 0;
     int total = 0;
 
-    for (int s = 0; s < cfg.num_scales; s++)
+    for (int s = 0; s < m_cfg.num_scales; s++)
     {
         cv::Size_<float> patch_sz;
 
@@ -790,14 +784,14 @@ void STAPLE_TRACKER::getScaleSubwindow(const cv::Mat &im, cv::Point_<float> cent
 
         // extract scale features
         cv::MatND temp;
-        fhog31(temp, im_patch_resized, cfg.hog_cell_size, 9);
+        fhog31(temp, im_patch_resized, m_cfg.hog_cell_size, 9);
 
         if (s == 0)
         {
             ch = temp.channels();
             total = temp.cols * temp.rows * ch;
 
-            output = cv::Mat(total, cfg.num_scales, CV_32FC2);
+            output = cv::Mat(total, m_cfg.num_scales, CV_32FC2);
         }
 
         int tempw = temp.cols;
@@ -819,10 +813,10 @@ void STAPLE_TRACKER::getScaleSubwindow(const cv::Mat &im, cv::Point_<float> cent
             {
                 for (int k = 0; k < tempch; ++k)
                 {
-                    outData[(count * cfg.num_scales + s) * 2 + 0] = tmpData[k] * scaleWnd;
-                    outData[(count * cfg.num_scales + s) * 2 + 1] = 0.0;
+                    outData[(count * m_cfg.num_scales + s) * 2 + 0] = tmpData[k] * scaleWnd;
+                    outData[(count * m_cfg.num_scales + s) * 2 + 1] = 0.0;
 
-                    count++;
+                    ++count;
                 }
                 tmpData += ch;
             }
@@ -844,7 +838,7 @@ void STAPLE_TRACKER::Train(const cv::Mat &im, bool first)
 
     // compute feature map, of cf_response_size
     cv::MatND xt;
-    getFeatureMap(im_patch_bg, cfg.feature_type, xt);
+    getFeatureMap(im_patch_bg, m_cfg.feature_type, xt);
 
     // apply Hann window in getFeatureMap
     // xt = bsxfun(@times, hann_window, xt);
@@ -926,11 +920,11 @@ void STAPLE_TRACKER::Train(const cv::Mat &im, bool first)
         } else {
             // subsequent frames, update the model by linear interpolation
             for (int ch =  0; ch < xt.channels(); ch++) {
-                hf_den[ch] = (1 - cfg.learning_rate_cf) * hf_den[ch] + cfg.learning_rate_cf * new_hf_den[ch];
-                hf_num[ch] = (1 - cfg.learning_rate_cf) * hf_num[ch] + cfg.learning_rate_cf * new_hf_num[ch];
+                hf_den[ch] = (1 - m_cfg.learning_rate_cf) * hf_den[ch] + m_cfg.learning_rate_cf * new_hf_den[ch];
+                hf_num[ch] = (1 - m_cfg.learning_rate_cf) * hf_num[ch] + m_cfg.learning_rate_cf * new_hf_num[ch];
             }
 
-            updateHistModel(false, im_patch_bg, cfg.learning_rate_pwp);
+            updateHistModel(false, im_patch_bg, m_cfg.learning_rate_pwp);
 
             // BG/FG MODEL UPDATE
             // patch of the target + padding
@@ -939,7 +933,7 @@ void STAPLE_TRACKER::Train(const cv::Mat &im, bool first)
     }
 
     // SCALE UPDATE
-    if (cfg.scale_adaptation) {
+    if (m_cfg.scale_adaptation) {
         cv::Mat im_patch_scale;
 
         getScaleSubwindow(im, pos, im_patch_scale);
@@ -995,15 +989,15 @@ void STAPLE_TRACKER::Train(const cv::Mat &im, bool first)
             new_sf_den.copyTo(sf_den);
             new_sf_num.copyTo(sf_num);
         } else {
-            sf_den = (1 - cfg.learning_rate_scale) * sf_den + cfg.learning_rate_scale * new_sf_den;
-            sf_num = (1 - cfg.learning_rate_scale) * sf_num + cfg.learning_rate_scale * new_sf_num;
+            sf_den = (1 - m_cfg.learning_rate_scale) * sf_den + m_cfg.learning_rate_scale * new_sf_den;
+            sf_num = (1 - m_cfg.learning_rate_scale) * sf_num + m_cfg.learning_rate_scale * new_sf_num;
         }
     }
 
     // update bbox position
     if (first) {
-        rect_position.x = pos.x - target_sz.width/2;
-        rect_position.y = pos.y - target_sz.height/2;
+        rect_position.x = cvRound(pos.x - target_sz.width / 2);
+        rect_position.y = cvRound(pos.y - target_sz.height / 2);
         rect_position.width = target_sz.width;
         rect_position.height = target_sz.height;
     }
@@ -1110,14 +1104,14 @@ void STAPLE_TRACKER::getColourMap(const cv::Mat &patch, cv::Mat& output)
     int d = patch.channels();
 
     // figure out which bin each pixel falls into
-    int bin_width = 256 / cfg.n_bins;
+    int bin_width = 256 / m_cfg.n_bins;
 
     // convert image to d channels array
     //patch_array = reshape(double(patch), w*h, d);
 
     output = cv::Mat(h, w, CV_32FC1);
 
-    if (!cfg.grayscale_sequence)
+    if (!m_cfg.grayscale_sequence)
     {
         for (int j = 0; j < h; ++j)
         {
@@ -1131,14 +1125,14 @@ void STAPLE_TRACKER::getColourMap(const cv::Mat &patch, cv::Mat& output)
                 int b3 = pSrc[2] / bin_width;
 
                 float* histd = (float*)bg_hist.data;
-                float probg = histd[b1*cfg.n_bins*cfg.n_bins + b2*cfg.n_bins + b3];
+                float probg = histd[b1 * m_cfg.n_bins * m_cfg.n_bins + b2 * m_cfg.n_bins + b3];
 
                 histd = (float*)fg_hist.data;
-                float profg = histd[b1*cfg.n_bins*cfg.n_bins + b2*cfg.n_bins + b3];
+                float profg = histd[b1 * m_cfg.n_bins * m_cfg.n_bins + b2 * m_cfg.n_bins + b3];
 
                 // xxx
                 *pDst = profg / (profg + probg);
-                if (isnan(*pDst))
+                if (std::isnan(*pDst))
                     *pDst = 0.0;
 
                 pSrc += d;
@@ -1168,7 +1162,7 @@ void STAPLE_TRACKER::getColourMap(const cv::Mat &patch, cv::Mat& output)
 
                 // xxx
                 *pDst = profg / (profg + probg);
-                if (isnan(*pDst))
+                if (std::isnan(*pDst))
                     *pDst = 0.0;
 
                 pSrc += d;
@@ -1220,7 +1214,7 @@ void STAPLE_TRACKER::getCenterLikelihood(const cv::Mat &object_likelihood, cv::S
 
         for (int i = 0; i < n1; ++i)
         {
-            *pLike = invArea * (temp.at<double>(j, i) + temp.at<double>(j+m.height, i+m.width) - temp.at<double>(j, i+m.width) - temp.at<double>(j+m.height, i));
+            *pLike = invArea * static_cast<float>(temp.at<double>(j, i) + temp.at<double>(j+m.height, i+m.width) - temp.at<double>(j, i+m.width) - temp.at<double>(j+m.height, i));
             ++pLike;
         }
     }
@@ -1239,7 +1233,7 @@ void STAPLE_TRACKER::getCenterLikelihood(const cv::Mat &object_likelihood, cv::S
 ///
 void STAPLE_TRACKER::mergeResponses(const cv::Mat &response_cf, const cv::Mat &response_pwp, cv::Mat &response)
 {
-    double alpha = cfg.merge_factor;
+    auto alpha = m_cfg.merge_factor;
     //const char *merge_method = cfg.merge_method;
 
     // MERGERESPONSES interpolates the two responses with the hyperparameter ALPHA
@@ -1265,15 +1259,15 @@ cv::RotatedRect STAPLE_TRACKER::Update(const cv::Mat &im, float& confidence)
 
     cv::Size pwp_search_area;
 
-    pwp_search_area.width = round(norm_pwp_search_area.width / area_resize_factor);
-    pwp_search_area.height = round(norm_pwp_search_area.height / area_resize_factor);
+    pwp_search_area.width = static_cast<int>(norm_pwp_search_area.width / area_resize_factor);
+    pwp_search_area.height = static_cast<int>(norm_pwp_search_area.height / area_resize_factor);
 
     // extract patch of size pwp_search_area and resize to norm_pwp_search_area
     getSubwindow(im, pos, norm_pwp_search_area, pwp_search_area, im_patch_pwp);
 
     // compute feature map
     cv::MatND xt_windowed;
-    getFeatureMap(im_patch_cf, cfg.feature_type, xt_windowed);
+    getFeatureMap(im_patch_cf, m_cfg.feature_type, xt_windowed);
 
     // apply Hann window in getFeatureMap
 
@@ -1290,38 +1284,34 @@ cv::RotatedRect STAPLE_TRACKER::Update(const cv::Mat &im, float& confidence)
         xtf.push_back(dimf);
     }
 
-    std::vector<cv::Mat> hf;
-    const int w = xt_windowed.cols;
-    const int h = xt_windowed.rows;
+	const int w = xt_windowed.cols;
+	const int h = xt_windowed.rows;
+	std::vector<cv::Mat> hf(xt_windowed.channels(), cv::Mat(h, w, CV_32FC2));
 
     // Correlation between filter and test patch gives the response
     // Solve diagonal system per pixel.
-    if (cfg.den_per_channel)
+    if (m_cfg.den_per_channel)
     {
         for (int ch = 0; ch < xt_windowed.channels(); ++ch)
         {
-            cv::Mat dim = cv::Mat(h, w, CV_32FC2);
-
             for (int j = 0; j < h; ++j)
             {
                 const cv::Vec2f* pSrc = hf_num[ch].ptr<cv::Vec2f>(j);
                 const float* pDen = hf_den[ch].ptr<float>(j);
-                cv::Vec2f* pDst = dim.ptr<cv::Vec2f>(j);
+                cv::Vec2f* pDst = hf[ch].ptr<cv::Vec2f>(j);
 
                 for (int i = 0; i < w; ++i)
                 {
-                    pDst[i] = pSrc[i] / (pDen[i] + cfg.lambda);
+                    pDst[i] = pSrc[i] / (pDen[i] + m_cfg.lambda);
                 }
             }
-
-            hf.push_back(dim);
         }
     }
     else
     {
         //hf = bsxfun(@rdivide, hf_num, sum(hf_den, 3)+p.lambda);
 
-        std::vector<float> DIM1(static_cast<size_t>(w) * static_cast<size_t>(h), cfg.lambda);
+        std::vector<float> DIM1(static_cast<size_t>(w) * static_cast<size_t>(h), m_cfg.lambda);
 
         for (int ch = 0; ch < xt_windowed.channels(); ++ch)
         {
@@ -1339,12 +1329,11 @@ cv::RotatedRect STAPLE_TRACKER::Update(const cv::Mat &im, float& confidence)
 
         for (int ch = 0; ch < xt_windowed.channels(); ++ch)
         {
-            cv::Mat dim = cv::Mat(h, w, CV_32FC2);
             const float* pDim1 = &DIM1[0];
             for (int j = 0; j < h; ++j)
             {
                 const cv::Vec2f* pSrc = hf_num[ch].ptr<cv::Vec2f>(j);
-                cv::Vec2f* pDst = dim.ptr<cv::Vec2f>(j);
+                cv::Vec2f* pDst = hf[ch].ptr<cv::Vec2f>(j);
 
                 for (int i = 0; i < w; ++i)
                 {
@@ -1354,8 +1343,6 @@ cv::RotatedRect STAPLE_TRACKER::Update(const cv::Mat &im, float& confidence)
                     ++pSrc;
                 }
             }
-
-            hf.push_back(dim);
         }
     }
 
@@ -1393,15 +1380,17 @@ cv::RotatedRect STAPLE_TRACKER::Update(const cv::Mat &im, float& confidence)
 
     // Crop square search region (in feature pixels).
     cv::Size newsz = norm_delta_area;
-    newsz.width = floor(newsz.width / cfg.hog_cell_size);
-    newsz.height = floor(newsz.height / cfg.hog_cell_size);
+    newsz.width = (newsz.width / m_cfg.hog_cell_size);
+    newsz.height = (newsz.height / m_cfg.hog_cell_size);
 
-    (newsz.width % 2 == 0) && (newsz.width -= 1);
-    (newsz.height % 2 == 0) && (newsz.height -= 1);
+    if (newsz.width % 2 == 0)
+		newsz.width -= 1;
+    if (newsz.height % 2 == 0)
+		newsz.height -= 1;
 
     cropFilterResponse(response_cf, newsz, response_cf);
 
-    if (cfg.hog_cell_size > 1)
+    if (m_cfg.hog_cell_size > 1)
     {
         cv::Mat temp;
         mexResize(response_cf, temp, norm_delta_area, "auto");
@@ -1430,8 +1419,8 @@ cv::RotatedRect STAPLE_TRACKER::Update(const cv::Mat &im, float& confidence)
     //std::cout << "maxLoc = " << maxLoc << ", maxVal = " << maxVal << std::endl;
     confidence = static_cast<float>(maxVal);
 
-    float centerx = (1 + norm_delta_area.width) / 2 - 1;
-    float centery = (1 + norm_delta_area.height) / 2 - 1;
+    float centerx = static_cast<float>((1 + norm_delta_area.width) / 2 - 1);
+    float centery = static_cast<float>((1 + norm_delta_area.height) / 2 - 1);
 
     pos.x += (maxLoc.x - centerx) / area_resize_factor;
     pos.y += (maxLoc.y - centery) / area_resize_factor;
@@ -1439,10 +1428,10 @@ cv::RotatedRect STAPLE_TRACKER::Update(const cv::Mat &im, float& confidence)
     // Report current location
     cv::Rect_<float> location;
 
-    location.x = pos.x - target_sz.width/2.0;
-    location.y = pos.y - target_sz.height/2.0;
-    location.width = target_sz.width;
-    location.height = target_sz.height;
+    location.x = pos.x - target_sz.width / 2.0f;
+    location.y = pos.y - target_sz.height / 2.0f;
+    location.width = static_cast<float>(target_sz.width);
+    location.height = static_cast<float>(target_sz.height);
 
     //std::cout << location << std::endl;
 
@@ -1451,7 +1440,7 @@ cv::RotatedRect STAPLE_TRACKER::Update(const cv::Mat &im, float& confidence)
     // rect_position = [pos([2,1]) - target_sz([2,1])/2, target_sz([2,1])];
 
     // SCALE SPACE SEARCH
-    if (cfg.scale_adaptation)
+    if (m_cfg.scale_adaptation)
     {
         cv::Mat im_patch_scale;
 
@@ -1463,21 +1452,21 @@ cv::RotatedRect STAPLE_TRACKER::Update(const cv::Mat &im, float& confidence)
         // im_patch_scale = getScaleSubwindow(im, pos, base_target_sz, scale_factor * scale_factors, scale_window, scale_model_sz, p.hog_scale_cell_size);
         // xsf = fft(im_patch_scale,[],2);
 
-        const int w = xsf.cols;
-        const int h = xsf.rows;
+        const int cols = xsf.cols;
+        const int rows = xsf.rows;
 
-        cv::Mat scale_responsef = cv::Mat(1, w, CV_32FC2, cv::Scalar(0, 0, 0));
+        cv::Mat scale_responsef = cv::Mat(1, cols, CV_32FC2, cv::Scalar(0, 0, 0));
 
-        for (int j = 0; j < h; ++j)
+        for (int j = 0; j < rows; ++j)
         {
             const float* pXSF = xsf.ptr<float>(j);
             const float* pXSFNUM = sf_num.ptr<float>(j);
             const float* pDen = sf_den.ptr<float>(0);
             float* pscale = scale_responsef.ptr<float>(0);
 
-            for (int i = 0; i < w; ++i)
+            for (int i = 0; i < cols; ++i)
             {
-                float invDen = 1.f / (*pDen + cfg.lambda);
+                float invDen = 1.f / (*pDen + m_cfg.lambda);
 
                 pscale[0] += invDen * (pXSFNUM[0]*pXSF[0] - pXSFNUM[1]*pXSF[1]);
                 pscale[1] += invDen * (pXSFNUM[0]*pXSF[1] + pXSFNUM[1]*pXSF[0]);
@@ -1493,10 +1482,6 @@ cv::RotatedRect STAPLE_TRACKER::Update(const cv::Mat &im, float& confidence)
         cv::dft(scale_responsef, scale_response, cv::DFT_SCALE|cv::DFT_INVERSE|cv::DFT_REAL_OUTPUT);
 
         //scale_response = real(ifft(sum(sf_num .* xsf, 1) ./ (sf_den + p.lambda) ));
-
-        double maxVal = 0;
-        cv::Point maxLoc;
-
         cv::minMaxLoc(scale_response, nullptr, &maxVal, nullptr, &maxLoc);
 
         //recovered_scale = ind2sub(size(scale_response),find(scale_response == max(scale_response(:)), 1));
@@ -1524,15 +1509,15 @@ cv::RotatedRect STAPLE_TRACKER::Update(const cv::Mat &im, float& confidence)
         bg_area.width = bg_area.width - (bg_area.width - target_sz.width) % 2;
         bg_area.height = bg_area.height - (bg_area.height - target_sz.height) % 2;
 
-        fg_area.width = cvRound(target_sz.width - avg_dim * cfg.inner_padding);
-        fg_area.height = cvRound(target_sz.height - avg_dim * cfg.inner_padding);
+        fg_area.width = cvRound(target_sz.width - avg_dim * m_cfg.inner_padding);
+        fg_area.height = cvRound(target_sz.height - avg_dim * m_cfg.inner_padding);
 
         fg_area.width = fg_area.width + int(bg_area.width - fg_area.width) % 2;
         fg_area.height = fg_area.height + int(bg_area.height - fg_area.height) % 2;
 
         // Compute the rectangle with (or close to) params.fixed_area and
         // same aspect ratio as the target bboxgetScaleSubwindow
-        area_resize_factor = sqrt(cfg.fixed_area / (float)(bg_area.width * bg_area.height));
+        area_resize_factor = sqrt(m_cfg.fixed_area / (float)(bg_area.width * bg_area.height));
     }
 
     return cv::RotatedRect(cv::Point2f(location.x + 0.5f * location.width, location.y + 0.5f * location.height),
