@@ -18,16 +18,11 @@ public:
     void update(const cv::Mat& img);
     cv::Mat& getMask();
 
-	int GetChannels() const
-	{
-		return m_channels;
-	}
-
 	void ResetModel(const cv::Mat& img, const cv::Rect& roiRect);
 
 private:
-    int m_samples = 20;
-    int m_channels = 1;
+    size_t m_samples = 20;
+    size_t m_channels = 1;
     int m_pixelNeighbor = 1;
     int m_distanceThreshold = 20;
     int m_matchingThreshold = 3;
