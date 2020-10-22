@@ -38,8 +38,6 @@ namespace vibe
 	///
 	void VIBE::init(const cv::Mat &img)
 	{
-		CV_Assert(img.channels() == m_channels);
-
 		m_size = img.size();
 
 		const size_t imWidth = static_cast<size_t>(m_size.width);
@@ -55,16 +53,16 @@ namespace vibe
 		{
 			for (size_t j = 0; j < imWidth; j++)
 			{
-				for (int c = 0; c < m_channels; c++)
+                for (size_t c = 0; c < m_channels; ++c)
 				{
 					m_model[chanSampl * (imWidth * i + j) + c] = image[m_channels * imWidth * i + m_channels * j + c];
 				}
-				for (int s = 1; s < m_samples; s++)
+                for (size_t s = 1; s < m_samples; ++s)
 				{
 					cv::Vec<size_t, 2> rnd_pos = getRndNeighbor(static_cast<int>(i), static_cast<int>(j));
 					size_t img_idx = m_channels * imWidth * rnd_pos[0] + m_channels * rnd_pos[1];
 					size_t model_idx = chanSampl * (imWidth * i + j) + m_channels * s;
-					for (int c = 0; c < m_channels; c++)
+                    for (size_t c = 0; c < m_channels; ++c)
 					{
 						m_model[model_idx + c] = image[img_idx + c];
 					}
@@ -76,8 +74,6 @@ namespace vibe
 	///
 	void VIBE::update(const cv::Mat& img)
 	{
-		CV_Assert(m_channels == img.channels());
-
 		if (m_size != img.size())
 		{
 			init(img);
@@ -96,10 +92,10 @@ namespace vibe
 				bool flag = false;
 				int matching_counter = 0;
 				model_t::value_type* model_ptr = &m_model[m_channels * m_samples * m_size.width * i + m_channels * m_samples * j];
-				for (int s = 0; s < m_samples; s++)
+                for (size_t s = 0; s < m_samples; ++s)
 				{
-					int channels_counter = 0;
-					for (int c = 0; c < m_channels; c++)
+                    size_t channels_counter = 0;
+                    for (size_t c = 0; c < m_channels; ++c)
 					{
 						if (std::abs((int)model_ptr[c] - img_ptr[c]) < m_distanceThreshold)
 							++channels_counter;
@@ -122,7 +118,7 @@ namespace vibe
 					{
 						int sample = m_rng[m_rngIdx = (m_rngIdx + 1) % RANDOM_BUFFER_SIZE] % m_samples;
 						int model_idx = m_channels * m_samples * m_size.width * i + m_channels * m_samples * j + m_channels * sample;
-						for (int c = 0; c < m_channels; c++)
+                        for (size_t c = 0; c < m_channels; ++c)
 						{
 							m_model[model_idx + c] = img_ptr[c];
 						}
@@ -130,7 +126,7 @@ namespace vibe
 						cv::Vec2i rnd_pos = getRndNeighbor(i, j);
 						sample = m_rng[m_rngIdx = (m_rngIdx + 1) % RANDOM_BUFFER_SIZE] % m_samples;
 						model_idx = m_channels * m_samples * m_size.width * rnd_pos[0] + m_channels * m_samples * rnd_pos[1] + m_channels * sample;
-						for (int c = 0; c < m_channels; c++)
+                        for (size_t c = 0; c < m_channels; ++c)
 						{
 							m_model[model_idx + c] = img_ptr[c];
 						}
@@ -155,8 +151,6 @@ namespace vibe
 	///
 	void VIBE::ResetModel(const cv::Mat& img, const cv::Rect& roiRect)
 	{
-		CV_Assert(m_channels == img.channels());
-
 		const int top = std::max(0, roiRect.y);
 		const int bottom = std::min(img.rows, roiRect.y + roiRect.height);
 		const int left = std::max(0, roiRect.x);
@@ -170,13 +164,12 @@ namespace vibe
 			{
 				if (*mask_ptr)
 				{
-					bool flag = false;
 					int matching_counter = 0;
 					model_t::value_type* model_ptr = &m_model[m_channels * m_samples * m_size.width * i + m_channels * m_samples * j];
-					for (int s = 0; s < m_samples; s++)
+                    for (size_t s = 0; s < m_samples; ++s)
 					{
-						int channels_counter = 0;
-						for (int c = 0; c < m_channels; c++)
+                        size_t channels_counter = 0;
+                        for (size_t c = 0; c < m_channels; ++c)
 						{
 							if (std::abs((int)model_ptr[c] - img_ptr[c]) >= m_distanceThreshold)
 							{
@@ -187,10 +180,7 @@ namespace vibe
 						if (channels_counter == m_channels)
 						{
 							if (++matching_counter > m_matchingThreshold)
-							{
-								flag = true;
 								break;
-							}
 						}
 						model_ptr += m_channels;
 					}
