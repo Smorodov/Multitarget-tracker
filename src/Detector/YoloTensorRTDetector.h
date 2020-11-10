@@ -26,6 +26,7 @@ private:
 
     float m_maxCropRatio = 3.0f;
 	std::vector<std::string> m_classNames;
+
 	tensor_rt::Config m_localConfig;
     size_t m_batchSize = 1;
 };

@@ -236,11 +236,11 @@ void CarsCounting::DrawTrack(cv::Mat frame,
 			if (period >= cvRound(m_fps) / 4)
 			{
 				auto velocity = (3.6f * dist * m_fps) / period;
-				//std::cout << track.m_type << ": distance " << std::fixed << std::setw(2) << std::setprecision(2) << dist << " on time " << (period / m_fps) << " with velocity " << velocity << " km/h: " << track.m_confidence << std::endl;
+				//std::cout << TypeConverter::Type2Str(track.m_type) << ": distance " << std::fixed << std::setw(2) << std::setprecision(2) << dist << " on time " << (period / m_fps) << " with velocity " << velocity << " km/h: " << track.m_confidence << std::endl;
 				if (velocity < 1.f || std::isnan(velocity))
 					velocity = 0;
-				//label << track.m_type << " " << std::fixed << std::setw(2) << std::setprecision(2) << velocity << " km/h";
-				label << track.m_type << " " << cvRound(velocity) << " km/h";
+				//label << TypeConverter::Type2Str(track.m_type) << " " << std::fixed << std::setw(2) << std::setprecision(2) << velocity << " km/h";
+				label << TypeConverter::Type2Str(track.m_type) << " " << cvRound(velocity) << " km/h";
 
 				int baseLine = 0;
 				double fontScale = 0.5;
@@ -352,14 +352,12 @@ bool CarsCounting::InitTracker(cv::UMat frame)
 	config.emplace("swapRB", "0");
     config.emplace("maxCropRatio", "-1");
 
-	config.emplace("white_list", "person");
-	config.emplace("white_list", "car");
-	config.emplace("white_list", "bicycle");
-	config.emplace("white_list", "motorbike");
-	config.emplace("white_list", "bus");
-	config.emplace("white_list", "truck");
-	//config.emplace("white_list", "traffic light");
-	//config.emplace("white_list", "stop sign");
+	config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_person));
+	config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_car));
+	config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_bicycle));
+	config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_motorbike));
+	config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_bus));
+	config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_truck));
 
 	m_detector = std::unique_ptr<BaseDetector>(CreateDetector(m_detectorType, config, frame));
 
@@ -399,10 +397,10 @@ bool CarsCounting::InitTracker(cv::UMat frame)
 		settings.m_minAreaRadiusPix = frame.rows / 20.f;
 		settings.m_maximumAllowedSkippedFrames = cvRound(2 * m_fps); // Maximum allowed skipped frames
 
-		settings.AddNearTypes("car", "bus", false);
-		settings.AddNearTypes("car", "truck", false);
-		settings.AddNearTypes("person", "bicycle", true);
-		settings.AddNearTypes("person", "motorbike", true);
+		settings.AddNearTypes(ObjectTypes::obj_car, ObjectTypes::obj_bus, false);
+		settings.AddNearTypes(ObjectTypes::obj_car, ObjectTypes::obj_truck, false);
+		settings.AddNearTypes(ObjectTypes::obj_person, ObjectTypes::obj_bicycle, true);
+		settings.AddNearTypes(ObjectTypes::obj_person, ObjectTypes::obj_motorbike, true);
 
 		settings.m_useAbandonedDetection = false;
 		if (settings.m_useAbandonedDetection)

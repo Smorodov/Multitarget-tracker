@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.5)
 
 project(mtracking)
 
-set(main_sources ../common/nms.h ../common/defines.h)
+set(main_sources ../common/nms.h ../common/defines.h ../common/object_types.h ../common/object_types.cpp)
 
   set(tracker_sources
              Ctracker.cpp

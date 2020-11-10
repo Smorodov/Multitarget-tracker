@@ -10,6 +10,7 @@
 #endif
 
 #include "defines.h"
+#include "object_types.h"
 #include "Kalman.h"
 #include "VOTTracker.hpp"
 
@@ -186,11 +187,11 @@ private:
 ///
 struct TrackingObject
 {
-	std::string m_type;                // Objects type name or empty value
 	Trace m_trace;                     // Trajectory
 	size_t m_ID = 0;                   // Objects ID
 	cv::RotatedRect m_rrect;           // Coordinates
 	cv::Vec<track_t, 2> m_velocity;    // pixels/sec
+	objtype_t m_type = bad_type;       // Objects type name or empty
 	float m_confidence = -1;           // From Detector with score (YOLO or SSD)
 	bool m_isStatic = false;           // Object is abandoned
 	bool m_outOfTheFrame = false;      // Is object out of freme
@@ -198,9 +199,9 @@ struct TrackingObject
 
 	///
     TrackingObject(const cv::RotatedRect& rrect, size_t ID, const Trace& trace,
-		bool isStatic, bool outOfTheFrame, const std::string& type, float confidence, cv::Vec<track_t, 2> velocity)
+		bool isStatic, bool outOfTheFrame, objtype_t type, float confidence, cv::Vec<track_t, 2> velocity)
 		:
-        m_type(type), m_trace(trace), m_ID(ID), m_rrect(rrect), m_velocity(velocity), m_confidence(confidence), m_isStatic(isStatic), m_outOfTheFrame(outOfTheFrame)
+        m_trace(trace), m_ID(ID), m_rrect(rrect), m_velocity(velocity), m_type(type), m_confidence(confidence), m_isStatic(isStatic), m_outOfTheFrame(outOfTheFrame)
 	{
 	}
 

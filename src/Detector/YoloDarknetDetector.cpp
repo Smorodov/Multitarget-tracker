@@ -58,6 +58,11 @@ bool YoloDarknetDetector::Init(const config_t& config)
                 className.erase(className.find_last_not_of(" \t\n\r\f\v") + 1);
                 m_classNames.push_back(className);
             }
+			if (FillTypesMap(m_classNames))
+			{
+				std::cout << "Unknown types in class names!" << std::endl;
+				assert(0);
+			}
         }
     }
 
@@ -73,7 +78,7 @@ bool YoloDarknetDetector::Init(const config_t& config)
 	auto whiteRange = config.equal_range("white_list");
 	for (auto it = whiteRange.first; it != whiteRange.second; ++it)
 	{
-		m_classesWhiteList.insert(it->second);
+		m_classesWhiteList.insert(std::stoi(it->second));
 	}
 
 	bool correct = m_detector.get() != nullptr;
@@ -145,8 +150,8 @@ void YoloDarknetDetector::DetectInCrop(const cv::Mat& colorFrame, const cv::Rect
 
 	for (const bbox_t& bbox : detects)
 	{
-		if (m_classesWhiteList.empty() || m_classesWhiteList.find(m_classNames[bbox.obj_id]) != std::end(m_classesWhiteList))
-			tmpRegions.emplace_back(cv::Rect(cvRound(wk * bbox.x) + crop.x, cvRound(hk * bbox.y) + crop.y, cvRound(wk * bbox.w), cvRound(hk * bbox.h)), m_classNames[bbox.obj_id], bbox.prob);
+		if (m_classesWhiteList.empty() || m_classesWhiteList.find(T2T(bbox.obj_id)) != std::end(m_classesWhiteList))
+			tmpRegions.emplace_back(cv::Rect(cvRound(wk * bbox.x) + crop.x, cvRound(hk * bbox.y) + crop.y, cvRound(wk * bbox.w), cvRound(hk * bbox.h)), T2T(bbox.obj_id), bbox.prob);
 	}
 	if (crop.width == netSize.width && crop.height == netSize.height)
 		m_tmpImg.release();
@@ -177,8 +182,8 @@ void YoloDarknetDetector::Detect(const cv::Mat& colorFrame, regions_t& tmpRegion
 
 	for (const bbox_t& bbox : detects)
 	{
-		if (m_classesWhiteList.empty() || m_classesWhiteList.find(m_classNames[bbox.obj_id]) != std::end(m_classesWhiteList))
-			tmpRegions.emplace_back(cv::Rect(cvRound(wk * bbox.x), cvRound(hk * bbox.y), cvRound(wk * bbox.w), cvRound(hk * bbox.h)), m_classNames[bbox.obj_id], bbox.prob);
+		if (m_classesWhiteList.empty() || m_classesWhiteList.find(T2T(bbox.obj_id)) != std::end(m_classesWhiteList))
+			tmpRegions.emplace_back(cv::Rect(cvRound(wk * bbox.x), cvRound(hk * bbox.y), cvRound(wk * bbox.w), cvRound(hk * bbox.h)), T2T(bbox.obj_id), bbox.prob);
 	}
 	//std::cout << "Detected " << detects.size() << " objects" << std::endl;
 }

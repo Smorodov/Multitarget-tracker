@@ -4,7 +4,7 @@
 #include <string>
 #include <map>
 #include <opencv2/opencv.hpp>
-
+#include "object_types.h"
 
 // ---------------------------------------------------------------------------
 //
@@ -28,10 +28,7 @@ typedef std::multimap<std::string, std::string> config_t;
 class CRegion
 {
 public:
-    CRegion()
-        : m_type(""), m_confidence(-1)
-    {
-    }
+	CRegion() = default;
 
     CRegion(const cv::Rect& rect)
         : m_brect(rect)
@@ -45,13 +42,13 @@ public:
         R2BRect();
     }
 
-    CRegion(const cv::Rect& rect, const std::string& type, float confidence)
+    CRegion(const cv::Rect& rect, objtype_t type, float confidence)
         : m_type(type), m_brect(rect), m_confidence(confidence)
     {
         B2RRect();
     }
 
-	std::string m_type;
+	objtype_t m_type = bad_type;
     cv::RotatedRect m_rrect;
     cv::Rect m_brect;
 	float m_confidence = -1;

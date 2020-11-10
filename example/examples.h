@@ -480,7 +480,7 @@ protected:
             {
                 DrawTrack(frame, 1, track);
 
-                std::string label = track.m_type + ": " + std::to_string(track.m_confidence);
+                std::string label = TypeConverter::Type2Str(track.m_type) + ": " + std::to_string(track.m_confidence);
                 int baseLine = 0;
                 cv::Size labelSize = cv::getTextSize(label, cv::FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
 
@@ -597,7 +597,7 @@ protected:
             {
                 DrawTrack(frame, 1, track);
 
-                std::string label = track.m_type + ": " + std::to_string(track.m_confidence);
+                std::string label = TypeConverter::Type2Str(track.m_type) + ": " + std::to_string(track.m_confidence);
                 int baseLine = 0;
                 cv::Size labelSize = cv::getTextSize(label, cv::FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
 
@@ -678,14 +678,12 @@ protected:
         config.emplace("classNames", pathToModel + "coco.names");
         config.emplace("maxCropRatio", "-1");
 
-        config.emplace("white_list", "person");
-        config.emplace("white_list", "car");
-        config.emplace("white_list", "bicycle");
-        config.emplace("white_list", "motorbike");
-        config.emplace("white_list", "bus");
-        config.emplace("white_list", "truck");
-        //config.emplace("white_list", "traffic light");
-        //config.emplace("white_list", "stop sign");
+        config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_person));
+        config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_car));
+        config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_bicycle));
+        config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_motorbike));
+        config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_bus));
+        config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_truck));
 
         m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Yolo_Darknet, config, frame));
         if (m_detector.get())
@@ -722,11 +720,11 @@ protected:
 		settings.m_maximumAllowedSkippedFrames = cvRound(2 * m_fps); // Maximum allowed skipped frames
 		settings.m_maxTraceLength = cvRound(2 * m_fps);      // Maximum trace length
 
-		settings.AddNearTypes("car", "bus", true);
-		settings.AddNearTypes("car", "truck", true);
-		settings.AddNearTypes("bus", "truck", true);
-		settings.AddNearTypes("person", "bicycle", true);
-		settings.AddNearTypes("person", "motorbike", true);
+		settings.AddNearTypes(ObjectTypes::obj_car, ObjectTypes::obj_bus, true);
+		settings.AddNearTypes(ObjectTypes::obj_car, ObjectTypes::obj_truck, true);
+		settings.AddNearTypes(ObjectTypes::obj_bus, ObjectTypes::obj_truck, true);
+		settings.AddNearTypes(ObjectTypes::obj_person, ObjectTypes::obj_bicycle, true);
+		settings.AddNearTypes(ObjectTypes::obj_person, ObjectTypes::obj_motorbike, true);
 
 		m_tracker = std::make_unique<CTracker>(settings);
 
@@ -757,9 +755,9 @@ protected:
 
 				std::stringstream label;
 #if 1
-				label << track.m_type << std::setprecision(2) << ": " << track.m_confidence;
+				label << TypeConverter::Type2Str(track.m_type) << std::setprecision(2) << ": " << track.m_confidence;
 #else
-				label << track.m_type << " " << std::setprecision(2) << track.m_velocity << ": " << track.m_confidence;
+				label << TypeConverter::Type2Str(track.m_type) << " " << std::setprecision(2) << track.m_velocity << ": " << track.m_confidence;
 #endif
 				int baseLine = 0;
 				cv::Size labelSize = cv::getTextSize(label.str(), cv::FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
@@ -891,14 +889,12 @@ protected:
 
 		config.emplace("classNames", pathToModel + "coco.names");
 
-		config.emplace("white_list", "person");
-		config.emplace("white_list", "car");
-		config.emplace("white_list", "bicycle");
-		config.emplace("white_list", "motorbike");
-		config.emplace("white_list", "bus");
-		config.emplace("white_list", "truck");
-		//config.emplace("white_list", "traffic light");
-		//config.emplace("white_list", "stop sign");
+		config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_person));
+		config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_car));
+		config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_bicycle));
+		config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_motorbike));
+		config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_bus));
+		config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_truck));
 
 		m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Yolo_TensorRT, config, frame));
 		if (m_detector.get())
@@ -929,18 +925,17 @@ protected:
 		settings.m_maximumAllowedSkippedFrames = cvRound(2 * m_fps); // Maximum allowed skipped frames
 		settings.m_maxTraceLength = cvRound(5 * m_fps);      // Maximum trace length
 
-		settings.AddNearTypes("car", "bus", false);
-		settings.AddNearTypes("car", "truck", false);
-		settings.AddNearTypes("person", "bicycle", true);
-		settings.AddNearTypes("person", "motorbike", true);
+		settings.AddNearTypes(ObjectTypes::obj_car, ObjectTypes::obj_bus, false);
+		settings.AddNearTypes(ObjectTypes::obj_car, ObjectTypes::obj_truck, false);
+		settings.AddNearTypes(ObjectTypes::obj_person, ObjectTypes::obj_bicycle, true);
+		settings.AddNearTypes(ObjectTypes::obj_person, ObjectTypes::obj_motorbike, true);
 
 		m_tracker = std::make_unique<CTracker>(settings);
 
 		return true;
 	}
 
-	///
-	/// \brief DrawData
+	///emplace("white_list", 	/// \brief DrawData
 	/// \param frame
 	/// \param framesCounter
 	/// \param currTime
@@ -962,7 +957,7 @@ protected:
 
 
 				std::stringstream label;
-				label << track.m_type << " " << std::setprecision(2) << track.m_velocity << ": " << track.m_confidence;
+				label << TypeConverter::Type2Str(track.m_type) << " " << std::setprecision(2) << track.m_velocity << ": " << track.m_confidence;
 				int baseLine = 0;
 				cv::Size labelSize = cv::getTextSize(label.str(), cv::FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
 

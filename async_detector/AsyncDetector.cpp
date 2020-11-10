@@ -233,11 +233,11 @@ void AsyncDetector::DrawData(frame_ptr frameInfo, int framesCounter, int currTim
                                0.3f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
                                cv::Size2f(0.1f, 8.0f)))      // Min and max ratio: width / height
             {
-				//std::cout << track.m_type << " - " << track.m_rect << std::endl;
+				//std::cout << TypeConverter::Type2Str(track.m_type) << " - " << track.m_rect << std::endl;
 
                 DrawTrack(frameInfo->m_frame, 1, track, true);
 
-				std::string label = track.m_type;// +": " + std::to_string(track.m_confidence);
+				std::string label = TypeConverter::Type2Str(track.m_type);// +": " + std::to_string(track.m_confidence);
 				int baseLine = 0;
 				cv::Size labelSize = cv::getTextSize(label, cv::FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
 
@@ -295,15 +295,14 @@ void AsyncDetector::CaptureThread(std::string fileName, int startFrame, float* f
     detectorConfig.emplace("maxCropRatio", "3.0");
 	
 #if 1
-    //detectorConfig.emplace("white_list", "person"); // Uncommit for only pedestrians detection
-	detectorConfig.emplace("white_list", "person");
-	detectorConfig.emplace("white_list", "car");
-	detectorConfig.emplace("white_list", "bicycle");
-	detectorConfig.emplace("white_list", "motorbike");
-	detectorConfig.emplace("white_list", "bus");
-	detectorConfig.emplace("white_list", "truck");
-    //detectorConfig.emplace("white_list", "traffic light");
-    //detectorConfig.emplace("white_list", "stop sign");
+	detectorConfig.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_person));
+	detectorConfig.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_car));
+	detectorConfig.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_bicycle));
+	detectorConfig.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_motorbike));
+	detectorConfig.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_bus));
+	detectorConfig.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_truck));
+    //detectorConfig.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_traffic light));
+    //detectorConfig.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_stop sign));
 #endif
 
     // Tracker
