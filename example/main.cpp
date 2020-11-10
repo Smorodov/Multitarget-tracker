@@ -20,7 +20,7 @@ static void Help()
 const char* keys =
 {
     "{ @1             |../data/atrium.avi  | movie file | }"
-    "{ e  example     |1                   | number of example 0 - MouseTracking, 1 - MotionDetector, 2 - FaceDetector, 3 - PedestrianDetector, 4 - YOLO Darknet detector, 5 - YOLO TensorRT Detector | }"
+    "{ e  example     |1                   | number of example 0 - MouseTracking, 1 - MotionDetector, 2 - FaceDetector, 3 - PedestrianDetector, 4 - OpenCV dnn objects detector, 5 - YOLO Darknet detector, 6 - YOLO TensorRT Detector | }"
     "{ sf start_frame |0                   | Start a video from this position | }"
     "{ ef end_frame   |0                   | Play a video to this position (if 0 then played to the end of file) | }"
     "{ ed end_delay   |0                   | Delay in milliseconds after video ending | }"
@@ -45,6 +45,8 @@ int main(int argc, char** argv)
     int exampleNum = parser.get<int>("example");
     int asyncPipeline = parser.get<int>("async");
 
+	std::unique_ptr<VideoExample> detector;
+
     switch (exampleNum)
     {
     case 0:
@@ -52,48 +54,40 @@ int main(int argc, char** argv)
         break;
 
     case 1:
-    {
-        MotionDetectorExample mdetector(parser);
-        asyncPipeline ? mdetector.AsyncProcess() : mdetector.SyncProcess();
+        detector = std::make_unique<MotionDetectorExample>(parser);
         break;
-    }
 
     case 2:
-    {
-        FaceDetectorExample face_detector(parser);
-        asyncPipeline ? face_detector.AsyncProcess() : face_detector.SyncProcess();
+		detector = std::make_unique<FaceDetectorExample>(parser);
         break;
-    }
 
     case 3:
-    {
-        PedestrianDetectorExample ped_detector(parser);
-        asyncPipeline ? ped_detector.AsyncProcess() : ped_detector.SyncProcess();
+		detector = std::make_unique<PedestrianDetectorExample>(parser);
         break;
-    }
+
+	case 4:
+		detector = std::make_unique<OpenCVDNNExample>(parser);
+		break;
 
 #ifdef BUILD_YOLO_LIB
-	case 4:
-	{
-		YoloDarknetExample yolo_detector(parser);
-        asyncPipeline ? yolo_detector.AsyncProcess() : yolo_detector.SyncProcess();
+	case 5:
+		detector = std::make_unique<YoloDarknetExample>(parser);
 		break;
-	}
 #endif
 
 #ifdef BUILD_YOLO_TENSORRT
-	case 5:
-	{
-		YoloTensorRTExample yolo_detector(parser);
-		asyncPipeline ? yolo_detector.AsyncProcess() : yolo_detector.SyncProcess();
+	case 6:
+		detector = std::make_unique<YoloTensorRTExample>(parser);
 		break;
-	}
 #endif
 
     default:
         std::cerr << "Wrong example number: " << exampleNum << std::endl;
         break;
     }
+
+	if (detector.get())
+		asyncPipeline ? detector->AsyncProcess() : detector->SyncProcess();
 
 #ifndef SILENT_WORK
     cv::destroyAllWindows();
