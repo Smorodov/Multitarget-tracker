@@ -2,8 +2,6 @@
 #include "MotionDetector.h"
 #include "FaceDetector.h"
 #include "PedestrianDetector.h"
-#include "SSDMobileNetDetector.h"
-#include "YoloDetector.h"
 #include "OCVDNNDetector.h"
 
 #ifdef BUILD_YOLO_LIB
@@ -64,14 +62,6 @@ BaseDetector* CreateDetector(
     case tracking::Pedestrian_HOG:
     case tracking::Pedestrian_C4:
         detector = new PedestrianDetector(frame);
-        break;
-
-    case tracking::SSD_MobileNet:
-        detector = new SSDMobileNetDetector(frame);
-        break;
-
-    case tracking::Yolo_OCV:
-        detector = new YoloOCVDetector(frame);
         break;
 
     case tracking::DNN_OCV:

@@ -96,8 +96,6 @@ enum Detectors
     Face_HAAR = 7,
     Pedestrian_HOG = 8,
     Pedestrian_C4 = 9,
-    SSD_MobileNet = 10,
-    Yolo_OCV = 11,
 	Yolo_Darknet = 12,
     Yolo_TensorRT = 13,
     DNN_OCV = 14

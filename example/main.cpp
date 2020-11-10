@@ -20,7 +20,7 @@ static void Help()
 const char* keys =
 {
     "{ @1             |../data/atrium.avi  | movie file | }"
-    "{ e  example     |1                   | number of example 0 - MouseTracking, 1 - MotionDetector, 2 - FaceDetector, 3 - PedestrianDetector, 4 - MobileNet SSD detector, 5 - YOLO OpenCV detector, 6 - YOLO Darknet detector, 7 - YOLO TensorRT Detector | }"
+    "{ e  example     |1                   | number of example 0 - MouseTracking, 1 - MotionDetector, 2 - FaceDetector, 3 - PedestrianDetector, 4 - YOLO Darknet detector, 5 - YOLO TensorRT Detector | }"
     "{ sf start_frame |0                   | Start a video from this position | }"
     "{ ef end_frame   |0                   | Play a video to this position (if 0 then played to the end of file) | }"
     "{ ed end_delay   |0                   | Delay in milliseconds after video ending | }"
@@ -72,22 +72,8 @@ int main(int argc, char** argv)
         break;
     }
 
-    case 4:
-    {
-        SSDMobileNetExample dnn_detector(parser);
-        asyncPipeline ? dnn_detector.AsyncProcess() : dnn_detector.SyncProcess();
-        break;
-    }
-
-    case 5:
-    {
-        YoloExample yolo_detector(parser);
-        asyncPipeline ? yolo_detector.AsyncProcess() : yolo_detector.SyncProcess();
-        break;
-    }
-
 #ifdef BUILD_YOLO_LIB
-	case 6:
+	case 4:
 	{
 		YoloDarknetExample yolo_detector(parser);
         asyncPipeline ? yolo_detector.AsyncProcess() : yolo_detector.SyncProcess();
@@ -96,7 +82,7 @@ int main(int argc, char** argv)
 #endif
 
 #ifdef BUILD_YOLO_TENSORRT
-	case 7:
+	case 5:
 	{
 		YoloTensorRTExample yolo_detector(parser);
 		asyncPipeline ? yolo_detector.AsyncProcess() : yolo_detector.SyncProcess();
