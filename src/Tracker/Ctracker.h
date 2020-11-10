@@ -95,7 +95,7 @@ struct TrackerSettings
 	/// \brief m_nearTypes
 	/// Object types that can be matched while tracking
 	///
-	std::map<std::string, std::set<std::string>> m_nearTypes;
+	std::map<objtype_t, std::set<objtype_t>> m_nearTypes;
 
 	///
 	TrackerSettings()
@@ -139,31 +139,25 @@ struct TrackerSettings
 	}
 
 	///
-	void AddNearTypes(const std::string& type1, const std::string& type2, bool sym)
+	void AddNearTypes(ObjectTypes type1, ObjectTypes type2, bool sym)
 	{
-		auto AddOne = [&](const std::string& type1, const std::string& type2)
+		auto AddOne = [&](objtype_t type1, objtype_t type2)
 		{
 			auto it = m_nearTypes.find(type1);
 			if (it == std::end(m_nearTypes))
-			{
-				m_nearTypes[type1] = std::set<std::string>{ type2 };
-			}
+				m_nearTypes[type1] = std::set<objtype_t>{ type2 };
 			else
-			{
 				it->second.insert(type2);
-			}
 		};
-		AddOne(type1, type2);
+		AddOne((objtype_t)type1, (objtype_t)type2);
 		if (sym)
-		{
-			AddOne(type2, type1);
-		}
+			AddOne((objtype_t)type2, (objtype_t)type1);
 	}
 
 	///
-	bool CheckType(const std::string& type1, const std::string& type2) const
+	bool CheckType(objtype_t type1, objtype_t type2) const
 	{
-		bool res = type1.empty() || type2.empty() || (type1 == type2);
+		bool res = (type1 == bad_type) || (type2 == bad_type) || (type1 == type2);
 		if (!res)
 		{
 			auto it = m_nearTypes.find(type1);

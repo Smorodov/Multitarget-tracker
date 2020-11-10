@@ -99,7 +99,19 @@ bool YoloTensorRTDetector::Init(const config_t& config)
 			{
 				m_classNames.push_back(className);
 			}
+			if (FillTypesMap(m_classNames))
+			{
+				std::cout << "Unknown types in class names!" << std::endl;
+				assert(0);
+			}
 		}
+	}
+
+	m_classesWhiteList.clear();
+	auto whiteRange = config.equal_range("white_list");
+	for (auto it = whiteRange.first; it != whiteRange.second; ++it)
+	{
+		m_classesWhiteList.insert(std::stoi(it->second));
 	}
 
 	auto maxCropRatio = config.find("maxCropRatio");
@@ -129,7 +141,8 @@ void YoloTensorRTDetector::Detect(const cv::UMat& colorFrame)
         {
             for (const tensor_rt::Result& bbox : dets)
             {
-                m_regions.emplace_back(bbox.rect, m_classNames[bbox.id], bbox.prob);
+				if (m_classesWhiteList.empty() || m_classesWhiteList.find(T2T(bbox.id)) != std::end(m_classesWhiteList))
+					m_regions.emplace_back(bbox.rect, T2T(bbox.id), bbox.prob);
             }
         }
     }
@@ -156,7 +169,8 @@ void YoloTensorRTDetector::Detect(const cv::UMat& colorFrame)
 
 				for (const tensor_rt::Result& bbox : detects[j])
 				{
-					tmpRegions.emplace_back(cv::Rect(bbox.rect.x + crop.x, bbox.rect.y + crop.y, bbox.rect.width, bbox.rect.height), m_classNames[bbox.id], bbox.prob);
+					if (m_classesWhiteList.empty() || m_classesWhiteList.find(T2T(bbox.id)) != std::end(m_classesWhiteList))
+						tmpRegions.emplace_back(cv::Rect(bbox.rect.x + crop.x, bbox.rect.y + crop.y, bbox.rect.width, bbox.rect.height), T2T(bbox.id), bbox.prob);
 				}
 			}
 			i += batchsize;

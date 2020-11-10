@@ -3,9 +3,9 @@
 
 # Last changes
 
-* Migration to C++17 standart
+* Object type changed from string to enum
 
-* Support CodeQL analyzer
+* The base opencv_dnn detector instead special MobileNetOpnCV and YoloOpenCV
 
 # New videos!
 
@@ -28,15 +28,13 @@
 
 1.3. HOG pedestrian detector from OpenCV (tracking::Pedestrian_HOG) and C4 pedestrian detector from [sturkmen72](https://github.com/sturkmen72/C4-Real-time-pedestrian-detection)  (tracking::Pedestrian_C4)
 
-1.4. MobileNet SSD detector (tracking::SSD_MobileNet) with opencv_dnn inference and pretrained models from [chuanqi305](https://github.com/chuanqi305/MobileNet-SSD)
+1.4. Detector based on opencv_dnn (tracking::DNN_OCV) and pretrained models from [chuanqi305](https://github.com/chuanqi305/MobileNet-SSD) and [pjreddie](https://pjreddie.com/darknet/yolo/)
 
-1.5. YOLO detector (tracking::Yolo_OCV) with opencv_dnn inference and pretrained models from [pjreddie](https://pjreddie.com/darknet/yolo/)
+1.5. YOLO detector (tracking::Yolo_Darknet) with darknet inference from [AlexeyAB](https://github.com/AlexeyAB/darknet) and pretrained models from [pjreddie](https://pjreddie.com/darknet/yolo/)
 
-1.6. YOLO detector (tracking::Yolo_Darknet) with darknet inference from [AlexeyAB](https://github.com/AlexeyAB/darknet) and pretrained models from [pjreddie](https://pjreddie.com/darknet/yolo/)
+1.6. YOLO detector (tracking::Yolo_TensorRT) with NVidia TensorRT inference from [enazoe](https://github.com/enazoe/yolo-tensorrt) and pretrained models from [pjreddie](https://pjreddie.com/darknet/yolo/)
 
-1.7. YOLO detector (tracking::Yolo_TensorRT) with NVidia TensorRT inference from [enazoe](https://github.com/enazoe/yolo-tensorrt) and pretrained models from [pjreddie](https://pjreddie.com/darknet/yolo/)
-
-1.8. You can to use custom detector with bounding or rotated rectangle as output.
+1.7. You can to use custom detector with bounding or rotated rectangle as output.
 
 #### 2. Matching or solve an [assignment problem](https://github.com/Smorodov/Multitarget-tracker/blob/master/src/Tracker/Ctracker.h):
 
@@ -151,7 +149,7 @@ How to run cmake on Windows for Visual Studio 15 2017 Win64: [example](https://g
 
            Params: 
            1. Movie file, for example ../data/atrium.avi
-           2. [Optional] Number of example: 0 - MouseTracking, 1 - MotionDetector, 2 - FaceDetector, 3 - PedestrianDetector, 4 - MobileNet SSD detector, 5 - YOLO OpenCV detector, 6 - Yolo Darknet detector, 7 - YOLO TensorRT Detector
+           2. [Optional] Number of example: 0 - MouseTracking, 1 - MotionDetector, 2 - FaceDetector, 3 - PedestrianDetector, 4 - OpenCV dnn objects detector, 5 - Yolo Darknet detector, 6 - YOLO TensorRT Detector
               -e=0 or --example=1
            3. [Optional] Frame number to start a video from this position
               -sf=0 or --start_frame==1500

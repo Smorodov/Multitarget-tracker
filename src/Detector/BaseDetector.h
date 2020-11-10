@@ -13,10 +13,10 @@ public:
     /// \brief BaseDetector
     /// \param frame
     ///
-	BaseDetector(const cv::UMat& frame)
-	{
-		m_minObjectSize.width = std::max(5, frame.cols / 100);
-		m_minObjectSize.height = m_minObjectSize.width;
+    BaseDetector(const cv::UMat& frame)
+    {
+        m_minObjectSize.width = std::max(5, frame.cols / 100);
+        m_minObjectSize.height = m_minObjectSize.width;
     }
     ///
     /// \brief ~BaseDetector
@@ -121,7 +121,8 @@ protected:
     cv::Mat m_motionMap;
 	cv::Mat m_normFor;
 
-	///
+	std::set<objtype_t> m_classesWhiteList;
+
     std::vector<cv::Rect> GetCrops(float maxCropRatio, cv::Size netSize, cv::Size imgSize) const
     {
         std::vector<cv::Rect> crops;
@@ -171,7 +172,34 @@ protected:
                 break;
         }
         return crops;
-    };
+    }
+
+	///
+	bool FillTypesMap(const std::vector<std::string>& classNames)
+	{
+		bool res = true;
+
+		m_typesMap.resize(classNames.size(), bad_type);
+		for (size_t i = 0; i < classNames.size(); ++i)
+		{
+			objtype_t type = TypeConverter::Str2Type(classNames[i]);
+			m_typesMap[i] = type;
+			res = (type != bad_type);
+		}
+		return res;
+	}
+	
+	///
+	objtype_t T2T(size_t typeInd) const
+	{
+		if (typeInd < m_typesMap.size())
+			return m_typesMap[typeInd];
+		else
+			return bad_type;
+	}
+
+private:
+    std::vector<objtype_t> m_typesMap;
 };
 
 

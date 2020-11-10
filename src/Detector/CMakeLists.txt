@@ -14,8 +14,6 @@ project(mdetection)
              FaceDetector.cpp
              PedestrianDetector.cpp
              pedestrians/c4-pedestrian-detector.cpp
-             SSDMobileNetDetector.cpp
-             YoloDetector.cpp
              OCVDNNDetector.cpp
 
              BaseDetector.h
@@ -31,8 +29,6 @@ project(mdetection)
              FaceDetector.h
              PedestrianDetector.h
              pedestrians/c4-pedestrian-detector.h
-             SSDMobileNetDetector.h
-             YoloDetector.h
              OCVDNNDetector.h
 )
 

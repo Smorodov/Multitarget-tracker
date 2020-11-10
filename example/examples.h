@@ -394,221 +394,175 @@ protected:
 // ----------------------------------------------------------------------
 
 ///
-/// \brief The SSDMobileNetExample class
+/// \brief The OpenCVDNNExample class
 ///
-class SSDMobileNetExample : public VideoExample
+class OpenCVDNNExample : public VideoExample
 {
 public:
-    SSDMobileNetExample(const cv::CommandLineParser& parser)
-        :
-          VideoExample(parser)
-    {
-    }
+	OpenCVDNNExample(const cv::CommandLineParser& parser)
+		:
+		VideoExample(parser)
+	{
+	}
 
 protected:
-    ///
-    /// \brief InitDetector(
-    /// \param frame
-    /// \return
-    ///
-    bool InitDetector(cv::UMat frame)
-    {
-#ifdef _WIN32
-        std::string pathToModel = "../../data/";
-#else
-        std::string pathToModel = "../data/";
-#endif
-        config_t config;
-        config.emplace("modelConfiguration", pathToModel + "MobileNetSSD_deploy.prototxt");
-        config.emplace("modelBinary", pathToModel + "MobileNetSSD_deploy.caffemodel");
-        config.emplace("confidenceThreshold", "0.5");
-        config.emplace("maxCropRatio", "3.0");
-        config.emplace("dnnTarget", "DNN_TARGET_CPU");
-        config.emplace("dnnBackend", "DNN_BACKEND_INFERENCE_ENGINE");
-
-        m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::SSD_MobileNet, config, frame));
-        if (m_detector.get())
-        {
-            m_detector->SetMinObjectSize(cv::Size(frame.cols / 20, frame.rows / 20));
-            return true;
-        }
-        return false;
-    }
-    ///
-    /// \brief InitTracker
-    /// \param frame
-    /// \return
-    ///
-    bool InitTracker(cv::UMat frame)
-    {
-        TrackerSettings settings;
-		settings.SetDistance(tracking::DistRects);
-        settings.m_kalmanType = tracking::KalmanLinear;
-        settings.m_filterGoal = tracking::FilterRect;
-        settings.m_lostTrackType = tracking::TrackCSRT;      // Use visual objects tracker for collisions resolving
-        settings.m_matchType = tracking::MatchHungrian;
-        settings.m_dt = 0.3f;                                // Delta time for Kalman filter
-        settings.m_accelNoiseMag = 0.1f;                     // Accel noise magnitude for Kalman filter
-        settings.m_distThres = 0.8f;                         // Distance threshold between region and object on two frames
-        settings.m_minAreaRadiusPix = frame.rows / 20.f;
-        settings.m_maximumAllowedSkippedFrames = cvRound(2 * m_fps); // Maximum allowed skipped frames
-        settings.m_maxTraceLength = cvRound(5 * m_fps);      // Maximum trace length
-
-        m_tracker = std::make_unique<CTracker>(settings);
-
-        return true;
-    }
-
-    ///
-    /// \brief DrawData
-    /// \param frame
-    /// \param framesCounter
-    /// \param currTime
-    ///
-    void DrawData(cv::Mat frame, int framesCounter, int currTime)
-    {
-		m_tracks = m_tracker->GetTracks();
-
-        if (m_showLogs)
-            std::cout << "Frame " << framesCounter << ": tracks = " << m_tracks.size() << ", time = " << currTime << std::endl;
-
-        for (const auto& track : m_tracks)
-        {
-            if (track.IsRobust(5,                           // Minimal trajectory size
-                                0.2f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
-                                cv::Size2f(0.1f, 8.0f)))      // Min and max ratio: width / height
-            {
-                DrawTrack(frame, 1, track);
-
-                std::string label = track.m_type + ": " + std::to_string(track.m_confidence);
-                int baseLine = 0;
-                cv::Size labelSize = cv::getTextSize(label, cv::FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
-
-                cv::Rect brect = track.m_rrect.boundingRect();
-				DrawFilledRect(frame, cv::Rect(cv::Point(brect.x, brect.y - labelSize.height), cv::Size(labelSize.width, labelSize.height + baseLine)), cv::Scalar(200, 200, 200), 150);
-                cv::putText(frame, label, brect.tl(), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 0, 0));
-            }
-        }
-        m_detector->CalcMotionMap(frame);
-    }
-};
-
-// ----------------------------------------------------------------------
-
-///
-/// \brief The YoloExample class
-///
-class YoloExample : public VideoExample
-{
-public:
-    YoloExample(const cv::CommandLineParser& parser)
-        :
-          VideoExample(parser)
-    {
-    }
-
-protected:
-    ///
-    /// \brief InitDetector(
-    /// \param frame
-    /// \return
-    ///
-    bool InitDetector(cv::UMat frame)
-    {
-        config_t config;
-        const int yoloTest = 1;
+	///
+	/// \brief InitDetector
+	/// \param frame
+	/// \return
+	///
+	bool InitDetector(cv::UMat frame)
+	{
+		config_t config;
 
 #ifdef _WIN32
-        std::string pathToModel = "../../data/";
+		std::string pathToModel = "../../data/";
 #else
-        std::string pathToModel = "../data/";
+		std::string pathToModel = "../data/";
 #endif
+		enum class NNModels
+		{
+			TinyYOLOv3 = 0,
+			YOLOv3,
+			YOLOv4,
+			TinyYOLOv4,
+			MobileNetSSD
+		};
+		NNModels usedModel = NNModels::MobileNetSSD;
+		switch (usedModel)
+		{
+		case NNModels::TinyYOLOv3:
+			config.emplace("modelConfiguration", pathToModel + "yolov3-tiny.cfg");
+			config.emplace("modelBinary", pathToModel + "yolov3-tiny.weights");
+			config.emplace("classNames", pathToModel + "coco.names");
+			config.emplace("confidenceThreshold", "0.5");
+			break;
 
-        switch (yoloTest)
-        {
-        case 0:
-            config.emplace("modelConfiguration", pathToModel + "tiny-yolo.cfg");
-            config.emplace("modelBinary", pathToModel + "tiny-yolo.weights");
-            break;
+		case NNModels::YOLOv3:
+			config.emplace("modelConfiguration", pathToModel + "yolov3.cfg");
+			config.emplace("modelBinary", pathToModel + "yolov3.weights");
+			config.emplace("classNames", pathToModel + "coco.names");
+			config.emplace("confidenceThreshold", "0.7");
+			break;
 
-        case 1:
-            config.emplace("modelConfiguration", pathToModel + "yolov3-tiny.cfg");
-            config.emplace("modelBinary", pathToModel + "yolov3-tiny.weights");
-            config.emplace("classNames", pathToModel + "coco.names");
-            break;
-        }
+		case NNModels::YOLOv4:
+			config.emplace("modelConfiguration", pathToModel + "yolov4.cfg");
+			config.emplace("modelBinary", pathToModel + "yolov4.weights");
+			config.emplace("classNames", pathToModel + "coco.names");
+			config.emplace("confidenceThreshold", "0.5");
+			break;
 
-        config.emplace("confidenceThreshold", "0.1");
-        config.emplace("maxCropRatio", "2.0");
-        config.emplace("dnnTarget", "DNN_TARGET_CPU");
-        config.emplace("dnnBackend", "DNN_BACKEND_OPENCV");
+		case NNModels::TinyYOLOv4:
+			config.emplace("modelConfiguration", pathToModel + "yolov4-tiny.cfg");
+			config.emplace("modelBinary", pathToModel + "yolov4-tiny.weights");
+			config.emplace("classNames", pathToModel + "coco.names");
+			config.emplace("confidenceThreshold", "0.5");
+			break;
 
-        m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Yolo_OCV, config, frame));
-        if (m_detector.get())
-        {
-            m_detector->SetMinObjectSize(cv::Size(frame.cols / 40, frame.rows / 40));
-            return true;
-        }
-        return false;
-    }
-    ///
-    /// \brief InitTracker
-    /// \param frame
-    /// \return
-    ///
-    bool InitTracker(cv::UMat frame)
-    {
-        TrackerSettings settings;
-		settings.SetDistance(tracking::DistRects);
-        settings.m_kalmanType = tracking::KalmanLinear;
-        settings.m_filterGoal = tracking::FilterRect;
-        settings.m_lostTrackType = tracking::TrackCSRT;      // Use visual objects tracker for collisions resolving
-        settings.m_matchType = tracking::MatchHungrian;
-        settings.m_dt = 0.3f;                                // Delta time for Kalman filter
-        settings.m_accelNoiseMag = 0.2f;                     // Accel noise magnitude for Kalman filter
-        settings.m_distThres = 0.8f;                         // Distance threshold between region and object on two frames
-        settings.m_minAreaRadiusPix = frame.rows / 20.f;
-        settings.m_maximumAllowedSkippedFrames = cvRound(2 * m_fps); // Maximum allowed skipped frames
-        settings.m_maxTraceLength = cvRound(5 * m_fps);      // Maximum trace length
+		case NNModels::MobileNetSSD:
+			config.emplace("modelConfiguration", pathToModel + "MobileNetSSD_deploy.prototxt");
+			config.emplace("modelBinary", pathToModel + "MobileNetSSD_deploy.caffemodel");
+			config.emplace("classNames", pathToModel + "voc.names");
+			config.emplace("confidenceThreshold", "0.5");
+			break;
+		}
+		config.emplace("maxCropRatio", "-1");
 
-        m_tracker = std::make_unique<CTracker>(settings);
+		config.emplace("dnnTarget", "DNN_TARGET_CPU");
+		config.emplace("dnnBackend", "DNN_BACKEND_DEFAULT");
 
-        return true;
-    }
+		m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::DNN_OCV, config, frame));
+		if (m_detector.get())
+			m_detector->SetMinObjectSize(cv::Size(frame.cols / 40, frame.rows / 40));
+		return (m_detector.get() != nullptr);
+	}
 
-    ///
-    /// \brief DrawData
-    /// \param frame
-    /// \param framesCounter
-    /// \param currTime
-    ///
-    void DrawData(cv::Mat frame, int framesCounter, int currTime)
-    {
+	///
+	/// \brief InitTracker
+	/// \param frame
+	/// \return
+	///
+	bool InitTracker(cv::UMat frame)
+	{
+		TrackerSettings settings;
+		settings.SetDistance(tracking::DistCenters);
+		settings.m_kalmanType = tracking::KalmanLinear;
+		settings.m_filterGoal = tracking::FilterRect;
+		settings.m_lostTrackType = tracking::TrackCSRT;      // Use visual objects tracker for collisions resolving
+		settings.m_matchType = tracking::MatchHungrian;
+		settings.m_useAcceleration = false;                   // Use constant acceleration motion model
+		settings.m_dt = settings.m_useAcceleration ? 0.05f : 0.4f; // Delta time for Kalman filter
+		settings.m_accelNoiseMag = 0.2f;                     // Accel noise magnitude for Kalman filter
+		settings.m_distThres = 0.8f;                         // Distance threshold between region and object on two frames
+#if 0
+		settings.m_minAreaRadiusPix = frame.rows / 20.f;
+#else
+		settings.m_minAreaRadiusPix = -1.f;
+#endif
+		settings.m_minAreaRadiusK = 0.8f;
+		settings.m_maximumAllowedSkippedFrames = cvRound(2 * m_fps); // Maximum allowed skipped frames
+		settings.m_maxTraceLength = cvRound(2 * m_fps);      // Maximum trace length
+
+		m_tracker = std::make_unique<CTracker>(settings);
+		return true;
+	}
+
+	///
+	/// \brief DrawData
+	/// \param frame
+	/// \param framesCounter
+	/// \param currTime
+	///
+	void DrawData(cv::Mat frame, int framesCounter, int currTime)
+	{
 		m_tracks = m_tracker->GetTracks();
 
-        if (m_showLogs)
-            std::cout << "Frame " << framesCounter << ": tracks = " << m_tracks.size() << ", time = " << currTime << std::endl;
+		if (m_showLogs)
+			std::cout << "Frame " << framesCounter << ": tracks = " << m_tracks.size() << ", time = " << currTime << std::endl;
 
-        for (const auto& track : m_tracks)
-        {
-            if (track.IsRobust(1,                           // Minimal trajectory size
-                                0.1f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
-                                cv::Size2f(0.1f, 8.0f)))      // Min and max ratio: width / height
-            {
-                DrawTrack(frame, 1, track);
+		for (const auto& track : m_tracks)
+		{
+			if (track.IsRobust(3,                           // Minimal trajectory size
+				0.5f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
+				cv::Size2f(0.1f, 8.0f)))      // Min and max ratio: width / height
+			{
+				DrawTrack(frame, 1, track, false);
 
-                std::string label = track.m_type + ": " + std::to_string(track.m_confidence);
-                int baseLine = 0;
-                cv::Size labelSize = cv::getTextSize(label, cv::FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
 
-                cv::Rect brect = track.m_rrect.boundingRect();
+				std::stringstream label;
+				label << TypeConverter::Type2Str(track.m_type) << std::setprecision(2) << ": " << track.m_confidence;
+
+				int baseLine = 0;
+				cv::Size labelSize = cv::getTextSize(label.str(), cv::FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
+
+				cv::Rect brect = track.m_rrect.boundingRect();
+				if (brect.x < 0)
+				{
+					brect.width = std::min(brect.width, frame.cols - 1);
+					brect.x = 0;
+				}
+				else if (brect.x + brect.width >= frame.cols)
+				{
+					brect.x = std::max(0, frame.cols - brect.width - 1);
+					brect.width = std::min(brect.width, frame.cols - 1);
+				}
+				if (brect.y - labelSize.height < 0)
+				{
+					brect.height = std::min(brect.height, frame.rows - 1);
+					brect.y = labelSize.height;
+				}
+				else if (brect.y + brect.height >= frame.rows)
+				{
+					brect.y = std::max(0, frame.rows - brect.height - 1);
+					brect.height = std::min(brect.height, frame.rows - 1);
+				}
 				DrawFilledRect(frame, cv::Rect(cv::Point(brect.x, brect.y - labelSize.height), cv::Size(labelSize.width, labelSize.height + baseLine)), cv::Scalar(200, 200, 200), 150);
-                cv::putText(frame, label, brect.tl(), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 0, 0));
-            }
-        }
+				cv::putText(frame, label.str(), brect.tl(), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 0, 0));
+			}
+		}
 
-        m_detector->CalcMotionMap(frame);
-    }
+		//m_detector->CalcMotionMap(frame);
+	}
 };
 
 #ifdef BUILD_YOLO_LIB
@@ -678,14 +632,12 @@ protected:
         config.emplace("classNames", pathToModel + "coco.names");
         config.emplace("maxCropRatio", "-1");
 
-        config.emplace("white_list", "person");
-        config.emplace("white_list", "car");
-        config.emplace("white_list", "bicycle");
-        config.emplace("white_list", "motorbike");
-        config.emplace("white_list", "bus");
-        config.emplace("white_list", "truck");
-        //config.emplace("white_list", "traffic light");
-        //config.emplace("white_list", "stop sign");
+        config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_person));
+        config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_car));
+        config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_bicycle));
+        config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_motorbike));
+        config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_bus));
+        config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_truck));
 
         m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Yolo_Darknet, config, frame));
         if (m_detector.get())
@@ -722,11 +674,11 @@ protected:
 		settings.m_maximumAllowedSkippedFrames = cvRound(2 * m_fps); // Maximum allowed skipped frames
 		settings.m_maxTraceLength = cvRound(2 * m_fps);      // Maximum trace length
 
-		settings.AddNearTypes("car", "bus", true);
-		settings.AddNearTypes("car", "truck", true);
-		settings.AddNearTypes("bus", "truck", true);
-		settings.AddNearTypes("person", "bicycle", true);
-		settings.AddNearTypes("person", "motorbike", true);
+		settings.AddNearTypes(ObjectTypes::obj_car, ObjectTypes::obj_bus, true);
+		settings.AddNearTypes(ObjectTypes::obj_car, ObjectTypes::obj_truck, true);
+		settings.AddNearTypes(ObjectTypes::obj_bus, ObjectTypes::obj_truck, true);
+		settings.AddNearTypes(ObjectTypes::obj_person, ObjectTypes::obj_bicycle, true);
+		settings.AddNearTypes(ObjectTypes::obj_person, ObjectTypes::obj_motorbike, true);
 
 		m_tracker = std::make_unique<CTracker>(settings);
 
@@ -757,9 +709,9 @@ protected:
 
 				std::stringstream label;
 #if 1
-				label << track.m_type << std::setprecision(2) << ": " << track.m_confidence;
+				label << TypeConverter::Type2Str(track.m_type) << std::setprecision(2) << ": " << track.m_confidence;
 #else
-				label << track.m_type << " " << std::setprecision(2) << track.m_velocity << ": " << track.m_confidence;
+				label << TypeConverter::Type2Str(track.m_type) << " " << std::setprecision(2) << track.m_velocity << ": " << track.m_confidence;
 #endif
 				int baseLine = 0;
 				cv::Size labelSize = cv::getTextSize(label.str(), cv::FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
@@ -891,14 +843,12 @@ protected:
 
 		config.emplace("classNames", pathToModel + "coco.names");
 
-		config.emplace("white_list", "person");
-		config.emplace("white_list", "car");
-		config.emplace("white_list", "bicycle");
-		config.emplace("white_list", "motorbike");
-		config.emplace("white_list", "bus");
-		config.emplace("white_list", "truck");
-		//config.emplace("white_list", "traffic light");
-		//config.emplace("white_list", "stop sign");
+		config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_person));
+		config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_car));
+		config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_bicycle));
+		config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_motorbike));
+		config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_bus));
+		config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_truck));
 
 		m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Yolo_TensorRT, config, frame));
 		if (m_detector.get())
@@ -929,18 +879,17 @@ protected:
 		settings.m_maximumAllowedSkippedFrames = cvRound(2 * m_fps); // Maximum allowed skipped frames
 		settings.m_maxTraceLength = cvRound(5 * m_fps);      // Maximum trace length
 
-		settings.AddNearTypes("car", "bus", false);
-		settings.AddNearTypes("car", "truck", false);
-		settings.AddNearTypes("person", "bicycle", true);
-		settings.AddNearTypes("person", "motorbike", true);
+		settings.AddNearTypes(ObjectTypes::obj_car, ObjectTypes::obj_bus, false);
+		settings.AddNearTypes(ObjectTypes::obj_car, ObjectTypes::obj_truck, false);
+		settings.AddNearTypes(ObjectTypes::obj_person, ObjectTypes::obj_bicycle, true);
+		settings.AddNearTypes(ObjectTypes::obj_person, ObjectTypes::obj_motorbike, true);
 
 		m_tracker = std::make_unique<CTracker>(settings);
 
 		return true;
 	}
 
-	///
-	/// \brief DrawData
+	///emplace("white_list", 	/// \brief DrawData
 	/// \param frame
 	/// \param framesCounter
 	/// \param currTime
@@ -962,7 +911,7 @@ protected:
 
 
 				std::stringstream label;
-				label << track.m_type << " " << std::setprecision(2) << track.m_velocity << ": " << track.m_confidence;
+				label << TypeConverter::Type2Str(track.m_type) << " " << std::setprecision(2) << track.m_velocity << ": " << track.m_confidence;
 				int baseLine = 0;
 				cv::Size labelSize = cv::getTextSize(label.str(), cv::FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
 

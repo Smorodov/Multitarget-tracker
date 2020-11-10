@@ -129,8 +129,20 @@ bool OCVDNNDetector::Init(const config_t& config)
             {
                 m_classNames.push_back(className);
             }
+			if (FillTypesMap(m_classNames))
+			{
+				std::cout << "Unknown types in class names!" << std::endl;
+				assert(0);
+			}
         }
     }
+
+	m_classesWhiteList.clear();
+	auto whiteRange = config.equal_range("white_list");
+	for (auto it = whiteRange.first; it != whiteRange.second; ++it)
+	{
+		m_classesWhiteList.insert(std::stoi(it->second));
+	}
 
     auto confidenceThreshold = config.find("confidenceThreshold");
     if (confidenceThreshold != config.end())
@@ -266,8 +278,8 @@ void OCVDNNDetector::DetectInCrop(const cv::UMat& colorFrame, const cv::Rect& cr
                         height = bottom - top + 1;
                     }
                     size_t objectClass = (int)(data[i + 1]) - 1;
-                    tmpRegions.emplace_back(cv::Rect(left + crop.x, top + crop.y, width, height),
-                                            (objectClass < m_classNames.size()) ? m_classNames[objectClass] : "", confidence);
+					if (m_classesWhiteList.empty() || m_classesWhiteList.find(T2T(objectClass)) != std::end(m_classesWhiteList))
+						tmpRegions.emplace_back(cv::Rect(left + crop.x, top + crop.y, width, height), T2T(objectClass), confidence);
                 }
             }
         }
@@ -294,12 +306,14 @@ void OCVDNNDetector::DetectInCrop(const cv::UMat& colorFrame, const cv::Rect& cr
                     int left = centerX - width / 2;
                     int top = centerY - height / 2;
 
-                    tmpRegions.emplace_back(cv::Rect(left + crop.x, top + crop.y, width, height),
-                                            (classIdPoint.x < static_cast<int>(m_classNames.size())) ? m_classNames[classIdPoint.x] : "", static_cast<float>(confidence));
+					if (m_classesWhiteList.empty() || m_classesWhiteList.find(T2T(classIdPoint.x)) != std::end(m_classesWhiteList))
+						tmpRegions.emplace_back(cv::Rect(left + crop.x, top + crop.y, width, height), T2T(classIdPoint.x), static_cast<float>(confidence));
                 }
             }
         }
     }
-    else
-        CV_Error(cv::Error::StsNotImplemented, "Unknown output layer type: " + m_outLayerType);
+	else
+	{
+		CV_Error(cv::Error::StsNotImplemented, "Unknown output layer type: " + m_outLayerType);
+	}
 }

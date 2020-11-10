@@ -4,7 +4,7 @@
 #include <string>
 #include <map>
 #include <opencv2/opencv.hpp>
-
+#include "object_types.h"
 
 // ---------------------------------------------------------------------------
 //
@@ -28,10 +28,7 @@ typedef std::multimap<std::string, std::string> config_t;
 class CRegion
 {
 public:
-    CRegion()
-        : m_type(""), m_confidence(-1)
-    {
-    }
+	CRegion() = default;
 
     CRegion(const cv::Rect& rect)
         : m_brect(rect)
@@ -45,13 +42,13 @@ public:
         R2BRect();
     }
 
-    CRegion(const cv::Rect& rect, const std::string& type, float confidence)
+    CRegion(const cv::Rect& rect, objtype_t type, float confidence)
         : m_type(type), m_brect(rect), m_confidence(confidence)
     {
         B2RRect();
     }
 
-	std::string m_type;
+	objtype_t m_type = bad_type;
     cv::RotatedRect m_rrect;
     cv::Rect m_brect;
 	float m_confidence = -1;
@@ -90,20 +87,18 @@ namespace tracking
 enum Detectors
 {
     Motion_VIBE = 0,
-    Motion_MOG = 1,
-    Motion_GMG = 2,
-    Motion_CNT = 3,
-    Motion_SuBSENSE = 4,
-    Motion_LOBSTER = 5,
-    Motion_MOG2 = 6,
-    Face_HAAR = 7,
-    Pedestrian_HOG = 8,
-    Pedestrian_C4 = 9,
-    SSD_MobileNet = 10,
-    Yolo_OCV = 11,
-	Yolo_Darknet = 12,
-    Yolo_TensorRT = 13,
-    DNN_OCV = 14
+    Motion_MOG,
+    Motion_GMG,
+    Motion_CNT,
+    Motion_SuBSENSE,
+    Motion_LOBSTER,
+    Motion_MOG2,
+    Face_HAAR,
+    Pedestrian_HOG,
+    Pedestrian_C4,
+	Yolo_Darknet,
+    Yolo_TensorRT,
+    DNN_OCV
 };
 
 ///

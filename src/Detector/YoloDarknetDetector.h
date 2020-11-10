@@ -33,7 +33,6 @@ private:
     float m_confidenceThreshold = 0.5f;
     float m_maxCropRatio = 3.0f;
 	std::vector<std::string> m_classNames;
-	std::set<std::string> m_classesWhiteList;
 
 	void DetectInCrop(const cv::Mat& colorFrame, const cv::Rect& crop, regions_t& tmpRegions);
 	void Detect(const cv::Mat& colorFrame, regions_t& tmpRegions);
