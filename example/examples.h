@@ -167,7 +167,7 @@ protected:
         {
             if (track.m_isStatic)
             {
-                DrawTrack(frame, 1, track, false);
+                DrawTrack(frame, 1, track, false, framesCounter);
 
 				std::string label = "abandoned " + std::to_string(track.m_ID);
 				int baseLine = 0;
@@ -202,7 +202,7 @@ protected:
                 if (track.IsRobust(cvRound(m_fps / 4),          // Minimal trajectory size
                                     0.7f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
                                     cv::Size2f(0.1f, 8.0f)))      // Min and max ratio: width / height
-                    DrawTrack(frame, 1, track, true);
+                    DrawTrack(frame, 1, track, true, framesCounter);
             }
         }
         m_detector->CalcMotionMap(frame);
@@ -294,7 +294,7 @@ protected:
             if (track.IsRobust(8,                           // Minimal trajectory size
                                 0.4f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
                                 cv::Size2f(0.1f, 8.0f)))      // Min and max ratio: width / height
-                DrawTrack(frame, 1, track);
+                DrawTrack(frame, 1, track, true, framesCounter);
         }
         m_detector->CalcMotionMap(frame);
     }
@@ -385,7 +385,7 @@ protected:
 			if (track.IsRobust(cvRound(m_fps / 2),          // Minimal trajectory size
                                 0.4f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
                                 cv::Size2f(0.1f, 8.0f)))      // Min and max ratio: width / height
-                DrawTrack(frame, 1, track);
+                DrawTrack(frame, 1, track, true, framesCounter);
         }
         m_detector->CalcMotionMap(frame);
     }
@@ -526,7 +526,7 @@ protected:
 				0.5f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
 				cv::Size2f(0.1f, 8.0f)))      // Min and max ratio: width / height
 			{
-				DrawTrack(frame, 1, track, false);
+				DrawTrack(frame, 1, track, false, framesCounter);
 
 
 				std::stringstream label;
@@ -704,7 +704,7 @@ protected:
                 0.5f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
 				cv::Size2f(0.1f, 8.0f)))      // Min and max ratio: width / height
 			{
-				DrawTrack(frame, 1, track, false);
+				DrawTrack(frame, 1, track, false, framesCounter);
 
 
 				std::stringstream label;
@@ -889,7 +889,7 @@ protected:
 		return true;
 	}
 
-	///emplace("white_list", 	/// \brief DrawData
+	/// \brief DrawData
 	/// \param frame
 	/// \param framesCounter
 	/// \param currTime
@@ -907,7 +907,7 @@ protected:
 				0.5f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
 				cv::Size2f(0.1f, 8.0f)))      // Min and max ratio: width / height
 			{
-				DrawTrack(frame, 1, track);
+				DrawTrack(frame, 1, track, true, framesCounter);
 
 
 				std::stringstream label;
