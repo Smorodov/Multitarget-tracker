@@ -9,17 +9,7 @@
 /// \param parser
 ///
 VideoExample::VideoExample(const cv::CommandLineParser& parser)
-    :
-      m_showLogs(true),
-      m_fps(25),
-      m_captureTimeOut(60000),
-      m_trackingTimeOut(60000),
-      m_isTrackerInitialized(false),
-      m_isDetectorInitialized(false),
-      m_fourcc(cv::VideoWriter::fourcc('M', 'J', 'P', 'G')),
-      m_startFrame(0),
-      m_endFrame(0),
-      m_finishDelay(0)
+    : m_resultsLog(parser.get<std::string>("res"))
 {
     m_inFile = parser.get<std::string>(0);
     m_outFile = parser.get<std::string>("out");
@@ -64,6 +54,8 @@ void VideoExample::SyncProcess()
         std::cerr << "Can't open " << m_inFile << std::endl;
         return;
     }
+
+	m_resultsLog.Open();
 
     int64 startLoopTime = cv::getTickCount();
 
@@ -365,7 +357,8 @@ void VideoExample::Tracking(cv::Mat frame, const regions_t& regions)
 void VideoExample::DrawTrack(cv::Mat frame,
                              int resizeCoeff,
                              const TrackingObject& track,
-                             bool drawTrajectory)
+                             bool drawTrajectory,
+                             int framesCounter)
 {
     auto ResizePoint = [resizeCoeff](const cv::Point& pt) -> cv::Point
     {
@@ -445,6 +438,10 @@ void VideoExample::DrawTrack(cv::Mat frame,
             }
         }
     }
+
+	cv::Rect brect = track.m_rrect.boundingRect();
+	m_resultsLog.AddTrack(framesCounter, track.m_ID, brect, track.m_type, track.m_confidence);
+	m_resultsLog.AddRobustTrack(track.m_ID);
 }
 
 ///
