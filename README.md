@@ -1,4 +1,5 @@
 ![travis ci:](https://travis-ci.org/Smorodov/Multitarget-tracker.svg?branch=master)
+[![CodeQL](https://github.com/Smorodov/Multitarget-tracker/workflows/CodeQL/badge.svg?branch=master)](https://github.com/Smorodov/Multitarget-tracker/actions?query=workflow%3ACodeQL)
 
 # Last changes
 
