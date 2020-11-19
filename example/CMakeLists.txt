@@ -3,14 +3,14 @@ cmake_minimum_required (VERSION 3.5)
 project(MultitargetTracker)
 
 set(SOURCES
-             main.cpp
-             VideoExample.cpp
+    main.cpp
+    VideoExample.cpp
 )
 
 set(HEADERS
-             MouseExample.h
-             VideoExample.h
-             examples.h
+    MouseExample.h
+    VideoExample.h
+    examples.h
 )
 
 # ----------------------------------------------------------------------------
@@ -24,12 +24,14 @@ INCLUDE_DIRECTORIES(
                     ${PROJECT_SOURCE_DIR}/../src/Detector/Subsense
                     ${PROJECT_SOURCE_DIR}/../src/Tracker
                     ${PROJECT_SOURCE_DIR}/../src/Tracker/HungarianAlg
+                    ${PROJECT_SOURCE_DIR}/../thirdparty
 )
 
 set(LIBS
     ${OpenCV_LIBS}
     mtracking
     mdetection
+    inih
 )
 
 if (BUILD_YOLO_LIB)

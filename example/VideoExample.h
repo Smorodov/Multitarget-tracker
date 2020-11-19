@@ -126,7 +126,7 @@ private:
 				{
 					if (m_robustIDs.find(detect.m_trackID) != std::end(m_robustIDs))
 					{
-						m_resCSV << frame.first << delim << detect.m_type << delim << detect.m_rect.x << delim << detect.m_rect.y << delim <<
+						m_resCSV << frame.first << delim << TypeConverter::Type2Str(detect.m_type) << delim << detect.m_rect.x << delim << detect.m_rect.y << delim <<
 							(detect.m_rect.x + detect.m_rect.width) << delim << (detect.m_rect.y + detect.m_rect.height) << delim <<
 							detect.m_conf << delim << detect.m_trackID << std::endl;
 					}
@@ -199,6 +199,10 @@ protected:
     virtual void DrawData(cv::Mat frame, int framesCounter, int currTime) = 0;
 
     void DrawTrack(cv::Mat frame, int resizeCoeff, const TrackingObject& track, bool drawTrajectory, int framesCounter);
+
+	TrackerSettings m_trackerSettings;
+	bool m_trackerSettingsLoaded = false;
+	bool ParseTrackerSettings(const std::string& settingsFile);
 
 private:
     bool m_isTrackerInitialized = false;

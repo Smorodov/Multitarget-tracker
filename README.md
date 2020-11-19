@@ -140,7 +140,7 @@ How to run cmake on Windows for Visual Studio 15 2017 Win64: [example](https://g
 **Usage:**
 
            Usage:
-             ./MultitargetTracker <path to movie file> [--example]=<number of example 0..7> [--start_frame]=<start a video from this position> [--end_frame]=<play a video to this position> [--end_delay]=<delay in milliseconds after video ending> [--out]=<name of result video file> [--show_logs]=<show logs> [--gpu]=<use OpenCL> [--async]=<async pipeline> [--res]=<csv log file>
+             ./MultitargetTracker <path to movie file> [--example]=<number of example 0..7> [--start_frame]=<start a video from this position> [--end_frame]=<play a video to this position> [--end_delay]=<delay in milliseconds after video ending> [--out]=<name of result video file> [--show_logs]=<show logs> [--gpu]=<use OpenCL> [--async]=<async pipeline> [--res]=<csv log file> [--settings]=<ini file>
              ./MultitargetTracker ../data/atrium.avi -e=1 -o=../data/atrium_motion.avi
            Press:
            * 'm' key for change mode: play|pause. When video is paused you can press any key for get next frame.
@@ -166,6 +166,8 @@ How to run cmake on Windows for Visual Studio 15 2017 Win64: [example](https://g
               -a=1 or --async=0
            10. [Optional] Path to the csv file with tracking result
               -r=res.csv or --res=res.csv
+           11. [Optional] Path to the ini file with tracker settings
+              -s=settings.ini or --settings=settings.ini
 
 More details here: [How to run examples](https://github.com/Smorodov/Multitarget-tracker/wiki/Run-examples).
 
@@ -185,6 +187,7 @@ More details here: [How to run examples](https://github.com/Smorodov/Multitarget
 * DAT tracker: https://github.com/foolwood/DAT
 * STAPLE tracker: https://github.com/xuduo35/STAPLE
 * LDES tracker: https://github.com/yfji/LDESCpp
+* Ini file parser: https://github.com/benhoyt/inih
 
 #### License
 GNU GPLv3: http://www.gnu.org/licenses/gpl-3.0.txt 
