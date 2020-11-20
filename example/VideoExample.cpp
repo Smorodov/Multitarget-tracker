@@ -2,6 +2,8 @@
 #include <ctime>
 #include <future>
 
+#include <inih/INIReader.h>
+
 #include "VideoExample.h"
 
 ///
@@ -27,6 +29,59 @@ VideoExample::VideoExample(const cv::CommandLineParser& parser)
     m_colors.push_back(cv::Scalar(255, 127, 255));
     m_colors.push_back(cv::Scalar(127, 0, 255));
     m_colors.push_back(cv::Scalar(127, 0, 127));
+
+    m_resultsLog.Open();
+
+    std::string settingsFile = parser.get<std::string>("settings");
+    m_trackerSettingsLoaded = ParseTrackerSettings(settingsFile);
+}
+
+///
+/// \brief VideoExample::ParseTrackerSettings
+///
+bool VideoExample::ParseTrackerSettings(const std::string& settingsFile)
+{
+	INIReader reader(settingsFile);
+
+	if (reader.ParseError() >= 0)
+	{
+        m_trackerSettings = TrackerSettings();
+        
+        auto distType = reader.GetInteger("tracking", "distance_type", -1);
+        if (distType >=0 && distType < (int)tracking::DistsCount)
+            m_trackerSettings.SetDistance((tracking::DistType)distType);
+
+        auto kalmanType = reader.GetInteger("tracking", "kalman_type", -1);
+        if (kalmanType >=0 && kalmanType < (int)tracking::KalmanCount)
+            m_trackerSettings.m_kalmanType = (tracking::KalmanType)kalmanType;
+
+        auto filterGoal = reader.GetInteger("tracking", "filter_goal", -1);
+        if (filterGoal >=0 && filterGoal < (int)tracking::FiltersCount)
+            m_trackerSettings.m_filterGoal = (tracking::FilterGoal)filterGoal;
+
+        auto lostTrackType = reader.GetInteger("tracking", "lost_track_type", -1);
+        if (lostTrackType >=0 && lostTrackType < (int)tracking::SingleTracksCount)
+            m_trackerSettings.m_lostTrackType = (tracking::LostTrackType)lostTrackType;
+
+        auto matchType = reader.GetInteger("tracking", "match_type", -1);
+        if (matchType >=0 && matchType < (int)tracking::MatchCount)
+            m_trackerSettings.m_matchType = (tracking::MatchType)matchType;
+
+		m_trackerSettings.m_useAcceleration = reader.GetInteger("tracking", "use_aceleration", 0) != 0; // Use constant acceleration motion model
+		m_trackerSettings.m_dt = static_cast<track_t>(reader.GetReal("tracking", "delta_time", 0.4));  // Delta time for Kalman filter
+		m_trackerSettings.m_accelNoiseMag = static_cast<track_t>(reader.GetReal("tracking", "accel_noise", 0.2)); // Accel noise magnitude for Kalman filter
+        m_trackerSettings.m_distThres = static_cast<track_t>(reader.GetReal("tracking", "dist_thresh", 0.8));     // Distance threshold between region and object on two frames
+		m_trackerSettings.m_minAreaRadiusPix = static_cast<track_t>(reader.GetReal("tracking", "min_area_radius_pix", -1.));
+		m_trackerSettings.m_minAreaRadiusK = static_cast<track_t>(reader.GetReal("tracking", "min_area_radius_k", 0.8));
+		m_trackerSettings.m_maximumAllowedSkippedFrames = reader.GetInteger("tracking", "max_skip_frames", 50); // Maximum allowed skipped frames
+		m_trackerSettings.m_maxTraceLength = reader.GetInteger("tracking", "max_trace_len", 50);                 // Maximum trace length
+        m_trackerSettings.m_useAbandonedDetection = reader.GetInteger("tracking", "detect_abandoned", 0) != 0;
+        m_trackerSettings.m_minStaticTime = reader.GetInteger("tracking", "min_static_time", 5);
+        m_trackerSettings.m_maxStaticTime = reader.GetInteger("tracking", "max_static_time", 25);
+
+		return true;
+	}
+	return false;
 }
 
 ///
@@ -54,8 +109,6 @@ void VideoExample::SyncProcess()
         std::cerr << "Can't open " << m_inFile << std::endl;
         return;
     }
-
-	m_resultsLog.Open();
 
     int64 startLoopTime = cv::getTickCount();
 

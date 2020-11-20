@@ -98,7 +98,8 @@ enum Detectors
     Pedestrian_C4,
 	Yolo_Darknet,
     Yolo_TensorRT,
-    DNN_OCV
+    DNN_OCV,
+    DetectorsCount
 };
 
 ///
@@ -119,7 +120,8 @@ enum DistType
 enum FilterGoal
 {
     FilterCenter,
-    FilterRect
+    FilterRect,
+    FiltersCount
 };
 
 ///
@@ -129,7 +131,8 @@ enum KalmanType
 {
     KalmanLinear,
     KalmanUnscented,
-    KalmanAugmentedUnscented
+    KalmanAugmentedUnscented,
+    KalmanCount
 };
 
 ///
@@ -138,7 +141,8 @@ enum KalmanType
 enum MatchType
 {
     MatchHungrian,
-    MatchBipart
+    MatchBipart,
+    MatchCount
 };
 
 ///
@@ -155,6 +159,7 @@ enum LostTrackType
     TrackCSRT,
     TrackDAT,
     TrackSTAPLE,
-    TrackLDES
+    TrackLDES,
+    SingleTracksCount
 };
 }
