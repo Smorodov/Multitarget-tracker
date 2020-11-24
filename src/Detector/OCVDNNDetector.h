@@ -12,16 +12,16 @@ class OCVDNNDetector : public BaseDetector
 {
 public:
     OCVDNNDetector(const cv::UMat& colorFrame);
-    ~OCVDNNDetector(void);
+    ~OCVDNNDetector(void) = default;
 
     bool Init(const config_t& config);
 
     void Detect(const cv::UMat& colorFrame);
 
-	bool CanGrayProcessing() const
-	{
-		return false;
-	}
+    bool CanGrayProcessing() const
+    {
+        return false;
+    }
 
 private:
     cv::dnn::Net m_net;
@@ -36,11 +36,11 @@ private:
     float m_meanVal = 0.f;
     float m_confidenceThreshold = 0.24f;
     float m_nmsThreshold = 0.4f;
-	bool m_swapRB = false;
+    bool m_swapRB = false;
     float m_maxCropRatio = 2.0f;
     std::vector<std::string> m_classNames;
     std::vector<cv::String> m_outNames;
-	std::vector<int> m_outLayers;
-	std::string m_outLayerType;
+    std::vector<int> m_outLayers;
+    std::string m_outLayerType;
     cv::UMat m_inputBlob;
 };

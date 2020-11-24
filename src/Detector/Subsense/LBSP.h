@@ -15,14 +15,15 @@
 
 	This algorithm is currently NOT thread-safe.
  */
-class LBSP : public cv::DescriptorExtractor {
+class LBSP : public cv::DescriptorExtractor
+{
 public:
 	//! constructor 1, threshold = absolute intensity 'similarity' threshold used when computing comparisons
 	LBSP(size_t nThreshold);
 	//! constructor 2, threshold = relative intensity 'similarity' threshold used when computing comparisons
 	LBSP(float fRelThreshold, size_t nThresholdOffset=0);
 	//! default destructor
-	virtual ~LBSP();
+	virtual ~LBSP() = default;
 	//! loads extractor params from the specified file node @@@@ not impl
 	virtual void read(const cv::FileNode&);
 	//! writes extractor params to the specified file storage @@@@ not impl

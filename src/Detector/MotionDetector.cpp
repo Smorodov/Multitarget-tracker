@@ -18,13 +18,6 @@ MotionDetector::MotionDetector(
 }
 
 ///
-/// \brief MotionDetector::~MotionDetector
-///
-MotionDetector::~MotionDetector(void)
-{
-}
-
-///
 /// \brief MotionDetector::Init
 /// \param config
 /// \return

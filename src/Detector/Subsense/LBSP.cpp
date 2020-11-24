@@ -14,8 +14,6 @@ LBSP::LBSP(float fRelThreshold, size_t nThresholdOffset)
 	CV_Assert(m_fRelThreshold>=0);
 }
 
-LBSP::~LBSP() {}
-
 void LBSP::read(const cv::FileNode& /*fn*/) {
     // ... = fn["..."];
 }

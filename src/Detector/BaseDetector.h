@@ -21,9 +21,7 @@ public:
     ///
     /// \brief ~BaseDetector
     ///
-    virtual ~BaseDetector(void)
-    {
-    }
+    virtual ~BaseDetector(void) = default;
 
     ///
     /// \brief Init

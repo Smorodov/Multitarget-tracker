@@ -10,7 +10,7 @@ class YoloTensorRTDetector : public BaseDetector
 {
 public:
 	YoloTensorRTDetector(const cv::UMat& colorFrame);
-	~YoloTensorRTDetector(void);
+	~YoloTensorRTDetector(void) = default;
 
 	bool Init(const config_t& config);
 

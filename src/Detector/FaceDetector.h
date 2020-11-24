@@ -9,7 +9,7 @@ class FaceDetector : public BaseDetector
 {
 public:
     FaceDetector(const cv::UMat& gray);
-    ~FaceDetector(void);
+    ~FaceDetector(void) = default;
 
     bool Init(const config_t& config);
 

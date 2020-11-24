@@ -18,13 +18,6 @@ YoloDarknetDetector::YoloDarknetDetector(const cv::UMat& colorFrame)
 }
 
 ///
-/// \brief YoloDarknetDetector::~YoloDarknetDetector
-///
-YoloDarknetDetector::~YoloDarknetDetector(void)
-{
-}
-
-///
 /// \brief YoloDarknetDetector::Init
 /// \return
 ///

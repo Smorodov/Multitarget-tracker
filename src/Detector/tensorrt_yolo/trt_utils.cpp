@@ -170,11 +170,9 @@ std::vector<std::string> loadListFromTextFile(const std::string filename)
     {
         if (line.empty())
             continue;
-
         else
             list.push_back(trim(line));
     }
-
     return list;
 }
 
@@ -1295,8 +1293,6 @@ nvinfer1::ILayer* netAddUpsample(int layerIdx, std::map<std::string, std::string
     return mm2;
 #endif
 }
-
-
 
 void printLayerInfo(std::string layerIndex, std::string layerName, std::string layerInput,
                     std::string layerOutput, std::string weightPtr)

@@ -12,12 +12,13 @@
 
 	This algorithm is currently NOT thread-safe.
  */
-class BackgroundSubtractorLBSP : public cv::BackgroundSubtractor {
+class BackgroundSubtractorLBSP : public cv::BackgroundSubtractor
+ {
 public:
 	//! full constructor
 	BackgroundSubtractorLBSP(float fRelLBSPThreshold, size_t nLBSPThresholdOffset=0);
 	//! default destructor
-	virtual ~BackgroundSubtractorLBSP();
+	virtual ~BackgroundSubtractorLBSP() = default;
 	//! (re)initiaization method; needs to be called before starting background subtraction
 	virtual void initialize(const cv::Mat& oInitImg);
 	//! (re)initiaization method; needs to be called before starting background subtraction

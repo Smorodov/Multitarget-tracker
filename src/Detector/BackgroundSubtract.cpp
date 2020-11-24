@@ -16,13 +16,6 @@ BackgroundSubtract::BackgroundSubtract(BGFG_ALGS algType, int channels)
 //----------------------------------------------------------------------
 //
 //----------------------------------------------------------------------
-BackgroundSubtract::~BackgroundSubtract()
-{
-}
-
-//----------------------------------------------------------------------
-//
-//----------------------------------------------------------------------
 bool BackgroundSubtract::Init(const config_t& config)
 {
     bool failed = true;

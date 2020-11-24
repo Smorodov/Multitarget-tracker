@@ -27,7 +27,7 @@ public:
 	};
 
     BackgroundSubtract(BGFG_ALGS algType, int channels);
-	~BackgroundSubtract();
+    ~BackgroundSubtract() = default;
 
     bool Init(const config_t& config);
 
