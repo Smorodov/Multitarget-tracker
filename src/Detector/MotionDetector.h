@@ -10,7 +10,7 @@ class MotionDetector : public BaseDetector
 {
 public:
     MotionDetector(BackgroundSubtract::BGFG_ALGS algType, cv::UMat& gray);
-    ~MotionDetector(void);
+    ~MotionDetector(void) = default;
 
     bool Init(const config_t& config);
 

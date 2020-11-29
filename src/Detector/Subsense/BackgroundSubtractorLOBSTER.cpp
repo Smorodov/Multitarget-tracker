@@ -4,17 +4,18 @@
 #include <iostream>
 #include <iomanip>
 
-BackgroundSubtractorLOBSTER::BackgroundSubtractorLOBSTER(	 float fRelLBSPThreshold
-															,size_t nLBSPThresholdOffset
-															,size_t nDescDistThreshold
-															,size_t nColorDistThreshold
-															,size_t nBGSamples
-															,size_t nRequiredBGSamples)
+BackgroundSubtractorLOBSTER::BackgroundSubtractorLOBSTER(float fRelLBSPThreshold,
+                                                         size_t nLBSPThresholdOffset,
+                                                         size_t nDescDistThreshold,
+                                                         size_t nColorDistThreshold,
+                                                         size_t nBGSamples,
+                                                         size_t nRequiredBGSamples)
 	:	 BackgroundSubtractorLBSP(fRelLBSPThreshold,nLBSPThresholdOffset)
 		,m_nColorDistThreshold(nColorDistThreshold)
 		,m_nDescDistThreshold(nDescDistThreshold)
 		,m_nBGSamples(nBGSamples)
-		,m_nRequiredBGSamples(nRequiredBGSamples) {
+		,m_nRequiredBGSamples(nRequiredBGSamples)
+ {
 	CV_Assert(m_nRequiredBGSamples<=m_nBGSamples);
 	m_bAutoModelResetEnabled = false; // @@@@@@ not supported here for now
 }

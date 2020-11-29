@@ -45,13 +45,13 @@ cv::Mat blobFromDsImages(const std::vector<DsImage>& inputImages,
 						const int& inputH,
                          const int& inputW)
 {
-    std::vector<cv::Mat> letterboxStack(inputImages.size());
+    std::vector<cv::Mat> letterboxStack;
+	letterboxStack.reserve(inputImages.size());
     for (uint32_t i = 0; i < inputImages.size(); ++i)
     {
-        inputImages.at(i).getLetterBoxedImage().copyTo(letterboxStack.at(i));
+		letterboxStack.emplace_back(inputImages[i].getLetterBoxedImage());
     }
-    return cv::dnn::blobFromImages(letterboxStack, 1.0, cv::Size(inputW, inputH),
-                                   cv::Scalar(0.0, 0.0, 0.0),true);
+    return cv::dnn::blobFromImages(letterboxStack, 1.0, cv::Size(inputW, inputH), cv::Scalar(0.0, 0.0, 0.0),true);
 }
 
 static void leftTrim(std::string& s)
@@ -170,11 +170,9 @@ std::vector<std::string> loadListFromTextFile(const std::string filename)
     {
         if (line.empty())
             continue;
-
         else
             list.push_back(trim(line));
     }
-
     return list;
 }
 
@@ -1295,8 +1293,6 @@ nvinfer1::ILayer* netAddUpsample(int layerIdx, std::map<std::string, std::string
     return mm2;
 #endif
 }
-
-
 
 void printLayerInfo(std::string layerIndex, std::string layerName, std::string layerInput,
                     std::string layerOutput, std::string weightPtr)

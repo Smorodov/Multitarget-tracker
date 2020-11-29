@@ -24,13 +24,6 @@ YoloTensorRTDetector::YoloTensorRTDetector(const cv::UMat& colorFrame)
 }
 
 ///
-/// \brief YoloDarknetDetector::~YoloDarknetDetector
-///
-YoloTensorRTDetector::~YoloTensorRTDetector(void)
-{
-}
-
-///
 /// \brief YoloDarknetDetector::Init
 /// \return
 ///

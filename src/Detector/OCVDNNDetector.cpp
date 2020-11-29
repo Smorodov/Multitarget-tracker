@@ -19,13 +19,6 @@ OCVDNNDetector::OCVDNNDetector(const cv::UMat& colorFrame)
 }
 
 ///
-/// \brief OCVDNNDetector::~OCVDNNDetector
-///
-OCVDNNDetector::~OCVDNNDetector(void)
-{
-}
-
-///
 /// \brief OCVDNNDetector::Init
 /// \return
 ///

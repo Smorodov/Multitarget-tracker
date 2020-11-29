@@ -469,9 +469,7 @@ public:
         minvalue = DBL_MAX;
         maxvalue = -minvalue;
     }
-    ~NodeDetector()
-    {
-    }
+    ~NodeDetector() = default;
 
     void Load(const NodeType _type,const int _featurelength,const int _upper_bound,const int _index,const char* _filename);
     bool Classify(int* f);

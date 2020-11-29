@@ -13,13 +13,6 @@ PedestrianDetector::PedestrianDetector(const cv::UMat& gray)
 }
 
 ///
-/// \brief PedestrianDetector::~PedestrianDetector
-///
-PedestrianDetector::~PedestrianDetector(void)
-{
-}
-
-///
 /// \brief PedestrianDetector::Init
 /// \param cascadeFileName
 /// \return

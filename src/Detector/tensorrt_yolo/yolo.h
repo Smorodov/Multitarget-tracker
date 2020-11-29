@@ -93,7 +93,6 @@ struct TensorInfo
     float* hostBuffer{nullptr};
 };
 
-
 class Yolo
 {
 public:

@@ -28,9 +28,9 @@ BackgroundSubtractorLBSP::BackgroundSubtractorLBSP(float fRelLBSPThreshold, size
 	CV_Assert(m_fRelLBSPThreshold>=0);
 }
 
-BackgroundSubtractorLBSP::~BackgroundSubtractorLBSP() {}
-
-void BackgroundSubtractorLBSP::initialize(const cv::Mat& oInitImg) {
+///
+void BackgroundSubtractorLBSP::initialize(const cv::Mat& oInitImg)
+{
 	this->initialize(oInitImg,cv::Mat());
 }
 
