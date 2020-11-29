@@ -45,13 +45,13 @@ cv::Mat blobFromDsImages(const std::vector<DsImage>& inputImages,
 						const int& inputH,
                          const int& inputW)
 {
-    std::vector<cv::Mat> letterboxStack(inputImages.size());
+    std::vector<cv::Mat> letterboxStack;
+	letterboxStack.reserve(inputImages.size());
     for (uint32_t i = 0; i < inputImages.size(); ++i)
     {
-        inputImages.at(i).getLetterBoxedImage().copyTo(letterboxStack.at(i));
+		letterboxStack.emplace_back(inputImages[i].getLetterBoxedImage());
     }
-    return cv::dnn::blobFromImages(letterboxStack, 1.0, cv::Size(inputW, inputH),
-                                   cv::Scalar(0.0, 0.0, 0.0),true);
+    return cv::dnn::blobFromImages(letterboxStack, 1.0, cv::Size(inputW, inputH), cv::Scalar(0.0, 0.0, 0.0),true);
 }
 
 static void leftTrim(std::string& s)
