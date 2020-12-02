@@ -365,12 +365,8 @@ bool CTrack::CheckStatic(int trajLen, cv::UMat currFrame, const CRegion& region)
     }
     else
     {
-        track_t kx = 0;
-        track_t bx = 0;
-        track_t ky = 0;
-        track_t by = 0;
-        get_lin_regress_params(m_trace, m_trace.size() - trajLen, m_trace.size(), kx, bx, ky, by);
-        track_t speed = sqrt(sqr(kx * trajLen) + sqr(ky * trajLen));
+        auto velocity = m_kalman.GetVelocity();
+        track_t speed = sqrt(sqr(velocity[0] * trajLen) + sqr(velocity[1] * trajLen));
         const track_t speedThresh = 10;
         if (speed < speedThresh)
         {

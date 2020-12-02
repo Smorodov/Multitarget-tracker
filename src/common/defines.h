@@ -96,7 +96,7 @@ enum Detectors
     Face_HAAR,
     Pedestrian_HOG,
     Pedestrian_C4,
-	Yolo_Darknet,
+    Yolo_Darknet,
     Yolo_TensorRT,
     DNN_OCV,
     DetectorsCount

@@ -186,7 +186,7 @@ protected:
     int m_captureTimeOut = 60000;
     int m_trackingTimeOut = 60000;
 
-	ResultsLog m_resultsLog;
+    ResultsLog m_resultsLog;
 
     static void CaptureAndDetect(VideoExample* thisPtr, std::atomic<bool>& stopCapture);
 
