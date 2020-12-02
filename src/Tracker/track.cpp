@@ -383,10 +383,11 @@ bool CTrack::CheckStatic(int trajLen, cv::UMat currFrame, const CRegion& region)
                 {
                     cv::line(img, m_trace[i], m_trace[i + 1], cv::Scalar(0, 0, 0), 1, cv::LINE_8);
                 }
-                std::string label = "(" + std::to_string(kx) + ", "  + std::to_string(ky) + ") = " + std::to_string(speed);
-                cv::line(img,
-                         cv::Point(cvRound(bx), cvRound(by)),
-                         cv::Point(cvRound(kx * trajLen + bx), cvRound(ky * trajLen + by)),
+                std::string label = "(" + std::to_string(velocity[0]) + ", "  + std::to_string(velocity[1]) + ") = " + std::to_string(speed);
+				Point_t p0 = m_trace[m_trace.size() - trajLen];
+				cv::line(img,
+                         cv::Point(cvRound(p0.x), cvRound(p0.y)),
+                         cv::Point(cvRound(velocity[0] * trajLen + p0.x), cvRound(velocity[1] * trajLen + p0.y)),
                          cv::Scalar(0, 0, 0), 1, cv::LINE_8);
                 cv::putText(img, label, m_staticRect.tl(), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 0, 0));
                 cv::imshow("m_staticFrame", img);
