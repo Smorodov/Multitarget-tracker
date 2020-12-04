@@ -310,12 +310,12 @@ public:
     track_t WidthDist(const CRegion& reg) const;
     track_t HeightDist(const CRegion& reg) const;
 
-    void Update(const CRegion& region, bool dataCorrect, size_t max_trace_length, cv::UMat prevFrame, cv::UMat currFrame, int trajLen);
-    void Update(const CRegion& region, const RegionEmbedding& regionEmbedding, bool dataCorrect, size_t max_trace_length, cv::UMat prevFrame, cv::UMat currFrame, int trajLen);
+    void Update(const CRegion& region, bool dataCorrect, size_t max_trace_length, cv::UMat prevFrame, cv::UMat currFrame, int trajLen, int maxSpeedForStatic);
+    void Update(const CRegion& region, const RegionEmbedding& regionEmbedding, bool dataCorrect, size_t max_trace_length, cv::UMat prevFrame, cv::UMat currFrame, int trajLen, int maxSpeedForStatic);
 
     bool IsStatic() const;
     bool IsStaticTimeout(int framesTime) const;
-	bool IsOutOfTheFrame() const;
+    bool IsOutOfTheFrame() const;
 
     cv::RotatedRect GetLastRect() const;
 
@@ -328,9 +328,9 @@ public:
     TrackingObject ConstructObject() const;
 
 private:
-	TKalmanFilter m_kalman;
-	CRegion m_lastRegion;
-	Trace m_trace;
+    TKalmanFilter m_kalman;
+    CRegion m_lastRegion;
+    Trace m_trace;
     cv::RotatedRect m_predictionRect;
     Point_t m_predictionPoint;
 
@@ -343,22 +343,26 @@ private:
 #endif
     std::unique_ptr<VOTTracker> m_VOTTracker;
 
+    ///
     void RectUpdate(const CRegion& region, bool dataCorrect, cv::UMat prevFrame, cv::UMat currFrame);
 
+    ///
     void CreateExternalTracker(int channels);
 
+    ///
     void PointUpdate(const Point_t& pt, const cv::Size& newObjSize, bool dataCorrect, const cv::Size& frameSize);
 
     RegionEmbedding m_regionEmbedding;
 
-    bool CheckStatic(int trajLen, cv::UMat currFrame, const CRegion& region);
-	cv::UMat m_staticFrame;
-	cv::Rect m_staticRect;
+    ///
+    bool CheckStatic(int trajLen, cv::UMat currFrame, const CRegion& region, int maxSpeedForStatic);
+    cv::UMat m_staticFrame;
+    cv::Rect m_staticRect;
     int m_staticFrames = 0;
-	bool m_isStatic = false;
+    bool m_isStatic = false;
 
-	bool m_filterObjectSize = false;
-	bool m_outOfTheFrame = false;
+    bool m_filterObjectSize = false;
+    bool m_outOfTheFrame = false;
 };
 
 typedef std::vector<std::unique_ptr<CTrack>> tracks_t;

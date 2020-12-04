@@ -21,7 +21,7 @@ struct TrackerSettings
 {
     tracking::KalmanType m_kalmanType = tracking::KalmanLinear;
     tracking::FilterGoal m_filterGoal = tracking::FilterCenter;
-    tracking::LostTrackType m_lostTrackType = tracking::TrackKCF;
+    tracking::LostTrackType m_lostTrackType = tracking::TrackKCF; // Used if m_filterGoal == tracking::FilterRect
     tracking::MatchType m_matchType = tracking::MatchHungrian;
 
 	std::array<track_t, tracking::DistsCount> m_distType;
@@ -90,6 +90,12 @@ struct TrackerSettings
     /// After this time (in seconds) the abandoned object will be removed
     ///
     int m_maxStaticTime = 25;
+    ///
+    /// \brief m_maxSpeedForStatic
+    /// Speed in pixels
+    /// If speed of object is more that this value than object is non static
+    ///
+    int m_maxSpeedForStatic = 10;
 
 	///
 	/// \brief m_nearTypes

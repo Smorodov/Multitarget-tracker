@@ -181,7 +181,7 @@ void CTrack::Update(const CRegion& region,
                     size_t max_trace_length,
                     cv::UMat prevFrame,
                     cv::UMat currFrame,
-                    int trajLen)
+                    int trajLen, int maxSpeedForStatic)
 {
     if (m_filterObjectSize) // Kalman filter for object coordinates and size
         RectUpdate(region, dataCorrect, prevFrame, currFrame);
@@ -195,7 +195,7 @@ void CTrack::Update(const CRegion& region,
         m_lastRegion = region;
         m_trace.push_back(m_predictionPoint, region.m_rrect.center);
 
-        CheckStatic(trajLen, currFrame, region);
+        CheckStatic(trajLen, currFrame, region, maxSpeedForStatic);
     }
     else
     {
@@ -222,7 +222,7 @@ void CTrack::Update(const CRegion& region,
                     size_t max_trace_length,
                     cv::UMat prevFrame,
                     cv::UMat currFrame,
-                    int trajLen)
+                    int trajLen, int maxSpeedForStatic)
 {
     m_regionEmbedding = regionEmbedding;
 
@@ -238,7 +238,7 @@ void CTrack::Update(const CRegion& region,
         m_lastRegion = region;
         m_trace.push_back(m_predictionPoint, m_lastRegion.m_rrect.center);
 
-        CheckStatic(trajLen, currFrame, region);
+        CheckStatic(trajLen, currFrame, region, maxSpeedForStatic);
     }
     else
     {
@@ -355,7 +355,7 @@ track_t CTrack::HeightDist(const CRegion& reg) const
 /// \param trajLen
 /// \return
 ///
-bool CTrack::CheckStatic(int trajLen, cv::UMat currFrame, const CRegion& region)
+bool CTrack::CheckStatic(int trajLen, cv::UMat currFrame, const CRegion& region, int maxSpeedForStatic)
 {
     if (!trajLen || static_cast<int>(m_trace.size()) < trajLen)
     {
@@ -366,9 +366,8 @@ bool CTrack::CheckStatic(int trajLen, cv::UMat currFrame, const CRegion& region)
     else
     {
         auto velocity = m_kalman.GetVelocity();
-        track_t speed = sqrt(sqr(velocity[0] * trajLen) + sqr(velocity[1] * trajLen));
-        const track_t speedThresh = 10;
-        if (speed < speedThresh)
+        track_t speed = sqrt(sqr(velocity[0]) + sqr(velocity[1]));
+        if (speed < maxSpeedForStatic)
         {
             if (!m_isStatic)
             {

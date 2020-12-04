@@ -78,6 +78,7 @@ bool VideoExample::ParseTrackerSettings(const std::string& settingsFile)
         m_trackerSettings.m_useAbandonedDetection = reader.GetInteger("tracking", "detect_abandoned", 0) != 0;
         m_trackerSettings.m_minStaticTime = reader.GetInteger("tracking", "min_static_time", 5);
         m_trackerSettings.m_maxStaticTime = reader.GetInteger("tracking", "max_static_time", 25);
+        m_trackerSettings.m_maxSpeedForStatic = reader.GetInteger("tracking", "max_speed_for_static", 10);
 
 		return true;
 	}
