@@ -119,12 +119,12 @@ protected:
 			m_trackerSettings.SetDistance(tracking::DistRects);
 			m_trackerSettings.m_kalmanType = tracking::KalmanLinear;
 			m_trackerSettings.m_filterGoal = tracking::FilterCenter;
-			m_trackerSettings.m_lostTrackType = tracking::TrackCSRT;       // Use visual objects tracker for collisions resolving
+			m_trackerSettings.m_lostTrackType = tracking::TrackCSRT; // Use visual objects tracker for collisions resolving. Used if m_filterGoal == tracking::FilterRect
 			m_trackerSettings.m_matchType = tracking::MatchHungrian;
-			m_trackerSettings.m_useAcceleration = false;                   // Use constant acceleration motion model
+			m_trackerSettings.m_useAcceleration = false;             // Use constant acceleration motion model
 			m_trackerSettings.m_dt = m_trackerSettings.m_useAcceleration ? 0.05f : 0.2f; // Delta time for Kalman filter
-			m_trackerSettings.m_accelNoiseMag = 0.2f;                  // Accel noise magnitude for Kalman filter
-			m_trackerSettings.m_distThres = 0.95f;                    // Distance threshold between region and object on two frames
+			m_trackerSettings.m_accelNoiseMag = 0.2f;                // Accel noise magnitude for Kalman filter
+			m_trackerSettings.m_distThres = 0.95f;                   // Distance threshold between region and object on two frames
 #if 0
 			m_trackerSettings.m_minAreaRadiusPix = frame.rows / 20.f;
 #else
@@ -264,7 +264,7 @@ protected:
 			m_trackerSettings.SetDistance(tracking::DistJaccard);
 			m_trackerSettings.m_kalmanType = tracking::KalmanUnscented;
 			m_trackerSettings.m_filterGoal = tracking::FilterRect;
-			m_trackerSettings.m_lostTrackType = tracking::TrackCSRT;      // Use visual objects tracker for collisions resolving
+			m_trackerSettings.m_lostTrackType = tracking::TrackCSRT;      // Use visual objects tracker for collisions resolving. Used if m_filterGoal == tracking::FilterRect
 			m_trackerSettings.m_matchType = tracking::MatchHungrian;
 			m_trackerSettings.m_dt = 0.3f;                                // Delta time for Kalman filter
 			m_trackerSettings.m_accelNoiseMag = 0.1f;                     // Accel noise magnitude for Kalman filter
@@ -356,7 +356,7 @@ protected:
 			m_trackerSettings.SetDistance(tracking::DistRects);
 			m_trackerSettings.m_kalmanType = tracking::KalmanLinear;
 			m_trackerSettings.m_filterGoal = tracking::FilterRect;
-			m_trackerSettings.m_lostTrackType = tracking::TrackCSRT;   // Use visual objects tracker for collisions resolving
+			m_trackerSettings.m_lostTrackType = tracking::TrackCSRT;   // Use visual objects tracker for collisions resolving. Used if m_filterGoal == tracking::FilterRect
 			m_trackerSettings.m_matchType = tracking::MatchHungrian;
 			m_trackerSettings.m_dt = 0.3f;                             // Delta time for Kalman filter
 			m_trackerSettings.m_accelNoiseMag = 0.1f;                  // Accel noise magnitude for Kalman filter
@@ -492,7 +492,7 @@ protected:
 		m_trackerSettings.SetDistance(tracking::DistCenters);
 		m_trackerSettings.m_kalmanType = tracking::KalmanLinear;
 		m_trackerSettings.m_filterGoal = tracking::FilterRect;
-		m_trackerSettings.m_lostTrackType = tracking::TrackCSRT;      // Use visual objects tracker for collisions resolving
+		m_trackerSettings.m_lostTrackType = tracking::TrackCSRT;      // Use visual objects tracker for collisions resolving. Used if m_filterGoal == tracking::FilterRect
 		m_trackerSettings.m_matchType = tracking::MatchHungrian;
 		m_trackerSettings.m_useAcceleration = false;                   // Use constant acceleration motion model
 		m_trackerSettings.m_dt = m_trackerSettings.m_useAcceleration ? 0.05f : 0.4f; // Delta time for Kalman filter
@@ -664,7 +664,7 @@ protected:
 			m_trackerSettings.SetDistance(tracking::DistCenters);
 			m_trackerSettings.m_kalmanType = tracking::KalmanLinear;
 			m_trackerSettings.m_filterGoal = tracking::FilterRect;
-			m_trackerSettings.m_lostTrackType = tracking::TrackCSRT;      // Use visual objects tracker for collisions resolving
+			m_trackerSettings.m_lostTrackType = tracking::TrackCSRT;      // Use visual objects tracker for collisions resolving. Used if m_filterGoal == tracking::FilterRect
 			m_trackerSettings.m_matchType = tracking::MatchHungrian;
 			m_trackerSettings.m_useAcceleration = false;                   // Use constant acceleration motion model
 			m_trackerSettings.m_dt = m_trackerSettings.m_useAcceleration ? 0.05f : 0.4f; // Delta time for Kalman filter
@@ -876,7 +876,7 @@ protected:
 			m_trackerSettings.SetDistance(tracking::DistCenters);
 			m_trackerSettings.m_kalmanType = tracking::KalmanLinear;
 			m_trackerSettings.m_filterGoal = tracking::FilterCenter;
-			m_trackerSettings.m_lostTrackType = tracking::TrackKCF;      // Use visual objects tracker for collisions resolving
+			m_trackerSettings.m_lostTrackType = tracking::TrackKCF;      // Use visual objects tracker for collisions resolving. Used if m_filterGoal == tracking::FilterRect
 			m_trackerSettings.m_matchType = tracking::MatchHungrian;
 			m_trackerSettings.m_dt = 0.3f;                                // Delta time for Kalman filter
 			m_trackerSettings.m_accelNoiseMag = 0.2f;                     // Accel noise magnitude for Kalman filter

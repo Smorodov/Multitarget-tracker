@@ -389,7 +389,7 @@ bool CarsCounting::InitTracker(cv::UMat frame)
 		settings.SetDistance(tracking::DistJaccard);
 		settings.m_kalmanType = tracking::KalmanLinear;
 		settings.m_filterGoal = tracking::FilterCenter;
-		settings.m_lostTrackType = tracking::TrackCSRT; // Use KCF tracker for collisions resolving
+		settings.m_lostTrackType = tracking::TrackCSRT; // Use KCF tracker for collisions resolving. Used if m_filterGoal == tracking::FilterRect
 		settings.m_matchType = tracking::MatchHungrian;
 		settings.m_dt = 0.3f;                           // Delta time for Kalman filter
 		settings.m_accelNoiseMag = 0.2f;                // Accel noise magnitude for Kalman filter
