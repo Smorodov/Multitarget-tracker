@@ -2,10 +2,12 @@
 #include <iostream>
 #include <vector>
 
+#ifdef USE_OCV_UKF
 #if (((CV_VERSION_MAJOR == 4) && (CV_VERSION_MINOR < 5)) || ((CV_VERSION_MAJOR == 4) && (CV_VERSION_MINOR == 5) && (CV_VERSION_REVISION < 1)) || (CV_VERSION_MAJOR == 3))
 namespace kalman = cv::tracking;
 #else
 namespace kalman = cv::detail::tracking;
+#endif
 #endif
 
 //---------------------------------------------------------------------------
