@@ -2,6 +2,12 @@
 #include <iostream>
 #include <vector>
 
+#if (((CV_VERSION_MAJOR == 4) && (CV_VERSION_MINOR < 5)) || ((CV_VERSION_MAJOR == 4) && (CV_VERSION_MINOR == 5) && (CV_VERSION_REVISION < 1)) || (CV_VERSION_MAJOR == 3))
+namespace kalman = cv::tracking;
+#else
+namespace kalman = cv::detail::tracking;
+#endif
+
 //---------------------------------------------------------------------------
 TKalmanFilter::TKalmanFilter(
         tracking::KalmanType type,
@@ -272,12 +278,12 @@ void TKalmanFilter::CreateLinearAcceleration(cv::Rect_<track_t> rect0, Point_t r
 
 #ifdef USE_OCV_UKF
 //---------------------------------------------------------------------------
-class AcceleratedModel: public cv::tracking::UkfSystemModel
+class AcceleratedModel: public kalman::UkfSystemModel
 {
 public:
     AcceleratedModel(track_t deltaTime, bool rectModel)
         :
-          cv::tracking::UkfSystemModel(),
+          kalman::UkfSystemModel(),
           m_deltaTime(deltaTime),
           m_rectModel(rectModel)
     {
@@ -365,7 +371,7 @@ void TKalmanFilter::CreateUnscented(Point_t xy0, Point_t xyv0)
     cv::Mat P = 1e-6f * cv::Mat::eye(DP, DP, Mat_t(1));
 
     cv::Ptr<AcceleratedModel> model(new AcceleratedModel(m_deltaTime, false));
-    cv::tracking::UnscentedKalmanFilterParams params(DP, MP, CP, 0, 0, model);
+    kalman::UnscentedKalmanFilterParams params(DP, MP, CP, 0, 0, model);
     params.dataType = Mat_t(1);
     params.stateInit = initState.clone();
     params.errorCovInit = P.clone();
@@ -376,7 +382,7 @@ void TKalmanFilter::CreateUnscented(Point_t xy0, Point_t xyv0)
     params.beta = 2.0;
     params.k = -2.0;
 
-    m_uncsentedKalman = cv::tracking::createUnscentedKalmanFilter(params);
+    m_uncsentedKalman = kalman::createUnscentedKalmanFilter(params);
 
     m_initialized = true;
 }
@@ -417,7 +423,7 @@ void TKalmanFilter::CreateUnscented(cv::Rect_<track_t> rect0, Point_t rectv0)
     cv::Mat P = 1e-3f * cv::Mat::eye(DP, DP, Mat_t(1));
 
     cv::Ptr<AcceleratedModel> model(new AcceleratedModel(m_deltaTime, true));
-    cv::tracking::UnscentedKalmanFilterParams params(DP, MP, CP, 0, 0, model);
+    kalman::UnscentedKalmanFilterParams params(DP, MP, CP, 0, 0, model);
     params.dataType = Mat_t(1);
     params.stateInit = initState.clone();
     params.errorCovInit = P.clone();
@@ -428,7 +434,7 @@ void TKalmanFilter::CreateUnscented(cv::Rect_<track_t> rect0, Point_t rectv0)
     params.beta = 2.0;
     params.k = -2.0;
 
-    m_uncsentedKalman = cv::tracking::createUnscentedKalmanFilter(params);
+    m_uncsentedKalman = kalman::createUnscentedKalmanFilter(params);
 
     m_initialized = true;
 }
@@ -463,7 +469,7 @@ void TKalmanFilter::CreateAugmentedUnscented(Point_t xy0, Point_t xyv0)
     cv::Mat P = 1e-6f * cv::Mat::eye(DP, DP, Mat_t(1));
 
     cv::Ptr<AcceleratedModel> model(new AcceleratedModel(m_deltaTime, false));
-    cv::tracking::AugmentedUnscentedKalmanFilterParams params(DP, MP, CP, 0, 0, model);
+    kalman::AugmentedUnscentedKalmanFilterParams params(DP, MP, CP, 0, 0, model);
     params.dataType = Mat_t(1);
     params.stateInit = initState.clone();
     params.errorCovInit = P.clone();
@@ -474,7 +480,7 @@ void TKalmanFilter::CreateAugmentedUnscented(Point_t xy0, Point_t xyv0)
     params.beta = 2.0;
     params.k = -2.0;
 
-    m_uncsentedKalman = cv::tracking::createAugmentedUnscentedKalmanFilter(params);
+    m_uncsentedKalman = kalman::createAugmentedUnscentedKalmanFilter(params);
 
     m_initialized = true;
 }
@@ -515,7 +521,7 @@ void TKalmanFilter::CreateAugmentedUnscented(cv::Rect_<track_t> rect0, Point_t r
     cv::Mat P = 1e-3f * cv::Mat::eye(DP, DP, Mat_t(1));
 
     cv::Ptr<AcceleratedModel> model(new AcceleratedModel(m_deltaTime, true));
-    cv::tracking::AugmentedUnscentedKalmanFilterParams params(DP, MP, CP, 0, 0, model);
+    kalman::AugmentedUnscentedKalmanFilterParams params(DP, MP, CP, 0, 0, model);
     params.dataType = Mat_t(1);
     params.stateInit = initState.clone();
     params.errorCovInit = P.clone();
@@ -526,7 +532,7 @@ void TKalmanFilter::CreateAugmentedUnscented(cv::Rect_<track_t> rect0, Point_t r
     params.beta = 2.0;
     params.k = -2.0;
 
-    m_uncsentedKalman = cv::tracking::createAugmentedUnscentedKalmanFilter(params);
+    m_uncsentedKalman = kalman::createAugmentedUnscentedKalmanFilter(params);
 
     m_initialized = true;
 }

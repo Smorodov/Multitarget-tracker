@@ -31,7 +31,11 @@ public:
 private:
     cv::KalmanFilter m_linearKalman;
 #ifdef USE_OCV_UKF
+#if (((CV_VERSION_MAJOR == 4) && (CV_VERSION_MINOR < 5)) || ((CV_VERSION_MAJOR == 4) && (CV_VERSION_MINOR == 5) && (CV_VERSION_REVISION < 1)) || (CV_VERSION_MAJOR == 3))
     cv::Ptr<cv::tracking::UnscentedKalmanFilter> m_uncsentedKalman;
+#else
+    cv::Ptr<cv::detail::tracking::UnscentedKalmanFilter> m_uncsentedKalman;
+#endif
 #endif
 
     static constexpr size_t MIN_INIT_VALS = 4;
