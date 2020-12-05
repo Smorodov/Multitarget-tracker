@@ -586,7 +586,11 @@ void CTrack::RectUpdate(const CRegion& region,
                     m_outOfTheFrame = true;
                 }
             }
+#if (((CV_VERSION_MAJOR == 4) && (CV_VERSION_MINOR < 5)) || ((CV_VERSION_MAJOR == 4) && (CV_VERSION_MINOR == 5) && (CV_VERSION_REVISION < 1)) || (CV_VERSION_MAJOR == 3))
             cv::Rect2d newRect;
+#else
+            cv::Rect newRect;
+#endif
             if (!inited && !m_tracker.empty() && m_tracker->update(cv::UMat(currFrame, roiRect), newRect))
             {
 #if 0
@@ -597,7 +601,11 @@ void CTrack::RectUpdate(const CRegion& region,
 #endif
 #endif
 
+#if (((CV_VERSION_MAJOR == 4) && (CV_VERSION_MINOR < 5)) || ((CV_VERSION_MAJOR == 4) && (CV_VERSION_MINOR == 5) && (CV_VERSION_REVISION < 1)) || (CV_VERSION_MAJOR == 3))
                 cv::Rect prect(cvRound(newRect.x) + roiRect.x, cvRound(newRect.y) + roiRect.y, cvRound(newRect.width), cvRound(newRect.height));
+#else
+                cv::Rect prect(newRect.x + roiRect.x, newRect.y + roiRect.y, newRect.width, newRect.height);
+#endif
 
                 UpdateRRect(brect, m_kalman.Update(prect, true));
 
@@ -773,12 +781,17 @@ void CTrack::CreateExternalTracker(int channels)
 #ifdef USE_OCV_KCF
         if (!m_tracker || m_tracker.empty())
         {
+#if (((CV_VERSION_MAJOR == 4) && (CV_VERSION_MINOR > 4)) || (CV_VERSION_MAJOR > 4))
+            std::cerr << "TrackMedianFlow not supported in OpenCV 4.5 and newer!" << std::endl;
+            CV_Assert(0);
+#else
             cv::TrackerMedianFlow::Params params;
 
 #if (((CV_VERSION_MAJOR == 3) && (CV_VERSION_MINOR >= 3)) || (CV_VERSION_MAJOR > 3))
             m_tracker = cv::TrackerMedianFlow::create(params);
 #else
             m_tracker = cv::TrackerMedianFlow::createTracker(params);
+#endif
 #endif
         }
 #endif
@@ -807,10 +820,15 @@ void CTrack::CreateExternalTracker(int channels)
 #ifdef USE_OCV_KCF
         if (!m_tracker || m_tracker.empty())
         {
+#if (((CV_VERSION_MAJOR == 4) && (CV_VERSION_MINOR > 4)) || (CV_VERSION_MAJOR > 4))
+            std::cerr << "TrackMOSSE not supported in OpenCV 4.5 and newer!" << std::endl;
+            CV_Assert(0);
+#else
 #if (((CV_VERSION_MAJOR == 3) && (CV_VERSION_MINOR > 3)) || (CV_VERSION_MAJOR > 3))
             m_tracker = cv::TrackerMOSSE::create();
 #else
             m_tracker = cv::TrackerMOSSE::createTracker();
+#endif
 #endif
         }
 #endif

@@ -38,13 +38,11 @@ set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -gencode arch=compute_75,code=compute_
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 find_package(CUDNN REQUIRED)
 find_package(TensorRT REQUIRED)
-find_package(gflags REQUIRED)
 
 include_directories(${OpenCV_INCLUDE_DIRS})
 include_directories(${CUDA_INCLUDE_DIRS})
 include_directories(${CUDNN_INCLUDE_DIR})
 include_directories(${TensorRT_INCLUDE_DIRS})
-include_directories(${GFLAGS_INCLUDE_DIR})
 
 file(GLOB TENSORRT_SOURCE_FILES *.cpp)
 file(GLOB TENSORRT_HEADER_FILES *.h)
@@ -71,7 +69,6 @@ set(TENSORRT_LIBS
     ${CUDNN_LIBRARY}
     # ${LIB_PTHREAD}
     ${TensorRT_LIBRARIES}
-    ${GFLAGS_LIBRARIES}
 )
 
 if (CMAKE_COMPILER_IS_GNUCXX)
