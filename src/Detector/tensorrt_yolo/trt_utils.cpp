@@ -26,7 +26,7 @@ SOFTWARE.
 #include "trt_utils.h"
 #include <NvInferRuntimeCommon.h>
 
-#ifdef _WIN32
+#ifdef HAVE_FILESYSTEM
 #include <filesystem>
 namespace fs = std::filesystem;
 #else

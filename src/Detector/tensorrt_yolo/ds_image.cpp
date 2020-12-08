@@ -24,7 +24,7 @@ SOFTWARE.
 */
 #include "ds_image.h"
 
-#ifdef _WIN32
+#ifdef HAVE_FILESYSTEM
 #include <filesystem>
 namespace fs = std::filesystem;
 #else

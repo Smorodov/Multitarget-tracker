@@ -37,6 +37,16 @@ if (SILENT_WORK)
     add_definitions(-DSILENT_WORK)
 endif(SILENT_WORK)
 
+include(CheckIncludeFileCXX)
+check_include_file_cxx(filesystem HAVE_FILESYSTEM)
+if(HAVE_FILESYSTEM)
+    add_definitions(-DHAVE_FILESYSTEM)
+    message("Founded filesystem header")
+else(HAVE_FILESYSTEM)
+    message("Do not found filesystem header")
+endif(HAVE_FILESYSTEM)
+
+
 option(BUILD_EXAMPLES "Should compiled examples (motion detection, pedestrians, faces, DNNs etc)?" ON)
 if (BUILD_EXAMPLES)
     add_subdirectory(example)
