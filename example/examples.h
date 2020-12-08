@@ -604,9 +604,10 @@ protected:
 			TinyYOLOv3 = 0,
 			YOLOv3,
             YOLOv4,
-            TinyYOLOv4
+            TinyYOLOv4,
+			ScaledYOLOv4
 		};
-        YOLOModels usedModel = YOLOModels::YOLOv4;
+        YOLOModels usedModel = YOLOModels::ScaledYOLOv4;
 		switch (usedModel)
 		{
 		case YOLOModels::TinyYOLOv3:
@@ -632,6 +633,12 @@ protected:
             config.emplace("modelBinary", pathToModel + "yolov4-tiny.weights");
             config.emplace("confidenceThreshold", "0.5");
             break;
+
+		case YOLOModels::ScaledYOLOv4:
+			config.emplace("modelConfiguration", pathToModel + "yolov4-csp.cfg");
+			config.emplace("modelBinary", pathToModel + "yolov4-csp.weights");
+			config.emplace("confidenceThreshold", "0.5");
+			break;
 		}
         config.emplace("classNames", pathToModel + "coco.names");
         config.emplace("maxCropRatio", "-1");
