@@ -220,7 +220,7 @@ void AsyncDetector::DrawData(frame_ptr frameInfo, int framesCounter, int currTim
     {
 		std::cout << "Frame " << framesCounter << ": ";
         int id = frameInfo->m_inDetector.load();
-        if (id != FrameInfo::StateNotProcessed)
+        if (id != FrameInfo::StateNotProcessed && id != FrameInfo::StateSkipped)
             std::cout << "(" << id << ") detects = " << frameInfo->m_regions.size() << ", ";
 		std::cout << "tracks = " << frameInfo->m_tracks.size() << ", time = " << currTime << std::endl;
     }
