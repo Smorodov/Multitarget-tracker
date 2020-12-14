@@ -826,7 +826,7 @@ protected:
             config.emplace("modelConfiguration", pathToModel + "yolov4.cfg");
             config.emplace("modelBinary", pathToModel + "yolov4.weights");
             config.emplace("confidenceThreshold", "0.8");
-            config.emplace("inference_precison", "FP32");
+            config.emplace("inference_precison", "FP16");
             config.emplace("net_type", "YOLOV4");
 			config.emplace("maxBatch", "1");
 			config.emplace("maxCropRatio", "-1");

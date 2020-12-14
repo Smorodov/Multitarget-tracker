@@ -89,11 +89,11 @@ public:
         size_t i = 0;
         for (auto it : m_que)
         {
-            if (it->m_inDetector.load() && it->m_inTracker.load())
+            if (it->m_inDetector.load() != FrameInfo::StateNotProcessed && it->m_inTracker.load() != FrameInfo::StateNotProcessed)
                 std::cout << i << " d" << it->m_inDetector.load() << " t" << it->m_inTracker.load() << "; ";
-            else if (it->m_inDetector.load())
+            else if (it->m_inDetector.load() != FrameInfo::StateNotProcessed)
                 std::cout << i << " d" << it->m_inDetector.load() << "; ";
-            else if (it->m_inTracker.load())
+            else if (it->m_inTracker.load() != FrameInfo::StateNotProcessed)
                 std::cout << i << " t" << it->m_inTracker.load() << "; ";
             else
                 std::cout << i << "; ";
@@ -113,7 +113,7 @@ public:
         QUE_LOG << "GetLastUndetectedFrame start" << std::endl;
 #endif
         std::unique_lock<std::mutex> lock(m_mutex);
-        while (m_que.empty() || m_que.back()->m_inDetector.load())
+        while (m_que.empty() || m_que.back()->m_inDetector.load() != FrameInfo::StateNotProcessed)
         {
             if (m_break.load())
                 break;
@@ -124,10 +124,20 @@ public:
         if (!m_break.load())
         {
             frame_ptr frameInfo = m_que.back();
-            assert(frameInfo->m_inDetector.load() == 0);
-            assert(frameInfo->m_inTracker.load());
-            frameInfo->m_inDetector.store(1);
+            assert(frameInfo->m_inDetector.load() == FrameInfo::StateNotProcessed);
+            assert(frameInfo->m_inTracker.load() == FrameInfo::StateNotProcessed);
+            frameInfo->m_inDetector.store(FrameInfo::StateInProcess);
+
+			queue_t::reverse_iterator it = m_que.rbegin();
+			for (++it; it != m_que.rend(); ++it)
+			{
+				if ((*it)->m_inDetector.load() == FrameInfo::StateNotProcessed)
+					(*it)->m_inDetector.store(FrameInfo::StateSkipped);
+				else
+					break;
+			}
 #if SHOW_QUE_LOG
+			PrintQue();
             QUE_LOG << "GetLastUndetectedFrame end: " << frameInfo->m_dt << ", frameInd " << frameInfo->m_frameInd << std::endl;
 #endif
             return frameInfo;
@@ -144,10 +154,11 @@ public:
         queue_t::iterator res_it = m_que.end();
         for (queue_t::iterator it = m_que.begin(); it != m_que.end(); ++it)
         {
-            if ((*it)->m_inDetector.load() == 1)
-                break;
-
-            else if ((*it)->m_inTracker.load() == 0)
+			if ((*it)->m_inDetector.load() == FrameInfo::StateInProcess || (*it)->m_inDetector.load() == FrameInfo::StateNotProcessed)
+			{
+				break;
+			}
+            else if ((*it)->m_inTracker.load() == FrameInfo::StateNotProcessed)
             {
                 res_it = it;
                 break;
@@ -179,9 +190,9 @@ public:
         if (!m_break.load())
         {
             frame_ptr frameInfo = *it;
-            assert(frameInfo->m_inTracker.load() == 0);
-            assert(frameInfo->m_inDetector.load() != 1);
-            frameInfo->m_inTracker.store(1);
+            assert(frameInfo->m_inTracker.load() == FrameInfo::StateNotProcessed);
+            assert(frameInfo->m_inDetector.load() != FrameInfo::StateInProcess && frameInfo->m_inDetector.load() != FrameInfo::StateNotProcessed);
+            frameInfo->m_inTracker.store(FrameInfo::StateInProcess);
 #if SHOW_QUE_LOG
             QUE_LOG << "GetFirstDetectedFrame end: " << frameInfo->m_dt << ", frameInd " << frameInfo->m_frameInd << std::endl;
 #endif
@@ -200,7 +211,7 @@ public:
         QUE_LOG << "GetFirstProcessedFrame start" << std::endl;
 #endif
         std::unique_lock<std::mutex> lock(m_mutex);
-        while (m_que.empty() || m_que.front()->m_inTracker.load() != 2)
+        while (m_que.empty() || m_que.front()->m_inTracker.load() != FrameInfo::StateCompleted)
         {
             if (m_break.load())
                 break;

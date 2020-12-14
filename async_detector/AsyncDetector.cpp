@@ -64,7 +64,6 @@ AsyncDetector::AsyncDetector(const cv::CommandLineParser& parser)
 ///
 AsyncDetector::~AsyncDetector()
 {
-
 }
 
 ///
@@ -90,6 +89,8 @@ void AsyncDetector::Process()
 
     for (; !stopFlag;)
     {
+		int64 t1 = cv::getTickCount();
+
         // Show frame after detecting and tracking
         frame_ptr processedFrame = m_framesQue.GetFirstProcessedFrame();
         if (!processedFrame)
@@ -101,14 +102,17 @@ void AsyncDetector::Process()
         int64 t2 = cv::getTickCount();
 
         allTime += t2 - processedFrame->m_dt;
-        int currTime = cvRound(1000 * (t2 - processedFrame->m_dt) / freq);
+        int currTime = cvRound(1000 * (t2 - t1) / freq);
 
         DrawData(processedFrame, framesCounter, currTime);
 
-        if (!m_outFile.empty() && !writer.isOpened())
-            writer.open(m_outFile, cv::VideoWriter::fourcc('H', 'F', 'Y', 'U'), m_fps, processedFrame->m_frame.size(), true);
-        if (writer.isOpened())
-            writer << processedFrame->m_frame;
+		if (!m_outFile.empty())
+		{
+			if (!writer.isOpened())
+				writer.open(m_outFile, cv::VideoWriter::fourcc('H', 'F', 'Y', 'U'), m_fps, processedFrame->m_frame.size(), true);
+			if (writer.isOpened())
+				writer << processedFrame->m_frame;
+		}
 
 #ifndef SILENT_WORK
         cv::imshow("Video", processedFrame->m_frame);
@@ -216,7 +220,7 @@ void AsyncDetector::DrawData(frame_ptr frameInfo, int framesCounter, int currTim
     {
 		std::cout << "Frame " << framesCounter << ": ";
         int id = frameInfo->m_inDetector.load();
-        if (id > 0)
+        if (id != FrameInfo::StateNotProcessed && id != FrameInfo::StateSkipped)
             std::cout << "(" << id << ") detects = " << frameInfo->m_regions.size() << ", ";
 		std::cout << "tracks = " << frameInfo->m_tracks.size() << ", time = " << currTime << std::endl;
     }
@@ -242,6 +246,26 @@ void AsyncDetector::DrawData(frame_ptr frameInfo, int framesCounter, int currTim
 				cv::Size labelSize = cv::getTextSize(label, cv::FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
 
                 cv::Rect brect = track.m_rrect.boundingRect();
+				if (brect.x < 0)
+				{
+					brect.width = std::min(brect.width, frameInfo->m_frame.cols - 1);
+					brect.x = 0;
+				}
+				else if (brect.x + brect.width >= frameInfo->m_frame.cols)
+				{
+					brect.x = std::max(0, frameInfo->m_frame.cols - brect.width - 1);
+					brect.width = std::min(brect.width, frameInfo->m_frame.cols - 1);
+				}
+				if (brect.y - labelSize.height < 0)
+				{
+					brect.height = std::min(brect.height, frameInfo->m_frame.rows - 1);
+					brect.y = labelSize.height;
+				}
+				else if (brect.y + brect.height >= frameInfo->m_frame.rows)
+				{
+					brect.y = std::max(0, frameInfo->m_frame.rows - brect.height - 1);
+					brect.height = std::min(brect.height, frameInfo->m_frame.rows - 1);
+				}
 				DrawFilledRect(frameInfo->m_frame, cv::Rect(cv::Point(brect.x, brect.y - labelSize.height), cv::Size(labelSize.width, labelSize.height + baseLine)), cv::Scalar(200, 200, 200), 150);
                 cv::putText(frameInfo->m_frame, label, brect.tl(), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 0, 0));
             }
@@ -287,8 +311,8 @@ void AsyncDetector::CaptureThread(std::string fileName, int startFrame, float* f
 	detectorConfig.emplace("modelConfiguration", pathToModel + "yolov3-tiny.cfg");
 	detectorConfig.emplace("modelBinary", pathToModel + "yolov3-tiny.weights");
 #else
-	detectorConfig.emplace("modelConfiguration", pathToModel + "yolov3.cfg");
-	detectorConfig.emplace("modelBinary", pathToModel + "yolov3.weights");
+    detectorConfig.emplace("modelConfiguration", pathToModel + "yolov4-csp.cfg");
+    detectorConfig.emplace("modelBinary", pathToModel + "yolov4-csp.weights");
 #endif
     detectorConfig.emplace("classNames", pathToModel + "coco.names");
     detectorConfig.emplace("confidenceThreshold", "0.3");
@@ -312,7 +336,7 @@ void AsyncDetector::CaptureThread(std::string fileName, int startFrame, float* f
 	trackerSettings.SetDistance(tracking::DistCenters);
     trackerSettings.m_kalmanType = tracking::KalmanLinear;
     trackerSettings.m_filterGoal = tracking::FilterRect;
-    trackerSettings.m_lostTrackType = tracking::TrackNone; // Use KCF tracker for collisions resolving. Used if m_filterGoal == tracking::FilterRect
+    trackerSettings.m_lostTrackType = tracking::TrackCSRT; // Use KCF tracker for collisions resolving. Used if m_filterGoal == tracking::FilterRect
     trackerSettings.m_matchType = tracking::MatchHungrian;
     trackerSettings.m_dt = 0.2f;                           // Delta time for Kalman filter
     trackerSettings.m_accelNoiseMag = 0.3f;                // Accel noise magnitude for Kalman filter
@@ -360,8 +384,8 @@ void AsyncDetector::CaptureThread(std::string fileName, int startFrame, float* f
 
         framesQue->AddNewFrame(frameInfo, 15);
 
-#if 0
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000 / cvRound(*fps)));
+#if 1
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000 / cvRound(*fps) - 1));
 #else
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 #endif
@@ -401,7 +425,7 @@ void AsyncDetector::DetectThread(const config_t& config, cv::Mat firstFrame, Fra
             const regions_t& regions = detector->GetDetects();
             frameInfo->m_regions.assign(regions.begin(), regions.end());
 
-            frameInfo->m_inDetector.store(2);
+            frameInfo->m_inDetector.store(FrameInfo::StateCompleted);
             framesQue->Signal(frameInfo->m_dt);
         }
     }
@@ -423,7 +447,7 @@ void AsyncDetector::TrackingThread(const TrackerSettings& settings, FramesQueue*
             tracker->Update(frameInfo->m_regions, frameInfo->m_clFrame, frameInfo->m_fps);
 
             frameInfo->m_tracks = tracker->GetTracks();
-            frameInfo->m_inTracker.store(2);
+            frameInfo->m_inTracker.store(FrameInfo::StateCompleted);
             framesQue->Signal(frameInfo->m_dt);
         }
     }
