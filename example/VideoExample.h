@@ -158,6 +158,50 @@ private:
 };
 
 ///
+/// \brief The FrameInfo struct
+///
+struct FrameInfo
+{
+	///
+	FrameInfo()
+	{
+		m_frames.reserve(m_batchSize);
+		m_regions.reserve(m_batchSize);
+		m_frameInds.reserve(m_batchSize);
+	}
+	///
+	FrameInfo(size_t batchSize)
+		: m_batchSize(batchSize)
+	{
+		m_frames.reserve(m_batchSize);
+		m_regions.reserve(m_batchSize);
+		m_frameInds.reserve(m_batchSize);
+	}
+
+	///
+	void SetBatchSize(size_t batchSize)
+	{
+		m_batchSize = batchSize;
+		m_frames.reserve(m_batchSize);
+		m_regions.reserve(m_batchSize);
+		m_frameInds.reserve(m_batchSize);
+	}
+
+	std::vector<cv::Mat> m_frames;
+	std::vector<regions_t> m_regions;
+	std::vector<int> m_frameInds;
+
+	size_t m_batchSize = 1;
+
+	int64 m_dt = 0;
+
+	std::condition_variable m_cond;
+	std::mutex m_mutex;
+	bool m_captured = false;
+};
+
+
+///
 /// \brief The VideoExample class
 ///
 class VideoExample
@@ -183,6 +227,8 @@ protected:
     bool m_showLogs = true;
     float m_fps = 25;
 
+	size_t m_batchSize = 1;
+
     int m_captureTimeOut = 60000;
     int m_trackingTimeOut = 60000;
 
@@ -193,8 +239,8 @@ protected:
     virtual bool InitDetector(cv::UMat frame) = 0;
     virtual bool InitTracker(cv::UMat frame) = 0;
 
-    void Detection(cv::Mat frame, regions_t& regions);
-    void Tracking(cv::Mat frame, const regions_t& regions);
+    void Detection(FrameInfo& frame);
+    void Tracking(FrameInfo& frame);
 
     virtual void DrawData(cv::Mat frame, int framesCounter, int currTime) = 0;
 
@@ -215,16 +261,6 @@ private:
     int m_finishDelay = 0;
     std::vector<cv::Scalar> m_colors;
 
-    struct FrameInfo
-    {
-        cv::Mat m_frame;
-        regions_t m_regions;
-        int64 m_dt = 0;
-
-        std::condition_variable m_cond;
-        std::mutex m_mutex;
-        bool m_captured = false;
-    };
     FrameInfo m_frameInfo[2];
 
     bool OpenCapture(cv::VideoCapture& capture);

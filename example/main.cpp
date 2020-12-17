@@ -10,7 +10,7 @@ static void Help()
 {
     printf("\nExamples of the Multitarget tracking algorithm\n"
            "Usage: \n"
-           "          ./MultitargetTracker <path to movie file> [--example]=<number of example 0..7> [--start_frame]=<start a video from this position> [--end_frame]=<play a video to this position> [--end_delay]=<delay in milliseconds after video ending> [--out]=<name of result video file> [--show_logs]=<show logs> [--async]=<async pipeline> [--res]=<csv log file> [--settings]=<ini file> \n\n"
+           "          ./MultitargetTracker <path to movie file> [--example]=<number of example 0..7> [--start_frame]=<start a video from this position> [--end_frame]=<play a video to this position> [--end_delay]=<delay in milliseconds after video ending> [--out]=<name of result video file> [--show_logs]=<show logs> [--async]=<async pipeline> [--res]=<csv log file> [--settings]=<ini file> [--batch_size=<number of frames>] \n\n"
            "Press:\n"
            "\'m\' key for change mode: play|pause. When video is paused you can press any key for get next frame. \n\n"
            "Press Esc to exit from video \n\n"
@@ -30,6 +30,7 @@ const char* keys =
     "{ a async        |1                   | Use 2 theads for processing pipeline | }"
     "{ r res          |                    | Path to the csv file with tracking result | }"
     "{ s settings     |                    | Path to the init file with tracking settings | }"
+	"{ bs batch_size  | 1                  | Batch size - frames count for processing | }"
 };
 
 // ----------------------------------------------------------------------
