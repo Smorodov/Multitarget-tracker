@@ -245,7 +245,7 @@ void VideoExample::AsyncProcess()
 
         if (!m_isTrackerInitialized)
         {
-			cv::UMat ufirst = frameInfo.m_frame.getUMat(cv::ACCESS_READ);
+			cv::UMat ufirst = frameInfo.m_frames[0].getUMat(cv::ACCESS_READ);
             m_isTrackerInitialized = InitTracker(ufirst);
             if (!m_isTrackerInitialized)
             {
@@ -257,7 +257,7 @@ void VideoExample::AsyncProcess()
 
         int64 t1 = cv::getTickCount();
 
-        Tracking(frameInfo.m_frame, frameInfo.m_regions);
+        Tracking(frameInfo);
 
         int64 t2 = cv::getTickCount();
 
@@ -266,23 +266,28 @@ void VideoExample::AsyncProcess()
 
         //std::cout << "Frame " << framesCounter << ": td = " << (1000 * frameInfo.m_dt / freq) << ", tt = " << (1000 * (t2 - t1) / freq) << std::endl;
 
-        DrawData(frameInfo.m_frame, framesCounter, currTime);
+		int key = 0;
+		for (size_t i = 0; i < m_batchSize; ++i)
+		{
+			DrawData(frameInfo.m_frames[i], framesCounter, currTime);
 
-        WriteFrame(writer, frameInfo.m_frame);
+			WriteFrame(writer, frameInfo.m_frames[i]);
 
-        int k = 0;
+			++framesCounter;
+			
 #ifndef SILENT_WORK
-        cv::imshow("Video", frameInfo.m_frame);
+			cv::imshow("Video", frameInfo.m_frames[0]);
 
-		int waitTime = manualMode ? 0 : 1;// std::max<int>(1, cvRound(1000 / m_fps - currTime));
-        k = cv::waitKey(waitTime);
-        if (k == 'm' || k == 'M')
-        {
-            manualMode = !manualMode;
-        }
+			int waitTime = manualMode ? 0 : 1;// std::max<int>(1, cvRound(1000 / m_fps - currTime));
+			key = cv::waitKey(waitTime);
+			if (key == 'm' || key == 'M')
+				manualMode = !manualMode;
+			else
+				break;
 #else
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+			std::this_thread::sleep_for(std::chrono::milliseconds(1));
 #endif
+		}
 
 		{
 			std::unique_lock<std::mutex> lock(frameInfo.m_mutex);
@@ -290,10 +295,9 @@ void VideoExample::AsyncProcess()
 		}
         frameInfo.m_cond.notify_one();
 
-        if (k == 27)
+        if (key == 27)
             break;
 
-        ++framesCounter;
         if (m_endFrame && framesCounter > m_endFrame)
         {
             std::cout << "Process: riched last " << m_endFrame << " frame" << std::endl;
@@ -330,6 +334,8 @@ void VideoExample::CaptureAndDetect(VideoExample* thisPtr, std::atomic<bool>& st
         return;
     }
 
+	int framesCounter = 0;
+
     int trackingTimeOut = thisPtr->m_trackingTimeOut;
 	size_t processCounter = 0;
     for (; !stopCapture.load();)
@@ -346,17 +352,31 @@ void VideoExample::CaptureAndDetect(VideoExample* thisPtr, std::atomic<bool>& st
             }
         }
 
-        capture >> frameInfo.m_frame;
-        if (frameInfo.m_frame.empty())
-        {
-            std::cerr << "CaptureAndDetect: frame is empty!" << std::endl;
-            frameInfo.m_cond.notify_one();
-            break;
-        }
+		if (frameInfo.m_frames.size() < frameInfo.m_batchSize)
+		{
+			frameInfo.m_frames.resize(frameInfo.m_batchSize);
+			frameInfo.m_frameInds.resize(frameInfo.m_batchSize);
+		}
+
+		for (size_t i = 1; i < frameInfo.m_batchSize; ++i)
+		{
+			capture >> frameInfo.m_frames[i];
+			if (frameInfo.m_frames[i].empty())
+			{
+				std::cerr << "CaptureAndDetect: frame is empty!" << std::endl;
+				frameInfo.m_cond.notify_one();
+				break;
+			}
+			frameInfo.m_frameInds.emplace_back(framesCounter);
+
+			++framesCounter;
+		}
+		if (frameInfo.m_frames.size() < frameInfo.m_batchSize)
+			break;
 
         if (!thisPtr->m_isDetectorInitialized)
         {
-			cv::UMat ufirst = frameInfo.m_frame.getUMat(cv::ACCESS_READ);
+			cv::UMat ufirst = frameInfo.m_frames[0].getUMat(cv::ACCESS_READ);
             thisPtr->m_isDetectorInitialized = thisPtr->InitDetector(ufirst);
             if (!thisPtr->m_isDetectorInitialized)
             {
@@ -367,7 +387,7 @@ void VideoExample::CaptureAndDetect(VideoExample* thisPtr, std::atomic<bool>& st
         }
 
         int64 t1 = cv::getTickCount();
-        thisPtr->Detection(frameInfo.m_frame, frameInfo.m_regions);
+        thisPtr->Detection(frameInfo);
         int64 t2 = cv::getTickCount();
         frameInfo.m_dt = t2 - t1;
 
