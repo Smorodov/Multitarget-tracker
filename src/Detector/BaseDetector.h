@@ -35,6 +35,21 @@ public:
     ///
     virtual void Detect(const cv::UMat& frame) = 0;
 
+    ///
+    /// \brief Detect
+    /// \param frames
+    /// \param regions
+    ///
+    virtual void Detect(const std::vector<cv::UMat>& frames, std::vector<regions_t>& regions)
+    {
+        for (size_t i = 0; i < frames.size(); ++i)
+        {
+            Detect(frames[i]);
+            auto res = GetDetects();
+            regions[i].assign(std::begin(res), std::end(res));
+        }
+    }
+
 	///
 	/// \brief ResetModel
 	/// \param img

@@ -143,11 +143,12 @@ void YoloTensorRTDetector::Detect(const cv::UMat& colorFrame)
     {
         std::vector<cv::Rect> crops = GetCrops(m_maxCropRatio, m_detector->get_input_size(), colorMat.size());
         regions_t tmpRegions;
+		std::vector<cv::Mat> batch;
+		batch.reserve(m_batchSize);
         for (size_t i = 0; i < crops.size();)
         {
             size_t batchsize = std::min(static_cast<size_t>(m_batchSize), crops.size() - i);
-			std::vector<cv::Mat> batch;
-			batch.reserve(batchsize);
+			batch.clear();
 			for (size_t j = 0; j < batchsize; ++j)
 			{
 				batch.emplace_back(colorMat, crops[i + j]);
@@ -179,4 +180,31 @@ void YoloTensorRTDetector::Detect(const cv::UMat& colorFrame)
 			//std::cout << "nms for " << tmpRegions.size() << " objects - result " << m_regions.size() << std::endl;
 		}
     }
+}
+
+///
+/// \brief YoloTensorRTDetector::Detect
+/// \param frames
+/// \param regions
+///
+void YoloTensorRTDetector::Detect(const std::vector<cv::UMat>& frames, std::vector<regions_t>& regions)
+{
+	std::vector<cv::Mat> batch;
+	for (const auto& frame : frames)
+	{
+		batch.emplace_back(frame.getMat(cv::ACCESS_READ));
+	}
+
+	std::vector<tensor_rt::BatchResult> detects;
+	m_detector->detect(batch, detects);
+	for (size_t i = 0; i < detects.size(); ++i)
+	{
+		const tensor_rt::BatchResult& dets = detects[i];
+		for (const tensor_rt::Result& bbox : dets)
+		{
+			if (m_classesWhiteList.empty() || m_classesWhiteList.find(T2T(bbox.id)) != std::end(m_classesWhiteList))
+				regions[i].emplace_back(bbox.rect, T2T(bbox.id), bbox.prob);
+		}
+	}
+	m_regions.assign(std::begin(regions.back()), std::end(regions.back()));
 }

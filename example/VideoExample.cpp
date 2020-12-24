@@ -181,7 +181,7 @@ void VideoExample::SyncProcess()
 
 		for (size_t i = 0; i < m_batchSize; ++i)
 		{
-			DrawData(frameInfo.m_frames[i], frameInfo.m_frameInds[i], currTime);
+			DrawData(frameInfo.m_frames[i].GetMatBGR(), frameInfo.m_frameInds[i], currTime);
 
 #ifndef SILENT_WORK
 			cv::imshow("Video", frame);
@@ -196,7 +196,7 @@ void VideoExample::SyncProcess()
 			std::this_thread::sleep_for(std::chrono::milliseconds(1));
 #endif
 
-			WriteFrame(writer, frameInfo.m_frames[i]);
+			WriteFrame(writer, frameInfo.m_frames[i].GetMatBGR());
 		}
     }
 
@@ -245,8 +245,7 @@ void VideoExample::AsyncProcess()
 
         if (!m_isTrackerInitialized)
         {
-			cv::UMat ufirst = frameInfo.m_frames[0].getUMat(cv::ACCESS_READ);
-            m_isTrackerInitialized = InitTracker(ufirst);
+            m_isTrackerInitialized = InitTracker(frameInfo.m_frames[0].GetUMatBGR());
             if (!m_isTrackerInitialized)
             {
                 std::cerr << "CaptureAndDetect: Tracker initialize error!!!" << std::endl;
@@ -269,14 +268,14 @@ void VideoExample::AsyncProcess()
 		int key = 0;
 		for (size_t i = 0; i < m_batchSize; ++i)
 		{
-			DrawData(frameInfo.m_frames[i], framesCounter, currTime);
+			DrawData(frameInfo.m_frames[i].GetMatBGR(), framesCounter, currTime);
 
-			WriteFrame(writer, frameInfo.m_frames[i]);
+			WriteFrame(writer, frameInfo.m_frames[i].GetMatBGR());
 
 			++framesCounter;
 			
 #ifndef SILENT_WORK
-			cv::imshow("Video", frameInfo.m_frames[0]);
+			cv::imshow("Video", frameInfo.m_frames[0].GetMatBGR());
 
 			int waitTime = manualMode ? 0 : 1;// std::max<int>(1, cvRound(1000 / m_fps - currTime));
 			key = cv::waitKey(waitTime);
@@ -360,7 +359,7 @@ void VideoExample::CaptureAndDetect(VideoExample* thisPtr, std::atomic<bool>& st
 
 		for (size_t i = 1; i < frameInfo.m_batchSize; ++i)
 		{
-			capture >> frameInfo.m_frames[i];
+			capture >> frameInfo.m_frames[i].GetMatBGRWrite();
 			if (frameInfo.m_frames[i].empty())
 			{
 				std::cerr << "CaptureAndDetect: frame is empty!" << std::endl;
@@ -376,8 +375,7 @@ void VideoExample::CaptureAndDetect(VideoExample* thisPtr, std::atomic<bool>& st
 
         if (!thisPtr->m_isDetectorInitialized)
         {
-			cv::UMat ufirst = frameInfo.m_frames[0].getUMat(cv::ACCESS_READ);
-            thisPtr->m_isDetectorInitialized = thisPtr->InitDetector(ufirst);
+            thisPtr->m_isDetectorInitialized = thisPtr->InitDetector(frameInfo.m_frames[0].GetUMatBGR());
             if (!thisPtr->m_isDetectorInitialized)
             {
                 std::cerr << "CaptureAndDetect: Detector initialize error!!!" << std::endl;
@@ -409,30 +407,21 @@ void VideoExample::CaptureAndDetect(VideoExample* thisPtr, std::atomic<bool>& st
 ///
 void VideoExample::Detection(FrameInfo& frame)
 {
-    cv::UMat uframe;
+	for (const auto& track : m_tracks)
+	{
+		if (track.m_isStatic)
+			m_detector->ResetModel(frame.m_frames[0].GetUMatBGR(), track.m_rrect.boundingRect());
+	}
 
+    std::vector<cv::UMat> frames;
 	for (size_t i = 0; i < frame.m_frames.size(); ++i)
 	{
-		if (!m_detector->CanGrayProcessing())
-			uframe = frame.m_frames[i].getUMat(cv::ACCESS_READ);
-		else
-			cv::cvtColor(frame.m_frames[i], uframe, cv::COLOR_BGR2GRAY);
-
-		if (i == 0)
-		{
-			for (const auto& track : m_tracks)
-			{
-				if (track.m_isStatic)
-					m_detector->ResetModel(uframe, track.m_rrect.boundingRect());
-			}
-		}
-
-		m_detector->Detect(uframe);
-
-		const regions_t& regs = m_detector->GetDetects();
-
-		frame.m_regions[i].assign(std::begin(regs), std::end(regs));
+        if (m_detector->CanGrayProcessing())
+            frames.emplace_back(frame.m_frames[i].GetUMatGray());
+        else
+            frames.emplace_back(frame.m_frames[i].GetUMatBGR());
 	}
+    m_detector->Detect(frames, frame.m_regions);
 }
 
 ///
@@ -442,16 +431,12 @@ void VideoExample::Detection(FrameInfo& frame)
 ///
 void VideoExample::Tracking(FrameInfo& frame)
 {
- 	cv::UMat uframe;
-
 	for (size_t i = 0; i < frame.m_frames.size(); ++i)
 	{
 		if (m_tracker->CanColorFrameToTrack())
-			uframe = frame.m_frames[i].getUMat(cv::ACCESS_READ);
+			m_tracker->Update(frame.m_regions[i], frame.m_frames[i].GetUMatBGR(), m_fps);
 		else
-			cv::cvtColor(frame.m_frames[i], uframe, cv::COLOR_BGR2GRAY);
-
-		m_tracker->Update(frame.m_regions[i], uframe, m_fps);
+			m_tracker->Update(frame.m_regions[i], frame.m_frames[i].GetUMatGray(), m_fps);
 	}
 }
 

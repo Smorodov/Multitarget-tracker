@@ -158,6 +158,75 @@ private:
 };
 
 ///
+/// \brief The Frame struct
+///
+class Frame
+{
+public:
+	Frame() = default;
+	Frame(cv::Mat imgBGR)
+	{
+		m_mBGR = imgBGR;
+	}
+
+	///
+	bool empty() const
+	{
+		return m_mBGR.empty();
+	}
+
+	///
+	const cv::Mat& GetMatBGR()
+	{
+		return m_mBGR;
+	}
+	///
+	cv::Mat& GetMatBGRWrite()
+	{
+		return m_mBGR;
+	}
+	///
+	const cv::Mat& GetMatGray()
+	{
+		if (m_mGray.empty())
+			cv::cvtColor(m_mBGR, m_mGray, cv::COLOR_BGR2GRAY);
+		return m_mGray;
+	}
+	///
+	const cv::UMat& GetUMatBGR()
+	{
+		if (m_umBGR.empty())
+			m_umBGR = m_mBGR.getUMat(cv::ACCESS_READ);
+		return m_umGray;
+	}
+	///
+	const cv::UMat& GetUMatGray()
+	{
+		if (m_umGray.empty())
+		{
+			if (m_mGray.empty())
+			{
+				if (m_umBGR.empty())
+					cv::cvtColor(m_mBGR, m_umGray, cv::COLOR_BGR2GRAY);
+				else
+					cv::cvtColor(m_umBGR, m_umGray, cv::COLOR_BGR2GRAY);
+			}
+			else
+			{
+				m_umGray = m_mGray.getUMat(cv::ACCESS_READ);
+			}
+		}
+		return m_umGray;
+	}
+
+private:
+	cv::Mat m_mBGR;
+	cv::Mat m_mGray;
+	cv::UMat m_umBGR;
+	cv::UMat m_umGray;
+};
+
+///
 /// \brief The FrameInfo struct
 ///
 struct FrameInfo
@@ -187,7 +256,7 @@ struct FrameInfo
 		m_frameInds.reserve(m_batchSize);
 	}
 
-	std::vector<cv::Mat> m_frames;
+	std::vector<Frame> m_frames;
 	std::vector<regions_t> m_regions;
 	std::vector<int> m_frameInds;
 

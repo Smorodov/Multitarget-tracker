@@ -21,6 +21,7 @@ public:
 	bool Init(const config_t& config);
 
 	void Detect(const cv::UMat& colorFrame);
+	void Detect(const std::vector<cv::UMat>& frames, std::vector<regions_t>& regions);
 
 	bool CanGrayProcessing() const
 	{
@@ -32,11 +33,14 @@ private:
 
     float m_confidenceThreshold = 0.5f;
     float m_maxCropRatio = 3.0f;
+	size_t m_batchSize = 1;
 	std::vector<std::string> m_classNames;
+	cv::Size m_netSize;
 
 	void DetectInCrop(const cv::Mat& colorFrame, const cv::Rect& crop, regions_t& tmpRegions);
 	void Detect(const cv::Mat& colorFrame, regions_t& tmpRegions);
 	void FillImg(image_t& detImage);
+	void FillBatchImg(const std::vector<cv::Mat>& batch, image_t& detImage);
 
 	cv::Mat m_tmpImg;
 	std::vector<float> m_tmpBuf;

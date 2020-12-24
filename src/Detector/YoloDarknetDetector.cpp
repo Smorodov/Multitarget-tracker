@@ -67,6 +67,10 @@ bool YoloDarknetDetector::Init(const config_t& config)
     if (maxCropRatio != config.end())
         m_maxCropRatio = std::stof(maxCropRatio->second);
 
+	auto maxBatch = config.find("maxBatch");
+	if (maxBatch != config.end())
+        m_batchSize = std::max(1, std::stoi(maxBatch->second));
+
     m_classesWhiteList.clear();
 	auto whiteRange = config.equal_range("white_list");
 	for (auto it = whiteRange.first; it != whiteRange.second; ++it)
@@ -75,7 +79,10 @@ bool YoloDarknetDetector::Init(const config_t& config)
 	}
 
 	bool correct = m_detector.get() != nullptr;
-    return correct;
+    
+	m_netSize = cv::Size(m_detector->get_net_width(), m_detector->get_net_height());
+	
+	return correct;
 }
 
 ///
@@ -93,17 +100,50 @@ void YoloDarknetDetector::Detect(const cv::UMat& colorFrame)
 	}
 	else
 	{
-        std::vector<cv::Rect> crops = GetCrops(m_maxCropRatio, cv::Size(m_detector->get_net_width(), m_detector->get_net_height()), colorMat.size());
+        std::vector<cv::Rect> crops = GetCrops(m_maxCropRatio, m_netSize, colorMat.size());
         regions_t tmpRegions;
-        for (size_t i = 0; i < crops.size(); ++i)
-        {
-            const auto& crop = crops[i];
-            //std::cout << "Crop " << i << ": " << crop << std::endl;
-            DetectInCrop(colorMat, crop, tmpRegions);
-        }
+		if (m_batchSize > 1)
+		{
+			std::vector<cv::Mat> batch;
+			batch.reserve(m_batchSize);
+				
+			for (size_t i = 0; i < crops.size(); ++i)
+			{
+				size_t batchsize = std::min(static_cast<size_t>(m_batchSize), crops.size() - i);
+				batch.clear();
+				for (size_t j = 0; j < batchsize; ++j)
+				{
+					batch.emplace_back(colorMat, crops[i + j]);
+				}
 
-		//det_num_pair* network_predict_batch(network *net, image im, int batch_size, int w, int h, float thresh, float hier, int *map, int relative, int letter);
-		//LIB_API void free_batch_detections(det_num_pair *det_num_pairs, int n);
+				image_t detImage;
+				FillBatchImg(batch, detImage);
+				std::vector<std::vector<bbox_t>> result_vec = m_detector->detectBatch(detImage, static_cast<int>(batchsize), m_netSize.width, m_netSize.height, m_confidenceThreshold);
+
+				const float wk = static_cast<float>(crops[i].width) / m_netSize.width;
+				const float hk = static_cast<float>(crops[i].height) / m_netSize.height;
+				for (size_t j = 0; j < batchsize; ++j)
+				{
+					for (const auto& bbox : result_vec[j])
+					{
+						if (m_classesWhiteList.empty() || m_classesWhiteList.find(T2T(bbox.obj_id)) != std::end(m_classesWhiteList))
+							tmpRegions.emplace_back(cv::Rect(crops[i + j].x + cvRound(wk * bbox.x), crops[i + j].y + cvRound(hk * bbox.y),
+								                             cvRound(wk * bbox.w), cvRound(hk * bbox.h)),
+								                    T2T(bbox.obj_id), bbox.prob);
+					}
+				}
+				i += batchsize;
+			}
+		}
+		else
+		{
+			for (size_t i = 0; i < crops.size(); ++i)
+			{
+				const auto& crop = crops[i];
+				//std::cout << "Crop " << i << ": " << crop << std::endl;
+				DetectInCrop(colorMat, crop, tmpRegions);
+			}
+		}
 
 		if (crops.size() > 1)
 		{
@@ -126,12 +166,10 @@ void YoloDarknetDetector::Detect(const cv::UMat& colorFrame)
 ///
 void YoloDarknetDetector::DetectInCrop(const cv::Mat& colorFrame, const cv::Rect& crop, regions_t& tmpRegions)
 {
-	cv::Size netSize(m_detector->get_net_width(), m_detector->get_net_height());
-
-	if (crop.width == netSize.width && crop.height == netSize.height)
+	if (crop.width == m_netSize.width && crop.height == m_netSize.height)
 		m_tmpImg = colorFrame(crop);
 	else
-		cv::resize(colorFrame(crop), m_tmpImg, netSize, 0, 0, cv::INTER_LINEAR);
+		cv::resize(colorFrame(crop), m_tmpImg, m_netSize, 0, 0, cv::INTER_LINEAR);
 	
 	image_t detImage;
 	FillImg(detImage);
@@ -146,7 +184,7 @@ void YoloDarknetDetector::DetectInCrop(const cv::Mat& colorFrame, const cv::Rect
 		if (m_classesWhiteList.empty() || m_classesWhiteList.find(T2T(bbox.obj_id)) != std::end(m_classesWhiteList))
 			tmpRegions.emplace_back(cv::Rect(cvRound(wk * bbox.x) + crop.x, cvRound(hk * bbox.y) + crop.y, cvRound(wk * bbox.w), cvRound(hk * bbox.h)), T2T(bbox.obj_id), bbox.prob);
 	}
-	if (crop.width == netSize.width && crop.height == netSize.height)
+	if (crop.width == m_netSize.width && crop.height == m_netSize.height)
 		m_tmpImg.release();
 	//std::cout << "Detected " << detects.size() << " objects" << std::endl;
 }
@@ -159,11 +197,10 @@ void YoloDarknetDetector::DetectInCrop(const cv::Mat& colorFrame, const cv::Rect
 ///
 void YoloDarknetDetector::Detect(const cv::Mat& colorFrame, regions_t& tmpRegions)
 {
-	cv::Size netSize(m_detector->get_net_width(), m_detector->get_net_height());
-	if (colorFrame.cols == netSize.width && colorFrame.rows == netSize.height)
+	if (colorFrame.cols == m_netSize.width && colorFrame.rows == m_netSize.height)
 		m_tmpImg = colorFrame;
 	else
-		cv::resize(colorFrame, m_tmpImg, netSize, 0, 0, cv::INTER_LINEAR);
+		cv::resize(colorFrame, m_tmpImg, m_netSize, 0, 0, cv::INTER_LINEAR);
 
 	image_t detImage;
 	FillImg(detImage);
@@ -191,8 +228,9 @@ void YoloDarknetDetector::FillImg(image_t& detImage)
 	detImage.h = m_tmpImg.rows;
 	detImage.c = m_tmpImg.channels();
 	assert(detImage.c == 3);
-	if (detImage.w * detImage.h * detImage.c != m_tmpBuf.size())
-		m_tmpBuf.resize(detImage.w * detImage.h * detImage.c);
+	size_t newSize = static_cast<size_t>(detImage.w * detImage.h * detImage.c);
+	if (newSize != m_tmpBuf.size())
+		m_tmpBuf.resize(newSize);
 	detImage.data = &m_tmpBuf[0];
 
 	const int h = detImage.h;
@@ -203,7 +241,7 @@ void YoloDarknetDetector::FillImg(image_t& detImage)
 		for (int c = 0; c < 3; ++c)
 		{
 			const unsigned char *data = m_tmpImg.ptr(y) + 2 - c;
-			float* fdata = detImage.data + c * w * h + y * w;
+			float* fdata = detImage.data + static_cast<ptrdiff_t>(c * w * h) + static_cast<ptrdiff_t>(y * w);
 			for (int x = 0; x < w; ++x)
 			{
 				*fdata = knorm * data[0];
@@ -212,4 +250,80 @@ void YoloDarknetDetector::FillImg(image_t& detImage)
 			}
 		}
 	}
+}
+
+///
+/// \brief YoloDarknetDetector::FillBatchImg
+/// \param batch
+/// \param detImage
+///
+void YoloDarknetDetector::FillBatchImg(const std::vector<cv::Mat>& batch, image_t& detImage)
+{
+	detImage.w = m_netSize.width;
+	detImage.h = m_netSize.height;
+	detImage.c = 3;
+	assert(detImage.c == 3);
+	size_t imgSize = static_cast<size_t>(detImage.w * detImage.h * detImage.c);
+	size_t newSize = batch.size() * imgSize;
+	if (newSize > m_tmpBuf.size())
+		m_tmpBuf.resize(newSize);
+	detImage.data = &m_tmpBuf[0];
+
+	for (size_t i = 0; i < batch.size(); ++i)
+	{
+		if (batch[i].cols == m_netSize.width && batch[i].rows == m_netSize.height)
+			m_tmpImg = batch[i];
+		else
+			cv::resize(batch[i], m_tmpImg, m_netSize, 0, 0, cv::INTER_LINEAR);
+
+		float* fImgStart = detImage.data + i * imgSize;
+
+		const int h = m_tmpImg.rows;
+		const int w = m_tmpImg.cols;
+		constexpr float knorm = 1.f / 255.f;
+		for (int y = 0; y < h; ++y)
+		{
+			for (int c = 0; c < 3; ++c)
+			{
+				const unsigned char* data = m_tmpImg.ptr(y) + 2 - c;
+				float* fdata = fImgStart + static_cast<ptrdiff_t>(c * w * h) + static_cast<ptrdiff_t>(y * w);
+				for (int x = 0; x < w; ++x)
+				{
+					*fdata = knorm * data[0];
+					++fdata;
+					data += 3;
+				}
+			}
+		}
+	}
+}
+
+///
+/// \brief YoloDarknetDetector::Detect
+/// \param frames
+/// \param regions
+///
+void YoloDarknetDetector::Detect(const std::vector<cv::UMat>& frames, std::vector<regions_t>& regions)
+{
+	std::vector<cv::Mat> batch;
+	for (const auto& frame : frames)
+	{
+		batch.emplace_back(frame.getMat(cv::ACCESS_READ));
+	}
+
+	image_t detImage;
+	FillBatchImg(batch, detImage);
+	std::vector<std::vector<bbox_t>> result_vec = m_detector->detectBatch(detImage, static_cast<int>(frames.size()), m_netSize.width, m_netSize.height, m_confidenceThreshold);
+
+	float wk = static_cast<float>(frames[0].cols) / m_netSize.width;
+	float hk = static_cast<float>(frames[0].rows) / m_netSize.height;
+	for (size_t i = 0; i < regions.size(); ++i)
+	{
+		for (const auto& bbox : result_vec[i])
+		{
+			if (m_classesWhiteList.empty() || m_classesWhiteList.find(T2T(bbox.obj_id)) != std::end(m_classesWhiteList))
+				regions[i].emplace_back(cv::Rect(cvRound(wk * bbox.x), cvRound(hk * bbox.y), cvRound(wk * bbox.w), cvRound(hk * bbox.h)), T2T(bbox.obj_id), bbox.prob);
+		}
+	}
+	m_regions.assign(std::begin(regions.back()), std::end(regions.back()));
 }

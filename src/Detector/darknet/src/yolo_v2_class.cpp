@@ -337,6 +337,70 @@ LIB_API std::vector<bbox_t> Detector::detect(image_t img, float thresh, bool use
     return bbox_vec;
 }
 
+LIB_API std::vector<std::vector<bbox_t>> Detector::detectBatch(image_t img, int batch_size, int width, int height, float thresh)
+{
+    detector_gpu_t &detector_gpu = *static_cast<detector_gpu_t *>(detector_gpu_ptr.get());
+    network &net = detector_gpu.net;
+#ifdef GPU
+    int old_gpu_index;
+    cudaGetDevice(&old_gpu_index);
+    if(cur_gpu_id != old_gpu_index)
+        cudaSetDevice(net.gpu_index);
+
+    net.wait_stream = wait_stream;    // 1 - wait CUDA-stream, 0 - not to wait
+#endif
+    //std::cout << "net.gpu_index = " << net.gpu_index << std::endl;
+
+    layer l = net.layers[net.n - 1];
+
+    float hier_thresh = 0.5;
+    image in_img;
+    in_img.c = img.c;
+    in_img.w = img.w;
+    in_img.h = img.h;
+    in_img.data = img.data;
+    det_num_pair* prediction = network_predict_batch(&net, in_img, batch_size, width, height, thresh, hier_thresh, 0, 0, 0);
+
+    std::vector<std::vector<bbox_t>> bbox_vec;
+
+    for (int bi = 0; bi < batch_size; ++bi)
+    {
+        auto dets = prediction[bi].dets;
+        for (int i = 0; i < prediction[bi].num; ++i)
+        {
+            box b = dets[i].bbox;
+            int const obj_id = max_index(dets[i].prob, l.classes);
+            float const prob = dets[i].prob[obj_id];
+
+            if (prob > thresh)
+            {
+                bbox_t bbox;
+                bbox.x = std::max((double)0, (b.x - b.w / 2.));
+                bbox.y = std::max((double)0, (b.y - b.h / 2.));
+                bbox.w = b.w;
+                bbox.h = b.h;
+                bbox.obj_id = obj_id;
+                bbox.prob = prob;
+                bbox.track_id = 0;
+                bbox.frames_counter = 0;
+                bbox.x_3d = NAN;
+                bbox.y_3d = NAN;
+                bbox.z_3d = NAN;
+
+                bbox_vec[bi].push_back(bbox);
+            }
+        }
+    }
+    free_batch_detections(prediction, batch_size);
+
+#ifdef GPU
+    if (cur_gpu_id != old_gpu_index)
+        cudaSetDevice(old_gpu_index);
+#endif
+
+    return bbox_vec;
+}
+
 LIB_API std::vector<bbox_t> Detector::tracking_id(std::vector<bbox_t> cur_bbox_vec, bool const change_history,
     int const frames_story, int const max_dist)
 {
