@@ -183,7 +183,7 @@ void VideoExample::SyncProcess()
 
 		for (size_t i = 0; i < m_batchSize; ++i)
 		{
-			DrawData(frameInfo.m_frames[i].GetMatBGR(), frameInfo.m_frameInds[i], currTime);
+			DrawData(frameInfo.m_frames[i].GetMatBGR(), frameInfo.m_tracks[i], frameInfo.m_frameInds[i], currTime);
 
 #ifndef SILENT_WORK
 			cv::imshow("Video", frame);
@@ -270,7 +270,7 @@ void VideoExample::AsyncProcess()
 		int key = 0;
 		for (size_t i = 0; i < m_batchSize; ++i)
 		{
-			DrawData(frameInfo.m_frames[i].GetMatBGR(), framesCounter, currTime);
+			DrawData(frameInfo.m_frames[i].GetMatBGR(), frameInfo.m_tracks[i], framesCounter, currTime);
 
 			WriteFrame(writer, frameInfo.m_frames[i].GetMatBGR());
 
@@ -408,10 +408,13 @@ void VideoExample::CaptureAndDetect(VideoExample* thisPtr, std::atomic<bool>& st
 ///
 void VideoExample::Detection(FrameInfo& frame)
 {
-	for (const auto& track : m_tracks)
+	if (m_trackerSettings.m_useAbandonedDetection)
 	{
-		if (track.m_isStatic)
-			m_detector->ResetModel(frame.m_frames[0].GetUMatBGR(), track.m_rrect.boundingRect());
+		for (const auto& track : m_tracks)
+		{
+			if (track.m_isStatic)
+				m_detector->ResetModel(frame.m_frames[0].GetUMatBGR(), track.m_rrect.boundingRect());
+		}
 	}
 
     std::vector<cv::UMat> frames;
@@ -435,13 +438,17 @@ void VideoExample::Tracking(FrameInfo& frame)
 {
 	assert(frame.m_regions.size() == frame.m_frames.size());
 
+	frame.CleanåTracks();
 	for (size_t i = 0; i < frame.m_frames.size(); ++i)
 	{
 		if (m_tracker->CanColorFrameToTrack())
 			m_tracker->Update(frame.m_regions[i], frame.m_frames[i].GetUMatBGR(), m_fps);
 		else
 			m_tracker->Update(frame.m_regions[i], frame.m_frames[i].GetUMatGray(), m_fps);
+		m_tracker->GetTracks(frame.m_tracks[i]);
 	}
+	if (m_trackerSettings.m_useAbandonedDetection)
+		m_tracker->GetTracks(m_tracks);
 }
 
 ///

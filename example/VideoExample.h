@@ -261,14 +261,26 @@ struct FrameInfo
 	{
 		if (m_regions.size() != m_batchSize)
 			m_regions.resize(m_batchSize);
-		for (auto& reg : m_regions)
+		for (auto& regions : m_regions)
 		{
-			reg.clear();
+			regions.clear();
+		}
+	}
+
+	///
+	void CleanåTracks()
+	{
+		if (m_tracks.size() != m_batchSize)
+			m_tracks.resize(m_batchSize);
+		for (auto& tracks : m_tracks)
+		{
+			tracks.clear();
 		}
 	}
 
 	std::vector<Frame> m_frames;
 	std::vector<regions_t> m_regions;
+	std::vector<std::vector<TrackingObject>> m_tracks;
 	std::vector<int> m_frameInds;
 
 	size_t m_batchSize = 1;
@@ -302,8 +314,6 @@ protected:
     std::unique_ptr<BaseDetector> m_detector;
     std::unique_ptr<CTracker> m_tracker;
 
-	std::vector<TrackingObject> m_tracks;
-
     bool m_showLogs = true;
     float m_fps = 25;
 
@@ -322,7 +332,7 @@ protected:
     void Detection(FrameInfo& frame);
     void Tracking(FrameInfo& frame);
 
-    virtual void DrawData(cv::Mat frame, int framesCounter, int currTime) = 0;
+    virtual void DrawData(cv::Mat frame, const std::vector<TrackingObject>& tracks, int framesCounter, int currTime) = 0;
 
     void DrawTrack(cv::Mat frame, int resizeCoeff, const TrackingObject& track, bool drawTrajectory, int framesCounter);
 
@@ -331,6 +341,8 @@ protected:
 	bool ParseTrackerSettings(const std::string& settingsFile);
 
 private:
+	std::vector<TrackingObject> m_tracks;
+
     bool m_isTrackerInitialized = false;
     bool m_isDetectorInitialized = false;
     std::string m_inFile;

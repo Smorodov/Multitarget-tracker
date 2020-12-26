@@ -446,7 +446,7 @@ void AsyncDetector::TrackingThread(const TrackerSettings& settings, FramesQueue*
         {
             tracker->Update(frameInfo->m_regions, frameInfo->m_clFrame, frameInfo->m_fps);
 
-            frameInfo->m_tracks = tracker->GetTracks();
+            tracker->GetTracks(frameInfo->m_tracks);
             frameInfo->m_inTracker.store(FrameInfo::StateCompleted);
             framesQue->Signal(frameInfo->m_dt);
         }

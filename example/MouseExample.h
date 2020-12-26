@@ -97,7 +97,8 @@ void MouseTracking(cv::CommandLineParser parser)
 
 		tracker.Update(regions, cv::UMat(), 100);
 
-		auto tracks = tracker.GetTracks();
+		std::vector<TrackingObject> tracks;
+		tracker.GetTracks(tracks);
 		std::cout << tracks.size() << std::endl;
 
 		for (size_t i = 0; i < tracks.size(); i++)

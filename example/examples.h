@@ -154,17 +154,16 @@ protected:
     ///
     /// \brief DrawData
     /// \param frame
+	/// \param tracks
     /// \param framesCounter
     /// \param currTime
     ///
-    void DrawData(cv::Mat frame, int framesCounter, int currTime)
+    void DrawData(cv::Mat frame, const std::vector<TrackingObject>& tracks, int framesCounter, int currTime)
     {
-		m_tracks = m_tracker->GetTracks();
-
         if (m_showLogs)
-            std::cout << "Frame " << framesCounter << ": tracks = " << m_tracks.size() << ", time = " << currTime << std::endl;
+            std::cout << "Frame " << framesCounter << ": tracks = " << tracks.size() << ", time = " << currTime << std::endl;
 
-        for (const auto& track : m_tracks)
+        for (const auto& track : tracks)
         {
             if (track.m_isStatic)
             {
@@ -278,20 +277,19 @@ protected:
         return true;
     }
 
-    ///
-    /// \brief DrawData
-    /// \param frame
-    /// \param framesCounter
-    /// \param currTime
-    ///
-    void DrawData(cv::Mat frame, int framesCounter, int currTime)
-    {
-		m_tracks = m_tracker->GetTracks();
-
+	///
+	/// \brief DrawData
+	/// \param frame
+	/// \param tracks
+	/// \param framesCounter
+	/// \param currTime
+	///
+	void DrawData(cv::Mat frame, const std::vector<TrackingObject>& tracks, int framesCounter, int currTime)
+	{
         if (m_showLogs)
-            std::cout << "Frame " << framesCounter << ": tracks = " << m_tracks.size() << ", time = " << currTime << std::endl;
+            std::cout << "Frame " << framesCounter << ": tracks = " << tracks.size() << ", time = " << currTime << std::endl;
 
-        for (const auto& track : m_tracks)
+        for (const auto& track : tracks)
         {
             if (track.IsRobust(8,                           // Minimal trajectory size
                                 0.4f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
@@ -370,20 +368,19 @@ protected:
         return true;
     }
 
-    ///
-    /// \brief DrawData
-    /// \param frame
-    /// \param framesCounter
-    /// \param currTime
-    ///
-    void DrawData(cv::Mat frame, int framesCounter, int currTime)
-    {
-		m_tracks = m_tracker->GetTracks();
-
+	///
+	/// \brief DrawData
+	/// \param frame
+	/// \param tracks
+	/// \param framesCounter
+	/// \param currTime
+	///
+	void DrawData(cv::Mat frame, const std::vector<TrackingObject>& tracks, int framesCounter, int currTime)
+	{
         if (m_showLogs)
-            std::cout << "Frame " << framesCounter << ": tracks = " << m_tracks.size() << ", time = " << currTime << std::endl;
+            std::cout << "Frame " << framesCounter << ": tracks = " << tracks.size() << ", time = " << currTime << std::endl;
 
-        for (const auto& track : m_tracks)
+        for (const auto& track : tracks)
         {
 			if (track.IsRobust(cvRound(m_fps / 2),          // Minimal trajectory size
                                 0.4f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
@@ -514,17 +511,16 @@ protected:
 	///
 	/// \brief DrawData
 	/// \param frame
+	/// \param tracks
 	/// \param framesCounter
 	/// \param currTime
 	///
-	void DrawData(cv::Mat frame, int framesCounter, int currTime)
+	void DrawData(cv::Mat frame, const std::vector<TrackingObject>& tracks, int framesCounter, int currTime)
 	{
-		m_tracks = m_tracker->GetTracks();
-
 		if (m_showLogs)
-			std::cout << "Frame " << framesCounter << ": tracks = " << m_tracks.size() << ", time = " << currTime << std::endl;
+			std::cout << "Frame " << framesCounter << ": tracks = " << tracks.size() << ", time = " << currTime << std::endl;
 
-		for (const auto& track : m_tracks)
+		for (const auto& track : tracks)
 		{
 			if (track.IsRobust(3,                           // Minimal trajectory size
 				0.5f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
@@ -697,20 +693,19 @@ protected:
 		return true;
 	}
 
-    ///
-    /// \brief DrawData
-    /// \param frame
-    /// \param framesCounter
-    /// \param currTime
-    ///
-	void DrawData(cv::Mat frame, int framesCounter, int currTime)
+	///
+	/// \brief DrawData
+	/// \param frame
+	/// \param tracks
+	/// \param framesCounter
+	/// \param currTime
+	///
+	void DrawData(cv::Mat frame, const std::vector<TrackingObject>& tracks, int framesCounter, int currTime)
 	{
-		m_tracks = m_tracker->GetTracks();
-
 		if (m_showLogs)
-			std::cout << "Frame " << framesCounter << ": tracks = " << m_tracks.size() << ", time = " << currTime << std::endl;
+			std::cout << "Frame " << framesCounter << ": tracks = " << tracks.size() << ", time = " << currTime << std::endl;
 
-		for (const auto& track : m_tracks)
+		for (const auto& track : tracks)
 		{
             if (track.IsRobust(3,                           // Minimal trajectory size
                 0.5f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
@@ -902,19 +897,19 @@ protected:
 		return true;
 	}
 
+	///
 	/// \brief DrawData
 	/// \param frame
+	/// \param tracks
 	/// \param framesCounter
 	/// \param currTime
 	///
-	void DrawData(cv::Mat frame, int framesCounter, int currTime)
+	void DrawData(cv::Mat frame, const std::vector<TrackingObject>& tracks, int framesCounter, int currTime)
 	{
-		m_tracks = m_tracker->GetTracks();
-
 		if (m_showLogs)
-			std::cout << "Frame " << framesCounter << ": tracks = " << m_tracks.size() << ", time = " << currTime << std::endl;
+			std::cout << "Frame " << framesCounter << ": tracks = " << tracks.size() << ", time = " << currTime << std::endl;
 
-		for (const auto& track : m_tracks)
+		for (const auto& track : tracks)
 		{
 			if (track.IsRobust(2,                           // Minimal trajectory size
 				0.5f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
