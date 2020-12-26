@@ -145,7 +145,7 @@ void YoloDarknetDetector::Detect(const cv::UMat& colorFrame)
 			}
 		}
 
-		if (crops.size() > 1)
+		if (crops.size() > 1 || m_batchSize > 1)
 		{
 			nms3<CRegion>(tmpRegions, m_regions, 0.4f,
 				[](const CRegion& reg) { return reg.m_brect; },
@@ -305,25 +305,42 @@ void YoloDarknetDetector::FillBatchImg(const std::vector<cv::Mat>& batch, image_
 ///
 void YoloDarknetDetector::Detect(const std::vector<cv::UMat>& frames, std::vector<regions_t>& regions)
 {
-	std::vector<cv::Mat> batch;
-	for (const auto& frame : frames)
+	if (frames.size() == 1)
 	{
-		batch.emplace_back(frame.getMat(cv::ACCESS_READ));
+		Detect(frames[0].getMat(cv::ACCESS_READ), regions[0]);
 	}
-
-	image_t detImage;
-	FillBatchImg(batch, detImage);
-	std::vector<std::vector<bbox_t>> result_vec = m_detector->detectBatch(detImage, static_cast<int>(frames.size()), m_netSize.width, m_netSize.height, m_confidenceThreshold);
-
-	float wk = static_cast<float>(frames[0].cols) / m_netSize.width;
-	float hk = static_cast<float>(frames[0].rows) / m_netSize.height;
-	for (size_t i = 0; i < regions.size(); ++i)
+	else
 	{
-		for (const auto& bbox : result_vec[i])
+		std::vector<cv::Mat> batch;
+		for (const auto& frame : frames)
 		{
-			if (m_classesWhiteList.empty() || m_classesWhiteList.find(T2T(bbox.obj_id)) != std::end(m_classesWhiteList))
-				regions[i].emplace_back(cv::Rect(cvRound(wk * bbox.x), cvRound(hk * bbox.y), cvRound(wk * bbox.w), cvRound(hk * bbox.h)), T2T(bbox.obj_id), bbox.prob);
+			batch.emplace_back(frame.getMat(cv::ACCESS_READ));
 		}
+
+		image_t detImage;
+		FillBatchImg(batch, detImage);
+		std::vector<std::vector<bbox_t>> result_vec = m_detector->detectBatch(detImage, static_cast<int>(frames.size()), m_netSize.width, m_netSize.height, m_confidenceThreshold);
+
+		regions_t tmpRegions;
+		tmpRegions.reserve(result_vec[0].size() + 16);
+		float wk = static_cast<float>(frames[0].cols) / m_netSize.width;
+		float hk = static_cast<float>(frames[0].rows) / m_netSize.height;
+		for (size_t i = 0; i < regions.size(); ++i)
+		{
+			tmpRegions.clear();
+			for (const auto& bbox : result_vec[i])
+			{
+				if (m_classesWhiteList.empty() || m_classesWhiteList.find(T2T(bbox.obj_id)) != std::end(m_classesWhiteList))
+					tmpRegions.emplace_back(cv::Rect(cvRound(wk * bbox.x), cvRound(hk * bbox.y), cvRound(wk * bbox.w), cvRound(hk * bbox.h)), T2T(bbox.obj_id), bbox.prob);
+			}
+
+			nms3<CRegion>(tmpRegions, regions[i], 0.4f,
+				[](const CRegion& reg) { return reg.m_brect; },
+				[](const CRegion& reg) { return reg.m_confidence; },
+				[](const CRegion& reg) { return reg.m_type; },
+				0, 0.f);
+		}
+
+		m_regions.assign(std::begin(regions.back()), std::end(regions.back()));
 	}
-	m_regions.assign(std::begin(regions.back()), std::end(regions.back()));
 }

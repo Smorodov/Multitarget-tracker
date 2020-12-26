@@ -361,7 +361,7 @@ LIB_API std::vector<std::vector<bbox_t>> Detector::detectBatch(image_t img, int 
     in_img.data = img.data;
     det_num_pair* prediction = network_predict_batch(&net, in_img, batch_size, width, height, thresh, hier_thresh, 0, 0, 0);
 
-    std::vector<std::vector<bbox_t>> bbox_vec;
+    std::vector<std::vector<bbox_t>> bbox_vec(batch_size);
 
     for (int bi = 0; bi < batch_size; ++bi)
     {

@@ -197,7 +197,7 @@ public:
 	{
 		if (m_umBGR.empty())
 			m_umBGR = m_mBGR.getUMat(cv::ACCESS_READ);
-		return m_umGray;
+		return m_umBGR;
 	}
 	///
 	const cv::UMat& GetUMatGray()
@@ -254,6 +254,17 @@ struct FrameInfo
 		m_frames.reserve(m_batchSize);
 		m_regions.reserve(m_batchSize);
 		m_frameInds.reserve(m_batchSize);
+	}
+
+	///
+	void CleanRegions()
+	{
+		if (m_regions.size() != m_batchSize)
+			m_regions.resize(m_batchSize);
+		for (auto& reg : m_regions)
+		{
+			reg.clear();
+		}
 	}
 
 	std::vector<Frame> m_frames;

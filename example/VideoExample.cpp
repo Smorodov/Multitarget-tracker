@@ -151,6 +151,8 @@ void VideoExample::SyncProcess()
 
 		FrameInfo frameInfo(m_batchSize);
 		frameInfo.m_frames.emplace_back(frame);
+		frameInfo.m_frameInds.emplace_back(framesCounter);
+		++framesCounter;
 		for (size_t i = 1; i < m_batchSize; ++i)
 		{
 			capture >> frame;
@@ -366,8 +368,7 @@ void VideoExample::CaptureAndDetect(VideoExample* thisPtr, std::atomic<bool>& st
 				frameInfo.m_cond.notify_one();
 				break;
 			}
-			frameInfo.m_frameInds.emplace_back(framesCounter);
-
+			frameInfo.m_frameInds[i] = framesCounter;
 			++framesCounter;
 		}
 		if (frameInfo.m_frames.size() < frameInfo.m_batchSize)
@@ -419,8 +420,9 @@ void VideoExample::Detection(FrameInfo& frame)
         if (m_detector->CanGrayProcessing())
             frames.emplace_back(frame.m_frames[i].GetUMatGray());
         else
-            frames.emplace_back(frame.m_frames[i].GetUMatBGR());
+            frames.push_back(frame.m_frames[i].GetUMatBGR());
 	}
+	frame.CleanRegions();
     m_detector->Detect(frames, frame.m_regions);
 }
 
@@ -431,6 +433,8 @@ void VideoExample::Detection(FrameInfo& frame)
 ///
 void VideoExample::Tracking(FrameInfo& frame)
 {
+	assert(frame.m_regions.size() == frame.m_frames.size());
+
 	for (size_t i = 0; i < frame.m_frames.size(); ++i)
 	{
 		if (m_tracker->CanColorFrameToTrack())
