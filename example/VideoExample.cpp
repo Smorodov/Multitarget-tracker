@@ -21,15 +21,15 @@ VideoExample::VideoExample(const cv::CommandLineParser& parser)
     m_finishDelay = parser.get<int>("end_delay");
 	m_batchSize = std::max(1, parser.get<int>("batch_size"));
 
-    m_colors.push_back(cv::Scalar(255, 0, 0));
-    m_colors.push_back(cv::Scalar(0, 255, 0));
-    m_colors.push_back(cv::Scalar(0, 0, 255));
-    m_colors.push_back(cv::Scalar(255, 255, 0));
-    m_colors.push_back(cv::Scalar(0, 255, 255));
-    m_colors.push_back(cv::Scalar(255, 0, 255));
-    m_colors.push_back(cv::Scalar(255, 127, 255));
-    m_colors.push_back(cv::Scalar(127, 0, 255));
-    m_colors.push_back(cv::Scalar(127, 0, 127));
+    m_colors.emplace_back(255, 0, 0);
+    m_colors.emplace_back(0, 255, 0);
+    m_colors.emplace_back(0, 0, 255);
+    m_colors.emplace_back(255, 255, 0);
+    m_colors.emplace_back(0, 255, 255);
+    m_colors.emplace_back(255, 0, 255);
+    m_colors.emplace_back(255, 127, 255);
+    m_colors.emplace_back(127, 0, 255);
+    m_colors.emplace_back(127, 0, 127);
 
     m_resultsLog.Open();
 
@@ -420,7 +420,7 @@ void VideoExample::Detection(FrameInfo& frame)
         if (m_detector->CanGrayProcessing())
             frames.emplace_back(frame.m_frames[i].GetUMatGray());
         else
-            frames.push_back(frame.m_frames[i].GetUMatBGR());
+            frames.emplace_back(frame.m_frames[i].GetUMatBGR());
 	}
 	frame.CleanRegions();
     m_detector->Detect(frames, frame.m_regions);

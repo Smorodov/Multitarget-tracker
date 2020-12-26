@@ -51,15 +51,15 @@ CarsCounting::CarsCounting(const cv::CommandLineParser& parser)
 
 	std::cout << "Inference framework set " << inference << " used " << m_detectorType << ", weights: " << m_weightsFile << ", config: " << m_configFile << ", names: " << m_namesFile << std::endl;
 
-    m_colors.push_back(cv::Scalar(255, 0, 0));
-    m_colors.push_back(cv::Scalar(0, 255, 0));
-    m_colors.push_back(cv::Scalar(0, 0, 255));
-    m_colors.push_back(cv::Scalar(255, 255, 0));
-    m_colors.push_back(cv::Scalar(0, 255, 255));
-    m_colors.push_back(cv::Scalar(255, 0, 255));
-    m_colors.push_back(cv::Scalar(255, 127, 255));
-    m_colors.push_back(cv::Scalar(127, 0, 255));
-    m_colors.push_back(cv::Scalar(127, 0, 127));
+    m_colors.emplace_back(255, 0, 0);
+    m_colors.emplace_back(0, 255, 0);
+    m_colors.emplace_back(0, 0, 255);
+    m_colors.emplace_back(255, 255, 0);
+    m_colors.emplace_back(0, 255, 255);
+    m_colors.emplace_back(255, 0, 255);
+    m_colors.emplace_back(255, 127, 255);
+    m_colors.emplace_back(127, 0, 255);
+    m_colors.emplace_back(127, 0, 127);
 }
 
 ///
