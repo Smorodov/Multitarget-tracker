@@ -48,15 +48,15 @@ AsyncDetector::AsyncDetector(const cv::CommandLineParser& parser)
     m_endFrame = parser.get<int>("end_frame");
     m_finishDelay = parser.get<int>("end_delay");
 
-    m_colors.push_back(cv::Scalar(255, 0, 0));
-    m_colors.push_back(cv::Scalar(0, 255, 0));
-    m_colors.push_back(cv::Scalar(0, 0, 255));
-    m_colors.push_back(cv::Scalar(255, 255, 0));
-    m_colors.push_back(cv::Scalar(0, 255, 255));
-    m_colors.push_back(cv::Scalar(255, 0, 255));
-    m_colors.push_back(cv::Scalar(255, 127, 255));
-    m_colors.push_back(cv::Scalar(127, 0, 255));
-    m_colors.push_back(cv::Scalar(127, 0, 127));
+    m_colors.emplace_back(255, 0, 0);
+    m_colors.emplace_back(0, 255, 0);
+    m_colors.emplace_back(0, 0, 255);
+    m_colors.emplace_back(255, 255, 0);
+    m_colors.emplace_back(0, 255, 255);
+    m_colors.emplace_back(255, 0, 255);
+    m_colors.emplace_back(255, 127, 255);
+    m_colors.emplace_back(127, 0, 255);
+    m_colors.emplace_back(127, 0, 127);
 }
 
 ///
@@ -446,7 +446,7 @@ void AsyncDetector::TrackingThread(const TrackerSettings& settings, FramesQueue*
         {
             tracker->Update(frameInfo->m_regions, frameInfo->m_clFrame, frameInfo->m_fps);
 
-            frameInfo->m_tracks = tracker->GetTracks();
+            tracker->GetTracks(frameInfo->m_tracks);
             frameInfo->m_inTracker.store(FrameInfo::StateCompleted);
             framesQue->Signal(frameInfo->m_dt);
         }

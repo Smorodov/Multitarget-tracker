@@ -15,6 +15,7 @@ public:
 	bool Init(const config_t& config);
 
 	void Detect(const cv::UMat& colorFrame);
+    void Detect(const std::vector<cv::UMat>& frames, std::vector<regions_t>& regions);
 
 	bool CanGrayProcessing() const
 	{

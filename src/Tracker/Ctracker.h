@@ -226,18 +226,16 @@ public:
     /// \brief GetTracks
     /// \return
     ///
-	std::vector<TrackingObject> GetTracks() const
+	void GetTracks(std::vector<TrackingObject>& tracks) const
 	{
-		std::vector<TrackingObject> tracks;
-		if (!m_tracks.empty())
-		{
+		tracks.clear();
+
+		if (m_tracks.size() > tracks.capacity())
 			tracks.reserve(m_tracks.size());
-			for (const auto& track : m_tracks)
-			{
-                tracks.push_back(track->ConstructObject());
-			}
+		for (const auto& track : m_tracks)
+		{
+			tracks.emplace_back(track->ConstructObject());
 		}
-		return tracks;
 	}
 
 private:

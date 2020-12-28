@@ -73,10 +73,10 @@ void MouseTracking(cv::CommandLineParser parser)
 
 		// Append circulating around mouse cv::Points (frequently intersecting)
 		std::vector<Point_t> pts;
-		pts.push_back(Point_t(Xmeasured + 100.0f*sin(-alpha), Ymeasured + 100.0f*cos(-alpha)));
-		pts.push_back(Point_t(Xmeasured + 100.0f*sin(alpha), Ymeasured + 100.0f*cos(alpha)));
-		pts.push_back(Point_t(Xmeasured + 100.0f*sin(alpha / 2.0f), Ymeasured + 100.0f*cos(alpha / 2.0f)));
-		pts.push_back(Point_t(Xmeasured + 100.0f*sin(alpha / 3.0f), Ymeasured + 100.0f*cos(alpha / 1.0f)));
+		pts.emplace_back(Xmeasured + 100.0f*sin(-alpha), Ymeasured + 100.0f*cos(-alpha));
+		pts.emplace_back(Xmeasured + 100.0f*sin(alpha), Ymeasured + 100.0f*cos(alpha));
+		pts.emplace_back(Xmeasured + 100.0f*sin(alpha / 2.0f), Ymeasured + 100.0f*cos(alpha / 2.0f));
+		pts.emplace_back(Xmeasured + 100.0f*sin(alpha / 3.0f), Ymeasured + 100.0f*cos(alpha / 1.0f));
 		alpha += 0.05f;
 
 		regions_t regions;
@@ -97,7 +97,8 @@ void MouseTracking(cv::CommandLineParser parser)
 
 		tracker.Update(regions, cv::UMat(), 100);
 
-		auto tracks = tracker.GetTracks();
+		std::vector<TrackingObject> tracks;
+		tracker.GetTracks(tracks);
 		std::cout << tracks.size() << std::endl;
 
 		for (size_t i = 0; i < tracks.size(); i++)
