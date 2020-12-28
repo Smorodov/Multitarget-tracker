@@ -23,13 +23,13 @@ namespace tensor_rt
 
 	enum ModelType
 	{
-		YOLOV2 = 0,
-		YOLOV3,
-		YOLOV2_TINY,
-		YOLOV3_TINY,
-		YOLOV4,
-		YOLOV4_TINY,
-                YOLOV5
+        YOLOV2 = 0,
+        YOLOV3,
+        YOLOV2_TINY,
+        YOLOV3_TINY,
+        YOLOV4,
+        YOLOV4_TINY,
+        YOLOV5
 	};
 
 	enum Precision
@@ -41,9 +41,9 @@ namespace tensor_rt
 
 	struct Config
 	{
-		std::string file_model_cfg = "configs/yolov3.cfg";
+		std::string file_model_cfg = "yolov4.cfg";
 
-		std::string file_model_weights = "configs/yolov3.weights";
+		std::string file_model_weights = "yolov4.weights";
 
 		float detect_thresh = 0.9f;
 
@@ -52,6 +52,8 @@ namespace tensor_rt
 		Precision	inference_precison = FP32;
 
 		int	gpu_id = 0;
+
+		uint32_t batch_size = 1;
 
 		std::string calibration_image_list_file_txt = "configs/calibration_images.txt";
 	};

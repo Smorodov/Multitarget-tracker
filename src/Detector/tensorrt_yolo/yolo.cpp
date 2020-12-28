@@ -28,6 +28,7 @@ Yolo::Yolo( const NetworkInfo& networkInfo, const InferParams& inferParams) :
 	m_NMSThresh(inferParams.nmsThresh),
 	m_PrintPerfInfo(inferParams.printPerfInfo),
 	m_PrintPredictions(inferParams.printPredictionInfo),
+	m_BatchSize(inferParams.batchSize),
 	m_Logger(Logger()),
 	m_Network(nullptr),
 	m_Builder(nullptr),

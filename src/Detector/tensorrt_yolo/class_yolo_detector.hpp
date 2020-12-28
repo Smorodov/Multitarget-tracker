@@ -116,6 +116,7 @@ private:
 		_infer_param.calibImagesPath = "";
 		_infer_param.probThresh = _config.detect_thresh;
 		_infer_param.nmsThresh = 0.5;
+		_infer_param.batchSize = _config.batch_size;
 	}
 
 	void build_net()

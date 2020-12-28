@@ -64,12 +64,13 @@ struct NetworkInfo
  */
 struct InferParams
 {
-    bool printPerfInfo;
-    bool printPredictionInfo;
+    bool printPerfInfo = false;
+    bool printPredictionInfo = false;
     std::string calibImages;
     std::string calibImagesPath;
-    float probThresh;
-    float nmsThresh;
+    float probThresh = 0.5f;
+    float nmsThresh = 0.5f;
+	uint32_t batchSize = 1;
 };
 
 /**
