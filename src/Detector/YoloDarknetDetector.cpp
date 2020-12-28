@@ -35,7 +35,11 @@ bool YoloDarknetDetector::Init(const config_t& config)
 	if (gpuId != config.end())
 		currGPUID = std::max(0, std::stoi(gpuId->second));
 
-	m_detector = std::make_unique<Detector>(modelConfiguration->second, modelBinary->second, currGPUID);
+	auto maxBatch = config.find("maxBatch");
+	if (maxBatch != config.end())
+		m_batchSize = std::max(1, std::stoi(maxBatch->second));
+
+	m_detector = std::make_unique<Detector>(modelConfiguration->second, modelBinary->second, currGPUID, static_cast<int>(m_batchSize));
 	m_detector->nms = 0.2f;
 
     auto classNames = config.find("classNames");
@@ -66,10 +70,6 @@ bool YoloDarknetDetector::Init(const config_t& config)
     auto maxCropRatio = config.find("maxCropRatio");
     if (maxCropRatio != config.end())
         m_maxCropRatio = std::stof(maxCropRatio->second);
-
-	auto maxBatch = config.find("maxBatch");
-	if (maxBatch != config.end())
-        m_batchSize = std::max(1, std::stoi(maxBatch->second));
 
     m_classesWhiteList.clear();
 	auto whiteRange = config.equal_range("white_list");

@@ -104,8 +104,6 @@ void VideoExample::SyncProcess()
     bool manualMode = false;
 #endif
 
-    cv::Mat frame;
-
     double freq = cv::getTickFrequency();
     int64 allTime = 0;
 
@@ -118,17 +116,35 @@ void VideoExample::SyncProcess()
         return;
     }
 
+	FrameInfo frameInfo(m_batchSize);
+	frameInfo.m_frames.resize(frameInfo.m_batchSize);
+	frameInfo.m_frameInds.resize(frameInfo.m_batchSize);
+
     int64 startLoopTime = cv::getTickCount();
 
     for (;;)
     {
-        capture >> frame;
-        if (frame.empty())
-            break;
+		size_t i = 0;
+		for (; i < m_batchSize; ++i)
+		{
+			capture >> frameInfo.m_frames[i].GetMatBGRWrite();
+			if (frameInfo.m_frames[i].empty())
+				break;
+			frameInfo.m_frameInds[i] = framesCounter;
+
+			++framesCounter;
+			if (m_endFrame && framesCounter > m_endFrame)
+			{
+				std::cout << "Process: riched last " << m_endFrame << " frame" << std::endl;
+				break;
+			}
+		}
+		if (i < m_batchSize)
+			break;
 
 		if (!m_isDetectorInitialized || !m_isTrackerInitialized)
 		{
-			cv::UMat ufirst = frame.getUMat(cv::ACCESS_READ);
+			cv::UMat ufirst = frameInfo.m_frames[0].GetUMatBGR();
 			if (!m_isDetectorInitialized)
 			{
 				m_isDetectorInitialized = InitDetector(ufirst);
@@ -149,28 +165,6 @@ void VideoExample::SyncProcess()
 			}
 		}
 
-		FrameInfo frameInfo(m_batchSize);
-		frameInfo.m_frames.emplace_back(frame);
-		frameInfo.m_frameInds.emplace_back(framesCounter);
-		++framesCounter;
-		for (size_t i = 1; i < m_batchSize; ++i)
-		{
-			capture >> frame;
-			if (frame.empty())
-				break;
-			frameInfo.m_frames.emplace_back(frame);
-			frameInfo.m_frameInds.emplace_back(framesCounter);
-
-			++framesCounter;
-			if (m_endFrame && framesCounter > m_endFrame)
-			{
-				std::cout << "Process: riched last " << m_endFrame << " frame" << std::endl;
-				break;
-			}
-		}
-		if (frameInfo.m_frames.size() < m_batchSize)
-			break;
-
         int64 t1 = cv::getTickCount();
 
         regions_t regions;
@@ -181,12 +175,12 @@ void VideoExample::SyncProcess()
         allTime += t2 - t1;
         int currTime = cvRound(1000 * (t2 - t1) / freq);
 
-		for (size_t i = 0; i < m_batchSize; ++i)
+		for (i = 0; i < m_batchSize; ++i)
 		{
 			DrawData(frameInfo.m_frames[i].GetMatBGR(), frameInfo.m_tracks[i], frameInfo.m_frameInds[i], currTime);
 
 #ifndef SILENT_WORK
-			cv::imshow("Video", frame);
+			cv::imshow("Video", frameInfo.m_frames[i].GetMatBGR());
 
 			int waitTime = manualMode ? 0 : 1;// std::max<int>(1, cvRound(1000 / m_fps - currTime));
 			int k = cv::waitKey(waitTime);
@@ -228,14 +222,13 @@ void VideoExample::AsyncProcess()
 
     double freq = cv::getTickFrequency();
 
-    int framesCounter = m_startFrame + 1;
-
     int64 allTime = 0;
     int64 startLoopTime = cv::getTickCount();
 	size_t processCounter = 0;
     for (; !stopCapture.load(); )
     {
         FrameInfo& frameInfo = m_frameInfo[processCounter % 2];
+		//std::cout << "tracking from " << (processCounter % 2) << " ind = " << processCounter << std::endl;
         {
             std::unique_lock<std::mutex> lock(frameInfo.m_mutex);
             if (!frameInfo.m_cond.wait_for(lock, std::chrono::milliseconds(m_captureTimeOut), [&frameInfo]{ return frameInfo.m_captured; }))
@@ -244,6 +237,7 @@ void VideoExample::AsyncProcess()
                 break;
             }
         }
+		//std::cout << "tracking from " << (processCounter % 2) << " in process..." << std::endl;
 
         if (!m_isTrackerInitialized)
         {
@@ -270,12 +264,10 @@ void VideoExample::AsyncProcess()
 		int key = 0;
 		for (size_t i = 0; i < m_batchSize; ++i)
 		{
-			DrawData(frameInfo.m_frames[i].GetMatBGR(), frameInfo.m_tracks[i], framesCounter, currTime);
+			DrawData(frameInfo.m_frames[i].GetMatBGR(), frameInfo.m_tracks[i], frameInfo.m_frameInds[i], currTime);
 
 			WriteFrame(writer, frameInfo.m_frames[i].GetMatBGR());
 
-			++framesCounter;
-			
 #ifndef SILENT_WORK
 			cv::imshow("Video", frameInfo.m_frames[0].GetMatBGR());
 
@@ -292,6 +284,8 @@ void VideoExample::AsyncProcess()
 
 		{
 			std::unique_lock<std::mutex> lock(frameInfo.m_mutex);
+			//std::cout << "tracking m_captured " << (processCounter % 2) << " - " << frameInfo.m_captured << std::endl;
+			assert(frameInfo.m_captured);
 			frameInfo.m_captured = false;
 		}
         frameInfo.m_cond.notify_one();
@@ -299,12 +293,7 @@ void VideoExample::AsyncProcess()
         if (key == 27)
             break;
 
-        if (m_endFrame && framesCounter > m_endFrame)
-        {
-            std::cout << "Process: riched last " << m_endFrame << " frame" << std::endl;
-            break;
-        }
-		++processCounter;
+ 		++processCounter;
     }
     stopCapture = true;
 
@@ -342,7 +331,7 @@ void VideoExample::CaptureAndDetect(VideoExample* thisPtr, std::atomic<bool>& st
     for (; !stopCapture.load();)
     {
         FrameInfo& frameInfo = thisPtr->m_frameInfo[processCounter % 2];
-
+		//std::cout << "captured to " << (processCounter % 2) << " ind = " << processCounter << std::endl;
         {
             std::unique_lock<std::mutex> lock(frameInfo.m_mutex);
             if (!frameInfo.m_cond.wait_for(lock, std::chrono::milliseconds(trackingTimeOut), [&frameInfo]{ return !frameInfo.m_captured; }))
@@ -352,6 +341,7 @@ void VideoExample::CaptureAndDetect(VideoExample* thisPtr, std::atomic<bool>& st
                 break;
             }
         }
+		//std::cout << "capture from " << (processCounter % 2) << " in process..." << std::endl;
 
 		if (frameInfo.m_frames.size() < frameInfo.m_batchSize)
 		{
@@ -359,7 +349,8 @@ void VideoExample::CaptureAndDetect(VideoExample* thisPtr, std::atomic<bool>& st
 			frameInfo.m_frameInds.resize(frameInfo.m_batchSize);
 		}
 
-		for (size_t i = 1; i < frameInfo.m_batchSize; ++i)
+		size_t i = 0;
+		for (; i < frameInfo.m_batchSize; ++i)
 		{
 			capture >> frameInfo.m_frames[i].GetMatBGRWrite();
 			if (frameInfo.m_frames[i].empty())
@@ -370,8 +361,14 @@ void VideoExample::CaptureAndDetect(VideoExample* thisPtr, std::atomic<bool>& st
 			}
 			frameInfo.m_frameInds[i] = framesCounter;
 			++framesCounter;
+
+			if (thisPtr->m_endFrame && framesCounter > thisPtr->m_endFrame)
+			{
+				std::cout << "Process: riched last " << thisPtr->m_endFrame << " frame" << std::endl;
+				break;
+			}
 		}
-		if (frameInfo.m_frames.size() < frameInfo.m_batchSize)
+		if (i < frameInfo.m_batchSize)
 			break;
 
         if (!thisPtr->m_isDetectorInitialized)
@@ -392,6 +389,8 @@ void VideoExample::CaptureAndDetect(VideoExample* thisPtr, std::atomic<bool>& st
 
 		{
 			std::unique_lock<std::mutex> lock(frameInfo.m_mutex);
+			//std::cout << "capture m_captured " << (processCounter % 2) << " - " << frameInfo.m_captured << std::endl;
+			assert(!frameInfo.m_captured);
 			frameInfo.m_captured = true;
 		}
 		frameInfo.m_cond.notify_one();
@@ -438,7 +437,7 @@ void VideoExample::Tracking(FrameInfo& frame)
 {
 	assert(frame.m_regions.size() == frame.m_frames.size());
 
-	frame.CleanåTracks();
+	frame.CleanTracks();
 	for (size_t i = 0; i < frame.m_frames.size(); ++i)
 	{
 		if (m_tracker->CanColorFrameToTrack())

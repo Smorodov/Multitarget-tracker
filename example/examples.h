@@ -628,12 +628,14 @@ protected:
             config.emplace("modelConfiguration", pathToModel + "yolov4-tiny.cfg");
             config.emplace("modelBinary", pathToModel + "yolov4-tiny.weights");
             config.emplace("confidenceThreshold", "0.5");
+			config.emplace("maxBatch", "4");
             break;
 
 		case YOLOModels::ScaledYOLOv4:
 			config.emplace("modelConfiguration", pathToModel + "yolov4-csp.cfg");
 			config.emplace("modelBinary", pathToModel + "yolov4-csp.weights");
 			config.emplace("confidenceThreshold", "0.5");
+			config.emplace("maxBatch", "2");
 			break;
 		}
         config.emplace("classNames", pathToModel + "coco.names");

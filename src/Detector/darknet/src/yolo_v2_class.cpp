@@ -27,9 +27,9 @@ extern "C" {
 //static Detector* detector = NULL;
 static std::unique_ptr<Detector> detector;
 
-int init(const char *configurationFilename, const char *weightsFilename, int gpu)
+int init(const char *configurationFilename, const char *weightsFilename, int gpu, int batch_size)
 {
-    detector.reset(new Detector(configurationFilename, weightsFilename, gpu));
+    detector.reset(new Detector(configurationFilename, weightsFilename, gpu, batch_size));
     return 1;
 }
 
@@ -127,7 +127,8 @@ struct detector_gpu_t {
     unsigned int *track_id;
 };
 
-LIB_API Detector::Detector(std::string cfg_filename, std::string weight_filename, int gpu_id) : cur_gpu_id(gpu_id)
+LIB_API Detector::Detector(std::string cfg_filename, std::string weight_filename, int gpu_id, int batch_size)
+    : cur_gpu_id(gpu_id)
 {
     wait_stream = 0;
 #ifdef GPU
@@ -153,11 +154,11 @@ LIB_API Detector::Detector(std::string cfg_filename, std::string weight_filename
     char *cfgfile = const_cast<char *>(_cfg_filename.c_str());
     char *weightfile = const_cast<char *>(_weight_filename.c_str());
 
-    net = parse_network_cfg_custom(cfgfile, 1, 1);
+    net = parse_network_cfg_custom(cfgfile, batch_size, batch_size);
     if (weightfile) {
         load_weights(&net, weightfile);
     }
-    set_batch_network(&net, 1);
+    set_batch_network(&net, batch_size);
     net.gpu_index = cur_gpu_id;
     fuse_conv_batchnorm(net);
 

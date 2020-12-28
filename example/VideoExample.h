@@ -183,30 +183,47 @@ public:
 	///
 	cv::Mat& GetMatBGRWrite()
 	{
+		m_umBGRGenerated = false;
+		m_mGrayGenerated = false;
+		m_umGrayGenerated = false;
 		return m_mBGR;
 	}
 	///
 	const cv::Mat& GetMatGray()
 	{
-		if (m_mGray.empty())
-			cv::cvtColor(m_mBGR, m_mGray, cv::COLOR_BGR2GRAY);
+		if (m_mGray.empty() || !m_mGrayGenerated)
+		{
+			if (m_umGray.empty() || !m_umGrayGenerated)
+				cv::cvtColor(m_mBGR, m_mGray, cv::COLOR_BGR2GRAY);
+			else
+				m_mGray = m_umGray.getMat(cv::ACCESS_READ);
+			m_mGrayGenerated = true;
+		}
 		return m_mGray;
 	}
 	///
 	const cv::UMat& GetUMatBGR()
 	{
-		if (m_umBGR.empty())
+		std::thread::id lastThreadID = std::this_thread::get_id();
+
+		if (m_umBGR.empty() || !m_umBGRGenerated || lastThreadID != m_umBGRThreadID)
+		{
 			m_umBGR = m_mBGR.getUMat(cv::ACCESS_READ);
+			m_umBGRGenerated = true;
+			m_umBGRThreadID = lastThreadID;
+		}
 		return m_umBGR;
 	}
 	///
 	const cv::UMat& GetUMatGray()
 	{
-		if (m_umGray.empty())
+		std::thread::id lastThreadID = std::this_thread::get_id();
+
+		if (m_umGray.empty() || !m_umGrayGenerated || lastThreadID != m_umGrayThreadID)
 		{
-			if (m_mGray.empty())
+			if (m_mGray.empty() || !m_mGrayGenerated)
 			{
-				if (m_umBGR.empty())
+				if (m_umBGR.empty() || !m_umBGRGenerated || lastThreadID != m_umGrayThreadID)
 					cv::cvtColor(m_mBGR, m_umGray, cv::COLOR_BGR2GRAY);
 				else
 					cv::cvtColor(m_umBGR, m_umGray, cv::COLOR_BGR2GRAY);
@@ -215,6 +232,8 @@ public:
 			{
 				m_umGray = m_mGray.getUMat(cv::ACCESS_READ);
 			}
+			m_umGrayGenerated = true;
+			m_umGrayThreadID = lastThreadID;
 		}
 		return m_umGray;
 	}
@@ -224,6 +243,11 @@ private:
 	cv::Mat m_mGray;
 	cv::UMat m_umBGR;
 	cv::UMat m_umGray;
+	bool m_umBGRGenerated = false;
+	bool m_mGrayGenerated = false;
+	bool m_umGrayGenerated = false;
+	std::thread::id m_umBGRThreadID;
+	std::thread::id m_umGrayThreadID;
 };
 
 ///
@@ -268,7 +292,7 @@ struct FrameInfo
 	}
 
 	///
-	void CleanåTracks()
+	void CleanTracks()
 	{
 		if (m_tracks.size() != m_batchSize)
 			m_tracks.resize(m_batchSize);
