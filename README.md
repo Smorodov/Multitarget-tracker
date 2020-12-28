@@ -3,9 +3,7 @@
 
 # Last changes
 
-* Object type changed from string to enum
-
-* The base opencv_dnn detector instead special MobileNetOpnCV and YoloOpenCV
+* Added new parameter Batch size - simultaneous detection on several consecutive frames. it can increase processing speed on a powerful GPU. Works with Darknet and TensorRT backends but can add some latency
 
 # New videos!
 
