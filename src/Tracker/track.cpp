@@ -132,11 +132,11 @@ track_t CTrack::CalcDistJaccard(const CRegion& reg) const
 /// \param reg
 /// \return
 ///
-track_t CTrack::CalcDistHist(const CRegion& reg, cv::Mat& hist, cv::UMat currFrame) const
+track_t CTrack::CalcDistHist(const CRegion& reg, RegionEmbedding& embedding, cv::UMat currFrame) const
 {
 	track_t res = 1;
 
-    if (hist.empty())
+    if (embedding.m_hist.empty())
 	{
 		int bins = 64;
 		std::vector<int> histSize;
@@ -152,17 +152,34 @@ track_t CTrack::CalcDistHist(const CRegion& reg, cv::Mat& hist, cv::UMat currFra
 		}
 
 		std::vector<cv::UMat> regROI = { currFrame(reg.m_brect) };
-        cv::calcHist(regROI, channels, cv::Mat(), hist, histSize, ranges, false);
-        cv::normalize(hist, hist, 0, 1, cv::NORM_MINMAX, -1, cv::Mat());
+        cv::calcHist(regROI, channels, cv::Mat(), embedding.m_hist, histSize, ranges, false);
+        cv::normalize(embedding.m_hist, embedding.m_hist, 0, 1, cv::NORM_MINMAX, -1, cv::Mat());
 	}
-    if (!hist.empty() && !m_regionEmbedding.m_hist.empty())
+    if (!embedding.m_hist.empty() && !m_regionEmbedding.m_hist.empty())
 	{
 #if (((CV_VERSION_MAJOR == 4) && (CV_VERSION_MINOR < 1)) || (CV_VERSION_MAJOR == 3))
-		res = static_cast<track_t>(cv::compareHist(hist, m_regionEmbedding.m_hist, CV_COMP_BHATTACHARYYA));
+		res = static_cast<track_t>(cv::compareHist(embedding.m_hist, m_regionEmbedding.m_hist, CV_COMP_BHATTACHARYYA));
         //res = 1.f - static_cast<track_t>(cv::compareHist(hist, m_regionEmbedding.m_hist, CV_COMP_CORREL));
 #else
-        res = static_cast<track_t>(cv::compareHist(hist, m_regionEmbedding.m_hist, cv::HISTCMP_BHATTACHARYYA));
+        res = static_cast<track_t>(cv::compareHist(embedding.m_hist, m_regionEmbedding.m_hist, cv::HISTCMP_BHATTACHARYYA));
 #endif
+	}
+	return res;
+}
+
+///
+/// \brief CTrack::CalcCosine
+/// \param reg
+/// \return
+///
+track_t CTrack::CalcCosine(const CRegion& reg, RegionEmbedding& embedding, cv::UMat currFrame) const
+{
+	track_t res = 1;
+	if (!embedding.m_embedding.empty() && !m_regionEmbedding.m_embedding.empty())
+	{
+		double xy = embedding.m_embedding.dot(m_regionEmbedding.m_embedding);
+		double norm = sqrt(embedding.m_embDot * m_regionEmbedding.m_embDot) + 1e-6;
+		res = 0.5f * static_cast<float>(1.0 - xy / norm);
 	}
 	return res;
 }

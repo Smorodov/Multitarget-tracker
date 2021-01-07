@@ -11,7 +11,7 @@
 #include "defines.h"
 #include "track.h"
 #include "ShortPathCalculator.h"
-
+#include "EmbeddingsCalculator.hpp"
 // ----------------------------------------------------------------------
 
 ///
@@ -102,6 +102,17 @@ struct TrackerSettings
 	/// Object types that can be matched while tracking
 	///
 	std::map<objtype_t, std::set<objtype_t>> m_nearTypes;
+
+	///
+	/// \brief m_embeddingCfgName
+	/// Neural network config file for embeddings
+	///
+	std::string m_embeddingCfgName;
+	///
+	/// \brief m_embeddingWeightsName
+	/// Neural network weights file for embeddings
+	///
+	std::string m_embeddingWeightsName;
 
 	///
 	TrackerSettings()
@@ -248,6 +259,7 @@ private:
     cv::UMat m_prevFrame;
 
     std::unique_ptr<ShortPathCalculator> m_SPCalculator;
+	EmbeddingsCalculator m_embCalculator;
 
     void CreateDistaceMatrix(const regions_t& regions, std::vector<RegionEmbedding>& regionEmbeddings, distMatrix_t& costMatrix, track_t maxPossibleCost, track_t& maxCost, cv::UMat currFrame);
     void UpdateTrackingState(const regions_t& regions, cv::UMat currFrame, float fps);
