@@ -239,8 +239,6 @@ struct TrackingObject
 ///
 struct RegionEmbedding
 {
-	static constexpr size_t EMBEDDING_SIZE = 128;
-
     cv::Mat m_hist;
 	cv::Mat m_embedding;
 	double m_embDot = 0.;

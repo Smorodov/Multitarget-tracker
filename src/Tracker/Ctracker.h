@@ -121,6 +121,7 @@ struct TrackerSettings
 		m_distType[tracking::DistRects] = 0.0f;
 		m_distType[tracking::DistJaccard] = 0.5f;
 		m_distType[tracking::DistHist] = 0.5f;
+		m_distType[tracking::DistFeatureCos] = 0.0f;
 
 		assert(CheckDistance());
 	}
@@ -130,6 +131,7 @@ struct TrackerSettings
 	{
 		track_t sum = std::accumulate(m_distType.begin(), m_distType.end(), 0.0f);
 		track_t maxOne = std::max(1.0f, std::fabs(sum));
+		//std::cout << "CheckDistance: " << sum << " - " << (std::numeric_limits<track_t>::epsilon() * maxOne) << ", " << std::fabs(sum - 1.0f) << std::endl;
 		return std::fabs(sum - 1.0f) <= std::numeric_limits<track_t>::epsilon() * maxOne;
 	}
 

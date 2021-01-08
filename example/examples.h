@@ -670,7 +670,43 @@ protected:
 	{
 		if (!m_trackerSettingsLoaded)
 		{
-			m_trackerSettings.SetDistance(tracking::DistCenters);
+			bool useDeepSORT = false;
+
+			if (useDeepSORT)
+			{
+#ifdef _WIN32
+				std::string pathToModel = "../../data/";
+#else
+				std::string pathToModel = "../data/";
+#endif
+				pathToModel = "C:/work/home/mtracker/Multitarget-tracker/data/";
+#if 0
+				m_trackerSettings.m_embeddingCfgName = ""; // pathToModel + "111.meta";
+				m_trackerSettings.m_embeddingWeightsName = pathToModel + "mars-small128_1.pb";
+#else
+#if 0
+				m_trackerSettings.m_embeddingCfgName = "";
+				m_trackerSettings.m_embeddingWeightsName = pathToModel + "open_model_zoo/vehicle-reid-0001/osnet_ain_x1_0_vehicle_reid.onnx";
+#else
+				m_trackerSettings.m_embeddingCfgName = pathToModel + "open_model_zoo/person-reidentification-retail-0286/FP32/person-reidentification-retail-0286.xml";
+				m_trackerSettings.m_embeddingWeightsName = pathToModel + "open_model_zoo/person-reidentification-retail-0286/FP32/person-reidentification-retail-0286.bin";
+#endif
+#endif
+				std::array<track_t, tracking::DistsCount> distType{
+					0.f,   // DistCenters
+					0.f,   // DistRects
+					0.5f,  // DistJaccard
+					0.f,   // DistHist
+					0.5f   // DistFeatureCos
+				};
+				if (!m_trackerSettings.SetDistances(distType))
+					std::cerr << "SetDistances failed! Absolutly summ must be equal 1" << std::endl;
+			}
+			else
+			{
+				m_trackerSettings.SetDistance(tracking::DistCenters);
+			}
+
 			m_trackerSettings.m_kalmanType = tracking::KalmanLinear;
 			m_trackerSettings.m_filterGoal = tracking::FilterRect;
 			m_trackerSettings.m_lostTrackType = tracking::TrackCSRT;      // Use visual objects tracker for collisions resolving. Used if m_filterGoal == tracking::FilterRect
