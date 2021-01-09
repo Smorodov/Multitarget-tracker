@@ -679,7 +679,6 @@ protected:
 #else
 				std::string pathToModel = "../data/";
 #endif
-				pathToModel = "C:/work/home/mtracker/Multitarget-tracker/data/";
 
 				m_trackerSettings.m_embeddings.emplace_back(pathToModel + "open_model_zoo/person-reidentification-retail-0286/FP16-INT8/person-reidentification-retail-0286.xml",
                                                             pathToModel + "open_model_zoo/person-reidentification-retail-0286/FP16-INT8/person-reidentification-retail-0286.bin",
