@@ -23,6 +23,22 @@ CTracker::CTracker(const TrackerSettings& settings)
     }
     assert(spcalc != nullptr);
     m_SPCalculator = std::unique_ptr<ShortPathCalculator>(spcalc);
+
+	for (const auto& embParam : settings.m_embeddings)
+	{
+		std::shared_ptr<EmbeddingsCalculator> embCalc = std::make_shared<EmbeddingsCalculator>();
+		if (!embCalc->Initialize(embParam.m_embeddingCfgName, embParam.m_embeddingWeightsName, embParam.m_inputLayer))
+		{
+			std::cerr << "EmbeddingsCalculator initialization error: " << embParam.m_embeddingCfgName << ", " << embParam.m_embeddingWeightsName << std::endl;
+		}
+		else
+		{
+			for (auto objType : embParam.m_objectTypes)
+			{
+				m_embCalculators.try_emplace((objtype_t)objType, embCalc);
+			}
+		}
+	}
 }
 
 ///
@@ -209,6 +225,7 @@ void CTracker::CreateDistaceMatrix(const regions_t& regions,
 			{
 				dist = 0;
 				size_t ind = 0;
+				// Euclidean distance between centers
 				if (m_settings.m_distType[ind] > 0.0f && ind == tracking::DistCenters)
 				{
 #if 1
@@ -223,6 +240,7 @@ void CTracker::CreateDistaceMatrix(const regions_t& regions,
 				}
 				++ind;
 
+				// Euclidean distance between bounding rectangles
 				if (m_settings.m_distType[ind] > 0.0f && ind == tracking::DistRects)
 				{
 #if 1
@@ -244,16 +262,37 @@ void CTracker::CreateDistaceMatrix(const regions_t& regions,
 				}
 				++ind;
 
+				// Intersection over Union, IoU
 				if (m_settings.m_distType[ind] > 0.0f && ind == tracking::DistJaccard)
 					dist += m_settings.m_distType[ind] * track->CalcDistJaccard(reg);
 				++ind;
 
+				// Bhatacharia distance between histograms
 				if (m_settings.m_distType[ind] > 0.0f && ind == tracking::DistHist)
                 {
                     if (regionEmbeddings.empty())
                         regionEmbeddings.resize(regions.size());
-                    dist += m_settings.m_distType[ind] * track->CalcDistHist(reg, regionEmbeddings[j].m_hist, currFrame);
+                    dist += m_settings.m_distType[ind] * track->CalcDistHist(reg, regionEmbeddings[j], currFrame);
                 }
+				++ind;
+
+				// Cosine distance between embeddings
+				if (m_settings.m_distType[ind] > 0.0f && ind == tracking::DistFeatureCos)
+				{
+					if (regionEmbeddings.empty())
+						regionEmbeddings.resize(regions.size());
+					if (regionEmbeddings[j].m_embedding.empty())
+					{
+						auto embCalc = m_embCalculators.find(reg.m_type);
+						if (embCalc != std::end(m_embCalculators))
+						{
+							embCalc->second->Calc(currFrame, reg.m_brect, regionEmbeddings[j].m_embedding);
+							regionEmbeddings[j].m_embDot = regionEmbeddings[j].m_embedding.dot(regionEmbeddings[j].m_embedding);
+						}
+						if (reg.m_type == track->LastRegion().m_type)
+							dist += m_settings.m_distType[ind] * track->CalcCosine(regionEmbeddings[j], currFrame);
+					}
+				}
 				++ind;
 				assert(ind == tracking::DistsCount);
 			}

@@ -11,7 +11,7 @@
 #include "defines.h"
 #include "track.h"
 #include "ShortPathCalculator.h"
-
+#include "EmbeddingsCalculator.hpp"
 // ----------------------------------------------------------------------
 
 ///
@@ -103,6 +103,39 @@ struct TrackerSettings
 	///
 	std::map<objtype_t, std::set<objtype_t>> m_nearTypes;
 
+    ///
+    struct EmbeddingParams
+    {
+        ///
+        /// \brief m_embeddingCfgName
+        /// Neural network config file for embeddings
+        ///
+        std::string m_embeddingCfgName;
+        ///
+        /// \brief m_embeddingWeightsName
+        /// Neural network weights file for embeddings
+        ///
+        std::string m_embeddingWeightsName;
+
+		///
+		cv::Size m_inputLayer{128, 256};
+
+		///
+		std::vector<ObjectTypes> m_objectTypes;
+
+		EmbeddingParams(const std::string& embeddingCfgName, const std::string& embeddingWeightsName,
+			const cv::Size& inputLayer, const std::vector<ObjectTypes>& objectTypes)
+			: m_embeddingCfgName(embeddingCfgName),
+			m_embeddingWeightsName(embeddingWeightsName),
+			m_inputLayer(inputLayer),
+			m_objectTypes(objectTypes)
+		{
+			assert(!m_objectTypes.empty());
+		}
+    };
+	///
+	std::vector<EmbeddingParams> m_embeddings;
+
 	///
 	TrackerSettings()
 	{
@@ -110,6 +143,7 @@ struct TrackerSettings
 		m_distType[tracking::DistRects] = 0.0f;
 		m_distType[tracking::DistJaccard] = 0.5f;
 		m_distType[tracking::DistHist] = 0.5f;
+		m_distType[tracking::DistFeatureCos] = 0.0f;
 
 		assert(CheckDistance());
 	}
@@ -119,6 +153,7 @@ struct TrackerSettings
 	{
 		track_t sum = std::accumulate(m_distType.begin(), m_distType.end(), 0.0f);
 		track_t maxOne = std::max(1.0f, std::fabs(sum));
+		//std::cout << "CheckDistance: " << sum << " - " << (std::numeric_limits<track_t>::epsilon() * maxOne) << ", " << std::fabs(sum - 1.0f) << std::endl;
 		return std::fabs(sum - 1.0f) <= std::numeric_limits<track_t>::epsilon() * maxOne;
 	}
 
@@ -248,6 +283,7 @@ private:
     cv::UMat m_prevFrame;
 
     std::unique_ptr<ShortPathCalculator> m_SPCalculator;
+	std::map<objtype_t, std::shared_ptr<EmbeddingsCalculator>> m_embCalculators;
 
     void CreateDistaceMatrix(const regions_t& regions, std::vector<RegionEmbedding>& regionEmbeddings, distMatrix_t& costMatrix, track_t maxPossibleCost, track_t& maxCost, cv::UMat currFrame);
     void UpdateTrackingState(const regions_t& regions, cv::UMat currFrame, float fps);

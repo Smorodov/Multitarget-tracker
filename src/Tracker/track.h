@@ -240,6 +240,8 @@ struct TrackingObject
 struct RegionEmbedding
 {
     cv::Mat m_hist;
+	cv::Mat m_embedding;
+	double m_embDot = 0.;
 };
 
 
@@ -269,15 +271,15 @@ public:
            tracking::LostTrackType externalTrackerForLost);
 
     ///
-    /// \brief CalcDist
-    /// Euclidean distance in pixels between objects centres on two N and N+1 frames
+    /// \brief CalcDistCenter
+    /// Euclidean distance from 0 to 1  between objects centres on two N and N+1 frames
     /// \param reg
     /// \return
     ///
     track_t CalcDistCenter(const CRegion& reg) const;
     ///
-    /// \brief CalcDist
-    /// Euclidean distance in pixels between object contours on two N and N+1 frames
+    /// \brief CalcDistRect
+    /// Euclidean distance from 0 to 1 between object contours on two N and N+1 frames
     /// \param reg
     /// \return
     ///
@@ -290,13 +292,21 @@ public:
     ///
     track_t CalcDistJaccard(const CRegion& reg) const;
 	///
-	/// \brief CalcDistJaccard
+	/// \brief CalcDistHist
 	/// Distance from 0 to 1 between objects histogramms on two N and N+1 frames
 	/// \param reg
 	/// \param currFrame
 	/// \return
 	///
-    track_t CalcDistHist(const CRegion& reg, cv::Mat& hist, cv::UMat currFrame) const;
+    track_t CalcDistHist(const CRegion& reg, RegionEmbedding& embedding, cv::UMat currFrame) const;
+	///
+	/// \brief CalcCosine
+	/// Distance from 0 to 1 between objects embeddings on two N and N+1 frames
+	/// \param embedding
+	/// \param currFrame
+	/// \return
+	///
+	track_t CalcCosine(RegionEmbedding& embedding, cv::UMat currFrame) const;
 
 	cv::RotatedRect CalcPredictionEllipse(cv::Size_<track_t> minRadius) const;
 	///

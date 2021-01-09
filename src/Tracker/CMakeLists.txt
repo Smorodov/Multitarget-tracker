@@ -18,6 +18,7 @@ set(main_sources ../common/nms.h ../common/defines.h ../common/object_types.h ..
              HungarianAlg/HungarianAlg.h
 
              VOTTracker.hpp
+             EmbeddingsCalculator.hpp
              dat/dat_tracker.cpp
              dat/dat_tracker.hpp
 )
