@@ -26,7 +26,7 @@ struct staple_cfg
     const char * feature_type = "fhog"; // "fhog", ""gray""
     float inner_padding = 0.2f;         // defines inner area used to sample colors from the foreground
     float output_sigma_factor = 1/16.0f; // standard deviation for the desired translation filter output
-    float lambda = 1e-3;               // egularization weight
+	float lambda = 1e-3f;               // egularization weight
     float learning_rate_cf = 0.01f;     // HOG model learning rate
     float merge_factor = 0.3f;          // fixed interpolation factor - how to linearly combine the two responses
     const char * merge_method = "const_factor";

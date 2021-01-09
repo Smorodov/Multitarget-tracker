@@ -302,11 +302,11 @@ public:
 	///
 	/// \brief CalcCosine
 	/// Distance from 0 to 1 between objects embeddings on two N and N+1 frames
-	/// \param reg
+	/// \param embedding
 	/// \param currFrame
 	/// \return
 	///
-	track_t CalcCosine(const CRegion& reg, RegionEmbedding& embedding, cv::UMat currFrame) const;
+	track_t CalcCosine(RegionEmbedding& embedding, cv::UMat currFrame) const;
 
 	cv::RotatedRect CalcPredictionEllipse(cv::Size_<track_t> minRadius) const;
 	///

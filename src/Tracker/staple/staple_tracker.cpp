@@ -644,7 +644,7 @@ void STAPLE_TRACKER::getFeatureMap(cv::Mat &im_patch, const char* feature_type, 
 
     // out(:,:,1) = single(im_patch)/255 - 0.5;
 
-    float alpha = 1. / 255.0f;
+    float alpha = 1.f / 255.0f;
     float betta = 0.5f;
 
     typedef cv::Vec<float, 28> Vecf28;

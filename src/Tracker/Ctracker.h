@@ -103,16 +103,38 @@ struct TrackerSettings
 	///
 	std::map<objtype_t, std::set<objtype_t>> m_nearTypes;
 
+    ///
+    struct EmbeddingParams
+    {
+        ///
+        /// \brief m_embeddingCfgName
+        /// Neural network config file for embeddings
+        ///
+        std::string m_embeddingCfgName;
+        ///
+        /// \brief m_embeddingWeightsName
+        /// Neural network weights file for embeddings
+        ///
+        std::string m_embeddingWeightsName;
+
+		///
+		cv::Size m_inputLayer{128, 256};
+
+		///
+		std::vector<ObjectTypes> m_objectTypes;
+
+		EmbeddingParams(const std::string& embeddingCfgName, const std::string& embeddingWeightsName,
+			const cv::Size& inputLayer, const std::vector<ObjectTypes>& objectTypes)
+			: m_embeddingCfgName(embeddingCfgName),
+			m_embeddingWeightsName(embeddingWeightsName),
+			m_inputLayer(inputLayer),
+			m_objectTypes(objectTypes)
+		{
+			assert(!m_objectTypes.empty());
+		}
+    };
 	///
-	/// \brief m_embeddingCfgName
-	/// Neural network config file for embeddings
-	///
-	std::string m_embeddingCfgName;
-	///
-	/// \brief m_embeddingWeightsName
-	/// Neural network weights file for embeddings
-	///
-	std::string m_embeddingWeightsName;
+	std::vector<EmbeddingParams> m_embeddings;
 
 	///
 	TrackerSettings()
@@ -261,7 +283,7 @@ private:
     cv::UMat m_prevFrame;
 
     std::unique_ptr<ShortPathCalculator> m_SPCalculator;
-	EmbeddingsCalculator m_embCalculator;
+	std::map<objtype_t, std::shared_ptr<EmbeddingsCalculator>> m_embCalculators;
 
     void CreateDistaceMatrix(const regions_t& regions, std::vector<RegionEmbedding>& regionEmbeddings, distMatrix_t& costMatrix, track_t maxPossibleCost, track_t& maxCost, cv::UMat currFrame);
     void UpdateTrackingState(const regions_t& regions, cv::UMat currFrame, float fps);

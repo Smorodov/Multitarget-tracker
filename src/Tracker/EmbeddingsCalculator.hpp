@@ -10,8 +10,10 @@ public:
     virtual ~EmbeddingsCalculator() = default;
 
 	///
-	bool Initialize(const std::string& cfgName, const std::string& weightsName)
+	bool Initialize(const std::string& cfgName, const std::string& weightsName, const cv::Size& inputLayer)
 	{
+		m_inputLayer = inputLayer;
+
 #if 1
 		m_net = cv::dnn::readNet(weightsName, cfgName);
 #else
@@ -32,19 +34,44 @@ public:
 	}
 
 	///
-	void Calc(const cv::UMat& img, const cv::Rect& rect, cv::Mat& embedding)
+	void Calc(const cv::UMat& img, cv::Rect rect, cv::Mat& embedding)
 	{
+		auto Clamp = [](int& v, int& size, int hi) -> int
+		{
+			int res = 0;
+			if (v < 0)
+			{
+				res = v;
+				v = 0;
+				return res;
+			}
+			else if (v + size > hi - 1)
+			{
+				res = v;
+				v = hi - 1 - size;
+				if (v < 0)
+				{
+					size += v;
+					v = 0;
+				}
+				res -= v;
+				return res;
+			}
+			return res;
+		};
+		Clamp(rect.x, rect.width, img.cols);
+		Clamp(rect.y, rect.height, img.rows);
+
 		cv::UMat obj;
-		//cv::resize(img(rect), obj, cv::Size(64, 128), 0., 0., cv::INTER_LINEAR); // mars-small128_1.pb
-		cv::resize(img(rect), obj, cv::Size(208, 208), 0., 0., cv::INTER_LINEAR);  // vehicle-reid-0001
-		cv::resize(img(rect), obj, cv::Size(128, 256), 0., 0., cv::INTER_LINEAR);  // person-reidentification-retail-0277
+		cv::resize(img(rect), obj, m_inputLayer, 0., 0., cv::INTER_LINEAR);
 		cv::Mat blob = cv::dnn::blobFromImage(obj, 1.0, cv::Size(), cv::Scalar(), false, false);
 		
 		m_net.setInput(blob);
 		embedding = m_net.forward();
-		std::cout << "embedding: " << embedding.size() << ", chans = " << embedding.channels() << std::endl;
+		//std::cout << "embedding: " << embedding.size() << ", chans = " << embedding.channels() << std::endl;
 	}
 
 private:
 	cv::dnn::Net m_net;
+	cv::Size m_inputLayer{128, 256};
 };

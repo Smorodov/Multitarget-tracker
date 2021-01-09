@@ -169,10 +169,10 @@ track_t CTrack::CalcDistHist(const CRegion& reg, RegionEmbedding& embedding, cv:
 
 ///
 /// \brief CTrack::CalcCosine
-/// \param reg
+/// \param embedding
 /// \return
 ///
-track_t CTrack::CalcCosine(const CRegion& reg, RegionEmbedding& embedding, cv::UMat currFrame) const
+track_t CTrack::CalcCosine(RegionEmbedding& embedding, cv::UMat currFrame) const
 {
 	track_t res = 1;
 	if (!embedding.m_embedding.empty() && !m_regionEmbedding.m_embedding.empty())
@@ -560,7 +560,7 @@ void CTrack::RectUpdate(const CRegion& region,
             {
                 CreateExternalTracker(currFrame.channels());
 
-                cv::Rect2d lastRect(brect.x - roiRect.x, brect.y - roiRect.y, brect.width, brect.height);
+                cv::Rect2d lastRect;
                 if (m_staticFrame.empty())
                 {
                     int dx = 1;//m_predictionRect.width / 8;

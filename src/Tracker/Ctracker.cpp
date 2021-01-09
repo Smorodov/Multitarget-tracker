@@ -24,8 +24,21 @@ CTracker::CTracker(const TrackerSettings& settings)
     assert(spcalc != nullptr);
     m_SPCalculator = std::unique_ptr<ShortPathCalculator>(spcalc);
 
-	if (!m_settings.m_embeddingWeightsName.empty() && !m_embCalculator.Initialize(m_settings.m_embeddingCfgName, m_settings.m_embeddingWeightsName))
-		std::cerr << "EmbeddingsCalculator initialization error: " << m_settings.m_embeddingCfgName << ", " << m_settings.m_embeddingWeightsName << std::endl;
+	for (const auto& embParam : settings.m_embeddings)
+	{
+		std::shared_ptr<EmbeddingsCalculator> embCalc = std::make_shared<EmbeddingsCalculator>();
+		if (!embCalc->Initialize(embParam.m_embeddingCfgName, embParam.m_embeddingWeightsName, embParam.m_inputLayer))
+		{
+			std::cerr << "EmbeddingsCalculator initialization error: " << embParam.m_embeddingCfgName << ", " << embParam.m_embeddingWeightsName << std::endl;
+		}
+		else
+		{
+			for (auto objType : embParam.m_objectTypes)
+			{
+				m_embCalculators.try_emplace((objtype_t)objType, embCalc);
+			}
+		}
+	}
 }
 
 ///
@@ -270,11 +283,15 @@ void CTracker::CreateDistaceMatrix(const regions_t& regions,
 						regionEmbeddings.resize(regions.size());
 					if (regionEmbeddings[j].m_embedding.empty())
 					{
-						assert(m_embCalculator.IsInitialized());
-						m_embCalculator.Calc(currFrame, reg.m_brect, regionEmbeddings[j].m_embedding);
-						regionEmbeddings[j].m_embDot = regionEmbeddings[j].m_embedding.dot(regionEmbeddings[j].m_embedding);
+						auto embCalc = m_embCalculators.find(reg.m_type);
+						if (embCalc != std::end(m_embCalculators))
+						{
+							embCalc->second->Calc(currFrame, reg.m_brect, regionEmbeddings[j].m_embedding);
+							regionEmbeddings[j].m_embDot = regionEmbeddings[j].m_embedding.dot(regionEmbeddings[j].m_embedding);
+						}
+						if (reg.m_type == track->LastRegion().m_type)
+							dist += m_settings.m_distType[ind] * track->CalcCosine(regionEmbeddings[j], currFrame);
 					}
-					dist += m_settings.m_distType[ind] * track->CalcCosine(reg, regionEmbeddings[j], currFrame);
 				}
 				++ind;
 				assert(ind == tracking::DistsCount);

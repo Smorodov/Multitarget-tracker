@@ -680,18 +680,19 @@ protected:
 				std::string pathToModel = "../data/";
 #endif
 				pathToModel = "C:/work/home/mtracker/Multitarget-tracker/data/";
+
+				m_trackerSettings.m_embeddings.emplace_back(pathToModel + "open_model_zoo/person-reidentification-retail-0286/FP16-INT8/person-reidentification-retail-0286.xml",
+                                                            pathToModel + "open_model_zoo/person-reidentification-retail-0286/FP16-INT8/person-reidentification-retail-0286.bin",
+                                                            cv::Size(128, 256),
+					                                        std::vector<ObjectTypes>{ ObjectTypes::obj_person });
+
 #if 0
-				m_trackerSettings.m_embeddingCfgName = ""; // pathToModel + "111.meta";
-				m_trackerSettings.m_embeddingWeightsName = pathToModel + "mars-small128_1.pb";
-#else
-#if 0
-				m_trackerSettings.m_embeddingCfgName = "";
-				m_trackerSettings.m_embeddingWeightsName = pathToModel + "open_model_zoo/vehicle-reid-0001/osnet_ain_x1_0_vehicle_reid.onnx";
-#else
-				m_trackerSettings.m_embeddingCfgName = pathToModel + "open_model_zoo/person-reidentification-retail-0286/FP32/person-reidentification-retail-0286.xml";
-				m_trackerSettings.m_embeddingWeightsName = pathToModel + "open_model_zoo/person-reidentification-retail-0286/FP32/person-reidentification-retail-0286.bin";
+				m_trackerSettings.m_embeddings.emplace_back("",
+                                                            pathToModel + "open_model_zoo/vehicle-reid-0001/osnet_ain_x1_0_vehicle_reid.onnx",
+                                                            cv::Size(208, 208),
+                                                            std::vector<ObjectTypes>{ ObjectTypes::obj_car, ObjectTypes::obj_bus, ObjectTypes::obj_truck });
 #endif
-#endif
+
 				std::array<track_t, tracking::DistsCount> distType{
 					0.f,   // DistCenters
 					0.f,   // DistRects
@@ -709,7 +710,7 @@ protected:
 
 			m_trackerSettings.m_kalmanType = tracking::KalmanLinear;
 			m_trackerSettings.m_filterGoal = tracking::FilterRect;
-			m_trackerSettings.m_lostTrackType = tracking::TrackCSRT;      // Use visual objects tracker for collisions resolving. Used if m_filterGoal == tracking::FilterRect
+			m_trackerSettings.m_lostTrackType = useDeepSORT ? tracking::TrackNone : tracking::TrackCSRT; // Use visual objects tracker for collisions resolving. Used if m_filterGoal == tracking::FilterRect
 			m_trackerSettings.m_matchType = tracking::MatchHungrian;
 			m_trackerSettings.m_useAcceleration = false;                   // Use constant acceleration motion model
 			m_trackerSettings.m_dt = m_trackerSettings.m_useAcceleration ? 0.05f : 0.4f; // Delta time for Kalman filter
