@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.5)
+cmake_minimum_required (VERSION 3.10)
 
 set(libname_rt "yolo_rt_lib")
 project(${libname_rt})

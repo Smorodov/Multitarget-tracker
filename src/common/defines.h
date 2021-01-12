@@ -110,9 +110,9 @@ enum DistType
     DistCenters,    // Euclidean distance between centers, [0, 1]
     DistRects,      // Euclidean distance between bounding rectangles, [0, 1]
     DistJaccard,    // Intersection over Union, IoU, [0, 1]
-	DistHist,       // Bhatacharia distance between histograms, [0, 1]
-	DistFeatureCos, // Cosine distance between embeddings, [0, 1]
-	DistsCount
+    DistHist,       // Bhatacharia distance between histograms, [0, 1]
+    DistFeatureCos, // Cosine distance between embeddings, [0, 1]
+    DistsCount
 };
 
 ///

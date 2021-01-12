@@ -70,7 +70,7 @@ struct InferParams
     std::string calibImagesPath;
     float probThresh = 0.5f;
     float nmsThresh = 0.5f;
-	uint32_t batchSize = 1;
+    uint32_t batchSize = 1;
 };
 
 /**
