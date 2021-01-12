@@ -117,7 +117,7 @@ namespace vibe
 					if (0 == m_rng[m_rngIdx = (m_rngIdx + 1) % RANDOM_BUFFER_SIZE] % m_updateFactor)
 					{
 						int sample = m_rng[m_rngIdx = (m_rngIdx + 1) % RANDOM_BUFFER_SIZE] % m_samples;
-						int model_idx = m_channels * m_samples * m_size.width * i + m_channels * m_samples * j + m_channels * sample;
+						size_t model_idx = m_channels * m_samples * m_size.width * i + m_channels * m_samples * j + m_channels * sample;
                         for (size_t c = 0; c < m_channels; ++c)
 						{
 							m_model[model_idx + c] = img_ptr[c];
