@@ -3,6 +3,8 @@
 
 # Last changes
 
+* New license Apache 2.0 instead GPLv3
+
 * Added new parameter Batch size - simultaneous detection on several consecutive frames. it can increase processing speed on a powerful GPU. Works with Darknet and TensorRT backends but can add some latency
 
 # New videos!
@@ -191,7 +193,7 @@ More details here: [How to run examples](https://github.com/Smorodov/Multitarget
 * Ini file parser: https://github.com/benhoyt/inih
 
 #### License
-GNU GPLv3: http://www.gnu.org/licenses/gpl-3.0.txt 
+Apache 2.0: [LICENSE text](https://github.com/Smorodov/Multitarget-tracker/blob/master/LICENSE)
 
 #### Project cititations
 1. Jeroen PROVOOST "Camera gebaseerde analysevan de verkeersstromen aaneen kruispunt", 2014 ( https://iiw.kuleuven.be/onderzoek/eavise/mastertheses/provoost.pdf )
