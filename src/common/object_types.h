@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <vector>
 
 ///
 enum class ObjectTypes
@@ -188,15 +189,16 @@ public:
 	///
 	static objtype_t Str2Type(const std::string& str)
 	{
-		for (size_t i = 0; i < m_typeNames->size(); ++i)
+		for (size_t i = 0; i < m_typeNames.size(); ++i)
 		{
 			if (str == m_typeNames[i])
 				return static_cast<objtype_t>(i);
 		}
-		return bad_type;
+        m_typeNames.emplace_back(str);
+		return static_cast<objtype_t>(m_typeNames.size()) - 1;
 	}
 
 private:
-	static std::string m_typeNames[(size_t)ObjectTypes::TypesCount];
+	static std::vector<std::string> m_typeNames;
 	static std::string m_badTypeName;
 };

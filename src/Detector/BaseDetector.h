@@ -197,7 +197,7 @@ protected:
 		{
 			objtype_t type = TypeConverter::Str2Type(classNames[i]);
 			m_typesMap[i] = type;
-			res = (type != bad_type);
+			res &= (type != bad_type);
 		}
 		return res;
 	}

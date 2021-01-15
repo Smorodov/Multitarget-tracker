@@ -55,7 +55,7 @@ bool YoloDarknetDetector::Init(const config_t& config)
                 className.erase(className.find_last_not_of(" \t\n\r\f\v") + 1);
                 m_classNames.push_back(className);
             }
-			if (FillTypesMap(m_classNames))
+			if (!FillTypesMap(m_classNames))
 			{
 				std::cout << "Unknown types in class names!" << std::endl;
 				assert(0);

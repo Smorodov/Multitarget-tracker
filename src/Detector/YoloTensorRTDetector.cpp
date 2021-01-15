@@ -93,7 +93,7 @@ bool YoloTensorRTDetector::Init(const config_t& config)
 			{
 				m_classNames.push_back(className);
 			}
-			if (FillTypesMap(m_classNames))
+			if (!FillTypesMap(m_classNames))
 			{
 				std::cout << "Unknown types in class names!" << std::endl;
 				assert(0);

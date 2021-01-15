@@ -1,6 +1,6 @@
 #include "object_types.h"
 
-std::string TypeConverter::m_typeNames[(size_t)ObjectTypes::TypesCount] =
+std::vector<std::string> TypeConverter::m_typeNames =
 {
 	"person",
 "bicycle",
