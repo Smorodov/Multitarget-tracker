@@ -47,7 +47,7 @@ bool YoloTensorRTDetector::Init(const config_t& config)
 	auto maxBatch = config.find("maxBatch");
 	if (maxBatch != config.end())
         m_batchSize = std::max(1, std::stoi(maxBatch->second));
-	m_localConfig.batch_size = m_batchSize;
+	m_localConfig.batch_size = static_cast<uint32_t>(m_batchSize);
 	
 	m_localConfig.file_model_cfg = modelConfiguration->second;
 	m_localConfig.file_model_weights = modelBinary->second;
@@ -93,7 +93,7 @@ bool YoloTensorRTDetector::Init(const config_t& config)
 			{
 				m_classNames.push_back(className);
 			}
-			if (FillTypesMap(m_classNames))
+			if (!FillTypesMap(m_classNames))
 			{
 				std::cout << "Unknown types in class names!" << std::endl;
 				assert(0);

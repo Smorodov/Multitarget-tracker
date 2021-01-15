@@ -30,7 +30,7 @@ const char* keys =
     "{ a async        |1                   | Use 2 theads for processing pipeline | }"
     "{ r res          |                    | Path to the csv file with tracking result | }"
     "{ s settings     |                    | Path to the init file with tracking settings | }"
-	"{ bs batch_size  | 1                  | Batch size - frames count for processing | }"
+	"{ bs batch_size  |1                   | Batch size - frames count for processing | }"
 };
 
 // ----------------------------------------------------------------------
