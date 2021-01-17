@@ -107,22 +107,22 @@ void YoloDarknetDetector::Detect(const cv::UMat& colorFrame)
 			std::vector<cv::Mat> batch;
 			batch.reserve(m_batchSize);
 				
-			for (size_t i = 0; i < crops.size(); ++i)
+			for (size_t i = 0; i < crops.size(); i += m_batchSize)
 			{
-				size_t batchsize = std::min(static_cast<size_t>(m_batchSize), crops.size() - i);
+				size_t batchSize = std::min(static_cast<size_t>(m_batchSize), crops.size() - i);
 				batch.clear();
-				for (size_t j = 0; j < batchsize; ++j)
+				for (size_t j = 0; j < batchSize; ++j)
 				{
 					batch.emplace_back(colorMat, crops[i + j]);
 				}
 
 				image_t detImage;
 				FillBatchImg(batch, detImage);
-				std::vector<std::vector<bbox_t>> result_vec = m_detector->detectBatch(detImage, static_cast<int>(batchsize), m_netSize.width, m_netSize.height, m_confidenceThreshold);
+				std::vector<std::vector<bbox_t>> result_vec = m_detector->detectBatch(detImage, static_cast<int>(batchSize), m_netSize.width, m_netSize.height, m_confidenceThreshold);
 
 				const float wk = static_cast<float>(crops[i].width) / m_netSize.width;
 				const float hk = static_cast<float>(crops[i].height) / m_netSize.height;
-				for (size_t j = 0; j < batchsize; ++j)
+				for (size_t j = 0; j < batchSize; ++j)
 				{
 					for (const auto& bbox : result_vec[j])
 					{
@@ -132,7 +132,6 @@ void YoloDarknetDetector::Detect(const cv::UMat& colorFrame)
 								                    T2T(bbox.obj_id), bbox.prob);
 					}
 				}
-				i += batchsize;
 			}
 		}
 		else
