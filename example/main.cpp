@@ -37,9 +37,10 @@ const char* keys =
 
 int main(int argc, char** argv)
 {
-    Help();
-
     cv::CommandLineParser parser(argc, argv, keys);
+
+    Help();
+    parser.printMessage();
 
     bool useOCL = parser.get<int>("gpu") != 0;
     cv::ocl::setUseOpenCL(useOCL);
