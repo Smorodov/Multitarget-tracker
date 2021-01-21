@@ -143,6 +143,7 @@ void YoloTensorRTDetector::Detect(const cv::UMat& colorFrame)
     else
     {
         std::vector<cv::Rect> crops = GetCrops(m_maxCropRatio, m_detector->get_input_size(), colorMat.size());
+		std::cout << "Image on " << crops.size() << " crops with size " << crops.front().size() << ", input size " << m_detector->get_input_size() << ", batch " << m_batchSize << ", frame " << colorMat.size() << std::endl;
         regions_t tmpRegions;
 		std::vector<cv::Mat> batch;
 		batch.reserve(m_batchSize);
@@ -189,22 +190,30 @@ void YoloTensorRTDetector::Detect(const cv::UMat& colorFrame)
 ///
 void YoloTensorRTDetector::Detect(const std::vector<cv::UMat>& frames, std::vector<regions_t>& regions)
 {
-	std::vector<cv::Mat> batch;
-	for (const auto& frame : frames)
-	{
-		batch.emplace_back(frame.getMat(cv::ACCESS_READ));
-	}
+    if (frames.size() == 1)
+    {
+        Detect(frames.front());
+        regions[0].assign(std::begin(m_regions), std::end(m_regions));
+    }
+    else
+    {
+        std::vector<cv::Mat> batch;
+        for (const auto& frame : frames)
+        {
+            batch.emplace_back(frame.getMat(cv::ACCESS_READ));
+        }
 
-	std::vector<tensor_rt::BatchResult> detects;
-	m_detector->detect(batch, detects);
-	for (size_t i = 0; i < detects.size(); ++i)
-	{
-		const tensor_rt::BatchResult& dets = detects[i];
-		for (const tensor_rt::Result& bbox : dets)
-		{
-			if (m_classesWhiteList.empty() || m_classesWhiteList.find(T2T(bbox.id)) != std::end(m_classesWhiteList))
-				regions[i].emplace_back(bbox.rect, T2T(bbox.id), bbox.prob);
-		}
-	}
-	m_regions.assign(std::begin(regions.back()), std::end(regions.back()));
+        std::vector<tensor_rt::BatchResult> detects;
+        m_detector->detect(batch, detects);
+        for (size_t i = 0; i < detects.size(); ++i)
+        {
+            const tensor_rt::BatchResult& dets = detects[i];
+            for (const tensor_rt::Result& bbox : dets)
+            {
+                if (m_classesWhiteList.empty() || m_classesWhiteList.find(T2T(bbox.id)) != std::end(m_classesWhiteList))
+                    regions[i].emplace_back(bbox.rect, T2T(bbox.id), bbox.prob);
+            }
+        }
+        m_regions.assign(std::begin(regions.back()), std::end(regions.back()));
+    }
 }
