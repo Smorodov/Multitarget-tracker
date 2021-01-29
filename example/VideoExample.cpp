@@ -48,12 +48,18 @@ VideoExample::VideoExample(const cv::CommandLineParser& parser)
 ///
 bool VideoExample::ParseTrackerSettings(const std::string& settingsFile)
 {
+    bool res = false;
+
+    std::cout << "ParseTrackerSettings: " << settingsFile << " ..." << std::endl;
+
 	INIReader reader(settingsFile);
 
 	if (reader.ParseError() >= 0)
 	{
+        std::cout << "ParseTrackerSettings - readed" << std::endl;
         m_trackerSettings = TrackerSettings();
         
+        // Read tracking settings
         auto distType = reader.GetInteger("tracking", "distance_type", -1);
         if (distType >=0 && distType < (int)tracking::DistsCount)
             m_trackerSettings.SetDistance((tracking::DistType)distType);
@@ -77,19 +83,31 @@ bool VideoExample::ParseTrackerSettings(const std::string& settingsFile)
 		m_trackerSettings.m_useAcceleration = reader.GetInteger("tracking", "use_aceleration", 0) != 0; // Use constant acceleration motion model
 		m_trackerSettings.m_dt = static_cast<track_t>(reader.GetReal("tracking", "delta_time", 0.4));  // Delta time for Kalman filter
 		m_trackerSettings.m_accelNoiseMag = static_cast<track_t>(reader.GetReal("tracking", "accel_noise", 0.2)); // Accel noise magnitude for Kalman filter
-        m_trackerSettings.m_distThres = static_cast<track_t>(reader.GetReal("tracking", "dist_thresh", 0.8));     // Distance threshold between region and object on two frames
+		m_trackerSettings.m_distThres = static_cast<track_t>(reader.GetReal("tracking", "dist_thresh", 0.8));     // Distance threshold between region and object on two frames
 		m_trackerSettings.m_minAreaRadiusPix = static_cast<track_t>(reader.GetReal("tracking", "min_area_radius_pix", -1.));
 		m_trackerSettings.m_minAreaRadiusK = static_cast<track_t>(reader.GetReal("tracking", "min_area_radius_k", 0.8));
 		m_trackerSettings.m_maximumAllowedSkippedFrames = reader.GetInteger("tracking", "max_skip_frames", 50); // Maximum allowed skipped frames
 		m_trackerSettings.m_maxTraceLength = reader.GetInteger("tracking", "max_trace_len", 50);                 // Maximum trace length
-        m_trackerSettings.m_useAbandonedDetection = reader.GetInteger("tracking", "detect_abandoned", 0) != 0;
-        m_trackerSettings.m_minStaticTime = reader.GetInteger("tracking", "min_static_time", 5);
-        m_trackerSettings.m_maxStaticTime = reader.GetInteger("tracking", "max_static_time", 25);
-        m_trackerSettings.m_maxSpeedForStatic = reader.GetInteger("tracking", "max_speed_for_static", 10);
+		m_trackerSettings.m_useAbandonedDetection = reader.GetInteger("tracking", "detect_abandoned", 0) != 0;
+		m_trackerSettings.m_minStaticTime = reader.GetInteger("tracking", "min_static_time", 5);
+		m_trackerSettings.m_maxStaticTime = reader.GetInteger("tracking", "max_static_time", 25);
+		m_trackerSettings.m_maxSpeedForStatic = reader.GetInteger("tracking", "max_speed_for_static", 10);
 
-		return true;
+
+        // Read detection settings
+        m_trackerSettings.m_nnWeights = reader.GetString("detection", "nn_weights", "data/yolov4-tiny_best.weights");
+        m_trackerSettings.m_nnConfig = reader.GetString("detection", "nn_config", "data/yolov4-tiny.cfg");
+        m_trackerSettings.m_classNames = reader.GetString("detection", "class_names", "data/traffic.names");
+        m_trackerSettings.m_confidenceThreshold = static_cast<track_t>(reader.GetReal("detection", "confidence_threshold", 0.5));
+        m_trackerSettings.m_maxCropRatio = static_cast<track_t>(reader.GetReal("detection", "max_crop_ratio", -1));
+        m_trackerSettings.m_maxBatch = reader.GetInteger("detection", "max_batch", 1);
+        m_trackerSettings.m_netType = reader.GetString("detection", "net_type", "YOLOV4_TINY");
+        m_trackerSettings.m_inferencePrecison = reader.GetString("detection", "inference_precison", "FP16");
+
+		res =  true;
 	}
-	return false;
+    std::cout << "ParseTrackerSettings: " << res << std::endl;
+	return res;
 }
 
 ///

@@ -101,7 +101,7 @@ void YoloDarknetDetector::Detect(const cv::UMat& colorFrame)
 	else
 	{
         std::vector<cv::Rect> crops = GetCrops(m_maxCropRatio, m_netSize, colorMat.size());
-		std::cout << "Image on " << crops.size() << " crops with size " << crops.front().size() << ", input size " << m_netSize << ", batch " << m_batchSize << ", frame " << colorMat.size() << std::endl;
+        std::cout << "Image on " << crops.size() << " crops with size " << crops.front().size() << ", input size " << m_netSize << ", batch " << m_batchSize << ", frame " << colorMat.size() << std::endl;
         regions_t tmpRegions;
 		if (m_batchSize > 1)
 		{

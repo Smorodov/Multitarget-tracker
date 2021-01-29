@@ -19,6 +19,10 @@
 ///
 struct TrackerSettings
 {
+    ///
+    /// Tracker settings
+    ///
+
     tracking::KalmanType m_kalmanType = tracking::KalmanLinear;
     tracking::FilterGoal m_filterGoal = tracking::FilterCenter;
     tracking::LostTrackType m_lostTrackType = tracking::TrackKCF; // Used if m_filterGoal == tracking::FilterRect
@@ -102,6 +106,47 @@ struct TrackerSettings
 	/// Object types that can be matched while tracking
 	///
 	std::map<objtype_t, std::set<objtype_t>> m_nearTypes;
+
+
+    ///
+    /// Detector settings
+    ///
+
+    ///
+    std::string m_nnWeights = "data/yolov4-tiny_best.weights";
+    
+    ///
+    std::string m_nnConfig = "data/yolov4-tiny.cfg";
+    
+    ///
+    std::string m_classNames = "data/traffic.names";
+
+    ///
+    float m_confidenceThreshold = 0.5f;
+
+    ///
+    float m_maxCropRatio = -1.f;
+
+    ///
+    int m_maxBatch = 1;
+
+    ///
+    /// YOLOV2
+    /// YOLOV3
+    /// YOLOV2_TINY
+    /// YOLOV3_TINY
+    /// YOLOV4
+    /// YOLOV4_TINY
+    /// YOLOV5
+    std::string m_netType = "YOLOV4_TINY";
+
+    ///
+    /// INT8
+    /// FP16
+    /// FP32
+    std::string m_inferencePrecison = "FP16";
+
+
 
     ///
     struct EmbeddingParams

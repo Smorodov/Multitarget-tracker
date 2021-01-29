@@ -113,7 +113,8 @@ bool YoloTensorRTDetector::Init(const config_t& config)
 		m_maxCropRatio = std::stof(maxCropRatio->second);
 
 	m_detector = std::make_unique<tensor_rt::Detector>();
-	m_detector->init(m_localConfig);
+	if (m_detector)
+        m_detector->init(m_localConfig);
 	return m_detector.get() != nullptr;
 }
 
@@ -143,7 +144,7 @@ void YoloTensorRTDetector::Detect(const cv::UMat& colorFrame)
     else
     {
         std::vector<cv::Rect> crops = GetCrops(m_maxCropRatio, m_detector->get_input_size(), colorMat.size());
-		std::cout << "Image on " << crops.size() << " crops with size " << crops.front().size() << ", input size " << m_detector->get_input_size() << ", batch " << m_batchSize << ", frame " << colorMat.size() << std::endl;
+        std::cout << "Image on " << crops.size() << " crops with size " << crops.front().size() << ", input size " << m_detector->get_input_size() << ", batch " << m_batchSize << ", frame " << colorMat.size() << std::endl;
         regions_t tmpRegions;
 		std::vector<cv::Mat> batch;
 		batch.reserve(m_batchSize);
