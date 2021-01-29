@@ -590,60 +590,74 @@ protected:
 	{
 		config_t config;
 
+        if (!m_trackerSettingsLoaded)
+        {
 #ifdef _WIN32
-		std::string pathToModel = "../../data/";
+            std::string pathToModel = "../../data/";
 #else
-		std::string pathToModel = "../data/";
+            std::string pathToModel = "../data/";
 #endif
-		size_t maxBatch = 1;
-		enum class YOLOModels
-		{
-			TinyYOLOv3 = 0,
-			YOLOv3,
-            YOLOv4,
-            TinyYOLOv4,
-			ScaledYOLOv4
-		};
-        YOLOModels usedModel = YOLOModels::ScaledYOLOv4;
-		switch (usedModel)
-		{
-		case YOLOModels::TinyYOLOv3:
-			config.emplace("modelConfiguration", pathToModel + "yolov3-tiny.cfg");
-			config.emplace("modelBinary", pathToModel + "yolov3-tiny.weights");
-			config.emplace("confidenceThreshold", "0.5");
-			break;
+            size_t maxBatch = 1;
+            enum class YOLOModels
+            {
+                TinyYOLOv3 = 0,
+                YOLOv3,
+                YOLOv4,
+                TinyYOLOv4,
+                ScaledYOLOv4
+            };
+            YOLOModels usedModel = YOLOModels::ScaledYOLOv4;
+            switch (usedModel)
+            {
+            case YOLOModels::TinyYOLOv3:
+                config.emplace("modelConfiguration", pathToModel + "yolov3-tiny.cfg");
+                config.emplace("modelBinary", pathToModel + "yolov3-tiny.weights");
+                config.emplace("confidenceThreshold", "0.5");
+                break;
 
-		case YOLOModels::YOLOv3:
-			config.emplace("modelConfiguration", pathToModel + "yolov3.cfg");
-			config.emplace("modelBinary", pathToModel + "yolov3.weights");
-			config.emplace("confidenceThreshold", "0.7");
-			break;
+            case YOLOModels::YOLOv3:
+                config.emplace("modelConfiguration", pathToModel + "yolov3.cfg");
+                config.emplace("modelBinary", pathToModel + "yolov3.weights");
+                config.emplace("confidenceThreshold", "0.7");
+                break;
 
-		case YOLOModels::YOLOv4:
-			config.emplace("modelConfiguration", pathToModel + "yolov4.cfg");
-			config.emplace("modelBinary", pathToModel + "yolov4.weights");
-			config.emplace("confidenceThreshold", "0.5");
-			break;
+            case YOLOModels::YOLOv4:
+                config.emplace("modelConfiguration", pathToModel + "yolov4.cfg");
+                config.emplace("modelBinary", pathToModel + "yolov4.weights");
+                config.emplace("confidenceThreshold", "0.5");
+                break;
 
-        case YOLOModels::TinyYOLOv4:
-            config.emplace("modelConfiguration", pathToModel + "yolov4-tiny.cfg");
-            config.emplace("modelBinary", pathToModel + "yolov4-tiny.weights");
-            config.emplace("confidenceThreshold", "0.5");
-			maxBatch = 4;
-            break;
+            case YOLOModels::TinyYOLOv4:
+                config.emplace("modelConfiguration", pathToModel + "yolov4-tiny.cfg");
+                config.emplace("modelBinary", pathToModel + "yolov4-tiny.weights");
+                config.emplace("confidenceThreshold", "0.5");
+                maxBatch = 4;
+                break;
 
-		case YOLOModels::ScaledYOLOv4:
-			config.emplace("modelConfiguration", pathToModel + "yolov4-csp.cfg");
-			config.emplace("modelBinary", pathToModel + "yolov4-csp.weights");
-			config.emplace("confidenceThreshold", "0.5");
-			maxBatch = 2;
-			break;
-		}
-		if (maxBatch < m_batchSize)
-			maxBatch = m_batchSize;
-		config.emplace("maxBatch", std::to_string(m_batchSize));
-        config.emplace("classNames", pathToModel + "coco.names");
-        config.emplace("maxCropRatio", "-1");
+            case YOLOModels::ScaledYOLOv4:
+                config.emplace("modelConfiguration", pathToModel + "yolov4-csp.cfg");
+                config.emplace("modelBinary", pathToModel + "yolov4-csp.weights");
+                config.emplace("confidenceThreshold", "0.5");
+                maxBatch = 2;
+                break;
+            }
+            if (maxBatch < m_batchSize)
+                maxBatch = m_batchSize;
+            config.emplace("maxBatch", std::to_string(m_batchSize));
+            config.emplace("classNames", pathToModel + "coco.names");
+            config.emplace("maxCropRatio", "-1");
+        }
+        else
+        {
+            config.emplace("modelConfiguration", m_trackerSettings.m_nnConfig);
+            config.emplace("modelBinary", m_trackerSettings.m_nnWeights);
+            config.emplace("confidenceThreshold", std::to_string(m_trackerSettings.m_confidenceThreshold));
+            config.emplace("classNames", m_trackerSettings.m_classNames);
+            config.emplace("maxCropRatio", std::to_string(m_trackerSettings.m_maxCropRatio));
+            config.emplace("maxBatch", std::to_string(m_trackerSettings.m_maxBatch));
+            config.emplace("net_type", m_trackerSettings.m_netType);
+            config.emplace("inference_precison", m_trackerSettings.m_inferencePrecison);
+        }
 
         config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_person));
         config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_car));
@@ -821,78 +835,91 @@ protected:
 	bool InitDetector(cv::UMat frame)
 	{
 		config_t config;
-
+        if (!m_trackerSettingsLoaded)
+        {
 #ifdef _WIN32
-		std::string pathToModel = "../../data/";
+            std::string pathToModel = "../../data/";
 #else
-		std::string pathToModel = "../data/";
+            std::string pathToModel = "../data/";
 #endif
-		size_t maxBatch = 1;
-        enum class YOLOModels
-        {
-            TinyYOLOv3 = 0,
-            YOLOv3,
-            YOLOv4,
-            TinyYOLOv4,
-            YOLOv5
-        };
-        YOLOModels usedModel = YOLOModels::YOLOv4;
-        switch (usedModel)
-        {
-        case YOLOModels::TinyYOLOv3:
-            config.emplace("modelConfiguration", pathToModel + "yolov3-tiny.cfg");
-            config.emplace("modelBinary", pathToModel + "yolov3-tiny.weights");
-            config.emplace("confidenceThreshold", "0.5");
-            config.emplace("inference_precison", "FP32");
-            config.emplace("net_type", "YOLOV3_TINY");
-			maxBatch = 4;
-			config.emplace("maxCropRatio", "2");
-            break;
+            size_t maxBatch = 1;
+            enum class YOLOModels
+            {
+                TinyYOLOv3 = 0,
+                YOLOv3,
+                YOLOv4,
+                TinyYOLOv4,
+                YOLOv5
+            };
+            YOLOModels usedModel = YOLOModels::YOLOv4;
+            switch (usedModel)
+            {
+            case YOLOModels::TinyYOLOv3:
+                config.emplace("modelConfiguration", pathToModel + "yolov3-tiny.cfg");
+                config.emplace("modelBinary", pathToModel + "yolov3-tiny.weights");
+                config.emplace("confidenceThreshold", "0.5");
+                config.emplace("inference_precison", "FP32");
+                config.emplace("net_type", "YOLOV3_TINY");
+                maxBatch = 4;
+                config.emplace("maxCropRatio", "2");
+                break;
 
-        case YOLOModels::YOLOv3:
-            config.emplace("modelConfiguration", pathToModel + "yolov3.cfg");
-            config.emplace("modelBinary", pathToModel + "yolov3.weights");
-            config.emplace("confidenceThreshold", "0.7");
-            config.emplace("inference_precison", "FP32");
-            config.emplace("net_type", "YOLOV3");
-			maxBatch = 2;
-			config.emplace("maxCropRatio", "-1");
-            break;
+            case YOLOModels::YOLOv3:
+                config.emplace("modelConfiguration", pathToModel + "yolov3.cfg");
+                config.emplace("modelBinary", pathToModel + "yolov3.weights");
+                config.emplace("confidenceThreshold", "0.7");
+                config.emplace("inference_precison", "FP32");
+                config.emplace("net_type", "YOLOV3");
+                maxBatch = 2;
+                config.emplace("maxCropRatio", "-1");
+                break;
 
-        case YOLOModels::YOLOv4:
-            config.emplace("modelConfiguration", pathToModel + "yolov4.cfg");
-            config.emplace("modelBinary", pathToModel + "yolov4.weights");
-            config.emplace("confidenceThreshold", "0.8");
-            config.emplace("inference_precison", "FP32");
-            config.emplace("net_type", "YOLOV4");
-			maxBatch = 1;
-			config.emplace("maxCropRatio", "-1");
-            break;
+            case YOLOModels::YOLOv4:
+                config.emplace("modelConfiguration", pathToModel + "yolov4.cfg");
+                config.emplace("modelBinary", pathToModel + "yolov4.weights");
+                config.emplace("confidenceThreshold", "0.8");
+                config.emplace("inference_precison", "FP32");
+                config.emplace("net_type", "YOLOV4");
+                maxBatch = 1;
+                config.emplace("maxCropRatio", "-1");
+                break;
 
-        case YOLOModels::TinyYOLOv4:
-            config.emplace("modelConfiguration", pathToModel + "yolov4-tiny.cfg");
-            config.emplace("modelBinary", pathToModel + "yolov4-tiny.weights");
-            config.emplace("confidenceThreshold", "0.5");
-            config.emplace("inference_precison", "FP32");
-            config.emplace("net_type", "YOLOV4_TINY");
-			maxBatch = 4;
-			config.emplace("maxCropRatio", "1");
-            break;
+            case YOLOModels::TinyYOLOv4:
+                config.emplace("modelConfiguration", pathToModel + "yolov4-tiny.cfg");
+                config.emplace("modelBinary", pathToModel + "yolov4-tiny.weights");
+                config.emplace("confidenceThreshold", "0.5");
+                config.emplace("inference_precison", "FP32");
+                config.emplace("net_type", "YOLOV4_TINY");
+                maxBatch = 4;
+                config.emplace("maxCropRatio", "1");
+                break;
 
-        case YOLOModels::YOLOv5:
-            config.emplace("modelConfiguration", pathToModel + "yolov5x.cfg");
-            config.emplace("modelBinary", pathToModel + "yolov5x.weights");
-            config.emplace("confidenceThreshold", "0.5");
-            config.emplace("inference_precison", "FP32");
-            config.emplace("net_type", "YOLOV5");
-			maxBatch = 1;
-            config.emplace("maxCropRatio", "-1");
-            break;
+            case YOLOModels::YOLOv5:
+                config.emplace("modelConfiguration", pathToModel + "yolov5x.cfg");
+                config.emplace("modelBinary", pathToModel + "yolov5x.weights");
+                config.emplace("confidenceThreshold", "0.5");
+                config.emplace("inference_precison", "FP32");
+                config.emplace("net_type", "YOLOV5");
+                maxBatch = 1;
+                config.emplace("maxCropRatio", "-1");
+                break;
+            }
+            if (maxBatch < m_batchSize)
+                maxBatch = m_batchSize;
+            config.emplace("maxBatch", std::to_string(m_batchSize));
+            config.emplace("classNames", pathToModel + "coco.names");
         }
-		if (maxBatch < m_batchSize)
-			maxBatch = m_batchSize;
-		config.emplace("maxBatch", std::to_string(m_batchSize));
-		config.emplace("classNames", pathToModel + "coco.names");
+        else
+        {
+            config.emplace("modelConfiguration", m_trackerSettings.m_nnConfig);
+            config.emplace("modelBinary", m_trackerSettings.m_nnWeights);
+            config.emplace("confidenceThreshold", std::to_string(m_trackerSettings.m_confidenceThreshold));
+            config.emplace("classNames", m_trackerSettings.m_classNames);
+            config.emplace("maxCropRatio", std::to_string(m_trackerSettings.m_maxCropRatio));
+            config.emplace("maxBatch", std::to_string(m_trackerSettings.m_maxBatch));
+            config.emplace("net_type", m_trackerSettings.m_netType);
+            config.emplace("inference_precison", m_trackerSettings.m_inferencePrecison);
+        }
 
 		config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_person));
 		config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_car));
