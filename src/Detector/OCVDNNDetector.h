@@ -8,7 +8,7 @@
 ///
 /// \brief The OCVDNNDetector class
 ///
-class OCVDNNDetector : public BaseDetector
+class OCVDNNDetector final : public BaseDetector
 {
 public:
     OCVDNNDetector(const cv::UMat& colorFrame);

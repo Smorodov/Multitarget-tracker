@@ -31,7 +31,7 @@ __GTL_BEGIN_NAMESPACE
  * @see maxflow_ff
  * @see maxflow_pp
  */
-class GTL_EXTERN maxflow_sap : public algorithm
+class GTL_EXTERN maxflow_sap final : public algorithm
 {
 public:
     /**

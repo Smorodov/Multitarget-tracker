@@ -12,7 +12,7 @@
 ///
 /// \brief The YoloDarknetDetector class
 ///
-class YoloDarknetDetector : public BaseDetector
+class YoloDarknetDetector final : public BaseDetector
 {
 public:
     YoloDarknetDetector(const cv::UMat& colorFrame);

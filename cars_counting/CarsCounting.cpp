@@ -359,7 +359,7 @@ bool CarsCounting::InitTracker(cv::UMat frame)
 	config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_bus));
 	config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_truck));
 
-	m_detector = std::unique_ptr<BaseDetector>(CreateDetector(m_detectorType, config, frame));
+	m_detector = CreateDetector(m_detectorType, config, frame);
 
 #else // Background subtraction
 
@@ -367,13 +367,13 @@ bool CarsCounting::InitTracker(cv::UMat frame)
     config.emplace("history", std::to_string(cvRound(10 * minStaticTime * m_fps)));
     config.emplace("varThreshold", "16");
     config.emplace("detectShadows", "1");
-    m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Motion_MOG2, config, frame));
+    m_detector = CreateDetector(tracking::Detectors::Motion_MOG2, config, frame);
 #else
     config.emplace("minPixelStability", "15");
     config.emplace("maxPixelStability", "900");
     config.emplace("useHistory", "1");
     config.emplace("isParallel", "1");
-    m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Motion_CNT, config, m_useLocalTracking, frame));
+    m_detector = CreateDetector(tracking::Detectors::Motion_CNT, config, m_useLocalTracking, frame);
 #endif
 
 #endif

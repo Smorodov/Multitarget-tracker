@@ -101,7 +101,7 @@ public:
         /**
 	 * @internal
 	 */
-	iteration_state state;
+	iteration_state state = END;
 
         /**
 	 * @internal
@@ -230,7 +230,7 @@ private:
  * - #s_node sets/retrieves that endpoints of the @a st_edge, which gets
  *   number 1.
  */
-class GTL_EXTERN st_number : public algorithm 
+class GTL_EXTERN st_number final : public algorithm 
 {
 public:
     /**

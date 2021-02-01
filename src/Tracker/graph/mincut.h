@@ -13,7 +13,7 @@
 
 typedef std::pair<GTL::node, GTL::node> node_pair;
 
-class GTL_EXTERN mincut : public GTL::algorithm
+class GTL_EXTERN mincut final : public GTL::algorithm
 {
 public:
 	mincut ();

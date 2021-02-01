@@ -27,7 +27,7 @@ __GTL_BEGIN_NAMESPACE
  *
  * @author Christian Bachmaier chris@infosun.fmi.uni-passau.de
  */
-class GTL_EXTERN dijkstra : public algorithm
+class GTL_EXTERN dijkstra final : public algorithm
 {
 public:
     /**

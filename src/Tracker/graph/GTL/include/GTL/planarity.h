@@ -44,7 +44,7 @@ __GTL_BEGIN_NAMESPACE
  * time if @f$E@f$ is the number of edges for both the test and the
  * detection of K5 or K3,3.
  */
-class GTL_EXTERN planarity : public algorithm 
+class GTL_EXTERN planarity final : public algorithm 
 {
 public:
     /**

@@ -18,7 +18,7 @@ __GTL_BEGIN_NAMESPACE
 /**
  * @brief Connected components algorithm
  */
-class GTL_EXTERN components : public dfs 
+class GTL_EXTERN components final : public dfs 
 {
 public:
     /**
@@ -33,7 +33,7 @@ public:
      *
      * @sa dfs::~dfs
      */
-    virtual ~components () {}
+    virtual ~components () = default;
 
     /**
      * @brief Checks whether the connected components algorithm can be applied

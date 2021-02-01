@@ -884,7 +884,7 @@ void CTrack::CreateExternalTracker(int channels)
 			m_tracker.release();
 #endif
         if (!m_VOTTracker)
-            m_VOTTracker = std::unique_ptr<DAT_TRACKER>(new DAT_TRACKER());
+            m_VOTTracker = std::make_unique<DAT_TRACKER>();
         break;
 
     case tracking::TrackSTAPLE:
@@ -894,7 +894,7 @@ void CTrack::CreateExternalTracker(int channels)
 #endif
 #ifdef USE_STAPLE_TRACKER
         if (!m_VOTTracker)
-            m_VOTTracker = std::unique_ptr<STAPLE_TRACKER>(new STAPLE_TRACKER());
+            m_VOTTracker = std::make_unique<STAPLE_TRACKER>();
 #else
 		std::cerr << "Project was compiled without STAPLE tracking!" << std::endl;
 #endif
@@ -907,7 +907,7 @@ void CTrack::CreateExternalTracker(int channels)
 #endif
 #ifdef USE_STAPLE_TRACKER
 		if (!m_VOTTracker)
-			m_VOTTracker = std::unique_ptr<LDESTracker>(new LDESTracker());
+			m_VOTTracker = std::make_unique<LDESTracker>();
 #else
 		std::cerr << "Project was compiled without STAPLE tracking!" << std::endl;
 #endif

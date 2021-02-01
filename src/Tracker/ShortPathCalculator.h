@@ -32,7 +32,7 @@ protected:
 ///
 /// \brief The SPHungrian class
 ///
-class SPHungrian : public ShortPathCalculator
+class SPHungrian final : public ShortPathCalculator
 {
 public:
     SPHungrian(const SPSettings& settings)
@@ -40,7 +40,7 @@ public:
     {
     }
 
-    void Solve(const distMatrix_t& costMatrix, size_t N, size_t M, assignments_t& assignment, track_t /*maxCost*/)
+    void Solve(const distMatrix_t& costMatrix, size_t N, size_t M, assignments_t& assignment, track_t /*maxCost*/) override
     {
         m_solver.Solve(costMatrix, N, M, assignment, AssignmentProblemSolver::optimal);
     }
@@ -52,7 +52,7 @@ private:
 ///
 /// \brief The SPBipart class
 ///
-class SPBipart : public ShortPathCalculator
+class SPBipart final : public ShortPathCalculator
 {
 public:
     SPBipart(const SPSettings& settings)
@@ -60,5 +60,5 @@ public:
     {
     }
 
-    void Solve(const distMatrix_t& costMatrix, size_t N, size_t M, assignments_t& assignment, track_t maxCost);
+    void Solve(const distMatrix_t& costMatrix, size_t N, size_t M, assignments_t& assignment, track_t maxCost) override;
 };

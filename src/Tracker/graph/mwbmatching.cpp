@@ -25,28 +25,20 @@
 #endif
 
 mwbmatching::mwbmatching ()
-    :
-      algorithm(),
-      mwbm(0),
-      set_vars_executed(false),
-      pq(NULL)
-{
-}
-
-mwbmatching::~mwbmatching ()
+    : algorithm()
 {
 }
 
 void mwbmatching::set_vars(const GTL::edge_map<int>& edge_weight)
 {
-    this->edge_weight = edge_weight;
-	mwbm = 0;
-    set_vars_executed = true;
+    m_edge_weight = edge_weight;
+	m_mwbm = 0;
+    m_set_vars_executed = true;
 }
 
 int mwbmatching::check (GTL::graph& G) 
 {
-	if (!set_vars_executed)
+	if (!m_set_vars_executed)
 		return(GTL_ERROR);
 
 	if ((G.number_of_nodes() <= 1) || (!G.is_connected()) || (!G.is_directed()))
@@ -58,9 +50,9 @@ int mwbmatching::check (GTL::graph& G)
 int mwbmatching::run(GTL::graph& G)
 {
 	// Initialise
-	pot.init (G, 0);
-	free.init (G, true);
-	dist.init (G, 0);
+	m_pot.init (G, 0);
+	m_free.init (G, true);
+	m_dist.init (G, 0);
 	
 	GTL::nodes_t A;
 	GTL::nodes_t B;
@@ -73,7 +65,7 @@ int mwbmatching::run(GTL::graph& G)
 		else
 			A.push_back(n);
 		
-		node_from_id[n.id()] = n;
+		m_node_from_id[n.id()] = n;
 	}
 	
 	// Simple heuristic
@@ -81,16 +73,16 @@ int mwbmatching::run(GTL::graph& G)
 	GTL::edge e;
 	forall_edges (e, G)
 	{
-		edge_from_id[e.id()] = e;
-		if (edge_weight[e] > C) 
-			C = edge_weight[e];	
+		m_edge_from_id[e.id()] = e;
+		if (m_edge_weight[e] > C) 
+			C = m_edge_weight[e];	
 	}
 
 	GTL::nodes_t::iterator it = A.begin();
 	GTL::nodes_t::iterator end = A.end();
 	while (it != end)
 	{
-		pot[*it] = C;
+		m_pot[*it] = C;
 		it++;
 	}
 	
@@ -98,9 +90,8 @@ int mwbmatching::run(GTL::graph& G)
 	
 	while (it != end)
 	{
-		if (free[*it])
+		if (m_free[*it])
 			augment (G, *it);
-
 		it++;
 	}
 	
@@ -109,11 +100,10 @@ int mwbmatching::run(GTL::graph& G)
 	end = B.end();
 	while (it != end)
 	{
-		GTL::edge e;
 		forall_out_edges (e, *it)
 		{
-			result.push_back (e);	
-			mwbm += edge_weight[e];
+			m_result.push_back (e);	
+			m_mwbm += m_edge_weight[e];
 		}
 		it++;
 	}
@@ -123,13 +113,10 @@ int mwbmatching::run(GTL::graph& G)
 int mwbmatching::augment(GTL::graph& G, GTL::node a)
 {
 	// Initialise
-	pred.init(G, -1);
-	pq = fh_alloc(G.number_of_nodes());
+	m_pred.init(G, -1);
+	m_pq = fh_alloc(G.number_of_nodes());
 	
-	dist[a] = 0;
-	GTL::node best_node_in_A = a;
-	long minA = pot[a];
-	long delta;
+	m_dist[a] = 0;
 	
 	std::stack<GTL::node, std::vector<GTL::node> > RA;
 	RA.push(a);
@@ -142,36 +129,39 @@ int mwbmatching::augment(GTL::graph& G, GTL::node a)
 	forall_adj_edges (e, a1)
 	{
 		const GTL::node& b = e.target_();
-		long db = dist[a1] + (pot[a1] + pot[b] - edge_weight[e]);
-		if (pred[b] == -1)
+		long db = m_dist[a1] + (m_pot[a1] + m_pot[b] - m_edge_weight[e]);
+		if (m_pred[b] == -1)
 		{
-			dist[b] = db;
-			pred[b] = e.id();
+			m_dist[b] = db;
+			m_pred[b] = e.id();
 			RB.push(b);
 			
-			fh_insert (pq, b.id(), db);	
+			fh_insert (m_pq, b.id(), db);	
 		}
 		else
 		{
-			if (db < dist[b])
+			if (db < m_dist[b])
 			{
-				dist[b] = db;
-				pred[b] = e.id();
+				m_dist[b] = db;
+				m_pred[b] = e.id();
 
-				fh_decrease_key (pq, b.id(), db);  
+				fh_decrease_key (m_pq, b.id(), db);  
 			}
 		}
 	}
 
+	GTL::node best_node_in_A = a;
+	long minA = m_pot[a];
+	long delta = 0;
 	for (;;)
 	{
 		// Find node with minimum distance db
 		int node_id = -1;
 		long db = 0;
-		if (pq->n != 0)
+		if (m_pq->n != 0)
 		{
-			node_id = fh_delete_min (pq);
-			db = dist[node_from_id[node_id]];
+			node_id = fh_delete_min (m_pq);
+			db = m_dist[m_node_from_id[node_id]];
 		}
 		
 		if (node_id == -1 || db >= minA)
@@ -179,58 +169,58 @@ int mwbmatching::augment(GTL::graph& G, GTL::node a)
 			delta = minA;
 			// augmentation by best node in A
       		augment_path_to (G, best_node_in_A);  
-      		free[a] = false; 
-      		free[best_node_in_A] = true; 
+      		m_free[a] = false; 
+      		m_free[best_node_in_A] = true; 
 			break;
 		}
 		else
 		{
-			GTL::node b = node_from_id[node_id];
-			if (free[b])
+			GTL::node b = m_node_from_id[node_id];
+			if (m_free[b])
 			{
 				delta = db;
 				// augmentation by path to b, so a and b are now matched
 				augment_path_to (G, b);
-        		free[a] = false;
-        		free[b] = false;
+        		m_free[a] = false;
+        		m_free[b] = false;
 		        break;
 			}
 			else
 			{
 				// continue shortest path computation
-				GTL::edge e = (*b.adj_edges_begin());
-				const GTL::node& a1 = e.target_();
-				pred[a1] = e.id(); 
-				RA.push(a1);
-				dist[a1] = db; 
+				e = (*b.adj_edges_begin());
+				const GTL::node& a2 = e.target_();
+				m_pred[a2] = e.id(); 
+				RA.push(a2);
+				m_dist[a2] = db; 
 					  
-				if (db + pot[a1] < minA)
+				if (db + m_pot[a2] < minA)
 				{ 
-					best_node_in_A = a1;
-				  	minA = db + pot[a1];
+					best_node_in_A = a2;
+				  	minA = db + m_pot[a2];
 				}
 				
 				// Relax
-				forall_adj_edges (e, a1)
+				forall_adj_edges (e, a2)
 				{
-					const GTL::node& b = e.target_();
-					long db = dist[a1] + (pot[a1] + pot[b] - edge_weight[e]);
-					if (pred[b] == -1)
+					const GTL::node& b1 = e.target_();
+					long db1 = m_dist[a2] + (m_pot[a2] + m_pot[b1] - m_edge_weight[e]);
+					if (m_pred[b1] == -1)
 					{
-						dist[b] = db;
-						pred[b] = e.id();
-						RB.push(b);
+						m_dist[b1] = db1;
+						m_pred[b1] = e.id();
+						RB.push(b1);
 						
-						fh_insert (pq, b.id(), db);	
+						fh_insert (m_pq, b1.id(), db1);
 					}
 					else
 					{
-						if (db < dist[b])
+						if (db1 < m_dist[b1])
 						{
-							dist[b] = db;
-							pred[b] = e.id();
+							m_dist[b1] = db1;
+							m_pred[b1] = e.id();
 
-							fh_decrease_key (pq, b.id(), db);  
+							fh_decrease_key (m_pq, b1.id(), db1);  
 						}
 					}
 				}							
@@ -240,37 +230,39 @@ int mwbmatching::augment(GTL::graph& G, GTL::node a)
 	
 	while (!RA.empty())
 	{
-		GTL::node a = RA.top();
+		GTL::node a_node = std::move(RA.top());
 		RA.pop();
-		pred[a] = -1;
-		long pot_change = delta - dist[a];
-		if (pot_change <= 0) continue;
-		pot[a] = pot[a] - pot_change;		
+		m_pred[a_node] = -1;
+		long pot_change = delta - m_dist[a_node];
+		if (pot_change <= 0)
+			continue;
+		m_pot[a_node] = m_pot[a_node] - pot_change;		
 	}
 	while (!RB.empty())
 	{
-		GTL::node b = RB.top();
+		GTL::node b_node = std::move(RB.top());
 		RB.pop();
-		pred[b] = -1;
+		m_pred[b_node] = -1;
 		
-		long pot_change = delta - dist[b];
-		if (pot_change <= 0) continue;
-		pot[b] = pot[b] + pot_change;		
+		long pot_change = delta - m_dist[b_node];
+		if (pot_change <= 0)
+			continue;
+		m_pot[b_node] = m_pot[b_node] + pot_change;
 	}
 	
 	// Clean up
-	fh_free(pq);
+	fh_free(m_pq);
 	return 0;
 }
 
 void mwbmatching::augment_path_to (GTL::graph &/*G*/, GTL::node v)
 {
-	int i = pred[v];
+	auto i = m_pred[v];
 	while (i != -1)
 	{
-		GTL::edge e = edge_from_id[i];
+		GTL::edge e = m_edge_from_id[i];
 		e.reverse();
-		i = pred[e.target()];
+		i = m_pred[e.target()];
 	}
 }
 
@@ -289,10 +281,7 @@ GTL::edges_t MAX_WEIGHT_BIPARTITE_MATCHING(GTL::graph &G, GTL::edge_map<int> wei
 	//else
 	{
 		if (mwbm.run(G) != GTL::algorithm::GTL_OK)
-		{
 			std::cout << "Error running maximum weight bipartite matching algorithm" << std::endl;
-			//exit(1);
-		}
 		else
 			L = mwbm.get_match();
 	}

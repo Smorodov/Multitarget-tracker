@@ -188,7 +188,7 @@ int maxflow_pp::leveling(GTL::graph& G)
 	node cur_node;
 	while (!next_nodes.empty())
 	{
-		cur_node = next_nodes.front();
+		cur_node = std::move(next_nodes.front());
 		next_nodes.pop();
 		node::out_edges_iterator out_edge_it = cur_node.out_edges_begin();
 		node::out_edges_iterator out_edges_end = cur_node.out_edges_end();
@@ -233,7 +233,7 @@ void maxflow_pp::hide_unreachable_nodes(GTL::graph& G)
 	reachable_from_net_source[net_source] = true;
 	while (!next_nodes.empty())
 	{
-		cur_node = next_nodes.front();
+		cur_node = std::move(next_nodes.front());
 		next_nodes.pop();
 		node::out_edges_iterator out_edge_it = cur_node.out_edges_begin();
 		node::out_edges_iterator out_edges_end = cur_node.out_edges_end();
@@ -253,7 +253,7 @@ void maxflow_pp::hide_unreachable_nodes(GTL::graph& G)
 	reachable_from_net_target[net_target] = true;
 	while (!next_nodes.empty())
 	{
-		cur_node = next_nodes.front();
+		cur_node = std::move(next_nodes.front());
 		next_nodes.pop();
 		node::in_edges_iterator in_edge_it = cur_node.in_edges_begin();
 		node::in_edges_iterator in_edges_end = cur_node.in_edges_end();
@@ -365,7 +365,7 @@ void maxflow_pp::get_sp_ahead(const graph& G, const node& start_node, node_map<e
 	node cur_node;
 	while (!next_nodes.empty())
 	{
-		cur_node = next_nodes.front();
+		cur_node = std::move(next_nodes.front());
 		next_nodes.pop();
 
 		node::out_edges_iterator out_edge_it = cur_node.out_edges_begin();
@@ -397,7 +397,7 @@ void maxflow_pp::get_sp_backwards(const graph& G, const node& start_node, node_m
 	node cur_node;
 	while (!next_nodes.empty())
 	{
-		cur_node = next_nodes.front();
+		cur_node = std::move(next_nodes.front());
 		next_nodes.pop();
 
 		node::in_edges_iterator in_edge_it = cur_node.in_edges_begin();

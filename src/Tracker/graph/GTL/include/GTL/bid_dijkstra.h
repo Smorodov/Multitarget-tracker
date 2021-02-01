@@ -33,7 +33,7 @@ __GTL_BEGIN_NAMESPACE
  *
  * @author Christian Bachmaier chris@infosun.fmi.uni-passau.de
  */
-class GTL_EXTERN bid_dijkstra : public algorithm
+class GTL_EXTERN bid_dijkstra final : public algorithm
 {
 public:
     /**

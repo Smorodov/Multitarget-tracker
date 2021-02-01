@@ -6,7 +6,7 @@
 ///
 /// \brief The PedestrianDetector class
 ///
-class PedestrianDetector : public BaseDetector
+class PedestrianDetector final : public BaseDetector
 {
 public:
     enum DetectorTypes

@@ -159,15 +159,14 @@ void bfs::bfs_sub (GTL::graph& G, const node& st, GTL::edge_map<int>* used)
     }
 
     while (!qu.empty()) {
-	node tmp = qu.front();
+	node tmp = std::move(qu.front());
 	qu.pop_front();
 	++reached_nodes;
 	
-	if (tmp == st) {
+	if (tmp == st)
 	    roots.push_back (bfs_order.insert (bfs_order.end(), tmp));
-	} else {
+	else
 	    bfs_order.push_back (tmp);
-	}
 
 	popped_node_handler (G, tmp);
 

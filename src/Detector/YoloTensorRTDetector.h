@@ -6,7 +6,7 @@
 ///
 /// \brief The YoloTensorRTDetector class
 ///
-class YoloTensorRTDetector : public BaseDetector
+class YoloTensorRTDetector final : public BaseDetector
 {
 public:
 	YoloTensorRTDetector(const cv::UMat& colorFrame);

@@ -31,10 +31,10 @@
 // Test whether graph is a tree
 bool is_tree (const GTL::graph& G);
 
-class MyTree : public MyGraph
+class MyTree final : public MyGraph
 {
 public:
-	MyTree () { };
+	MyTree () = default;
 
 	GTL::node parent( const GTL::node v ) const;
 	GTL::node root() const;

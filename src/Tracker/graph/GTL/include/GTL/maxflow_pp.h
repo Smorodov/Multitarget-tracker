@@ -22,7 +22,7 @@ __GTL_BEGIN_NAMESPACE
 /**
  * @short Maximum flow algorithm (Malhotra, Kumar, Maheshwari).
  */
-class GTL_EXTERN maxflow_pp : public algorithm
+class GTL_EXTERN maxflow_pp final : public algorithm
 {
 public:
     /**

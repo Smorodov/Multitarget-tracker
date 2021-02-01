@@ -30,7 +30,7 @@ __GTL_BEGIN_NAMESPACE
  *
  * @see ratio_cut_partition
  */
-class GTL_EXTERN fm_partition : public algorithm
+class GTL_EXTERN fm_partition final : public algorithm
 {
 public:
     /**

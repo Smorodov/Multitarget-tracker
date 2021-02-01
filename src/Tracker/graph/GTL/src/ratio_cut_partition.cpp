@@ -20,29 +20,6 @@
 
 __GTL_BEGIN_NAMESPACE
 
-
-const ratio_cut_partition::side_type ratio_cut_partition::A = 0;
-const ratio_cut_partition::side_type ratio_cut_partition::B = 1;
-
-
-const ratio_cut_partition::fix_type ratio_cut_partition::FIXA = 0;
-const ratio_cut_partition::fix_type ratio_cut_partition::FIXB = 1;
-const ratio_cut_partition::fix_type ratio_cut_partition::UNFIXED = 2;
-
-
-ratio_cut_partition::ratio_cut_partition()
-{
-	set_vars_executed = false;
-	enable_cut_edges_storing = false;
-	enable_nodesAB_storing = false;
-}
-
-
-ratio_cut_partition::~ratio_cut_partition()
-{
-}
-
-
 void ratio_cut_partition::set_vars(const graph& G,
 	const node_map<int>& node_weight, const edge_map<int>& edge_weight)
 {
@@ -750,7 +727,7 @@ void ratio_cut_partition::compute_target_node(const graph& G)
 
 	while (!next_nodes.empty())
 	{
-		cur_node = next_nodes.front();
+		cur_node = std::move(next_nodes.front());
 		next_nodes.pop();
 
 		node::adj_edges_iterator adj_edge_it = cur_node.adj_edges_begin();

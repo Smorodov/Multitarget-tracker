@@ -110,7 +110,7 @@ class GBaseFont
 {
 public:
     GBaseFont ();
-    virtual ~GBaseFont () {};
+    virtual ~GBaseFont () = default;
     virtual std::string GetName () { return description; };
     virtual std::string GetDescription () { return description; };
     virtual int  GetSize () { return size; };
@@ -139,8 +139,8 @@ typedef GFont *GFontPtr;
 class GBasePrinter
 {
 public:
-    GBasePrinter () {};
-    virtual ~GBasePrinter () {};
+    GBasePrinter () = default;
+    virtual ~GBasePrinter () = default;
     virtual void PrinterSetup () = 0;
     virtual void AbortPrinting () = 0;
     virtual void EndDoc ();
@@ -162,8 +162,8 @@ public:
 class GBasePort
 {
 public:
-    GBasePort () { Device = devScreen; PenWidth = 1;};
-    virtual ~GBasePort() {};
+    GBasePort () = default;
+    virtual ~GBasePort() = default;
     virtual void DrawArc (const GPoint &pt, const int radius,
         const double startAngleDegrees, const double endAngleDegrees) = 0;
     virtual void DrawCircle (const GPoint &pt, const int radius) = 0;
@@ -205,10 +205,10 @@ protected:
     // printer class
     //pens
 
-    int PenWidth;
+    int PenWidth = 1;
 
     // Device info
-    GPortDevice Device;
+    GPortDevice Device = devScreen;
     GRect	DisplayRect;
 };
 
@@ -216,11 +216,11 @@ protected:
 // Win
 // Postscript
 
-class GPostscriptPort : public GBasePort
+class GPostscriptPort final : public GBasePort
 {
 public:
     GPostscriptPort ();
-    virtual ~GPostscriptPort () {};
+    virtual ~GPostscriptPort () = default;
     virtual void DrawArc (const GPoint &pt, const int radius,
             const double startAngleDegrees, const double endAngleDegrees);
     virtual void DrawCircle (const GPoint &pt, const int radius);
@@ -265,7 +265,7 @@ protected:
 	double fill_r, fill_g, fill_b;
 };
 
-class GMacPort : public GBasePort
+class GMacPort final : public GBasePort
 {
 public:
     // Groups
@@ -274,7 +274,7 @@ public:
 protected:
 };
 
-class SVGPort : public GBasePort
+class SVGPort final : public GBasePort
 {
 public:
     SVGPort ();

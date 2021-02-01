@@ -10,19 +10,18 @@ CTracker::CTracker(const TrackerSettings& settings)
       m_settings(settings),
       m_nextTrackID(0)
 {
-    ShortPathCalculator* spcalc = nullptr;
+    m_SPCalculator.reset();
     SPSettings spSettings = { settings.m_distThres, 12 };
     switch (m_settings.m_matchType)
     {
     case tracking::MatchHungrian:
-        spcalc = new SPHungrian(spSettings);
+        m_SPCalculator = std::make_unique<SPHungrian>(spSettings);
         break;
     case tracking::MatchBipart:
-        spcalc = new SPBipart(spSettings);
+        m_SPCalculator = std::make_unique<SPBipart>(spSettings);
         break;
     }
-    assert(spcalc != nullptr);
-    m_SPCalculator = std::unique_ptr<ShortPathCalculator>(spcalc);
+    assert(m_SPCalculator);
 
 	for (const auto& embParam : settings.m_embeddings)
 	{

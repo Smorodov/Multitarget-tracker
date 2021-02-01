@@ -24,26 +24,6 @@ __GTL_BEGIN_NAMESPACE
 class node_data;
 
 //--------------------------------------------------------------------------
-// The first alternative is correct. The second one is a workaround
-// for compilers that don't support namespaces and use the SGI STL
-// (i.e. gcc/egcs)
-//--------------------------------------------------------------------------
-
-#ifdef __GTL_USE_NAMESPACES
-
-class node;
-typedef std::iterator<std::bidirectional_iterator_tag, GTL::edge> bi_iter_edge;
-typedef std::iterator<std::bidirectional_iterator_tag, GTL::node> bi_iter_node;
-
-#else
-
-class node;
-typedef bidirectional_iterator<edge,ptrdiff_t> bi_iter_edge;
-typedef bidirectional_iterator<node,ptrdiff_t> bi_iter_node;
-
-#endif // __GTL_USE_NAMESPACES
-
-//--------------------------------------------------------------------------
 //   nodes
 //--------------------------------------------------------------------------
 
@@ -237,9 +217,11 @@ private:
 /**
  * @short Iterator for adjacent edges of a node
  */
-class GTL_EXTERN node::adj_edges_iterator : public bi_iter_edge
+class GTL_EXTERN node::adj_edges_iterator
 {
 public:
+    using iterator_category = std::bidirectional_iterator_tag;
+    using value_type = GTL::edge;
 	
     // constructor
     adj_edges_iterator();
@@ -268,9 +250,11 @@ private:
 /**
  * @short Iterator for all incident edges of a node
  */
-class GTL_EXTERN node::inout_edges_iterator : public bi_iter_edge
+class GTL_EXTERN node::inout_edges_iterator
 {
 public:
+    using iterator_category = std::bidirectional_iterator_tag;
+    using value_type = GTL::edge;
 
     // constructor
     inout_edges_iterator();
@@ -298,9 +282,11 @@ private:
 /**
  * @short Iterator for adjacent nodes of a node
  */
-class GTL_EXTERN node::adj_nodes_iterator : public bi_iter_node
+class GTL_EXTERN node::adj_nodes_iterator
 {
 public:
+    using iterator_category = std::bidirectional_iterator_tag;
+    using value_type = GTL::node;
 
     // constructor
     adj_nodes_iterator();
