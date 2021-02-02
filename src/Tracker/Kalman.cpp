@@ -280,7 +280,7 @@ void TKalmanFilter::CreateLinearAcceleration(cv::Rect_<track_t> rect0, Point_t r
 
 #ifdef USE_OCV_UKF
 //---------------------------------------------------------------------------
-class AcceleratedModel: public kalman::UkfSystemModel
+class AcceleratedModel final : public kalman::UkfSystemModel
 {
 public:
     AcceleratedModel(track_t deltaTime, bool rectModel)

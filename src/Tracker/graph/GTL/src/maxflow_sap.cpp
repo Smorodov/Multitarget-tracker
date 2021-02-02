@@ -227,7 +227,7 @@ void maxflow_sap::comp_dist_labels(const graph& G, std::vector<int>& numb)
 
     while (!next_nodes.empty())
     {
-		cur_node = next_nodes.front();
+		cur_node = std::move(next_nodes.front());
 		next_nodes.pop();
 		node::in_edges_iterator in_edge_it = cur_node.in_edges_begin();
 		node::in_edges_iterator in_edges_end = cur_node.in_edges_end();

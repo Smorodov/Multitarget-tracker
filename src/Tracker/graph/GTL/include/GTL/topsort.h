@@ -32,7 +32,7 @@ __GTL_BEGIN_NAMESPACE
  * new iterator, <code>topsort_iterator</code> is provided.
  */
 
-class GTL_EXTERN topsort : public dfs 
+class GTL_EXTERN topsort final : public dfs 
 {
 public:
     /**

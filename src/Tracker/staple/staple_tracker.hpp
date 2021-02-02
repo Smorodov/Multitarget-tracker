@@ -53,7 +53,7 @@ struct staple_cfg
 ///
 /// \brief The STAPLE_TRACKER class
 ///
-class STAPLE_TRACKER : public VOTTracker
+class STAPLE_TRACKER final : public VOTTracker
 {
 public:
     STAPLE_TRACKER();

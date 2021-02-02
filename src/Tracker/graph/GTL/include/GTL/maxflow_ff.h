@@ -22,7 +22,7 @@ __GTL_BEGIN_NAMESPACE
 /**
  * @short Maximum flow algorithm (Edmonds-Karp).
  */
-class GTL_EXTERN maxflow_ff : public algorithm
+class GTL_EXTERN maxflow_ff final : public algorithm
 {
 public:
     /**

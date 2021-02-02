@@ -5,7 +5,7 @@
 ///
 /// \brief The FaceDetector class
 ///
-class FaceDetector : public BaseDetector
+class FaceDetector final : public BaseDetector
 {
 public:
     FaceDetector(const cv::UMat& gray);

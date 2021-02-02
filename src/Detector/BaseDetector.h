@@ -222,4 +222,4 @@ private:
 /// \param gray
 /// \return
 ///
-BaseDetector* CreateDetector(tracking::Detectors detectorType, const config_t& config, cv::UMat& gray);
+std::unique_ptr<BaseDetector> CreateDetector(tracking::Detectors detectorType, const config_t& config, cv::UMat& gray);

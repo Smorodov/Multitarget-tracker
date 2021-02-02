@@ -39,7 +39,7 @@ struct dat_cfg
 ///
 /// \brief The DAT_TRACKER class
 ///
-class DAT_TRACKER : public VOTTracker
+class DAT_TRACKER final : public VOTTracker
 {
 public:
     DAT_TRACKER();

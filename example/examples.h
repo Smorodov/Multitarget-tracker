@@ -38,13 +38,11 @@ void DrawFilledRect(cv::Mat& frame, const cv::Rect& rect, cv::Scalar cl, int alp
 ///
 /// \brief The MotionDetectorExample class
 ///
-class MotionDetectorExample : public VideoExample
+class MotionDetectorExample final : public VideoExample
 {
 public:
     MotionDetectorExample(const cv::CommandLineParser& parser)
-        :
-          VideoExample(parser),
-          m_minObjWidth(10)
+        : VideoExample(parser), m_minObjWidth(10)
     {
     }
 
@@ -98,7 +96,7 @@ protected:
 			config.emplace("detectShadows", "1");
 			break;
 		}
-        m_detector = std::unique_ptr<BaseDetector>(CreateDetector(detectorType, config, frame));
+        m_detector = CreateDetector(detectorType, config, frame);
 
         if (m_detector.get())
         {
@@ -218,12 +216,11 @@ private:
 ///
 /// \brief The FaceDetectorExample class
 ///
-class FaceDetectorExample : public VideoExample
+class FaceDetectorExample final : public VideoExample
 {
 public:
     FaceDetectorExample(const cv::CommandLineParser& parser)
-        :
-          VideoExample(parser)
+        : VideoExample(parser)
     {
     }
 
@@ -243,7 +240,7 @@ protected:
 
         config_t config;
         config.emplace("cascadeFileName", pathToModel + "haarcascade_frontalface_alt2.xml");
-        m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Face_HAAR, config, frame));
+        m_detector = CreateDetector(tracking::Detectors::Face_HAAR, config, frame);
         if (m_detector.get())
         {
             m_detector->SetMinObjectSize(cv::Size(frame.cols / 20, frame.rows / 20));
@@ -305,12 +302,11 @@ protected:
 ///
 /// \brief The PedestrianDetectorExample class
 ///
-class PedestrianDetectorExample : public VideoExample
+class PedestrianDetectorExample final : public VideoExample
 {
 public:
     PedestrianDetectorExample(const cv::CommandLineParser& parser)
-        :
-          VideoExample(parser)
+        : VideoExample(parser)
     {
     }
 
@@ -334,7 +330,7 @@ protected:
         config.emplace("detectorType", (detectorType == tracking::Pedestrian_HOG) ? "HOG" : "C4");
         config.emplace("cascadeFileName1", pathToModel + "combined.txt.model");
         config.emplace("cascadeFileName2", pathToModel + "combined.txt.model_");
-        m_detector = std::unique_ptr<BaseDetector>(CreateDetector(detectorType, config, frame));
+        m_detector = CreateDetector(detectorType, config, frame);
         if (m_detector.get())
         {
             m_detector->SetMinObjectSize(cv::Size(frame.cols / 20, frame.rows / 20));
@@ -396,12 +392,11 @@ protected:
 ///
 /// \brief The OpenCVDNNExample class
 ///
-class OpenCVDNNExample : public VideoExample
+class OpenCVDNNExample final : public VideoExample
 {
 public:
 	OpenCVDNNExample(const cv::CommandLineParser& parser)
-		:
-		VideoExample(parser)
+		: VideoExample(parser)
 	{
 	}
 
@@ -471,7 +466,7 @@ protected:
 		config.emplace("dnnTarget", "DNN_TARGET_CPU");
 		config.emplace("dnnBackend", "DNN_BACKEND_DEFAULT");
 
-		m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::DNN_OCV, config, frame));
+		m_detector = CreateDetector(tracking::Detectors::DNN_OCV, config, frame);
 		if (m_detector.get())
 			m_detector->SetMinObjectSize(cv::Size(frame.cols / 40, frame.rows / 40));
 		return (m_detector.get() != nullptr);
@@ -571,12 +566,11 @@ protected:
 ///
 /// \brief The YoloDarknetExample class
 ///
-class YoloDarknetExample : public VideoExample
+class YoloDarknetExample final : public VideoExample
 {
 public:
 	YoloDarknetExample(const cv::CommandLineParser& parser)
-		:
-		VideoExample(parser)
+		: VideoExample(parser)
 	{
 	}
 
@@ -666,7 +660,7 @@ protected:
         config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_bus));
         config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_truck));
 
-        m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Yolo_Darknet, config, frame));
+        m_detector = CreateDetector(tracking::Detectors::Yolo_Darknet, config, frame);
         if (m_detector.get())
         {
             m_detector->SetMinObjectSize(cv::Size(frame.cols / 40, frame.rows / 40));
@@ -724,7 +718,7 @@ protected:
 			m_trackerSettings.m_kalmanType = tracking::KalmanLinear;
 			m_trackerSettings.m_filterGoal = tracking::FilterRect;
 			m_trackerSettings.m_lostTrackType = useDeepSORT ? tracking::TrackNone : tracking::TrackCSRT; // Use visual objects tracker for collisions resolving. Used if m_filterGoal == tracking::FilterRect
-			m_trackerSettings.m_matchType = tracking::MatchHungrian;
+			m_trackerSettings.m_matchType = tracking::MatchBipart;
 			m_trackerSettings.m_useAcceleration = false;                   // Use constant acceleration motion model
 			m_trackerSettings.m_dt = m_trackerSettings.m_useAcceleration ? 0.05f : 0.4f; // Delta time for Kalman filter
 			m_trackerSettings.m_accelNoiseMag = 0.2f;                     // Accel noise magnitude for Kalman filter
@@ -817,12 +811,11 @@ protected:
 ///
 /// \brief The YoloTensorRTExample class
 ///
-class YoloTensorRTExample : public VideoExample
+class YoloTensorRTExample final : public VideoExample
 {
 public:
 	YoloTensorRTExample(const cv::CommandLineParser& parser)
-		:
-		VideoExample(parser)
+		: VideoExample(parser)
 	{
 	}
 
@@ -928,7 +921,7 @@ protected:
 		config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_bus));
 		config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_truck));
 
-		m_detector = std::unique_ptr<BaseDetector>(CreateDetector(tracking::Detectors::Yolo_TensorRT, config, frame));
+		m_detector = CreateDetector(tracking::Detectors::Yolo_TensorRT, config, frame);
 		if (m_detector.get())
 		{
 			m_detector->SetMinObjectSize(cv::Size(frame.cols / 40, frame.rows / 40));

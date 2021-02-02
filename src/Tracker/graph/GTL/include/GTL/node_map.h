@@ -51,7 +51,7 @@ class graph;
  * @see edge_map
  */
 template <class T, class Alloc = std::allocator<T> >
-class node_map : public ne_map<node, T, graph, Alloc>
+class node_map final : public ne_map<node, T, graph, Alloc>
 {
 public:
 

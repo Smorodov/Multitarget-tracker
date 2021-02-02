@@ -29,7 +29,7 @@ __GTL_BEGIN_NAMESPACE
  *
  * @see fm_partition
  */
-class GTL_EXTERN ratio_cut_partition : public algorithm
+class GTL_EXTERN ratio_cut_partition final : public algorithm
 {
 public:
     /**
@@ -45,14 +45,14 @@ public:
      *
      * @see ratio_cut_partition#side_type
      */
-    const static side_type A;
+    const static side_type A = 0;
 
     /**
      * <code>B</code> means the node is on side B.
      *
      * @see ratio_cut_partition#side_type
      */
-    const static side_type B;
+    const static side_type B = 1;
 
     /**
      * Fix type of each node (needed with
@@ -69,35 +69,35 @@ public:
      *
      * @see ratio_cut_partition#set_vars
      */
-    const static fix_type FIXA;
+    const static fix_type FIXA = 0;
 
     /**
      * <code>FIXB</code> means fix node on side <code>B</code>.
      *
      * @see ratio_cut_partition#fixe_type
      */
-    const static fix_type FIXB;
+    const static fix_type FIXB = 1;
 
     /**
      * <code>UNFIXED</code> means node is free.
      *
      * @see ratio_cut_partition#fixe_type
      */
-    const static fix_type UNFIXED;
+    const static fix_type UNFIXED = 2;
 
     /**
      * Default constructor.
      *
      * @see algorithm#algorithm
      */
-    ratio_cut_partition();
+    ratio_cut_partition() = default;
 
     /**
      * Destructor.
      *
      * @see algorithm#~algorithm
      */
-    virtual ~ratio_cut_partition();
+    virtual ~ratio_cut_partition() = default;
 
     /**
      * Sets variables.
@@ -404,7 +404,7 @@ protected:
      * <code>true</code>, iff user enabled storing of cut-edges with
      * @ref ratio_cut_partition#store_cut_edges.
      */
-    bool enable_cut_edges_storing;
+    bool enable_cut_edges_storing = false;
 		
     /**
      * @internal
@@ -417,7 +417,7 @@ protected:
      * <code>true</code>, iff user enabled storing of nodes with @ref
      * ratio_cut_partition#store_nodesAB.
      */
-    bool enable_nodesAB_storing;
+    bool enable_nodesAB_storing = false;
 		
     /**
      * @internal
@@ -449,7 +449,7 @@ protected:
      * ratio_cut_partition#set_vars before @ref ratio_cut_partition#
      * check and @ref ratio_cut_partition#run.
      */
-    bool set_vars_executed;
+    bool set_vars_executed = false;
 
     /**
      * @internal

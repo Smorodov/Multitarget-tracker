@@ -33,7 +33,7 @@ __GTL_BEGIN_NAMESPACE
  * whole graph, even if it is not connected. 
  */
 
-class GTL_EXTERN biconnectivity : public dfs 
+class GTL_EXTERN biconnectivity final : public dfs 
 {
 public:
     /**
@@ -48,7 +48,7 @@ public:
      *
      * @see dfs::~dfs
      */
-    virtual ~biconnectivity () {}
+    virtual ~biconnectivity () = default;
 
     /**
      * @brief Checks whether the algorithm can be applied.

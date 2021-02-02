@@ -265,7 +265,7 @@ protected:
 /**
  * @internal
  */
-class GTL_EXTERN p_node : public pq_node 
+class GTL_EXTERN p_node final : public pq_node 
 {
 private:
     /**
@@ -416,7 +416,7 @@ private:
 /**
  * @internal
  */
-class GTL_EXTERN q_node : public pq_node 
+class GTL_EXTERN q_node final : public pq_node 
 {
 private:
     /**
@@ -587,7 +587,7 @@ private:
 /**
  * @internal
  */
-class GTL_EXTERN pq_leaf : public pq_node 
+class GTL_EXTERN pq_leaf final : public pq_node 
 {
 public:
     /**
@@ -686,7 +686,7 @@ private:
 /**
  * @internal
  */
-class GTL_EXTERN direction_indicator : public pq_node 
+class GTL_EXTERN direction_indicator final : public pq_node 
 {
 private:
     /**

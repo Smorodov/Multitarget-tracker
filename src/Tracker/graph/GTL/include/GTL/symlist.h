@@ -24,9 +24,7 @@ struct symnode
     /**
      * @internal
      */
-    symnode()
-    {
-    }
+    symnode() = default;
 
     /**
      * @internal
@@ -38,7 +36,7 @@ struct symnode
     /**
      * @internal
      */
-    symnode* adj[2];
+    symnode* adj[2]{nullptr, nullptr};
 
     /**
      * @internal

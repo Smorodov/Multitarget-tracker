@@ -28,7 +28,7 @@
 
 	This algorithm is currently NOT thread-safe.
  */
-class BackgroundSubtractorLOBSTER : public BackgroundSubtractorLBSP {
+class BackgroundSubtractorLOBSTER final : public BackgroundSubtractorLBSP {
 public:
 	//! full constructor
 	BackgroundSubtractorLOBSTER(float fRelLBSPThreshold=BGSLOBSTER_DEFAULT_LBSP_REL_SIMILARITY_THRESHOLD,

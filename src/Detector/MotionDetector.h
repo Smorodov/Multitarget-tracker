@@ -6,7 +6,7 @@
 ///
 /// \brief The MotionDetector class
 ///
-class MotionDetector : public BaseDetector
+class MotionDetector final : public BaseDetector
 {
 public:
     MotionDetector(BackgroundSubtract::BGFG_ALGS algType, cv::UMat& gray);

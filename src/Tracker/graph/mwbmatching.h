@@ -7,11 +7,11 @@
 #include <map>
 #include "fheap.h"
 
-class GTL_EXTERN mwbmatching : public GTL::algorithm
+class GTL_EXTERN mwbmatching final : public GTL::algorithm
 {
 public:
 	mwbmatching ();
-	virtual ~mwbmatching();
+	virtual ~mwbmatching() = default;
 	
     /**
      * Sets weight of every edge for maximum weight bipartite matching calculation.
@@ -46,7 +46,7 @@ public:
      *
      * @see algorithm#reset
      */
-    virtual void reset () {};
+    virtual void reset () {}
 	
 	/**
 	 * Returns the value of the maximum weight bipartite matching for the graph G.
@@ -54,7 +54,7 @@ public:
 	 * @return maximum weight bipartite matching value
 	 *
 	 */
-	int get_mwbm() const { return mwbm; };
+	int get_mwbm() const { return m_mwbm; }
 	
 	/**
 	 * Returns the maximum weight bipartite matching for the graph G as a list of
@@ -63,34 +63,34 @@ public:
 	 * @return list of edges in maximum weight bipartite matching 
 	 *
 	 */
-	GTL::edges_t get_match() { return result; };
+	GTL::edges_t get_match() { return m_result; }
 	
 protected:
     /**
      * @internal
      */
-	long mwbm;
+	long m_mwbm = 0;
 	
     /**
      * @internal
      */
-    bool set_vars_executed;
+    bool m_set_vars_executed = false;
 	
     /**
      * @internal
      */
-	GTL::edge_map<int> edge_weight;
+	GTL::edge_map<int> m_edge_weight;
     
-	GTL::edges_t result;
+	GTL::edges_t m_result;
     
-	GTL::node_map<long> pot;
-	GTL::node_map<bool> free;
-	GTL::node_map<long> dist;
-	GTL::node_map<long> pred;
-	std::map <int, GTL::node, std::less<int> > node_from_id;
-	std::map <int, GTL::edge, std::less<int> > edge_from_id;
+	GTL::node_map<long> m_pot;
+	GTL::node_map<bool> m_free;
+	GTL::node_map<long> m_dist;
+	GTL::node_map<long> m_pred;
+	std::map <int, GTL::node, std::less<int> > m_node_from_id;
+	std::map <int, GTL::edge, std::less<int> > m_edge_from_id;
 	
-    fheap_t *pq;
+    fheap_t* m_pq = nullptr;
 	
 	int augment(GTL::graph& G, GTL::node a);
 	inline void augment_path_to (GTL::graph &G, GTL::node v);

@@ -46,7 +46,7 @@ void MyTree::postorder_traversal()
 	S.push (root());
 	int num = 1;
 	do {
-		GTL::node v = S.top();
+		GTL::node v = std::move(S.top());
 		S.pop();
 		int n = number_of_nodes() - num++ + 1; // order in which node is visited in postorder
 		order[v] = n; 

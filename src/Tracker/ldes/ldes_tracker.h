@@ -7,7 +7,7 @@
 
 #include "../VOTTracker.hpp"
 
-class LDESTracker : public VOTTracker
+class LDESTracker final : public VOTTracker
 {
 public:
 	LDESTracker();

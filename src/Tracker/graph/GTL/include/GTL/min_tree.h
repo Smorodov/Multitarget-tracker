@@ -22,7 +22,7 @@ __GTL_BEGIN_NAMESPACE
  * 
  * @author Marcus Raitner
  */
-class min_tree: public algorithm { 
+class min_tree final : public algorithm { 
 
 public:
 
@@ -34,7 +34,7 @@ public:
     /**
      * @brief Destructor
      */
-    virtual ~min_tree () {};
+    virtual ~min_tree () = default;
 
     /**
      * @brief Checks whether %algorithm can be applied.

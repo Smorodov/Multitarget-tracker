@@ -221,7 +221,7 @@ public:
         }
         if (!m_break.load())
         {
-            frame_ptr frameInfo = m_que.front();
+            frame_ptr frameInfo = std::move(m_que.front());
             m_que.pop_front();
 #if SHOW_QUE_LOG
             QUE_LOG << "GetFirstProcessedFrame end: " << frameInfo->m_dt << ", frameInd " << frameInfo->m_frameInd << std::endl;

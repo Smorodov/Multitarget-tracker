@@ -109,24 +109,24 @@ pathfinder::const_iterator::const_iterator (pathfinder& _pf, GTL::node n) :
 	pf (_pf) 
 {
     if (!pf.back[n].empty()) {
-	edge back = pf.back[n].front();
-	curr = n.opposite (back);
+	edge back_edge = std::move(pf.back[n].front());
+	curr = n.opposite (back_edge);
 	pf.used[curr] = 1;
 	pf.back[n].pop_front();
-	pf.forward[curr].erase (pf.pos[back].first);
+	pf.forward[curr].erase (pf.pos[back_edge].first);
 	state = END;
 		
     } else if (!pf.tree[n].empty()) {
-	curr = n.opposite (pf.tree[n].front());
+	curr = n.opposite (std::move(pf.tree[n].front()));
 	pf.used[curr] = 1;
 	pf.tree[n].pop_front();
 	state = DOWN;
 		
     } else if (!pf.forward[n].empty()) {
-	edge forward = pf.forward[n].front();
-	curr = n.opposite (forward);
+	edge forward_edge = std::move(pf.forward[n].front());
+	curr = n.opposite (forward_edge);
 	pf.forward[n].pop_front();
-	pf.back[curr].erase (pf.pos[forward].second); 
+	pf.back[curr].erase (pf.pos[forward_edge].second); 
 		
 	if (pf.used[curr]) {
 	    state = END;
@@ -226,20 +226,17 @@ int st_number::run (GTL::graph& /*G*/)
 		{
 			st_num[tmp] = act_st++;
 			st_ord.push_back(tmp);
-			tmp = order.back();
+			tmp = std::move(order.back());
 			order.pop_back();
-
 		}
 		else
 		{
 			pos = order.end();
-
 			while (it != end)
 			{
 				pos = order.insert(pos, *it);
 				++it;
 			}
-
 			order.erase(pos);
 		}
 	}

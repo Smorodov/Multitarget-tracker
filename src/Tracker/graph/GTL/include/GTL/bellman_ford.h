@@ -30,7 +30,7 @@ __GTL_BEGIN_NAMESPACE
  * implementation finds them.
  */ 
 
-class GTL_EXTERN bellman_ford : public algorithm 
+class GTL_EXTERN bellman_ford final : public algorithm 
 {
 public:
 

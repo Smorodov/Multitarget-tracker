@@ -219,7 +219,7 @@ int maxflow_ff::comp_sp(const graph& /*G*/, std::queue<node>& next_nodes, node_m
 
 	while (!next_nodes.empty())
 	{
-		cur_node = next_nodes.front();
+		cur_node = std::move(next_nodes.front());
 		next_nodes.pop();
 
 		node::out_edges_iterator out_edge_it = cur_node.out_edges_begin();

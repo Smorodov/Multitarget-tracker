@@ -84,7 +84,7 @@ __GTL_BEGIN_NAMESPACE
  *    -  bfs::non_tree_edges_iterator
  *    -  bfs::roots_iterator
  */
-class GTL_EXTERN bfs : public algorithm
+class GTL_EXTERN bfs final : public algorithm
 {
 public:
     

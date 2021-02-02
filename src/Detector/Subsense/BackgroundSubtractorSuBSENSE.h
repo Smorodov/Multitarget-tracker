@@ -26,7 +26,7 @@
 
 	This algorithm is currently NOT thread-safe.
  */
-class BackgroundSubtractorSuBSENSE : public BackgroundSubtractorLBSP {
+class BackgroundSubtractorSuBSENSE final : public BackgroundSubtractorLBSP {
 public:
 	//! full constructor
 	BackgroundSubtractorSuBSENSE(	float fRelLBSPThreshold=BGSSUBSENSE_DEFAULT_LBSP_REL_SIMILARITY_THRESHOLD,
