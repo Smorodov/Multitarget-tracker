@@ -33,8 +33,8 @@ class DsImage
 {
 public:
     DsImage();
-    DsImage(const std::string& path, const int& inputH, const int& inputW);
-    DsImage(const cv::Mat& mat_image_, const int& inputH, const int& inputW);
+    DsImage(const std::string& path, const std::string &s_net_type_, const int& inputH, const int& inputW);
+    DsImage(const cv::Mat& mat_image_, const std::string &s_net_type_, const int& inputH, const int& inputW);
     int getImageHeight() const { return m_Height; }
     int getImageWidth() const { return m_Width; }
     cv::Mat getLetterBoxedImage() const { return m_LetterboxImage; }
@@ -44,7 +44,7 @@ public:
     void showImage() const;
     void saveImageJPEG(const std::string& dirPath) const;
     std::string exportJson() const;
-
+	void letterbox(const int& inputH, const int& inputW);
 private:
     int m_Height;
     int m_Width;

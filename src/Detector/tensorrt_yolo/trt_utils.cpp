@@ -120,30 +120,24 @@ BBox convertBBoxNetRes(const float& bx, const float& by, const float& bw, const 
     return b;
 }
 
-void convertBBoxImgRes(const float /*scalingFactor*/,
-	//const float& xOffset,
-//	const float& yOffset,
-	const uint32_t &input_w_,
-	const uint32_t &input_h_,
-	const uint32_t &image_w_,
-	const uint32_t &image_h_,
-                       BBox& bbox)
+void convertBBoxImgRes(const float scalingFactor,
+	const float xOffset,
+	const float yOffset,
+    BBox& bbox)
 {
-    //// Undo Letterbox
-    //bbox.x1 -= xOffset;
-    //bbox.x2 -= xOffset;
-    //bbox.y1 -= yOffset;
-    //bbox.y2 -= yOffset;
+	    //// Undo Letterbox
+    bbox.x1 -= xOffset;
+    bbox.x2 -= xOffset;
+    bbox.y1 -= yOffset;
+    bbox.y2 -= yOffset;
+//// Restore to input resolution
+	bbox.x1 /= scalingFactor;
+	bbox.x2 /= scalingFactor;
+	bbox.y1 /= scalingFactor;
+	bbox.y2 /= scalingFactor;
+	std::cout << "convertBBoxImgRes" << std::endl;
 
-    //// Restore to input resolution
-    //bbox.x1 /= scalingFactor;
-    //bbox.x2 /= scalingFactor;
-    //bbox.y1 /= scalingFactor;
-    //bbox.y2 /= scalingFactor;
-	bbox.x1 = ((float)bbox.x1 / (float)input_w_)*(float)image_w_;
-	bbox.y1 = ((float)bbox.y1 / (float)input_h_)*(float)image_h_;
-	bbox.x2 = ((float)bbox.x2 / (float)input_w_)*(float)image_w_;
-	bbox.y2 = ((float)bbox.y2 / (float)input_h_)*(float)image_h_;
+    
 }
 
 void printPredictions(const BBoxInfo& b, const std::string& className)
@@ -211,7 +205,7 @@ std::vector<BBoxInfo> nmsAllClasses(const float nmsThresh,
 
     for (auto& boxes : splitBoxes)
     {
-		if (("yolov5"== model_type)||("yolov4" == model_type)||("yolov4-tiny"== model_type))
+		if ("yolov5"== model_type)
 		{
 			boxes =	diou_nms(nmsThresh, boxes);
 		}
@@ -836,6 +830,14 @@ nvinfer1::ILayer * layer_act(nvinfer1::ITensor* input_,
 		assert(act != nullptr);
 		return act;
 	}
+	else if (s_act_ == "silu")
+	{
+		auto sig = network_->addActivation(*input_, nvinfer1::ActivationType::kSIGMOID);
+		assert(sig != nullptr);
+		auto act = network_->addElementWise(*input_, *sig->getOutput(0), ElementWiseOperation::kPROD);
+		assert(act != nullptr);
+		return act;
+	}
 	return nullptr;
 }
 
@@ -897,6 +899,34 @@ nvinfer1::ILayer * layer_conv(std::vector<nvinfer1::Weights> &trtWeights_,
 	return conv;
 }
 
+nvinfer1::ILayer * C3(std::vector<nvinfer1::Weights> &trtWeights_,
+    std::string s_model_name_,
+    std::map<std::string, std::vector<float>> &map_wts_,
+    nvinfer1::INetworkDefinition* network_,
+    nvinfer1::ITensor* input_,
+    const int c2_,
+    const int n_depth_,
+    const bool b_short_cut_,
+    const int group_,
+    const float e_ )
+{
+    int c_ = (int)((float)c2_ * e_);
+    auto cv1 = layer_conv_bn_act(trtWeights_, s_model_name_ +".cv1", map_wts_, input_, network_, c_, 1, 1, 1, true, true, "silu");
+    auto cv2 = layer_conv_bn_act(trtWeights_, s_model_name_ +".cv2", map_wts_, input_, network_, c_, 1, 1, 1, true, true, "silu");
+    auto out = cv1;
+    for (int d = 0; d < n_depth_; ++d) {
+        std::string m_name = s_model_name_ + ".m." + std::to_string(d);
+	out = layer_bottleneck(trtWeights_, m_name, map_wts_, network_, out->getOutput(0), c_, b_short_cut_, group_, 1.f);
+    }
+    nvinfer1::ITensor** concatInputs = reinterpret_cast<nvinfer1::ITensor**>(malloc(sizeof(nvinfer1::ITensor*) *2));
+    concatInputs[0] = out->getOutput(0);
+    concatInputs[1] = cv2->getOutput(0);
+    auto cat = layer_concate(concatInputs, 2, 0, network_);
+
+    auto cv3 = layer_conv_bn_act(trtWeights_, s_model_name_ +".cv3", map_wts_, cat->getOutput(0), network_, c2_, 1, 1, 1, true, true, "silu");
+    return cv3;
+}
+
 nvinfer1::ILayer * layer_bottleneck_csp(std::vector<nvinfer1::Weights> &trtWeights_,
 	std::string s_model_name_,
 	std::map<std::string, std::vector<float>> &map_wts_,
@@ -931,7 +961,7 @@ nvinfer1::ILayer * layer_bottleneck_csp(std::vector<nvinfer1::Weights> &trtWeigh
 	concatInputs[1] = cv2->getOutput(0);
 	auto cat = layer_concate(concatInputs, 2, 0,network_);
 	auto bn = layer_bn(trtWeights_, s_model_name_, map_wts_, cat->getOutput(0), 2 * c_, network_);
-	auto act = layer_act(bn->getOutput(0), network_);
+	auto act = layer_act(bn->getOutput(0), network_,"leaky");
 	//cv4
 	auto cv4 = layer_conv_bn_act(trtWeights_, s_model_name_ + ".cv4", map_wts_, act->getOutput(0), network_, c2_, 1);
 	return cv4;

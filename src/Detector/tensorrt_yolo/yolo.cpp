@@ -69,7 +69,7 @@ Yolo::Yolo( const NetworkInfo& networkInfo, const InferParams& inferParams) :
 	{
 		Int8EntropyCalibrator calibrator(m_BatchSize, m_CalibImages, m_CalibImagesFilePath,
 			m_CalibTableFilePath, m_InputSize, m_InputH, m_InputW,
-			m_InputBlobName);
+			m_InputBlobName, m_NetworkType);
 		if ("yolov5" == m_NetworkType)
 		{
 			create_engine_yolov5(nvinfer1::DataType::kINT8, &calibrator);
@@ -497,6 +497,40 @@ int make_division(const float f_in_, const int n_divisor_)
 	return ceil(f_in_ / n_divisor_)*n_divisor_;
 }
 
+void parse_c3_args(const std::string s_args_, int &n_out_ch_, bool &b_shourt_cut_)
+{
+	std::string s_args = s_args_;
+	while (!s_args.empty())
+	{
+		auto npos = s_args.find_first_of(',');
+		if (npos != std::string::npos)
+		{
+			n_out_ch_ = std::stoi(trim(s_args.substr(0, npos)));
+			s_args.erase(0, npos + 1);
+		}
+		else
+		{
+			try
+			{
+				n_out_ch_ = std::stoi(trim(s_args.substr(0, npos)));
+			}
+			catch (const std::exception&)
+			{
+
+			}
+			if ("False" == trim(s_args))
+			{
+				b_shourt_cut_ = false;
+			}
+			else if ("True" == trim(s_args))
+			{
+				b_shourt_cut_ = true;
+			}
+			break;
+		}
+	}
+}
+
 void parse_bottleneck_args(const std::string s_args_, int &n_out_ch_, bool &b_shourt_cut_)
 {
 	std::string s_args = s_args_;
@@ -538,7 +572,7 @@ void parse_spp_args(const std::string s_args_, int &n_filters_, std::vector<int>
 	size_t pos = 0;
 	std::string token;
 	std::string delimiter = ",";
-	bool w = 0;
+	bool w = false;
 	while ((pos = s_args.find(delimiter)) != std::string::npos) 
 	{
 		token = s_args.substr(0, pos);
@@ -654,6 +688,7 @@ void Yolo::create_engine_yolov5(const nvinfer1::DataType dataType,
 
 	nvinfer1::ITensor* previous = elementDivide->getOutput(0);
 	std::vector<nvinfer1::ITensor*> tensorOutputs;
+	int n_layer_wts_index = 0;
 	int n_output = 3 * (_n_classes + 5);
 	for (uint32_t i = 0; i < m_configBlocks.size(); ++i)
 	{
@@ -703,6 +738,24 @@ void Yolo::create_engine_yolov5(const nvinfer1::DataType dataType,
 			tensorOutputs.push_back(out->getOutput(0));
 			printLayerInfo(layerIndex, "Conv", inputVol, outputVol, "");
 		}//end Conv
+		else if ("C3" == m_configBlocks.at(i).at("type"))
+		{
+			std::string inputVol = dimsToString(previous->getDimensions());
+			int filters = 0;
+			bool short_cut =true;
+			int number = std::stoi(m_configBlocks[i]["number"]);
+			parse_bottleneck_args(m_configBlocks[i]["args"], filters, short_cut);
+			int n_out_channel = (n_output != filters) ? make_division(filters*_f_width_multiple, 8) : filters;
+			int n_depth = (number > 1) ? (std::max(int(round(_f_depth_multiple *number)), 1)) : number;
+			std::string s_model_name = "model." + std::to_string(i- 1);
+			auto out = C3(trtWeights,s_model_name, model_wts, m_Network, previous, n_out_channel, n_depth, short_cut);
+			previous = out->getOutput(0);
+			assert(previous != nullptr);
+			channels = getNumChannels(previous);
+			std::string outputVol = dimsToString(previous->getDimensions());
+			tensorOutputs.push_back(out->getOutput(0));
+			printLayerInfo(layerIndex, "C3", inputVol, outputVol, "");
+		}// end C3
 		else if ("BottleneckCSP" == m_configBlocks.at(i).at("type"))
 		{
 			std::string inputVol = dimsToString(previous->getDimensions());
@@ -903,7 +956,7 @@ void Yolo::load_weights_v5(const std::string s_weights_path_,
 	std::string line;
 	while (std::getline(file,line))
 	{
-		if(line.size()==0)continue;
+		if(line.empty())continue;
 		std::stringstream iss(line);
 		std::string wts_name;
 		iss >> wts_name ;
@@ -960,12 +1013,12 @@ std::vector<std::map<std::string, std::string>> Yolo::parseConfigFile(const std:
 
     while (getline(file, line))
     {
-        if (line.size() == 0) continue;
+        if (line.empty()) continue;
         if (line.front() == '#') continue;
         line = trim(line);
         if (line.front() == '[')
         {
-            if (block.size() > 0)
+            if (!block.empty())
             {
                 blocks.push_back(block);
                 block.clear();
@@ -1190,6 +1243,7 @@ void Yolo::parse_cfg_blocks_v5(const  std::vector<std::map<std::string, std::str
 			
 		}
 	}
+	std::cout << "Config Done!" << std::endl;
 }
 void Yolo::allocateBuffers()
 {
@@ -1238,9 +1292,9 @@ void Yolo::destroyNetworkUtils(std::vector<nvinfer1::Weights>& trtWeights)
     if (m_ModelStream) m_ModelStream->destroy();
 
     // deallocate the weights
-    for (uint32_t i = 0; i < trtWeights.size(); ++i)
+    for (auto & trtWeight : trtWeights)
     {
-        if (trtWeights[i].count > 0) free(const_cast<void*>(trtWeights[i].values));
+        if (trtWeight.count > 0) free(const_cast<void*>(trtWeight.values));
     }
 }
 

@@ -33,7 +33,7 @@ Int8EntropyCalibrator::Int8EntropyCalibrator(const uint32_t& batchSize, const st
                                              const std::string& calibImagesPath,
                                              const std::string& calibTableFilePath,
                                              const uint64_t& inputSize, const uint32_t& inputH,
-                                             const uint32_t& inputW, const std::string& inputBlobName) :
+                                             const uint32_t& inputW, const std::string& inputBlobName, const std::string &s_net_type_) :
     m_BatchSize(batchSize),
     m_InputH(inputH),
     m_InputW(inputW),
@@ -41,7 +41,8 @@ Int8EntropyCalibrator::Int8EntropyCalibrator(const uint32_t& batchSize, const st
     m_InputCount(batchSize * inputSize),
     m_InputBlobName(inputBlobName),
     m_CalibTableFilePath(calibTableFilePath),
-    m_ImageIndex(0)
+    m_ImageIndex(0),
+    _s_net_type(s_net_type_)
 {
     if (!fileExists(m_CalibTableFilePath, false))
     {
@@ -66,7 +67,7 @@ bool Int8EntropyCalibrator::getBatch(void* bindings[], const char* names[], int 
     std::vector<DsImage> dsImages(m_BatchSize);
     for (uint32_t j = m_ImageIndex; j < m_ImageIndex + m_BatchSize; ++j)
     {
-        dsImages.at(j - m_ImageIndex) = DsImage(m_ImageList.at(j), m_InputH, m_InputW);
+        dsImages.at(j - m_ImageIndex) = DsImage(m_ImageList.at(j), _s_net_type, m_InputH, m_InputW);
     }
     m_ImageIndex += m_BatchSize;
 
