@@ -33,10 +33,10 @@ std::vector<BBoxInfo> YoloV3::decodeTensor(const int imageIdx,
 										   const int imageW,
                                            const TensorInfo& tensor)
 {
-	/*float scalingFactor
-		= std::min(static_cast<float>(m_InputW) / imageW, static_cast<float>(m_InputH) / imageH);
-	float xOffset = (m_InputW - scalingFactor * imageW) / 2;
-	float yOffset = (m_InputH - scalingFactor * imageH) / 2;*/
+	float	scale_h = 1.f;
+	float	scale_w = 1.f;
+	int	xOffset = 0;
+	int yOffset = 0;
 
     const float* detections = &tensor.hostBuffer[imageIdx * tensor.volume];
 
@@ -84,7 +84,7 @@ std::vector<BBoxInfo> YoloV3::decodeTensor(const int imageIdx,
 
                 if (maxProb > m_ProbThresh)
                 {
-					add_bbox_proposal(bx, by, bw, bh, tensor.stride_h, tensor.stride_w,maxIndex, maxProb, imageW, imageH, binfo);
+					add_bbox_proposal(bx, by, bw, bh, tensor.stride_h, tensor.stride_w, scale_h, scale_w, xOffset, yOffset, maxIndex, maxProb, imageW, imageH, binfo);
                 }
             }
         }

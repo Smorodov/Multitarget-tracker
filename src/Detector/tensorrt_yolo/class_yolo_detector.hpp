@@ -49,7 +49,7 @@ public:
 			vec_batch_result.reserve(vec_image.size());
 		for (const auto &img:vec_image)
 		{
-			vec_ds_images.emplace_back(img, _p_net->getInputH(), _p_net->getInputW());
+			vec_ds_images.emplace_back(img, _vec_net_type[_config.net_type], _p_net->getInputH(), _p_net->getInputW());
 		}
 		cv::Mat trtInput = blobFromDsImages(vec_ds_images, _p_net->getInputH(),_p_net->getInputW());
 		_p_net->doInference(trtInput.data, static_cast<uint32_t>(vec_ds_images.size()));
