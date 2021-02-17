@@ -70,5 +70,5 @@ install:
   - cd ../../
 
 script:
-  - cmake . -DCMAKE_BUILD_TYPE=Release
+  - cmake .
   - make -j4
