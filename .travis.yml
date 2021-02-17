@@ -71,4 +71,4 @@ install:
 
 script:
   - cmake .
-  - make -j4
+  - cmake --build . --config Release -- -j 4
