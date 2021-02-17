@@ -13,6 +13,8 @@ set(main_sources ../common/nms.h ../common/defines.h ../common/object_types.h ..
              track.h
              Kalman.cpp
              Kalman.h
+             TrackerSettings.cpp
+             TrackerSettings.h
 
              HungarianAlg/HungarianAlg.cpp
              HungarianAlg/HungarianAlg.h
@@ -177,7 +179,7 @@ include_directories(${PROJECT_SOURCE_DIR}/../src)
 include_directories(${PROJECT_SOURCE_DIR}/../common)
 include_directories(${PROJECT_SOURCE_DIR}/graph)
 include_directories(${PROJECT_SOURCE_DIR}/graph/GTL/include)
-
+include_directories(${PROJECT_SOURCE_DIR}/../../thirdparty)
 
 if (CMAKE_COMPILER_IS_GNUCXX)
     add_library(${PROJECT_NAME} SHARED 
@@ -196,11 +198,13 @@ endif()
 if (CMAKE_COMPILER_IS_GNUCXX)
 set(LIBS
     ${OpenCV_LIBS}
-#    iconv
+    inih
+    #iconv
 )
 else(CMAKE_COMPILER_IS_GNUCXX)
 set(LIBS
     ${OpenCV_LIBS}
+    inih
 )
 endif()
 
