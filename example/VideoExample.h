@@ -360,9 +360,8 @@ protected:
 
     void DrawTrack(cv::Mat frame, int resizeCoeff, const TrackingObject& track, bool drawTrajectory, int framesCounter);
 
-	TrackerSettings m_trackerSettings;
-	bool m_trackerSettingsLoaded = false;
-	bool ParseTrackerSettings(const std::string& settingsFile);
+    TrackerSettings m_trackerSettings;
+    bool m_trackerSettingsLoaded = false;
 
 private:
 	std::vector<TrackingObject> m_tracks;
