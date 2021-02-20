@@ -200,7 +200,6 @@ void OCVDNNDetector::Detect(const cv::UMat& colorFrame)
     else
     {
 		std::vector<cv::Rect> crops = GetCrops(m_maxCropRatio, cv::Size(m_inWidth, m_inHeight), colorFrame.size());
-		regions_t tmpRegions;
 		for (size_t i = 0; i < crops.size(); ++i)
 		{
 			const auto& crop = crops[i];
