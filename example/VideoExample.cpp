@@ -1,8 +1,5 @@
 #include <iomanip>
 #include <ctime>
-#include <future>
-
-#include <inih/INIReader.h>
 
 #include "VideoExample.h"
 

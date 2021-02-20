@@ -192,9 +192,10 @@ void OCVDNNDetector::Detect(const cv::UMat& colorFrame)
 {
     m_regions.clear();
 
+    regions_t tmpRegions;
     if (m_maxCropRatio <= 0)
     {
-        DetectInCrop(colorFrame, cv::Rect(0, 0, colorFrame.cols, colorFrame.rows), m_regions);
+        DetectInCrop(colorFrame, cv::Rect(0, 0, colorFrame.cols, colorFrame.rows), tmpRegions);
     }
     else
     {
@@ -206,17 +207,12 @@ void OCVDNNDetector::Detect(const cv::UMat& colorFrame)
 			//std::cout << "Crop " << i << ": " << crop << std::endl;
 			DetectInCrop(colorFrame, crop, tmpRegions);
 		}
-
-		if (crops.size() > 1)
-		{
-			nms3<CRegion>(tmpRegions, m_regions, m_nmsThreshold,
-				[](const CRegion& reg) { return reg.m_brect; },
-				[](const CRegion& reg) { return reg.m_confidence; },
-				[](const CRegion& reg) { return reg.m_type; },
-				0, 0.f);
-			//std::cout << "nms for " << tmpRegions.size() << " objects - result " << m_regions.size() << std::endl;
-		}
     }
+    nms3<CRegion>(tmpRegions, m_regions, m_nmsThreshold,
+        [](const CRegion& reg) { return reg.m_brect; },
+        [](const CRegion& reg) { return reg.m_confidence; },
+        [](const CRegion& reg) { return reg.m_type; },
+        0, 0.f);
 }
 
 ///

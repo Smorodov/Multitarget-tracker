@@ -138,6 +138,28 @@ struct TrackerSettings
     /// FP32
     std::string m_inferencePrecison = "FP16";
 
+    // opencv_dnn = 12
+    // darknet_cudnn = 10
+    // tensorrt = 11
+    int m_detectorBackend = 11;
+
+    // DNN_TARGET_CPU
+    // DNN_TARGET_OPENCL
+    // DNN_TARGET_OPENCL_FP16
+    // DNN_TARGET_MYRIAD
+    // DNN_TARGET_CUDA
+    // DNN_TARGET_CUDA_FP16
+    std::string m_dnnTarget = "DNN_TARGET_CPU";
+
+    // DNN_BACKEND_DEFAULT
+    // DNN_BACKEND_HALIDE
+    // DNN_BACKEND_INFERENCE_ENGINE
+    // DNN_BACKEND_OPENCV
+    // DNN_BACKEND_VKCOM
+    // DNN_BACKEND_CUDA
+    // DNN_BACKEND_INFERENCE_ENGINE_NGRAPH
+    // DNN_BACKEND_INFERENCE_ENGINE_NN_BUILDER_2019
+    std::string m_dnnBackend = "DNN_BACKEND_OPENCV";
 
 
     ///
