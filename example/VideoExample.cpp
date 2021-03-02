@@ -142,6 +142,8 @@ void VideoExample::SyncProcess()
 
 			WriteFrame(writer, frameInfo.m_frames[i].GetMatBGR());
 		}
+        if (framesCounter % 100 == 0)
+            m_resultsLog.Flush();
     }
 
     int64 stopLoopTime = cv::getTickCount();
@@ -242,6 +244,9 @@ void VideoExample::AsyncProcess()
             break;
 
  		++processCounter;
+
+        if (processCounter % 100 == 0)
+            m_resultsLog.Flush();
     }
     stopCapture = true;
 
