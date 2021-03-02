@@ -62,6 +62,9 @@ bool ParseTrackerSettings(const std::string& settingsFile, TrackerSettings& trac
         trackerSettings.m_maxBatch = reader.GetInteger("detection", "max_batch", 1);
         trackerSettings.m_netType = reader.GetString("detection", "net_type", "YOLOV4_TINY");
         trackerSettings.m_inferencePrecison = reader.GetString("detection", "inference_precison", "FP16");
+        trackerSettings.m_detectorBackend = reader.GetInteger("detection", "detector_backend", (int)tracking::Detectors::DNN_OCV);
+        trackerSettings.m_dnnTarget = reader.GetString("detection", "ocv_dnn_target", "DNN_TARGET_CPU");
+        trackerSettings.m_dnnBackend = reader.GetString("detection", "ocv_dnn_backend", "DNN_BACKEND_OPENCV");
 
         res = true;
     }

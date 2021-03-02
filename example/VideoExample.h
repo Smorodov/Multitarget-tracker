@@ -70,6 +70,13 @@ public:
 		m_robustIDs.insert(trackID);
 	}
 
+    ///
+    void Flush()
+    {
+        WriteAll(true);
+        m_frames.clear();
+    }
+
 private:
 	std::string m_fileName;
 	std::ofstream m_resCSV;
