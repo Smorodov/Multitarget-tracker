@@ -130,9 +130,7 @@ public:
     ///
     /// \brief RoadLine
     ///
-    RoadLine()
-    {
-    }
+    RoadLine() = default;
     RoadLine(const cv::Point2f& pt1, const cv::Point2f& pt2, unsigned int uid)
         :
           m_pt1(pt1), m_pt2(pt2), m_uid(uid)
@@ -187,13 +185,19 @@ public:
     /// \param pt2
     /// \return
     ///
-    int IsIntersect(cv::Point2f pt1, cv::Point2f pt2)
+    int IsIntersect(size_t objID, cv::Point2f pt1, cv::Point2f pt2)
     {
-        bool isIntersect = CheckIntersection(pt1, pt2);
         int direction = 0;
+
+        if (m_lastIntersections.find(objID) != m_lastIntersections.end())
+            return direction;
+
+        bool isIntersect = CheckIntersection(pt1, pt2);
 
         if (isIntersect)
         {
+            m_lastIntersections.emplace(objID);
+
             cv::Point2f pt;
             if ((m_pt1.x <= m_pt2.x) && (m_pt1.y > m_pt2.y))
             {
@@ -240,6 +244,8 @@ public:
     }
 
 private:
+
+    std::set<size_t> m_lastIntersections;
 
     ///
     /// \brief CheckIntersection
@@ -382,7 +388,6 @@ private:
     // Road lines
     std::deque<RoadLine> m_lines;
     void CheckLinesIntersection(const TrackingObject& track, float xMax, float yMax);
-    std::set<size_t> m_lastIntersections;
 
 	// Binding frame coordinates to geographical coordinates
 	GeoParams<float> m_geoParams;

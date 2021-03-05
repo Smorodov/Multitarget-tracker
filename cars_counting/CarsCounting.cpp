@@ -543,11 +543,7 @@ void CarsCounting::CheckLinesIntersection(const TrackingObject& track, float xMa
 	{
 		for (auto& rl : m_lines)
 		{
-			if (m_lastIntersections.find(track.m_ID) == m_lastIntersections.end())
-			{
-				if (rl.IsIntersect(Pti2f(track.m_trace[track.m_trace.size() - minTrack]), Pti2f(track.m_trace[track.m_trace.size() - 1])))
-					m_lastIntersections.emplace(track.m_ID);
-			}
+            rl.IsIntersect(track.m_ID, Pti2f(track.m_trace[track.m_trace.size() - minTrack]), Pti2f(track.m_trace[track.m_trace.size() - 1]));
 		}
 	}
 }
