@@ -28,7 +28,7 @@ install:
   # OpenCV dependencies - Details available at: http://docs.opencv.org/trunk/doc/tutorials/introduction/linux_install/linux_install.html
   - sudo apt-get install -y --allow-unauthenticated build-essential
   - sudo apt-get install -y --allow-unauthenticated cmake git libgtk2.0-dev pkg-config libavcodec-dev libavformat-dev libswscale-dev
-  - sudo apt-get install -y --allow-unauthenticated python-dev python-numpy libtbb2 libtbb-dev libjpeg-dev libpng-dev libtiff-dev libjasper-dev libdc1394-22-dev
+  - sudo apt-get install -y --allow-unauthenticated libtbb2 libtbb-dev libjpeg-dev libpng-dev libtiff-dev
 
   # Download v3.0.0 .zip file and extract.
   - curl -sL https://github.com/opencv/opencv/archive/4.3.0.zip > opencv.zip
@@ -70,5 +70,7 @@ install:
   - cd ../../
 
 script:
-  - cmake .
+  - mkdir build
+  - cd build
+  - cmake . .. -DCMAKE_BUILD_TYPE=Release
   - cmake --build . --config Release -- -j 4
