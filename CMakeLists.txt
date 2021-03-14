@@ -101,4 +101,3 @@ endif(BUILD_YOLO_TENSORRT)
 add_subdirectory(thirdparty)
 add_subdirectory(src)
 
-install(TARGETS mtracking mdetection LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
