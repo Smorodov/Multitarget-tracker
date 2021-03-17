@@ -59,7 +59,7 @@ void MouseTracking(cv::CommandLineParser parser)
 	settings.m_maximumAllowedSkippedFrames = 25;
 	settings.m_maxTraceLength = 25;
 
-	CTracker tracker(settings);
+	std::unique_ptr<BaseTracker> tracker = BaseTracker::CreateTracker(settings);
 
 	track_t alpha = 0;
 	cv::RNG rng;
@@ -85,7 +85,6 @@ void MouseTracking(cv::CommandLineParser parser)
 			regions.push_back(CRegion(cv::Rect(cvRound(p.x), cvRound(p.y), 1, 1)));
 		}
 
-
 		for (size_t i = 0; i < pts.size(); i++)
 		{
 #if (CV_VERSION_MAJOR >= 4)
@@ -95,10 +94,10 @@ void MouseTracking(cv::CommandLineParser parser)
 #endif
 		}
 
-		tracker.Update(regions, cv::UMat(), 100);
+		tracker->Update(regions, cv::UMat(), 100);
 
 		std::vector<TrackingObject> tracks;
-		tracker.GetTracks(tracks);
+		tracker->GetTracks(tracks);
 		std::cout << tracks.size() << std::endl;
 
 		for (size_t i = 0; i < tracks.size(); i++)
@@ -119,9 +118,7 @@ void MouseTracking(cv::CommandLineParser parser)
 		}
 
 		if (writer.isOpened())
-		{
 			writer << frame;
-		}
 
 #ifndef SILENT_WORK
         cv::imshow("Video", frame);

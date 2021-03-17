@@ -210,4 +210,8 @@ endif()
 
 target_link_libraries(${PROJECT_NAME} ${LIBS})
 
-install(TARGETS ${PROJECT_NAME} LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "Ctracker.h;TrackerSettings.h;trajectory.h;../common/defines.h;../common/object_types.h")
+install(TARGETS ${PROJECT_NAME}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
+        RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
+        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
