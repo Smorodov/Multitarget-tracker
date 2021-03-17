@@ -1,4 +1,46 @@
 #include "Ctracker.h"
+#include "ShortPathCalculator.h"
+#include "EmbeddingsCalculator.hpp"
+#include "track.h"
+
+///
+/// \brief The CTracker class
+///
+class CTracker final : public BaseTracker
+{
+public:
+    CTracker(const TrackerSettings& settings);
+	CTracker(const CTracker&) = delete;
+	CTracker(CTracker&&) = delete;
+	CTracker& operator=(const CTracker&) = delete;
+	CTracker& operator=(CTracker&&) = delete;
+	
+	~CTracker(void) = default;
+
+    void Update(const regions_t& regions, cv::UMat currFrame, float fps) override;
+
+    bool CanGrayFrameToTrack() const override;
+	bool CanColorFrameToTrack() const override;
+    size_t GetTracksCount() const override;
+	void GetTracks(std::vector<TrackingObject>& tracks) const override;
+
+private:
+    TrackerSettings m_settings;
+
+	tracks_t m_tracks;
+
+    size_t m_nextTrackID = 0;
+
+    cv::UMat m_prevFrame;
+
+    std::unique_ptr<ShortPathCalculator> m_SPCalculator;
+    std::map<objtype_t, std::shared_ptr<EmbeddingsCalculator>> m_embCalculators;
+
+    void CreateDistaceMatrix(const regions_t& regions, const std::vector<RegionEmbedding>& regionEmbeddings, distMatrix_t& costMatrix, track_t maxPossibleCost, track_t& maxCost);
+    void UpdateTrackingState(const regions_t& regions, cv::UMat currFrame, float fps);
+	void CalcEmbeddins(std::vector<RegionEmbedding>& regionEmbeddings, const regions_t& regions, cv::UMat currFrame) const;
+};
+// ----------------------------------------------------------------------
 
 ///
 /// \brief CTracker::CTracker
@@ -6,9 +48,7 @@
 /// \param settings
 ///
 CTracker::CTracker(const TrackerSettings& settings)
-    :
-      m_settings(settings),
-      m_nextTrackID(0)
+    : m_settings(settings)
 {
     m_SPCalculator.reset();
     SPSettings spSettings = { settings.m_distThres, 12 };
@@ -41,10 +81,50 @@ CTracker::CTracker(const TrackerSettings& settings)
 }
 
 ///
-/// \brief CTracker::~CTracker
-///
-CTracker::~CTracker(void)
+    /// \brief CanGrayFrameToTrack
+    /// \return
+    ///
+bool CTracker::CanGrayFrameToTrack() const
 {
+    bool needColor = (m_settings.m_lostTrackType == tracking::LostTrackType::TrackGOTURN) ||
+        (m_settings.m_lostTrackType == tracking::LostTrackType::TrackDAT) ||
+        (m_settings.m_lostTrackType == tracking::LostTrackType::TrackSTAPLE) ||
+        (m_settings.m_lostTrackType == tracking::LostTrackType::TrackLDES);
+    return !needColor;
+}
+
+///
+/// \brief CanColorFrameToTrack
+/// \return
+///
+bool CTracker::CanColorFrameToTrack() const
+{
+    return true;
+}
+
+///
+/// \brief GetTracksCount
+/// \return
+///
+size_t CTracker::GetTracksCount() const
+{
+    return m_tracks.size();
+}
+
+///
+/// \brief GetTracks
+/// \return
+///
+void CTracker::GetTracks(std::vector<TrackingObject>& tracks) const
+{
+    tracks.clear();
+
+    if (m_tracks.size() > tracks.capacity())
+        tracks.reserve(m_tracks.size());
+    for (const auto& track : m_tracks)
+    {
+        tracks.emplace_back(track->ConstructObject());
+    }
 }
 
 ///
@@ -53,9 +133,7 @@ CTracker::~CTracker(void)
 /// \param currFrame
 /// \param fps
 ///
-void CTracker::Update(const regions_t& regions,
-                      cv::UMat currFrame,
-                      float fps)
+void CTracker::Update(const regions_t& regions, cv::UMat currFrame, float fps)
 {
     UpdateTrackingState(regions, currFrame, fps);
 
@@ -353,4 +431,12 @@ void CTracker::CalcEmbeddins(std::vector<RegionEmbedding>& regionEmbeddings, con
             }
         }
     }
+}
+
+///
+/// BaseTracker::CreateTracker
+///
+std::unique_ptr<BaseTracker> BaseTracker::CreateTracker(const TrackerSettings& settings)
+{
+    return std::make_unique<CTracker>(settings);
 }

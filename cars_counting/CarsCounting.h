@@ -357,7 +357,7 @@ protected:
 	tracking::Detectors m_detectorType = tracking::Detectors::Yolo_Darknet;
 
     std::unique_ptr<BaseDetector> m_detector;
-    std::unique_ptr<CTracker> m_tracker;
+    std::unique_ptr<BaseTracker> m_tracker;
 
 	bool m_drawHeatMap = false;
 

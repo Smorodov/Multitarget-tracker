@@ -437,7 +437,7 @@ void AsyncDetector::DetectThread(const config_t& config, cv::Mat firstFrame, Fra
 ///
 void AsyncDetector::TrackingThread(const TrackerSettings& settings, FramesQueue* framesQue, bool* stopFlag)
 {
-    std::unique_ptr<CTracker> tracker = std::make_unique<CTracker>(settings);
+    std::unique_ptr<BaseTracker> tracker = BaseTracker::CreateTracker(settings);
 
     for (; !(*stopFlag);)
     {

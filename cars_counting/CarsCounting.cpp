@@ -416,7 +416,7 @@ bool CarsCounting::InitTracker(cv::UMat frame)
 			settings.m_maxTraceLength = cvRound(4 * m_fps);              // Maximum trace length
 		}
 
-		m_tracker = std::make_unique<CTracker>(settings);
+		m_tracker = BaseTracker::CreateTracker(settings);
 	}
 #if 0
 #if 0

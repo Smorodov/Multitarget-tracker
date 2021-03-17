@@ -145,7 +145,7 @@ protected:
 			}
 		}
 
-        m_tracker = std::make_unique<CTracker>(m_trackerSettings);
+        m_tracker = BaseTracker::CreateTracker(m_trackerSettings);
         return true;
     }
 
@@ -269,7 +269,7 @@ protected:
 			m_trackerSettings.m_maximumAllowedSkippedFrames = cvRound(m_fps / 2);   // Maximum allowed skipped frames
 			m_trackerSettings.m_maxTraceLength = cvRound(5 * m_fps);            // Maximum trace length
 		}
-		m_tracker = std::make_unique<CTracker>(m_trackerSettings);
+		m_tracker = BaseTracker::CreateTracker(m_trackerSettings);
 
         return true;
     }
@@ -359,7 +359,7 @@ protected:
 			m_trackerSettings.m_maximumAllowedSkippedFrames = cvRound(m_fps);   // Maximum allowed skipped frames
 			m_trackerSettings.m_maxTraceLength = cvRound(5 * m_fps);   // Maximum trace length
 		}
-		m_tracker = std::make_unique<CTracker>(m_trackerSettings);
+		m_tracker = BaseTracker::CreateTracker(m_trackerSettings);
 
         return true;
     }
@@ -499,7 +499,7 @@ protected:
 		m_trackerSettings.m_maximumAllowedSkippedFrames = cvRound(2 * m_fps); // Maximum allowed skipped frames
 		m_trackerSettings.m_maxTraceLength = cvRound(2 * m_fps);      // Maximum trace length
 		}
-		m_tracker = std::make_unique<CTracker>(m_trackerSettings);
+		m_tracker = BaseTracker::CreateTracker(m_trackerSettings);
 		return true;
 	}
 
@@ -738,7 +738,7 @@ protected:
 		m_trackerSettings.AddNearTypes(ObjectTypes::obj_person, ObjectTypes::obj_bicycle, true);
 		m_trackerSettings.AddNearTypes(ObjectTypes::obj_person, ObjectTypes::obj_motorbike, true);
 
-		m_tracker = std::make_unique<CTracker>(m_trackerSettings);
+		m_tracker = BaseTracker::CreateTracker(m_trackerSettings);
 
 		return true;
 	}
@@ -956,7 +956,7 @@ protected:
 		m_trackerSettings.AddNearTypes(ObjectTypes::obj_person, ObjectTypes::obj_bicycle, true);
 		m_trackerSettings.AddNearTypes(ObjectTypes::obj_person, ObjectTypes::obj_motorbike, true);
 
-		m_tracker = std::make_unique<CTracker>(m_trackerSettings);
+		m_tracker = BaseTracker::CreateTracker(m_trackerSettings);
 
 		return true;
 	}
