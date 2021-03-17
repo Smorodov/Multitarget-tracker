@@ -78,6 +78,7 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
     assignments_t assignment(N, -1); // Assignments regions -> tracks
 
     std::vector<RegionEmbedding> regionEmbeddings;
+    CalcEmbeddins(regionEmbeddings, regions, currFrame);
 
     if (!m_tracks.empty())
     {
@@ -85,7 +86,7 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
         distMatrix_t costMatrix(N * M);
         const track_t maxPossibleCost = static_cast<track_t>(currFrame.cols * currFrame.rows);
         track_t maxCost = 0;
-        CreateDistaceMatrix(regions, regionEmbeddings, costMatrix, maxPossibleCost, maxCost, currFrame);
+        CreateDistaceMatrix(regions, regionEmbeddings, costMatrix, maxPossibleCost, maxCost);
 
         // Solving assignment problem (shortest paths)
         m_SPCalculator->Solve(costMatrix, N, M, assignment, maxCost);
@@ -161,6 +162,7 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
         if (assignment[i] != -1) // If we have assigned detect, then update using its coordinates,
         {
             m_tracks[i]->SkippedFrames() = 0;
+            std::cout << "Update track " << i << " for " << assignment[i] << " region, regionEmbeddings.size = " << regionEmbeddings.size() << std::endl;
             if (regionEmbeddings.empty())
                 m_tracks[i]->Update(regions[assignment[i]],
                         true, m_settings.m_maxTraceLength,
@@ -187,11 +189,10 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
 /// \param maxCost
 ///
 void CTracker::CreateDistaceMatrix(const regions_t& regions,
-                                   std::vector<RegionEmbedding>& regionEmbeddings,
+                                   const std::vector<RegionEmbedding>& regionEmbeddings,
                                    distMatrix_t& costMatrix,
                                    track_t maxPossibleCost,
-                                   track_t& maxCost,
-                                   cv::UMat currFrame)
+                                   track_t& maxCost)
 {
     const size_t N = m_tracks.size();	// Tracking objects
     maxCost = 0;
@@ -269,29 +270,19 @@ void CTracker::CreateDistaceMatrix(const regions_t& regions,
 				// Bhatacharia distance between histograms
 				if (m_settings.m_distType[ind] > 0.0f && ind == tracking::DistHist)
                 {
-                    if (regionEmbeddings.empty())
-                        regionEmbeddings.resize(regions.size());
-                    dist += m_settings.m_distType[ind] * track->CalcDistHist(reg, regionEmbeddings[j], currFrame);
+                    dist += m_settings.m_distType[ind] * track->CalcDistHist(regionEmbeddings[j]);
                 }
 				++ind;
 
 				// Cosine distance between embeddings
-				if (m_settings.m_distType[ind] > 0.0f && ind == tracking::DistFeatureCos)
-				{
-					if (regionEmbeddings.empty())
-						regionEmbeddings.resize(regions.size());
-					if (regionEmbeddings[j].m_embedding.empty())
-					{
-						auto embCalc = m_embCalculators.find(reg.m_type);
-						if (embCalc != std::end(m_embCalculators))
-						{
-							embCalc->second->Calc(currFrame, reg.m_brect, regionEmbeddings[j].m_embedding);
-							regionEmbeddings[j].m_embDot = regionEmbeddings[j].m_embedding.dot(regionEmbeddings[j].m_embedding);
-						}
-						if (reg.m_type == track->LastRegion().m_type)
-							dist += m_settings.m_distType[ind] * track->CalcCosine(regionEmbeddings[j], currFrame);
-					}
-				}
+                if (m_settings.m_distType[ind] > 0.0f && ind == tracking::DistFeatureCos)
+                {
+                    if (reg.m_type == track->LastRegion().m_type)
+                    {
+                        std::cout << "CalcCosine: " << TypeConverter::Type2Str(track->LastRegion().m_type) << ", reg = " << reg.m_brect << ", track = " << track->LastRegion().m_brect << std::endl;
+                        dist += m_settings.m_distType[ind] * track->CalcCosine(regionEmbeddings[j]);
+                    }
+                }
 				++ind;
 				assert(ind == tracking::DistsCount);
 			}
@@ -301,4 +292,65 @@ void CTracker::CreateDistaceMatrix(const regions_t& regions,
 				maxCost = dist;
 		}
 	}
+}
+
+///
+/// \brief CTracker::CalcEmbeddins
+/// \param regionEmbeddings
+/// \param regions
+/// \param currFrame
+///
+void CTracker::CalcEmbeddins(std::vector<RegionEmbedding>& regionEmbeddings, const regions_t& regions, cv::UMat currFrame) const
+{
+    if (!regions.empty())
+    {
+        regionEmbeddings.resize(regions.size());
+        // Bhatacharia distance between histograms
+        if (m_settings.m_distType[tracking::DistHist] > 0.0f)
+        {
+            for (size_t j = 0; j < regions.size(); ++j)
+            {
+                    int bins = 64;
+                    std::vector<int> histSize;
+                    std::vector<float> ranges;
+                    std::vector<int> channels;
+
+                    for (int i = 0, stop = currFrame.channels(); i < stop; ++i)
+                    {
+                        histSize.push_back(bins);
+                        ranges.push_back(0);
+                        ranges.push_back(255);
+                        channels.push_back(i);
+                    }
+
+                    std::vector<cv::UMat> regROI = { currFrame(regions[j].m_brect) };
+                    cv::calcHist(regROI, channels, cv::Mat(), regionEmbeddings[j].m_hist, histSize, ranges, false);
+                    cv::normalize(regionEmbeddings[j].m_hist, regionEmbeddings[j].m_hist, 0, 1, cv::NORM_MINMAX, -1, cv::Mat());
+            }
+        }
+
+        // Cosine distance between embeddings
+        if (m_settings.m_distType[tracking::DistFeatureCos] > 0.0f)
+        {
+            for (size_t j = 0; j < regions.size(); ++j)
+            {
+                if (regionEmbeddings[j].m_embedding.empty())
+                {
+                    std::cout << "Search embCalc for " << TypeConverter::Type2Str(regions[j].m_type) << ": ";
+                    auto embCalc = m_embCalculators.find(regions[j].m_type);
+                    if (embCalc != std::end(m_embCalculators))
+                    {
+                        embCalc->second->Calc(currFrame, regions[j].m_brect, regionEmbeddings[j].m_embedding);
+                        regionEmbeddings[j].m_embDot = regionEmbeddings[j].m_embedding.dot(regionEmbeddings[j].m_embedding);
+
+                        std::cout << "Founded! m_embedding = " << regionEmbeddings[j].m_embedding.size() << ", m_embDot = " << regionEmbeddings[j].m_embDot << std::endl;
+                    }
+                    else
+                    {
+                        std::cout << "Not found" << std::endl;
+                    }
+                }
+            }
+        }
+    }
 }

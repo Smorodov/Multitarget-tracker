@@ -88,6 +88,7 @@ private:
     std::unique_ptr<ShortPathCalculator> m_SPCalculator;
     std::map<objtype_t, std::shared_ptr<EmbeddingsCalculator>> m_embCalculators;
 
-    void CreateDistaceMatrix(const regions_t& regions, std::vector<RegionEmbedding>& regionEmbeddings, distMatrix_t& costMatrix, track_t maxPossibleCost, track_t& maxCost, cv::UMat currFrame);
+    void CreateDistaceMatrix(const regions_t& regions, const std::vector<RegionEmbedding>& regionEmbeddings, distMatrix_t& costMatrix, track_t maxPossibleCost, track_t& maxCost);
     void UpdateTrackingState(const regions_t& regions, cv::UMat currFrame, float fps);
+	void CalcEmbeddins(std::vector<RegionEmbedding>& regionEmbeddings, const regions_t& regions, cv::UMat currFrame) const;
 };

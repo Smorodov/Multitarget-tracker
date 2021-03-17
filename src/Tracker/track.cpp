@@ -129,32 +129,13 @@ track_t CTrack::CalcDistJaccard(const CRegion& reg) const
 
 ///
 /// \brief CTrack::CalcDistHist
-/// \param reg
+/// \param embedding
 /// \return
 ///
-track_t CTrack::CalcDistHist(const CRegion& reg, RegionEmbedding& embedding, cv::UMat currFrame) const
+track_t CTrack::CalcDistHist(const RegionEmbedding& embedding) const
 {
 	track_t res = 1;
 
-    if (embedding.m_hist.empty())
-	{
-		int bins = 64;
-		std::vector<int> histSize;
-		std::vector<float> ranges;
-		std::vector<int> channels;
-
-		for (int i = 0, stop = currFrame.channels(); i < stop; ++i)
-		{
-			histSize.push_back(bins);
-			ranges.push_back(0);
-			ranges.push_back(255);
-			channels.push_back(i);
-		}
-
-		std::vector<cv::UMat> regROI = { currFrame(reg.m_brect) };
-        cv::calcHist(regROI, channels, cv::Mat(), embedding.m_hist, histSize, ranges, false);
-        cv::normalize(embedding.m_hist, embedding.m_hist, 0, 1, cv::NORM_MINMAX, -1, cv::Mat());
-	}
     if (!embedding.m_hist.empty() && !m_regionEmbedding.m_hist.empty())
 	{
 #if (((CV_VERSION_MAJOR == 4) && (CV_VERSION_MINOR < 1)) || (CV_VERSION_MAJOR == 3))
@@ -164,6 +145,12 @@ track_t CTrack::CalcDistHist(const CRegion& reg, RegionEmbedding& embedding, cv:
         res = static_cast<track_t>(cv::compareHist(embedding.m_hist, m_regionEmbedding.m_hist, cv::HISTCMP_BHATTACHARYYA));
 #endif
 	}
+    else
+    {
+        assert(0);
+        CV_Assert(!embedding.m_hist.empty());
+        CV_Assert(!m_regionEmbedding.m_hist.empty());
+    }
 	return res;
 }
 
@@ -172,15 +159,26 @@ track_t CTrack::CalcDistHist(const CRegion& reg, RegionEmbedding& embedding, cv:
 /// \param embedding
 /// \return
 ///
-track_t CTrack::CalcCosine(RegionEmbedding& embedding, cv::UMat currFrame) const
+track_t CTrack::CalcCosine(const RegionEmbedding& embedding) const
 {
 	track_t res = 1;
 	if (!embedding.m_embedding.empty() && !m_regionEmbedding.m_embedding.empty())
 	{
 		double xy = embedding.m_embedding.dot(m_regionEmbedding.m_embedding);
 		double norm = sqrt(embedding.m_embDot * m_regionEmbedding.m_embDot) + 1e-6;
-		res = 0.5f * static_cast<float>(1.0 - xy / norm);
+		//res = 1.f - 0.5f * fabs(static_cast<float>(xy / norm));
+        res = 0.5f * static_cast<float>(1.0 - xy / norm);
+        if (res < 0)
+            res += 1;
+        //res = static_cast<float>(-xy / norm);
 	}
+    else
+    {
+        assert(0);
+        CV_Assert(!embedding.m_embedding.empty());
+        CV_Assert(!m_regionEmbedding.m_embedding.empty());
+    }
+    std::cout << "CalcCosine: " << embedding.m_embedding.size() << " - " << m_regionEmbedding.m_embedding.size() << " = " << res << std::endl;
 	return res;
 }
 
