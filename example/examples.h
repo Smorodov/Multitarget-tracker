@@ -693,9 +693,9 @@ protected:
                                                             cv::Size(128, 256),
 					                                        std::vector<ObjectTypes>{ ObjectTypes::obj_person });
 
-#if 0
-				m_trackerSettings.m_embeddings.emplace_back("",
-                                                            pathToModel + "open_model_zoo/vehicle-reid-0001/osnet_ain_x1_0_vehicle_reid.onnx",
+#if 1
+				m_trackerSettings.m_embeddings.emplace_back(pathToModel + "open_model_zoo/vehicle-reid-0001/osnet_ain_x1_0_vehicle_reid.xml",
+                                                            pathToModel + "open_model_zoo/vehicle-reid-0001/osnet_ain_x1_0_vehicle_reid.bin",
                                                             cv::Size(208, 208),
                                                             std::vector<ObjectTypes>{ ObjectTypes::obj_car, ObjectTypes::obj_bus, ObjectTypes::obj_truck });
 #endif
