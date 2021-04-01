@@ -174,6 +174,14 @@ else()
     remove_definitions(-DUSE_OCV_KCF)
 endif(USE_OCV_KCF)
 
+option(USE_OCV_EMBEDDINGS "Should use the embeddings from opencv_dnn + OpenVINO?" ON)
+if(USE_OCV_EMBEDDINGS)
+    add_definitions(-DUSE_OCV_EMBEDDINGS)
+else()
+    remove_definitions(-DUSE_OCV_EMBEDDINGS)
+endif(USE_OCV_EMBEDDINGS)
+
+
 include_directories(${PROJECT_SOURCE_DIR})
 include_directories(${PROJECT_SOURCE_DIR}/../src)
 include_directories(${PROJECT_SOURCE_DIR}/../common)

@@ -12,7 +12,8 @@ public:
 	///
 	bool Initialize(const std::string& cfgName, const std::string& weightsName, const cv::Size& inputLayer)
 	{
-		m_inputLayer = inputLayer;
+#if USE_OCV_EMBEDDINGS
+        m_inputLayer = inputLayer;
 
 #if 1
 		m_net = cv::dnn::readNet(weightsName, cfgName);
@@ -25,17 +26,26 @@ public:
 			m_net.setPreferableTarget(cv::dnn::DNN_TARGET_CPU);
 		}
 		return !m_net.empty();
-	}
+#else
+        std::cerr << "EmbeddingsCalculator was disabled in CMAKE! Check SetDistances params." << std::endl;
+        return false;
+#endif
+    }
 	
 	///
-	bool IsInitialized() const
-	{
-		return !m_net.empty();
+    bool IsInitialized() const
+    {
+#if USE_OCV_EMBEDDINGS
+        return !m_net.empty();
+#else
+        return false;
+#endif
 	}
 
 	///
 	void Calc(const cv::UMat& img, cv::Rect rect, cv::Mat& embedding)
-	{
+    {
+#if USE_OCV_EMBEDDINGS
 		auto Clamp = [](int& v, int& size, int hi) -> int
 		{
 			int res = 0;
@@ -69,9 +79,14 @@ public:
 		m_net.setInput(blob);
 		embedding = m_net.forward();
 		//std::cout << "embedding: " << embedding.size() << ", chans = " << embedding.channels() << std::endl;
+#else
+        std::cerr << "EmbeddingsCalculator was disabled in CMAKE! Check SetDistances params." << std::endl;
+#endif
 	}
 
 private:
-	cv::dnn::Net m_net;
-	cv::Size m_inputLayer{128, 256};
+#if USE_OCV_EMBEDDINGS
+    cv::dnn::Net m_net;
+    cv::Size m_inputLayer{ 128, 256 };
+#endif
 };
