@@ -1,6 +1,10 @@
 #include "MouseExample.h"
 #include "examples.h"
 
+#ifdef BUILD_CARS_COUNTING
+#include "CarsCounting.h"
+#endif
+
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/ocl.hpp>
 
@@ -31,6 +35,11 @@ const char* keys =
     "{ r res          |                    | Path to the csv file with tracking result | }"
     "{ s settings     |                    | Path to the init file with tracking settings | }"
 	"{ bs batch_size  |1                   | Batch size - frames count for processing | }"
+    "{ inf inference  |darknet             | For CarsCounting: Type of inference framework: darknet, ocvdnn | }"
+	"{ w weights      |                    | For CarsCounting: Weights of neural network: yolov4.weights | }"
+	"{ c config       |                    | For CarsCounting: Config file of neural network: yolov4.cfg | }"
+	"{ n names        |                    | For CarsCounting: File with classes names: coco.names | }"
+ 	"{ hm heat_map    |0                   | For CarsCounting: Draw heat map | }"
 };
 
 // ----------------------------------------------------------------------
@@ -83,6 +92,14 @@ int main(int argc, char** argv)
 	case 6:
 		detector = std::make_unique<YoloTensorRTExample>(parser);
 		break;
+#endif
+
+#ifdef BUILD_CARS_COUNTING
+    case 7:
+        detector = std::make_unique<CarsCounting>(parser);
+        detector->AddLine(RoadLine(cv::Point2f(0.1f, 0.7f), cv::Point2f(0.47f, 0.7f), 0));
+        detector->AddLine(RoadLine(cv::Point2f(0.52f, 0.6f), cv::Point2f(0.8f, 0.6f), 1));
+        break;
 #endif
 
     default:

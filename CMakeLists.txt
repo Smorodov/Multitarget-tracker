@@ -56,7 +56,7 @@ endif(BUILD_EXAMPLES)
 
 option(BUILD_CARS_COUNTING "Should compiled Cars counting example?" OFF)
 if (BUILD_CARS_COUNTING)
-    add_subdirectory(cars_counting)
+    add_definitions(-DBUILD_CARS_COUNTING)
 endif(BUILD_CARS_COUNTING)
 
 option(BUILD_ASYNC_DETECTOR "Should compiled async example with low fps Detector?" OFF)

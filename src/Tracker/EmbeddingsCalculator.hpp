@@ -12,7 +12,7 @@ public:
 	///
 	bool Initialize(const std::string& cfgName, const std::string& weightsName, const cv::Size& inputLayer)
 	{
-#if USE_OCV_EMBEDDINGS
+#ifdef USE_OCV_EMBEDDINGS
         m_inputLayer = inputLayer;
 
 #if 1
@@ -35,7 +35,7 @@ public:
 	///
     bool IsInitialized() const
     {
-#if USE_OCV_EMBEDDINGS
+#ifdef USE_OCV_EMBEDDINGS
         return !m_net.empty();
 #else
         return false;
@@ -45,7 +45,7 @@ public:
 	///
 	void Calc(const cv::UMat& img, cv::Rect rect, cv::Mat& embedding)
     {
-#if USE_OCV_EMBEDDINGS
+#ifdef USE_OCV_EMBEDDINGS
 		auto Clamp = [](int& v, int& size, int hi) -> int
 		{
 			int res = 0;
@@ -85,7 +85,7 @@ public:
 	}
 
 private:
-#if USE_OCV_EMBEDDINGS
+#ifdef USE_OCV_EMBEDDINGS
     cv::dnn::Net m_net;
     cv::Size m_inputLayer{ 128, 256 };
 #endif

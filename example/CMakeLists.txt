@@ -11,7 +11,13 @@ set(HEADERS
     MouseExample.h
     VideoExample.h
     examples.h
+    FileLogger.h
 )
+
+if (BUILD_CARS_COUNTING)
+    set(SOURCES ${SOURCES} CarsCounting.cpp)
+    set(HEADERS ${HEADERS} CarsCounting.h)
+endif(BUILD_CARS_COUNTING)
 
 # ----------------------------------------------------------------------------
 # добавляем include директории

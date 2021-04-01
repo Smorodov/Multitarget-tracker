@@ -1,11 +1,6 @@
 #pragma once
 
-#include "BaseDetector.h"
-
-#include "Ctracker.h"
-#include <iostream>
-#include <vector>
-#include <map>
+#include "VideoExample.h"
 
 ///
 constexpr double DEG_TO_RAD = 0.017453292519943295769236907684886;
@@ -336,54 +331,30 @@ private:
 ///
 /// \brief The CarsCounting class
 ///
-class CarsCounting
+class CarsCounting final : public VideoExample
 {
 public:
     CarsCounting(const cv::CommandLineParser& parser);
-    virtual ~CarsCounting();
-
-    void Process();
 
     // Lines API
     void AddLine(const RoadLine& newLine);
     bool GetLine(unsigned int lineUid, RoadLine& line);
     bool RemoveLine(unsigned int lineUid);
 
-protected:
+private:
 
 	std::string m_weightsFile;
 	std::string m_configFile;
 	std::string m_namesFile;
 	tracking::Detectors m_detectorType = tracking::Detectors::Yolo_Darknet;
 
-    std::unique_ptr<BaseDetector> m_detector;
-    std::unique_ptr<BaseTracker> m_tracker;
-
 	bool m_drawHeatMap = false;
 
-    bool m_showLogs = false;
-    float m_fps = 0;
+    bool InitDetector(cv::UMat frame) override;
+    bool InitTracker(cv::UMat frame) override;
 
-    virtual bool InitTracker(cv::UMat frame);
-
-    virtual void DrawData(cv::Mat frame, int framesCounter, int currTime);
-
-    void DrawTrack(cv::Mat frame,
-                   int resizeCoeff,
-                   const TrackingObject& track,
-                   bool drawTrajectory = true);
-
-private:
-
-    bool m_isTrackerInitialized = false;
-    std::string m_inFile;
-    std::string m_outFile;
-    int m_startFrame = 0;
-    int m_endFrame = 0;
-    int m_finishDelay = 0;
-    std::vector<cv::Scalar> m_colors;
-
-    int m_minObjWidth = 10;
+    void DrawData(cv::Mat frame, const std::vector<TrackingObject>& tracks, int framesCounter, int currTime) override;
+    void DrawTrack(cv::Mat frame, const TrackingObject& track, bool drawTrajectory, int framesCounter) override;
 
     // Road lines
     std::deque<RoadLine> m_lines;
