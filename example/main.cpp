@@ -24,7 +24,7 @@ static void Help()
 const char* keys =
 {
     "{ @1             |../data/atrium.avi  | movie file | }"
-    "{ e  example     |1                   | number of example 0 - MouseTracking, 1 - MotionDetector, 2 - FaceDetector, 3 - PedestrianDetector, 4 - OpenCV dnn objects detector, 5 - YOLO Darknet detector, 6 - YOLO TensorRT Detector | }"
+    "{ e  example     |1                   | number of example 0 - MouseTracking, 1 - MotionDetector, 2 - FaceDetector, 3 - PedestrianDetector, 4 - OpenCV dnn objects detector, 5 - YOLO Darknet detector, 6 - YOLO TensorRT Detector, 7 - Cars counting | }"
     "{ sf start_frame |0                   | Start a video from this position | }"
     "{ ef end_frame   |0                   | Play a video to this position (if 0 then played to the end of file) | }"
     "{ ed end_delay   |0                   | Delay in milliseconds after video ending | }"
@@ -96,10 +96,13 @@ int main(int argc, char** argv)
 
 #ifdef BUILD_CARS_COUNTING
     case 7:
-        detector = std::make_unique<CarsCounting>(parser);
-        detector->AddLine(RoadLine(cv::Point2f(0.1f, 0.7f), cv::Point2f(0.47f, 0.7f), 0));
-        detector->AddLine(RoadLine(cv::Point2f(0.52f, 0.6f), cv::Point2f(0.8f, 0.6f), 1));
+    {
+        auto carsCounting = new CarsCounting(parser);
+        carsCounting->AddLine(RoadLine(cv::Point2f(0.1f, 0.7f), cv::Point2f(0.47f, 0.7f), 0));
+        carsCounting->AddLine(RoadLine(cv::Point2f(0.52f, 0.6f), cv::Point2f(0.8f, 0.6f), 1));
+        detector = std::unique_ptr<CarsCounting>(carsCounting);
         break;
+    }
 #endif
 
     default:

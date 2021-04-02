@@ -54,7 +54,7 @@
 
 3.4. Simple [Abandoned detector](https://github.com/Smorodov/Multitarget-tracker/blob/master/src/Tracker/Ctracker.h)
 
-3.5. [Line intersection](https://github.com/Smorodov/Multitarget-tracker/blob/master/cars_counting/CarsCounting.cpp) counting
+3.5. [Line intersection](https://github.com/Smorodov/Multitarget-tracker/blob/master/src/CarsCounting.cpp) counting
 
 #### 4. [Advanced visual search](https://github.com/Smorodov/Multitarget-tracker/blob/master/src/Tracker/Ctracker.h) for objects if they have not been detected:
 
@@ -149,7 +149,7 @@ How to run cmake on Windows for Visual Studio 15 2017 Win64: [example](https://g
 
            Params: 
            1. Movie file, for example ../data/atrium.avi
-           2. [Optional] Number of example: 0 - MouseTracking, 1 - MotionDetector, 2 - FaceDetector, 3 - PedestrianDetector, 4 - OpenCV dnn objects detector, 5 - Yolo Darknet detector, 6 - YOLO TensorRT Detector
+           2. [Optional] Number of example: 0 - MouseTracking, 1 - MotionDetector, 2 - FaceDetector, 3 - PedestrianDetector, 4 - OpenCV dnn objects detector, 5 - Yolo Darknet detector, 6 - YOLO TensorRT Detector, Cars counting
               -e=0 or --example=1
            3. [Optional] Frame number to start a video from this position
               -sf=0 or --start_frame==1500
