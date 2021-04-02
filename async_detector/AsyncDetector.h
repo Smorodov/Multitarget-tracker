@@ -71,7 +71,7 @@ private:
 
 	void DrawData(frame_ptr frameInfo, int framesCounter, int currTime);
 
-    void DrawTrack(cv::Mat frame, int resizeCoeff, const TrackingObject& track, bool drawTrajectory = true);
+    void DrawTrack(cv::Mat frame, const TrackingObject& track, bool drawTrajectory = true);
 
     static void CaptureThread(std::string fileName, int startFrame, float* fps, FramesQueue* framesQue, bool* stopFlag);
     static void DetectThread(const config_t& config, cv::Mat firstFrame, FramesQueue* framesQue, bool* stopFlag);

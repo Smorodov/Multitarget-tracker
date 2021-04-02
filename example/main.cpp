@@ -1,6 +1,10 @@
 #include "MouseExample.h"
 #include "examples.h"
 
+#ifdef BUILD_CARS_COUNTING
+#include "CarsCounting.h"
+#endif
+
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/ocl.hpp>
 
@@ -20,7 +24,7 @@ static void Help()
 const char* keys =
 {
     "{ @1             |../data/atrium.avi  | movie file | }"
-    "{ e  example     |1                   | number of example 0 - MouseTracking, 1 - MotionDetector, 2 - FaceDetector, 3 - PedestrianDetector, 4 - OpenCV dnn objects detector, 5 - YOLO Darknet detector, 6 - YOLO TensorRT Detector | }"
+    "{ e  example     |1                   | number of example 0 - MouseTracking, 1 - MotionDetector, 2 - FaceDetector, 3 - PedestrianDetector, 4 - OpenCV dnn objects detector, 5 - YOLO Darknet detector, 6 - YOLO TensorRT Detector, 7 - Cars counting | }"
     "{ sf start_frame |0                   | Start a video from this position | }"
     "{ ef end_frame   |0                   | Play a video to this position (if 0 then played to the end of file) | }"
     "{ ed end_delay   |0                   | Delay in milliseconds after video ending | }"
@@ -31,6 +35,11 @@ const char* keys =
     "{ r res          |                    | Path to the csv file with tracking result | }"
     "{ s settings     |                    | Path to the init file with tracking settings | }"
 	"{ bs batch_size  |1                   | Batch size - frames count for processing | }"
+    "{ inf inference  |darknet             | For CarsCounting: Type of inference framework: darknet, ocvdnn | }"
+	"{ w weights      |                    | For CarsCounting: Weights of neural network: yolov4.weights | }"
+	"{ c config       |                    | For CarsCounting: Config file of neural network: yolov4.cfg | }"
+	"{ n names        |                    | For CarsCounting: File with classes names: coco.names | }"
+ 	"{ hm heat_map    |0                   | For CarsCounting: Draw heat map | }"
 };
 
 // ----------------------------------------------------------------------
@@ -83,6 +92,17 @@ int main(int argc, char** argv)
 	case 6:
 		detector = std::make_unique<YoloTensorRTExample>(parser);
 		break;
+#endif
+
+#ifdef BUILD_CARS_COUNTING
+    case 7:
+    {
+        auto carsCounting = new CarsCounting(parser);
+        carsCounting->AddLine(RoadLine(cv::Point2f(0.1f, 0.7f), cv::Point2f(0.47f, 0.7f), 0));
+        carsCounting->AddLine(RoadLine(cv::Point2f(0.52f, 0.6f), cv::Point2f(0.8f, 0.6f), 1));
+        detector = std::unique_ptr<CarsCounting>(carsCounting);
+        break;
+    }
 #endif
 
     default:

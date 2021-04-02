@@ -406,27 +406,20 @@ void VideoExample::Tracking(FrameInfo& frame)
 ///
 /// \brief VideoExample::DrawTrack
 /// \param frame
-/// \param resizeCoeff
 /// \param track
 /// \param drawTrajectory
 ///
 void VideoExample::DrawTrack(cv::Mat frame,
-                             int resizeCoeff,
                              const TrackingObject& track,
                              bool drawTrajectory,
                              int framesCounter)
 {
-    auto ResizePoint = [resizeCoeff](const cv::Point& pt) -> cv::Point
-    {
-        return cv::Point(resizeCoeff * pt.x, resizeCoeff * pt.y);
-    };
-
     cv::Scalar color = track.m_isStatic ? cv::Scalar(255, 0, 255) : cv::Scalar(0, 255, 0);
     cv::Point2f rectPoints[4];
     track.m_rrect.points(rectPoints);
     for (int i = 0; i < 4; ++i)
     {
-        cv::line(frame, ResizePoint(rectPoints[i]), ResizePoint(rectPoints[(i+1) % 4]), color);
+        cv::line(frame, rectPoints[i], rectPoints[(i+1) % 4], color);
     }
 #if 0
 #if 0
@@ -480,16 +473,16 @@ void VideoExample::DrawTrack(cv::Mat frame,
             const TrajectoryPoint& pt1 = track.m_trace.at(j);
             const TrajectoryPoint& pt2 = track.m_trace.at(j + 1);
 #if (CV_VERSION_MAJOR >= 4)
-            cv::line(frame, ResizePoint(pt1.m_prediction), ResizePoint(pt2.m_prediction), cl, 1, cv::LINE_AA);
+            cv::line(frame, pt1.m_prediction, pt2.m_prediction, cl, 1, cv::LINE_AA);
 #else
-            cv::line(frame, ResizePoint(pt1.m_prediction), ResizePoint(pt2.m_prediction), cl, 1, CV_AA);
+            cv::line(frame, pt1.m_prediction, pt2.m_prediction, cl, 1, CV_AA);
 #endif
             if (!pt2.m_hasRaw)
             {
 #if (CV_VERSION_MAJOR >= 4)
-                cv::circle(frame, ResizePoint(pt2.m_prediction), 4, cl, 1, cv::LINE_AA);
+                cv::circle(frame, pt2.m_prediction, 4, cl, 1, cv::LINE_AA);
 #else
-                cv::circle(frame, ResizePoint(pt2.m_prediction), 4, cl, 1, CV_AA);
+                cv::circle(frame, pt2.m_prediction, 4, cl, 1, CV_AA);
 #endif
             }
         }

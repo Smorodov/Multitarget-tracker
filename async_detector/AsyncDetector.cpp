@@ -149,39 +149,28 @@ void AsyncDetector::Process()
 ///
 /// \brief AsyncDetector::DrawTrack
 /// \param frame
-/// \param resizeCoeff
 /// \param track
 /// \param drawTrajectory
 /// \param isStatic
 ///
 void AsyncDetector::DrawTrack(cv::Mat frame,
-                             int resizeCoeff,
                              const TrackingObject& track,
                              bool drawTrajectory)
 {
-    auto ResizeRect = [&](const cv::Rect& r) -> cv::Rect
-    {
-        return cv::Rect(resizeCoeff * r.x, resizeCoeff * r.y, resizeCoeff * r.width, resizeCoeff * r.height);
-    };
-    auto ResizePoint = [&](const cv::Point& pt) -> cv::Point
-    {
-        return cv::Point(resizeCoeff * pt.x, resizeCoeff * pt.y);
-    };
-
     if (track.m_isStatic)
     {
 #if (CV_VERSION_MAJOR >= 4)
-        cv::rectangle(frame, ResizeRect(track.m_rrect.boundingRect()), cv::Scalar(255, 0, 255), 2, cv::LINE_AA);
+        cv::rectangle(frame, track.m_rrect.boundingRect(), cv::Scalar(255, 0, 255), 2, cv::LINE_AA);
 #else
-        cv::rectangle(frame, ResizeRect(track.m_rrect.boundingRect()), cv::Scalar(255, 0, 255), 2, CV_AA);
+        cv::rectangle(frame, track.m_rrect.boundingRect(), cv::Scalar(255, 0, 255), 2, CV_AA);
 #endif
     }
     else
     {
 #if (CV_VERSION_MAJOR >= 4)
-        cv::rectangle(frame, ResizeRect(track.m_rrect.boundingRect()), cv::Scalar(0, 255, 0), 1, cv::LINE_AA);
+        cv::rectangle(frame, track.m_rrect.boundingRect(), cv::Scalar(0, 255, 0), 1, cv::LINE_AA);
 #else
-        cv::rectangle(frame, ResizeRect(track.m_rrect.boundingRect()), cv::Scalar(0, 255, 0), 1, CV_AA);
+        cv::rectangle(frame, track.m_rrect.boundingRect(), cv::Scalar(0, 255, 0), 1, CV_AA);
 #endif
     }
 
@@ -194,16 +183,16 @@ void AsyncDetector::DrawTrack(cv::Mat frame,
             const TrajectoryPoint& pt1 = track.m_trace.at(j);
             const TrajectoryPoint& pt2 = track.m_trace.at(j + 1);
 #if (CV_VERSION_MAJOR >= 4)
-            cv::line(frame, ResizePoint(pt1.m_prediction), ResizePoint(pt2.m_prediction), cl, 1, cv::LINE_AA);
+            cv::line(frame, pt1.m_prediction, pt2.m_prediction, cl, 1, cv::LINE_AA);
 #else
-            cv::line(frame, ResizePoint(pt1.m_prediction), ResizePoint(pt2.m_prediction), cl, 1, CV_AA);
+            cv::line(frame, pt1.m_prediction, pt2.m_prediction, cl, 1, CV_AA);
 #endif
             if (pt2.m_hasRaw)
             {
 #if (CV_VERSION_MAJOR >= 4)
-                cv::circle(frame, ResizePoint(pt2.m_prediction), 4, cl, 4, cv::LINE_AA);
+                cv::circle(frame, pt2.m_prediction, 4, cl, 4, cv::LINE_AA);
 #else
-                cv::circle(frame, ResizePoint(pt2.m_prediction), 4, cl, 4, CV_AA);
+                cv::circle(frame, pt2.m_prediction, 4, cl, 4, CV_AA);
 #endif
             }
         }
@@ -229,7 +218,7 @@ void AsyncDetector::DrawData(frame_ptr frameInfo, int framesCounter, int currTim
     {
         if (track.m_isStatic)
         {
-            DrawTrack(frameInfo->m_frame, 1, track, true);
+            DrawTrack(frameInfo->m_frame, track, true);
         }
         else
         {
@@ -239,7 +228,7 @@ void AsyncDetector::DrawData(frame_ptr frameInfo, int framesCounter, int currTim
             {
 				//std::cout << TypeConverter::Type2Str(track.m_type) << " - " << track.m_rect << std::endl;
 
-                DrawTrack(frameInfo->m_frame, 1, track, true);
+                DrawTrack(frameInfo->m_frame, track, true);
 
 				std::string label = TypeConverter::Type2Str(track.m_type);// +": " + std::to_string(track.m_confidence);
 				int baseLine = 0;

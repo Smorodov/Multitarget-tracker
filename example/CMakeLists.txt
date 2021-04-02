@@ -11,7 +11,13 @@ set(HEADERS
     MouseExample.h
     VideoExample.h
     examples.h
+    FileLogger.h
 )
+
+if (BUILD_CARS_COUNTING)
+    set(SOURCES ${SOURCES} CarsCounting.cpp)
+    set(HEADERS ${HEADERS} CarsCounting.h)
+endif(BUILD_CARS_COUNTING)
 
 # ----------------------------------------------------------------------------
 # добавляем include директории
@@ -51,6 +57,11 @@ endif(BUILD_YOLO_LIB)
 if (BUILD_YOLO_TENSORRT)
     add_definitions(-DBUILD_YOLO_TENSORRT)
 endif(BUILD_YOLO_TENSORRT)
+
+if (BUILD_CARS_COUNTING)
+    add_definitions(-DBUILD_CARS_COUNTING)
+endif(BUILD_CARS_COUNTING)
+
 
 ADD_EXECUTABLE(${PROJECT_NAME} ${SOURCES} ${HEADERS})
 

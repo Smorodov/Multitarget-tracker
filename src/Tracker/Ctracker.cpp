@@ -240,7 +240,7 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
         if (assignment[i] != -1) // If we have assigned detect, then update using its coordinates,
         {
             m_tracks[i]->SkippedFrames() = 0;
-            std::cout << "Update track " << i << " for " << assignment[i] << " region, regionEmbeddings.size = " << regionEmbeddings.size() << std::endl;
+            //std::cout << "Update track " << i << " for " << assignment[i] << " region, regionEmbeddings.size = " << regionEmbeddings.size() << std::endl;
             if (regionEmbeddings.empty())
                 m_tracks[i]->Update(regions[assignment[i]],
                         true, m_settings.m_maxTraceLength,
