@@ -28,6 +28,7 @@ CarsCounting::CarsCounting(const cv::CommandLineParser& parser)
 
 	std::map<std::string, tracking::Detectors> infMap;
 	infMap.emplace("darknet", tracking::Detectors::Yolo_Darknet);
+    infMap.emplace("tensorrt", tracking::Detectors::Yolo_TensorRT);
 	infMap.emplace("ocvdnn", tracking::Detectors::DNN_OCV);
 	std::string inference = parser.get<std::string>("inference");
 	auto infType = infMap.find(inference);
