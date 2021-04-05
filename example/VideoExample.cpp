@@ -154,6 +154,8 @@ void VideoExample::SyncProcess()
 #endif
 }
 
+#define SHOW_ASYNC_LOGS 0
+
 ///
 /// \brief VideoExample::AsyncProcess
 ///
@@ -174,27 +176,30 @@ void VideoExample::AsyncProcess()
 
     int64 allTime = 0;
     int64 startLoopTime = cv::getTickCount();
-	size_t processCounter = 0;
+    size_t processCounter = 0;
     for (; !stopCapture.load(); )
     {
         FrameInfo& frameInfo = m_frameInfo[processCounter % 2];
-		//std::cout << "tracking from " << (processCounter % 2) << " ind = " << processCounter << std::endl;
+#if SHOW_ASYNC_LOGS
+        std::cout << "--- waiting tracking from " << (processCounter % 2) << " ind = " << processCounter << std::endl;
+#endif
         {
             std::unique_lock<std::mutex> lock(frameInfo.m_mutex);
-            if (!frameInfo.m_cond.wait_for(lock, std::chrono::milliseconds(m_captureTimeOut), [&frameInfo]{ return frameInfo.m_captured; }))
+            if (!frameInfo.m_cond.wait_for(lock, std::chrono::milliseconds(m_captureTimeOut), [&frameInfo] { return frameInfo.m_captured.load(); }))
             {
-                std::cout << "Wait frame timeout!" << std::endl;
+                std::cout << "--- Wait frame timeout!" << std::endl;
                 break;
             }
         }
-		//std::cout << "tracking from " << (processCounter % 2) << " in process..." << std::endl;
-
+#if SHOW_ASYNC_LOGS
+        std::cout << "--- tracking from " << (processCounter % 2) << " in progress..." << std::endl;
+#endif
         if (!m_isTrackerInitialized)
         {
             m_isTrackerInitialized = InitTracker(frameInfo.m_frames[0].GetUMatBGR());
             if (!m_isTrackerInitialized)
             {
-                std::cerr << "CaptureAndDetect: Tracker initialize error!!!" << std::endl;
+                std::cerr << "--- AsyncProcess: Tracker initialize error!!!" << std::endl;
                 frameInfo.m_cond.notify_one();
                 break;
             }
@@ -209,7 +214,9 @@ void VideoExample::AsyncProcess()
         allTime += t2 - t1 + frameInfo.m_dt;
         int currTime = cvRound(1000 * (t2 - t1 + frameInfo.m_dt) / freq);
 
-        //std::cout << "Frame " << framesCounter << ": td = " << (1000 * frameInfo.m_dt / freq) << ", tt = " << (1000 * (t2 - t1) / freq) << std::endl;
+#if SHOW_ASYNC_LOGS
+        std::cout << "--- Frame " << frameInfo.m_frameInds[0] << ": td = " << (1000 * frameInfo.m_dt / freq) << ", tt = " << (1000 * (t2 - t1) / freq) << std::endl;
+#endif
 
 		int key = 0;
 		for (size_t i = 0; i < m_batchSize; ++i)
@@ -219,7 +226,7 @@ void VideoExample::AsyncProcess()
 			WriteFrame(writer, frameInfo.m_frames[i].GetMatBGR());
 
 #ifndef SILENT_WORK
-			cv::imshow("Video", frameInfo.m_frames[0].GetMatBGR());
+			cv::imshow("Video", frameInfo.m_frames[i].GetMatBGR());
 
 			int waitTime = manualMode ? 0 : 1;// std::max<int>(1, cvRound(1000 / m_fps - currTime));
 			key = cv::waitKey(waitTime);
@@ -232,18 +239,17 @@ void VideoExample::AsyncProcess()
 #endif
 		}
 
-		{
-			std::unique_lock<std::mutex> lock(frameInfo.m_mutex);
-			//std::cout << "tracking m_captured " << (processCounter % 2) << " - " << frameInfo.m_captured << std::endl;
-			assert(frameInfo.m_captured);
-			frameInfo.m_captured = false;
-		}
+#if SHOW_ASYNC_LOGS
+        std::cout << "--- tracking m_captured " << (processCounter % 2) << " - captured still " << frameInfo.m_captured.load() << std::endl;
+#endif
+        assert(frameInfo.m_captured.load());
+        frameInfo.m_captured = false;
         frameInfo.m_cond.notify_one();
 
         if (key == 27)
             break;
 
- 		++processCounter;
+        ++processCounter;
 
         if (processCounter % 100 == 0)
             m_resultsLog.Flush();
@@ -255,7 +261,7 @@ void VideoExample::AsyncProcess()
 
     int64 stopLoopTime = cv::getTickCount();
 
-    std::cout << "algorithms time = " << (allTime / freq) << ", work time = " << ((stopLoopTime - startLoopTime) / freq) << std::endl;
+    std::cout << "--- algorithms time = " << (allTime / freq) << ", work time = " << ((stopLoopTime - startLoopTime) / freq) << std::endl;
 
 #ifndef SILENT_WORK
     cv::waitKey(m_finishDelay);
@@ -272,64 +278,72 @@ void VideoExample::CaptureAndDetect(VideoExample* thisPtr, std::atomic<bool>& st
     cv::VideoCapture capture;
     if (!thisPtr->OpenCapture(capture))
     {
-        std::cerr << "Can't open " << thisPtr->m_inFile << std::endl;
+        std::cerr << "+++ Can't open " << thisPtr->m_inFile << std::endl;
         stopCapture = true;
         return;
     }
 
 	int framesCounter = 0;
 
-    int trackingTimeOut = thisPtr->m_trackingTimeOut;
-	size_t processCounter = 0;
+    const auto localEndFrame = thisPtr->m_endFrame;
+    auto localIsDetectorInitialized = thisPtr->m_isDetectorInitialized;
+    auto localTrackingTimeOut = thisPtr->m_trackingTimeOut;
+    size_t processCounter = 0;
     for (; !stopCapture.load();)
     {
         FrameInfo& frameInfo = thisPtr->m_frameInfo[processCounter % 2];
-		//std::cout << "captured to " << (processCounter % 2) << " ind = " << processCounter << std::endl;
+#if SHOW_ASYNC_LOGS
+        std::cout << "+++ waiting capture to " << (processCounter % 2) << " ind = " << processCounter << std::endl;
+#endif
         {
             std::unique_lock<std::mutex> lock(frameInfo.m_mutex);
-            if (!frameInfo.m_cond.wait_for(lock, std::chrono::milliseconds(trackingTimeOut), [&frameInfo]{ return !frameInfo.m_captured; }))
+            if (!frameInfo.m_cond.wait_for(lock, std::chrono::milliseconds(localTrackingTimeOut), [&frameInfo] { return !frameInfo.m_captured.load(); }))
             {
-                std::cout << "Wait tracking timeout!" << std::endl;
+                std::cout << "+++ Wait tracking timeout!" << std::endl;
                 frameInfo.m_cond.notify_one();
                 break;
             }
         }
-		//std::cout << "capture from " << (processCounter % 2) << " in process..." << std::endl;
-
+#if SHOW_ASYNC_LOGS
+        std::cout << "+++ capture to " << (processCounter % 2) << " in progress..." << std::endl;
+#endif
 		if (frameInfo.m_frames.size() < frameInfo.m_batchSize)
 		{
 			frameInfo.m_frames.resize(frameInfo.m_batchSize);
 			frameInfo.m_frameInds.resize(frameInfo.m_batchSize);
 		}
 
+        cv::Mat frame;
 		size_t i = 0;
 		for (; i < frameInfo.m_batchSize; ++i)
 		{
-			capture >> frameInfo.m_frames[i].GetMatBGRWrite();
-			if (frameInfo.m_frames[i].empty())
+			capture >> frame;
+			if (frame.empty())
 			{
-				std::cerr << "CaptureAndDetect: frame is empty!" << std::endl;
+				std::cerr << "+++ CaptureAndDetect: frame is empty!" << std::endl;
 				frameInfo.m_cond.notify_one();
 				break;
 			}
+            frameInfo.m_frames[i].GetMatBGRWrite() = frame;
 			frameInfo.m_frameInds[i] = framesCounter;
 			++framesCounter;
 
-			if (thisPtr->m_endFrame && framesCounter > thisPtr->m_endFrame)
-			{
-				std::cout << "Process: riched last " << thisPtr->m_endFrame << " frame" << std::endl;
-				break;
-			}
-		}
-		if (i < frameInfo.m_batchSize)
-			break;
+            if (localEndFrame && framesCounter > localEndFrame)
+            {
+                std::cout << "+++ Process: riched last " << localEndFrame << " frame" << std::endl;
+                break;
+            }
+        }
+        if (i < frameInfo.m_batchSize)
+            break;
 
-        if (!thisPtr->m_isDetectorInitialized)
+        if (!localIsDetectorInitialized)
         {
             thisPtr->m_isDetectorInitialized = thisPtr->InitDetector(frameInfo.m_frames[0].GetUMatBGR());
+            localIsDetectorInitialized = thisPtr->m_isDetectorInitialized;
             if (!thisPtr->m_isDetectorInitialized)
             {
-                std::cerr << "CaptureAndDetect: Detector initialize error!!!" << std::endl;
+                std::cerr << "+++ CaptureAndDetect: Detector initialize error!!!" << std::endl;
                 frameInfo.m_cond.notify_one();
                 break;
             }
@@ -340,13 +354,12 @@ void VideoExample::CaptureAndDetect(VideoExample* thisPtr, std::atomic<bool>& st
         int64 t2 = cv::getTickCount();
         frameInfo.m_dt = t2 - t1;
 
-		{
-			std::unique_lock<std::mutex> lock(frameInfo.m_mutex);
-			//std::cout << "capture m_captured " << (processCounter % 2) << " - " << frameInfo.m_captured << std::endl;
-			assert(!frameInfo.m_captured);
-			frameInfo.m_captured = true;
-		}
-		frameInfo.m_cond.notify_one();
+#if SHOW_ASYNC_LOGS
+        std::cout << "+++ capture m_captured " << (processCounter % 2) << " - captured still " << frameInfo.m_captured.load() << std::endl;
+#endif
+        assert(!frameInfo.m_captured.load());
+        frameInfo.m_captured = true;
+        frameInfo.m_cond.notify_one();
 
 		++processCounter;
     }
