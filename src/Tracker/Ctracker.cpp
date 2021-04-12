@@ -140,6 +140,8 @@ void CTracker::Update(const regions_t& regions, cv::UMat currFrame, float fps)
     currFrame.copyTo(m_prevFrame);
 }
 
+#define DRAW_DBG_ASSIGNMENT 0
+
 ///
 /// \brief CTracker::UpdateTrackingState
 /// \param regions
@@ -158,6 +160,44 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
     std::vector<RegionEmbedding> regionEmbeddings;
     CalcEmbeddins(regionEmbeddings, regions, currFrame);
 
+#if DRAW_DBG_ASSIGNMENT
+    cv::Mat dbgAssignment = currFrame.getMat(cv::ACCESS_READ).clone();
+    {
+        cv::Mat foreground(dbgAssignment.size(), CV_8UC1, cv::Scalar(0, 0, 100));
+        for (const auto& track : m_tracks)
+        {
+#if (CV_VERSION_MAJOR < 4)
+            cv::ellipse(foreground, track->GetLastRect(), cv::Scalar(255, 255, 255), CV_FILLED);
+#else
+            cv::ellipse(foreground, track->GetLastRect(), cv::Scalar(255, 255, 255), cv::FILLED);
+#endif
+        }
+
+        const int chans = dbgAssignment.channels();
+        const int height = dbgAssignment.rows;
+#pragma omp parallel for
+        for (int y = 0; y < height; ++y)
+        {
+            uchar* imgPtr = dbgAssignment.ptr(y);
+            const uchar* frgrndPtr = foreground.ptr(y);
+            for (int x = 0; x < dbgAssignment.cols; ++x)
+            {
+                for (int ci = chans - 1; ci < chans; ++ci)
+                {
+                    imgPtr[ci] = cv::saturate_cast<uchar>(imgPtr[ci] + frgrndPtr[0]);
+                }
+                imgPtr += chans;
+                ++frgrndPtr;
+            }
+        }
+
+        for (const auto& reg : regions)
+        {
+            cv::rectangle(dbgAssignment, reg.m_brect, cv::Scalar(255, 0, 0), 1);
+        }
+    }
+#endif
+
     if (!m_tracks.empty())
     {
         // Distance matrix between all tracks to all regions
@@ -172,6 +212,62 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
         // clean assignment from pairs with large distance
         for (size_t i = 0; i < assignment.size(); i++)
         {
+#if DRAW_DBG_ASSIGNMENT
+            std::stringstream ss;
+            if (assignment[i] != -1)
+            {
+                ss << std::fixed << std::setprecision(2) << costMatrix[i + assignment[i] * N];
+
+				if (costMatrix[i + assignment[i] * N] > m_settings.m_distThres)
+                {
+                    ss << ">" << m_settings.m_distThres;
+                    cv::line(dbgAssignment, m_tracks[i]->GetLastRect().center, regions[assignment[i]].m_rrect.center, cv::Scalar(0, 0, 255), 1);
+                    cv::rectangle(dbgAssignment, m_tracks[i]->LastRegion().m_brect, cv::Scalar(0, 0, 255), 1);
+                }
+                else
+                {
+                    ss << "<" << m_settings.m_distThres;
+                    cv::line(dbgAssignment, m_tracks[i]->GetLastRect().center, regions[assignment[i]].m_rrect.center, cv::Scalar(0, 255, 0), 1);
+                    cv::rectangle(dbgAssignment, m_tracks[i]->LastRegion().m_brect, cv::Scalar(0, 255, 0), 1);
+                }
+
+                for (size_t ri = 0; ri < regions.size(); ++ri)
+                {
+                    if (ri != assignment[i] && costMatrix[i + ri * N] < 1)
+                    {
+                        std::stringstream liness;
+                        liness << std::fixed << std::setprecision(2) << costMatrix[i + ri * N];
+                        auto p1 = m_tracks[i]->GetLastRect().center;
+                        auto p2 = regions[ri].m_rrect.center;
+                        cv::line(dbgAssignment, p1, p2, cv::Scalar(255, 0, 255), 1);
+                        cv::putText(dbgAssignment, liness.str(), cv::Point((p1.x + p2.x) / 2, (p1.y + p2.y) / 2), cv::FONT_HERSHEY_DUPLEX, 0.7, cv::Scalar(0, 0, 0), 1, 8);
+                    }
+                }
+            }
+            else
+            {
+                // If track have no assigned detect, then increment skipped frames counter.
+                cv::rectangle(dbgAssignment, m_tracks[i]->LastRegion().m_brect, cv::Scalar(255, 0, 255), 1);
+                for (size_t ri = 0; ri < regions.size(); ++ri)
+                {
+                    if (costMatrix[i + ri * N] < 1)
+                    {
+                        std::stringstream liness;
+                        liness << std::fixed << std::setprecision(2) << costMatrix[i + ri * N];
+                        auto p1 = m_tracks[i]->GetLastRect().center;
+                        auto p2 = regions[ri].m_rrect.center;
+                        cv::line(dbgAssignment, p1, p2, cv::Scalar(255, 0, 255), 1);
+                        cv::putText(dbgAssignment, liness.str(), cv::Point((p1.x + p2.x) / 2, (p1.y + p2.y) / 2), cv::FONT_HERSHEY_DUPLEX, 0.7, cv::Scalar(0, 0, 0), 1, 8);
+                    }
+                }
+            }
+            if (ss.str().length() > 0)
+            {
+                auto brect = m_tracks[i]->LastRegion().m_brect;
+                cv::putText(dbgAssignment, ss.str(), cv::Point(brect.x, brect.y), cv::FONT_HERSHEY_DUPLEX, 0.7, cv::Scalar(0, 0, 0), 1, 8);
+            }
+#endif
+
             if (assignment[i] != -1)
             {
 				if (costMatrix[i + assignment[i] * N] > m_settings.m_distThres)
@@ -257,6 +353,12 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
             m_tracks[i]->Update(CRegion(), false, m_settings.m_maxTraceLength, m_prevFrame, currFrame, 0, m_settings.m_maxSpeedForStatic);
         }
     }
+
+#if DRAW_DBG_ASSIGNMENT
+    cv::imshow("dbgAssignment", dbgAssignment);
+    //cv::waitKey(1);
+#endif
+
 }
 
 ///

@@ -600,7 +600,7 @@ protected:
                 TinyYOLOv4,
                 ScaledYOLOv4
             };
-            YOLOModels usedModel = YOLOModels::ScaledYOLOv4;
+            YOLOModels usedModel = YOLOModels::YOLOv4;
             switch (usedModel)
             {
             case YOLOModels::TinyYOLOv3:
@@ -761,7 +761,7 @@ protected:
                 0.5f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
 				cv::Size2f(0.1f, 8.0f)))      // Min and max ratio: width / height
 			{
-				DrawTrack(frame, track, false, framesCounter);
+				DrawTrack(frame, track, true, framesCounter);
 
 
 				std::stringstream label;

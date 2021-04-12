@@ -487,7 +487,8 @@ void CTrack::RectUpdate(const CRegion& region,
 {
     m_kalman.GetRectPrediction();
 
-    bool recalcPrediction = true;
+    bool wasTracked = false;
+    cv::RotatedRect trackedRRect;
 
     auto Clamp = [](int& v, int& size, int hi) -> int
     {
@@ -525,6 +526,113 @@ void CTrack::RectUpdate(const CRegion& region,
         m_predictionRect.size.height *= newRect.height / static_cast<float>(prevRect.height);
     };
 
+    auto InitTracker = [&](cv::Rect& roiRect, bool reinit)
+    {
+        bool inited = false;
+        cv::Rect brect = dataCorrect ? region.m_brect : m_predictionRect.boundingRect();
+        roiRect.x = 0;
+        roiRect.y = 0;
+        roiRect.width = currFrame.cols;
+        roiRect.height = currFrame.rows;
+
+        switch (m_externalTrackerForLost)
+        {
+        case tracking::TrackNone:
+            break;
+
+        case tracking::TrackKCF:
+        case tracking::TrackMIL:
+        case tracking::TrackMedianFlow:
+        case tracking::TrackGOTURN:
+        case tracking::TrackMOSSE:
+        case tracking::TrackCSRT:
+#ifdef USE_OCV_KCF
+            {
+                roiRect.width = std::max(3 * brect.width, currFrame.cols / 4);
+                roiRect.height = std::max(3 * brect.height, currFrame.rows / 4);
+                if (roiRect.width > currFrame.cols)
+                    roiRect.width = currFrame.cols;
+
+                if (roiRect.height > currFrame.rows)
+                    roiRect.height = currFrame.rows;
+
+                roiRect.x = brect.x + brect.width / 2 - roiRect.width / 2;
+                roiRect.y = brect.y + brect.height / 2 - roiRect.height / 2;
+                Clamp(roiRect.x, roiRect.width, currFrame.cols);
+                Clamp(roiRect.y, roiRect.height, currFrame.rows);
+
+                if (!m_tracker || m_tracker.empty() || reinit)
+                {
+                    CreateExternalTracker(currFrame.channels());
+
+                    int dx = 0;//m_predictionRect.width / 8;
+                    int dy = 0;//m_predictionRect.height / 8;
+                    cv::Rect2d lastRect(brect.x - roiRect.x - dx, brect.y - roiRect.y - dy, brect.width + 2 * dx, brect.height + 2 * dy);
+
+                    if (lastRect.x >= 0 &&
+                            lastRect.y >= 0 &&
+                            lastRect.x + lastRect.width < roiRect.width &&
+                            lastRect.y + lastRect.height < roiRect.height &&
+                            lastRect.area() > 0)
+                    {
+                        m_tracker->init(cv::UMat(currFrame, roiRect), lastRect);
+#if 0
+#ifndef SILENT_WORK
+                        cv::Mat tmp = cv::UMat(currFrame, roiRect).getMat(cv::ACCESS_READ).clone();
+                        cv::rectangle(tmp, lastRect, cv::Scalar(255, 255, 255), 2);
+                        cv::imshow("init " + std::to_string(m_trackID), tmp);
+#endif
+#endif
+                        inited = true;
+                        m_outOfTheFrame = false;
+                    }
+                    else
+                    {
+                        m_tracker.release();
+                        m_outOfTheFrame = true;
+                    }
+                }
+            }
+#else
+            std::cerr << "KCF tracker was disabled in CMAKE! Set lostTrackType = TrackNone in constructor." << std::endl;
+#endif
+            break;
+
+        case tracking::TrackDAT:
+        case tracking::TrackSTAPLE:
+        case tracking::TrackLDES:
+            {
+                if (!m_VOTTracker || reinit)
+                {
+                    CreateExternalTracker(currFrame.channels());
+
+                    cv::Rect2d lastRect(brect.x, brect.y, brect.width, brect.height);
+
+                    if (lastRect.x >= 0 &&
+                            lastRect.y >= 0 &&
+                            lastRect.x + lastRect.width < prevFrame.cols &&
+                            lastRect.y + lastRect.height < prevFrame.rows &&
+                            lastRect.area() > 0)
+                    {
+                        cv::Mat mat = currFrame.getMat(cv::ACCESS_READ);
+                        m_VOTTracker->Initialize(mat, lastRect);
+                        m_VOTTracker->Train(mat, true);
+
+                        inited = true;
+                        m_outOfTheFrame = false;
+                    }
+                    else
+                    {
+                        m_VOTTracker = nullptr;
+                        m_outOfTheFrame = true;
+                    }
+                }
+            }
+            break;
+        }
+        return inited;
+    };
+
     switch (m_externalTrackerForLost)
     {
     case tracking::TrackNone:
@@ -537,70 +645,9 @@ void CTrack::RectUpdate(const CRegion& region,
     case tracking::TrackMOSSE:
 	case tracking::TrackCSRT:
 #ifdef USE_OCV_KCF
-        if (!dataCorrect)
         {
-            cv::Rect brect = m_predictionRect.boundingRect();
-
-            cv::Size roiSize(std::max(3 * brect.width, currFrame.cols / 4), std::max(3 * brect.height, currFrame.rows / 4));
-            if (roiSize.width > currFrame.cols)
-                roiSize.width = currFrame.cols;
-
-            if (roiSize.height > currFrame.rows)
-                roiSize.height = currFrame.rows;
-
-            cv::Point roiTL(brect.x + brect.width / 2 - roiSize.width / 2, brect.y + brect.height / 2 - roiSize.height / 2);
-            cv::Rect roiRect(roiTL, roiSize);
-            Clamp(roiRect.x, roiRect.width, currFrame.cols);
-            Clamp(roiRect.y, roiRect.height, currFrame.rows);
-
-            bool inited = false;
-            if (!m_tracker || m_tracker.empty())
-            {
-                CreateExternalTracker(currFrame.channels());
-
-                cv::Rect2d lastRect;
-                if (m_staticFrame.empty())
-                {
-                    int dx = 1;//m_predictionRect.width / 8;
-                    int dy = 1;//m_predictionRect.height / 8;
-                    lastRect = cv::Rect2d(brect.x - roiRect.x - dx, brect.y - roiRect.y - dy, brect.width + 2 * dx, brect.height + 2 * dy);
-                }
-                else
-                {
-                    lastRect = cv::Rect2d(m_staticRect.x - roiRect.x, m_staticRect.y - roiRect.y, m_staticRect.width, m_staticRect.height);
-                }
-
-                if (lastRect.x >= 0 &&
-                        lastRect.y >= 0 &&
-                        lastRect.x + lastRect.width < roiRect.width &&
-                        lastRect.y + lastRect.height < roiRect.height &&
-                        lastRect.area() > 0)
-                {
-                    if (m_staticFrame.empty())
-                        m_tracker->init(cv::UMat(prevFrame, roiRect), lastRect);
-                    else
-                        m_tracker->init(cv::UMat(m_staticFrame, roiRect), lastRect);
-#if 0
-#ifndef SILENT_WORK
-                    cv::Mat tmp;
-                    if (m_staticFrame.empty())
-                        tmp = cv::UMat(prevFrame, roiRect).getMat(cv::ACCESS_READ).clone();
-                    else
-                        tmp = cv::UMat(m_staticFrame, roiRect).getMat(cv::ACCESS_READ).clone();
-                    cv::rectangle(tmp, lastRect, cv::Scalar(255, 255, 255), 2);
-                    cv::imshow("init " + std::to_string(m_trackID), tmp);
-#endif
-#endif
-
-                    inited = true;
-                    m_outOfTheFrame = false;
-                }
-                else
-                {
-                    m_tracker.release();
-                    m_outOfTheFrame = true;
-                }
-            }
+            cv::Rect roiRect;
+            bool inited = InitTracker(roiRect, false);
 #if (((CV_VERSION_MAJOR == 4) && (CV_VERSION_MINOR < 5)) || ((CV_VERSION_MAJOR == 4) && (CV_VERSION_MINOR == 5) && (CV_VERSION_REVISION < 1)) || (CV_VERSION_MAJOR == 3))
             cv::Rect2d newRect;
 #else
@@ -621,16 +668,10 @@ void CTrack::RectUpdate(const CRegion& region,
 #else
                 cv::Rect prect(newRect.x + roiRect.x, newRect.y + roiRect.y, newRect.width, newRect.height);
 #endif
-
-                UpdateRRect(brect, m_kalman.Update(prect, true));
-
-                recalcPrediction = false;
+                //trackedRRect = cv::RotatedRect(prect.tl(), cv::Point2f(static_cast<float>(prect.x + prect.width), static_cast<float>(prect.y)), prect.br());
+                trackedRRect = cv::RotatedRect(cv::Point2f(prect.x + prect.width / 2.f, prect.y + prect.height / 2.f), cv::Size2f(prect.width, prect.height), 0);
+                wasTracked = true;
             }
-        }
-        else
-        {
-            if (m_tracker)
-                m_tracker = nullptr;
         }
 #else
         std::cerr << "KCF tracker was disabled in CMAKE! Set lostTrackType = TrackNone in constructor." << std::endl;
@@ -640,81 +681,101 @@ void CTrack::RectUpdate(const CRegion& region,
     case tracking::TrackDAT:
     case tracking::TrackSTAPLE:
     case tracking::TrackLDES:
-        if (!dataCorrect)
         {
-            bool inited = false;
-            cv::Rect brect = m_predictionRect.boundingRect();
-            if (!m_VOTTracker)
-            {
-                CreateExternalTracker(currFrame.channels());
-
-                cv::Rect2d lastRect(brect.x, brect.y, brect.width, brect.height);
-                if (!m_staticFrame.empty())
-                    lastRect = cv::Rect2d(m_staticRect.x, m_staticRect.y, m_staticRect.width, m_staticRect.height);
-
-                if (lastRect.x >= 0 &&
-                        lastRect.y >= 0 &&
-                        lastRect.x + lastRect.width < prevFrame.cols &&
-                        lastRect.y + lastRect.height < prevFrame.rows &&
-                        lastRect.area() > 0)
-                {
-                    if (m_staticFrame.empty())
-                    {
-                        cv::Mat mat = prevFrame.getMat(cv::ACCESS_READ);
-                        m_VOTTracker->Initialize(mat, lastRect);
-                        m_VOTTracker->Train(mat, true);
-                    }
-                    else
-                    {
-                        cv::Mat mat = m_staticFrame.getMat(cv::ACCESS_READ);
-                        m_VOTTracker->Initialize(mat, lastRect);
-                        m_VOTTracker->Train(mat, true);
-                    }
-
-                    inited = true;
-                    m_outOfTheFrame = false;
-                }
-                else
-                {
-					m_VOTTracker = nullptr;
-                    m_outOfTheFrame = true;
-                }
-            }
+            cv::Rect roiRect;
+            bool inited = InitTracker(roiRect, false);
             if (!inited && m_VOTTracker)
             {
                 constexpr float confThresh = 0.3f;
                 cv::Mat mat = currFrame.getMat(cv::ACCESS_READ);
                 float confidence = 0;
-                cv::RotatedRect newRect = m_VOTTracker->Update(mat, confidence);
+                trackedRRect = m_VOTTracker->Update(mat, confidence);
                 if (confidence > confThresh)
                 {
                     m_VOTTracker->Train(mat, false);
-
-					if (newRect.angle > 0.5f)
-					{
-						m_predictionRect = newRect;
-                        m_kalman.Update(newRect.boundingRect(), true);
-					}
-					else
-					{
-                        UpdateRRect(brect, m_kalman.Update(newRect.boundingRect(), true));
-					}
-                    recalcPrediction = false;
+                    wasTracked = true;
                 }
             }
-        }
-        else
-        {
-            if (m_VOTTracker)
-                m_VOTTracker = nullptr;
         }
         break;
     }
 
-    if (recalcPrediction)
-        UpdateRRect(m_predictionRect.boundingRect(), m_kalman.Update(region.m_brect, dataCorrect));
-
     cv::Rect brect = m_predictionRect.boundingRect();
+
+    if (dataCorrect)
+    {
+        if (wasTracked)
+        {
+#if 0
+            if (trackedRRect.angle > 0.5f)
+            {
+                m_predictionRect = trackedRRect;
+                m_kalman.Update(trackedRRect.boundingRect(), true);
+            }
+            else
+            {
+                UpdateRRect(brect, m_kalman.Update(trackedRRect.boundingRect(), true));
+            }
+#else
+            auto IoU = [](cv::Rect r1, cv::Rect r2)
+            {
+                return (r1 & r2).area() / static_cast<float>((r1 | r2).area());
+            };
+            auto iou = IoU(trackedRRect.boundingRect(), region.m_brect);
+            if (iou < 0.5f)
+            {
+                cv::Rect roiRect;
+                InitTracker(roiRect, true);
+                //std::cout << "Reinit tracker with iou = " << iou << std::endl;
+            }
+
+#if 0
+#ifndef SILENT_WORK
+            {
+                auto rrr = trackedRRect.boundingRect() | region.m_brect;
+                cv::Mat tmpFrame = cv::UMat(currFrame, rrr).getMat(cv::ACCESS_READ).clone();
+                cv::Rect r1(trackedRRect.boundingRect());
+                cv::Rect r2(region.m_brect);
+                r1.x -= rrr.x;
+                r1.y -= rrr.y;
+                r2.x -= rrr.x;
+                r2.y -= rrr.y;
+                cv::rectangle(tmpFrame, r1, cv::Scalar(0, 255, 0), 1);
+                cv::rectangle(tmpFrame, r2, cv::Scalar(255, 0, 255), 1);
+                cv::imshow("reinit " + std::to_string(m_trackID), tmpFrame);
+            }
+#endif
+#endif
+
+            UpdateRRect(brect, m_kalman.Update(region.m_brect, dataCorrect));
+#endif
+        }
+        else
+        {
+            UpdateRRect(brect, m_kalman.Update(region.m_brect, dataCorrect));
+        }
+    }
+    else
+    {
+        if (wasTracked)
+        {
+            if (trackedRRect.angle > 0.5f)
+            {
+                m_predictionRect = trackedRRect;
+                m_kalman.Update(trackedRRect.boundingRect(), true);
+            }
+            else
+            {
+                UpdateRRect(brect, m_kalman.Update(trackedRRect.boundingRect(), true));
+            }
+        }
+        else
+        {
+            UpdateRRect(brect, m_kalman.Update(region.m_brect, dataCorrect));
+        }
+    }
+
+    brect = m_predictionRect.boundingRect();
     int dx = Clamp(brect.x, brect.width, currFrame.cols);
     int dy = Clamp(brect.y, brect.height, currFrame.rows);
 #if 0
