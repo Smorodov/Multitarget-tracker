@@ -110,6 +110,7 @@ public:
     const Point_t& AveragePoint() const;
     Point_t& AveragePoint();
     const CRegion& LastRegion() const;
+    objtype_t GetCurrType() const;
     size_t SkippedFrames() const;
     size_t& SkippedFrames();
 
@@ -124,6 +125,11 @@ private:
 
     size_t m_trackID = 0;
     size_t m_skippedFrames = 0;
+
+    objtype_t m_currType = bad_type;
+    objtype_t m_lastType = bad_type;
+    size_t m_anotherTypeCounter = 0;
+    static constexpr size_t m_changeTypeThreshold = 25;
 
     tracking::LostTrackType m_externalTrackerForLost = tracking::TrackNone;
 #ifdef USE_OCV_KCF

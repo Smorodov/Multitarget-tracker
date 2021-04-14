@@ -30,6 +30,8 @@ CTrack::CTrack(const CRegion& region,
       m_predictionRect(region.m_rrect),
       m_predictionPoint(region.m_rrect.center),
       m_trackID(trackID),
+      m_currType(region.m_type),
+      m_lastType(region.m_type),
       m_externalTrackerForLost(externalTrackerForLost),
       m_filterObjectSize(filterObjectSize)
 {
@@ -69,6 +71,8 @@ CTrack::CTrack(const CRegion& region,
       m_predictionRect(region.m_rrect),
       m_predictionPoint(region.m_rrect.center),
       m_trackID(trackID),
+      m_currType(region.m_type),
+      m_lastType(region.m_type),
       m_externalTrackerForLost(externalTrackerForLost),
       m_regionEmbedding(regionEmbedding),
       m_filterObjectSize(filterObjectSize)
@@ -198,6 +202,29 @@ void CTrack::Update(const CRegion& region,
                     cv::UMat currFrame,
                     int trajLen, int maxSpeedForStatic)
 {
+    if (region.m_type == m_currType)
+    {
+        m_anotherTypeCounter = 0;
+        m_lastType = region.m_type;
+    }
+    else
+    {
+        if (region.m_type == m_lastType)
+        {
+            ++m_anotherTypeCounter;
+            if (m_anotherTypeCounter > m_changeTypeThreshold)
+            {
+                m_currType = region.m_type;
+                m_anotherTypeCounter = 0;
+            }
+        }
+        else
+        {
+            m_lastType = region.m_type;
+            m_anotherTypeCounter = 0;
+        }
+    }
+
     if (m_filterObjectSize) // Kalman filter for object coordinates and size
         RectUpdate(region, dataCorrect, prevFrame, currFrame);
     else // Kalman filter only for object center
@@ -446,13 +473,22 @@ const CRegion& CTrack::LastRegion() const
 }
 
 ///
+/// \brief CTrack::GetCurrType
+/// \return
+///
+objtype_t CTrack::GetCurrType() const
+{
+    return m_currType;
+}
+
+///
 /// \brief CTrack::ConstructObject
 /// \return
 ///
 TrackingObject CTrack::ConstructObject() const
 {
     return TrackingObject(GetLastRect(), m_trackID, m_trace, IsStatic(), IsOutOfTheFrame(),
-                          m_lastRegion.m_type, m_lastRegion.m_confidence, m_kalman.GetVelocity());
+                          m_currType, m_lastRegion.m_confidence, m_kalman.GetVelocity());
 }
 
 ///
