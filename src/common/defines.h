@@ -30,19 +30,19 @@ class CRegion
 public:
 	CRegion() = default;
 
-    CRegion(const cv::Rect& rect)
+    CRegion(const cv::Rect& rect) noexcept
         : m_brect(rect)
     {
         B2RRect();
     }
 
-    CRegion(const cv::RotatedRect& rrect)
+    CRegion(const cv::RotatedRect& rrect) noexcept
         : m_rrect(rrect)
     {
         R2BRect();
     }
 
-    CRegion(const cv::Rect& rect, objtype_t type, float confidence)
+    CRegion(const cv::Rect& rect, objtype_t type, float confidence) noexcept
         : m_type(type), m_brect(rect), m_confidence(confidence)
     {
         B2RRect();
@@ -58,7 +58,7 @@ private:
     /// \brief R2BRect
     /// \return
     ///
-    cv::Rect R2BRect()
+    cv::Rect R2BRect() noexcept
     {
         m_brect = m_rrect.boundingRect();
         return m_brect;
@@ -67,7 +67,7 @@ private:
     /// \brief B2RRect
     /// \return
     ///
-    cv::RotatedRect B2RRect()
+    cv::RotatedRect B2RRect() noexcept
     {
         m_rrect = cv::RotatedRect(m_brect.tl(), cv::Point2f(static_cast<float>(m_brect.x + m_brect.width), static_cast<float>(m_brect.y)), m_brect.br());
         return m_rrect;
