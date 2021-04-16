@@ -6,9 +6,8 @@ namespace tensor_rt
 	class Detector::Impl
 	{
 	public:
-		Impl() {}
-
-		~Impl() {}
+		Impl() = default;
+		~Impl() = default;
 
 		YoloDectector _detector;
 	};

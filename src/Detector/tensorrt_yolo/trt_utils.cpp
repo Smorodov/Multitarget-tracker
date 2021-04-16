@@ -135,9 +135,7 @@ void convertBBoxImgRes(const float scalingFactor,
 	bbox.x2 /= scalingFactor;
 	bbox.y1 /= scalingFactor;
 	bbox.y2 /= scalingFactor;
-	std::cout << "convertBBoxImgRes" << std::endl;
-
-    
+	std::cout << "convertBBoxImgRes" << std::endl;    
 }
 
 void printPredictions(const BBoxInfo& b, const std::string& className)

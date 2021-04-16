@@ -150,7 +150,7 @@ protected:
 	//Logger glogger;
     uint32_t m_BatchSize = 1;
     nvinfer1::INetworkDefinition* m_Network;
-    nvinfer1::IBuilder* m_Builder ;
+    nvinfer1::IBuilder* m_Builder;
     nvinfer1::IHostMemory* m_ModelStream;
     nvinfer1::ICudaEngine* m_Engine;
     nvinfer1::IExecutionContext* m_Context;
