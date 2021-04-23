@@ -60,6 +60,7 @@ bool ParseTrackerSettings(const std::string& settingsFile, TrackerSettings& trac
         trackerSettings.m_confidenceThreshold = static_cast<track_t>(reader.GetReal("detection", "confidence_threshold", 0.5));
         trackerSettings.m_maxCropRatio = static_cast<track_t>(reader.GetReal("detection", "max_crop_ratio", -1));
         trackerSettings.m_maxBatch = reader.GetInteger("detection", "max_batch", 1);
+        trackerSettings.m_gpuId = reader.GetInteger("detection", "gpu_id", 0);
         trackerSettings.m_netType = reader.GetString("detection", "net_type", "YOLOV4_TINY");
         trackerSettings.m_inferencePrecison = reader.GetString("detection", "inference_precison", "FP16");
         trackerSettings.m_detectorBackend = reader.GetInteger("detection", "detector_backend", (int)tracking::Detectors::DNN_OCV);
