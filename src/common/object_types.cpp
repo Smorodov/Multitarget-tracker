@@ -81,7 +81,8 @@ std::vector<std::string> TypeConverter::m_typeNames =
 "scissors",
 "teddy_bear",
 "hair_drier",
-"toothbrush"
+"toothbrush",
+"vehicle"
 };
 
 std::string TypeConverter::m_badTypeName = "unknown";
