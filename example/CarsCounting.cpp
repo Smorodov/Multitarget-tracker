@@ -188,6 +188,7 @@ bool CarsCounting::InitDetector(cv::UMat frame)
 	config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_motorbike));
 	config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_bus));
 	config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_truck));
+    config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_vehicle));
 
 	m_detector = CreateDetector(m_detectorType, config, frame);
 

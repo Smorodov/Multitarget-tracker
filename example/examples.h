@@ -649,6 +649,7 @@ protected:
             config.emplace("classNames", m_trackerSettings.m_classNames);
             config.emplace("maxCropRatio", std::to_string(m_trackerSettings.m_maxCropRatio));
             config.emplace("maxBatch", std::to_string(m_trackerSettings.m_maxBatch));
+            config.emplace("gpuId", std::to_string(m_trackerSettings.m_gpuId));
             config.emplace("net_type", m_trackerSettings.m_netType);
             config.emplace("inference_precison", m_trackerSettings.m_inferencePrecison);
         }
@@ -910,6 +911,7 @@ protected:
             config.emplace("classNames", m_trackerSettings.m_classNames);
             config.emplace("maxCropRatio", std::to_string(m_trackerSettings.m_maxCropRatio));
             config.emplace("maxBatch", std::to_string(m_trackerSettings.m_maxBatch));
+            config.emplace("gpuId", std::to_string(m_trackerSettings.m_gpuId));
             config.emplace("net_type", m_trackerSettings.m_netType);
             config.emplace("inference_precison", m_trackerSettings.m_inferencePrecison);
         }

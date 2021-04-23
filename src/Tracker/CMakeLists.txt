@@ -11,6 +11,7 @@ set(main_sources ../common/nms.h ../common/defines.h ../common/object_types.h ..
              ShortPathCalculator.h
              track.cpp
              track.h
+             trajectory.h
              Kalman.cpp
              Kalman.h
              TrackerSettings.cpp

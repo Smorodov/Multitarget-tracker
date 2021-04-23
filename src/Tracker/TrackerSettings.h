@@ -123,6 +123,9 @@ struct TrackerSettings
     int m_maxBatch = 1;
 
     ///
+    int m_gpuId = 0;
+
+    ///
     /// YOLOV2
     /// YOLOV3
     /// YOLOV2_TINY
