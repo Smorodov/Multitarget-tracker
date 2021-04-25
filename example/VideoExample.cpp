@@ -8,7 +8,7 @@
 /// \param parser
 ///
 VideoExample::VideoExample(const cv::CommandLineParser& parser)
-    : m_resultsLog(parser.get<std::string>("res"))
+    : m_resultsLog(parser.get<std::string>("res"), parser.get<int>("write_n_frame"))
 {
     m_inFile = parser.get<std::string>(0);
     m_outFile = parser.get<std::string>("out");
