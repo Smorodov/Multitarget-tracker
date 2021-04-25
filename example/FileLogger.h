@@ -13,8 +13,8 @@ class ResultsLog
 {
 public:
 	///
-	ResultsLog(const std::string& fileName)
-		: m_fileName(fileName)
+	ResultsLog(const std::string& fileName, int writeEachNFrame)
+		: m_fileName(fileName), m_writeEachNFrame(writeEachNFrame)
 	{
 	}
 
@@ -98,6 +98,7 @@ private:
 	};
 	std::map<int, DetectsOnFrame> m_frames;
 	std::set<size_t> m_robustIDs;
+    int m_writeEachNFrame = 1;
 
 	///
 	void WriteAll(bool byFrames)
@@ -108,16 +109,19 @@ private:
 			char delim = ',';
 			for (const auto& frame : m_frames)
 			{
-				for (const auto& detect : frame.second.m_detects)
-				{
-					if (m_robustIDs.find(detect.m_trackID) != std::end(m_robustIDs))
-					{
-						m_resCSV << frame.first << delim << TypeConverter::Type2Str(detect.m_type) << delim << detect.m_rect.x << delim << detect.m_rect.y << delim <<
-							detect.m_rect.width << delim << detect.m_rect.height << delim <<
-							detect.m_conf << delim << std::endl;
-					}
-				}
-			}
+                if (frame.first % m_writeEachNFrame == 0)
+                {
+                    for (const auto& detect : frame.second.m_detects)
+                    {
+                        if (m_robustIDs.find(detect.m_trackID) != std::end(m_robustIDs))
+                        {
+                            m_resCSV << frame.first << delim << TypeConverter::Type2Str(detect.m_type) << delim << detect.m_rect.x << delim << detect.m_rect.y << delim <<
+                                detect.m_rect.width << delim << detect.m_rect.height << delim <<
+                                detect.m_conf << delim << std::endl;
+                        }
+                    }
+                }
+            }
 #else
 			char delim = '	';
 			for (const auto& frame : m_frames)
@@ -138,21 +142,24 @@ private:
 		{
 			char delim = ',';
 			for (size_t id : m_robustIDs)
-			{
-				for (const auto& frame : m_frames)
-				{
-					for (const auto& detect : frame.second.m_detects)
-					{
-						if (detect.m_trackID == id)
-						{
-							m_resCSV << frame.first << delim << id << delim << detect.m_rect.x << delim << detect.m_rect.y << delim <<
-								detect.m_rect.width << delim << detect.m_rect.height << delim <<
-								detect.m_conf << ",-1,-1,-1," << std::endl;
-							break;
-						}
-					}
-				}
-			}
+            {
+                for (const auto& frame : m_frames)
+                {
+                    if (frame.first % m_writeEachNFrame == 0)
+                    {
+                        for (const auto& detect : frame.second.m_detects)
+                        {
+                            if (detect.m_trackID == id)
+                            {
+                                m_resCSV << frame.first << delim << id << delim << detect.m_rect.x << delim << detect.m_rect.y << delim <<
+                                    detect.m_rect.width << delim << detect.m_rect.height << delim <<
+                                    detect.m_conf << ",-1,-1,-1," << std::endl;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
 		}
 	}
 };
