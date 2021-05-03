@@ -28,6 +28,7 @@ public:
 	virtual bool CanColorFrameToTrack() const = 0;
 	virtual size_t GetTracksCount() const = 0;
 	virtual void GetTracks(std::vector<TrackingObject>& tracks) const = 0;
+    virtual void GetRemovedTracks(std::vector<track_id_t>& trackIDs) const = 0;
 
 	static std::unique_ptr<BaseTracker> CreateTracker(const TrackerSettings& settings);
 };

@@ -176,7 +176,7 @@ void AsyncDetector::DrawTrack(cv::Mat frame,
 
     if (drawTrajectory)
     {
-        cv::Scalar cl = m_colors[track.m_ID % m_colors.size()];
+        cv::Scalar cl = m_colors[track.m_ID.ID2Module(m_colors.size())];
 
         for (size_t j = 0; j < track.m_trace.size() - 1; ++j)
         {

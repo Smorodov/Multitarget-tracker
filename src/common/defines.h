@@ -18,6 +18,74 @@ typedef std::vector<int> assignments_t;
 typedef std::vector<track_t> distMatrix_t;
 
 ///
+template<typename T>
+class TrackID
+{
+public:
+    typedef T value_type;
+
+    TrackID() = default;
+    TrackID(const TrackID& id) = default;
+    TrackID(TrackID&& id) = default;
+    TrackID& operator=(TrackID&& id) noexcept
+    {
+        m_val = std::move(id.m_val);
+        return *this;
+    }
+    TrackID& operator=(const TrackID& id) noexcept
+    {
+        m_val = id.m_val;
+        return *this;
+    }
+    TrackID(T val)
+        : m_val(val)
+    {
+    }
+    const TrackID& operator=(T val)
+    {
+        m_val = val;
+    }
+
+    bool operator==(const TrackID& id) const
+    {
+        return m_val == id.m_val;
+    }
+
+    std::string ID2Str() const
+    {
+        return std::to_string(m_val);
+    }
+    static TrackID Str2ID(const std::string& id)
+    {
+        return TrackID(std::stoi(id));
+    }
+    TrackID NextID() const
+    {
+        return TrackID(m_val + 1);
+    }
+    size_t ID2Module(size_t module) const
+    {
+        return m_val % module;
+    }
+
+    T m_val{ 0 };
+};
+
+typedef TrackID<size_t> track_id_t;
+namespace std
+{
+  template <>
+  struct hash<track_id_t>
+  {
+    std::size_t operator()(const track_id_t& k) const
+    {
+      return std::hash<track_id_t::value_type>()(k.m_val);
+    }
+  };
+
+}
+
+///
 /// \brief config_t
 ///
 typedef std::multimap<std::string, std::string> config_t;

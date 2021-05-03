@@ -1,6 +1,7 @@
 #pragma once
 #include <fstream>
 #include <map>
+#include <unordered_set>
 
 #include <opencv2/opencv.hpp>
 
@@ -37,7 +38,7 @@ public:
 	}
 
 	///
-	bool AddTrack(int framesCounter, size_t trackID, const cv::Rect& brect, objtype_t type, float confidence)
+	bool AddTrack(int framesCounter, track_id_t trackID, const cv::Rect& brect, objtype_t type, float confidence)
 	{
 		if (m_resCSV.is_open())
 		{
@@ -58,7 +59,7 @@ public:
 	}
 
 	///
-	void AddRobustTrack(size_t trackID)
+	void AddRobustTrack(track_id_t trackID)
 	{
 		m_robustIDs.insert(trackID);
 	}
@@ -80,9 +81,9 @@ private:
 		cv::Rect m_rect;
 		objtype_t m_type;
 		float m_conf = 0.f;
-		size_t m_trackID = 0;
+		track_id_t m_trackID = 0;
 
-		Detection(size_t trackID, const cv::Rect& brect, objtype_t type, float confidence)
+		Detection(track_id_t trackID, const cv::Rect& brect, objtype_t type, float confidence)
 		{
 			m_type = type;
 			m_rect = brect;
@@ -97,7 +98,7 @@ private:
 		std::vector<Detection> m_detects;
 	};
 	std::map<int, DetectsOnFrame> m_frames;
-	std::set<size_t> m_robustIDs;
+	std::unordered_set<track_id_t> m_robustIDs;
     int m_writeEachNFrame = 1;
 
 	///
@@ -141,7 +142,7 @@ private:
 		else
 		{
 			char delim = ',';
-			for (size_t id : m_robustIDs)
+			for (auto id : m_robustIDs)
             {
                 for (const auto& frame : m_frames)
                 {
@@ -151,7 +152,7 @@ private:
                         {
                             if (detect.m_trackID == id)
                             {
-                                m_resCSV << frame.first << delim << id << delim << detect.m_rect.x << delim << detect.m_rect.y << delim <<
+                                m_resCSV << frame.first << delim << id.ID2Str() << delim << detect.m_rect.x << delim << detect.m_rect.y << delim <<
                                     detect.m_rect.width << delim << detect.m_rect.height << delim <<
                                     detect.m_conf << ",-1,-1,-1," << std::endl;
                                 break;

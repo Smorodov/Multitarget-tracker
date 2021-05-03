@@ -23,13 +23,15 @@ public:
 	bool CanColorFrameToTrack() const override;
     size_t GetTracksCount() const override;
 	void GetTracks(std::vector<TrackingObject>& tracks) const override;
+    void GetRemovedTracks(std::vector<track_id_t>& trackIDs) const override;
 
 private:
     TrackerSettings m_settings;
 
 	tracks_t m_tracks;
 
-    size_t m_nextTrackID = 0;
+    track_id_t m_nextTrackID = 0;
+    std::vector<track_id_t> m_removedObjects;
 
     cv::UMat m_prevFrame;
 
@@ -128,6 +130,15 @@ void CTracker::GetTracks(std::vector<TrackingObject>& tracks) const
 }
 
 ///
+/// \brief GetRemovedTracks
+/// \return
+///
+void CTracker::GetRemovedTracks(std::vector<track_id_t>& trackIDs) const
+{
+    trackIDs.assign(std::begin(m_removedObjects), std::end(m_removedObjects));
+}
+
+///
 /// \brief CTracker::Update
 /// \param regions
 /// \param currFrame
@@ -135,6 +146,8 @@ void CTracker::GetTracks(std::vector<TrackingObject>& tracks) const
 ///
 void CTracker::Update(const regions_t& regions, cv::UMat currFrame, float fps)
 {
+    m_removedObjects.clear();
+
     UpdateTrackingState(regions, currFrame, fps);
 
     currFrame.copyTo(m_prevFrame);
@@ -290,6 +303,7 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
 				m_tracks[i]->IsOutOfTheFrame() ||
                     m_tracks[i]->IsStaticTimeout(cvRound(fps * (m_settings.m_maxStaticTime - m_settings.m_minStaticTime))))
             {
+                m_removedObjects.push_back(m_tracks[i]->GetID());
                 m_tracks.erase(m_tracks.begin() + i);
                 assignment.erase(assignment.begin() + i);
             }
@@ -311,7 +325,7 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
                                                             m_settings.m_dt,
                                                             m_settings.m_accelNoiseMag,
                                                             m_settings.m_useAcceleration,
-                                                            m_nextTrackID++,
+                                                            m_nextTrackID,
                                                             m_settings.m_filterGoal == tracking::FilterRect,
                                                             m_settings.m_lostTrackType));
             else
@@ -321,9 +335,10 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
                                                             m_settings.m_dt,
                                                             m_settings.m_accelNoiseMag,
                                                             m_settings.m_useAcceleration,
-                                                            m_nextTrackID++,
+                                                            m_nextTrackID,
                                                             m_settings.m_filterGoal == tracking::FilterRect,
                                                             m_settings.m_lostTrackType));
+            m_nextTrackID = m_nextTrackID.NextID();
         }
     }
 

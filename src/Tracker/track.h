@@ -36,7 +36,7 @@ public:
            track_t deltaTime,
            track_t accelNoiseMag,
            bool useAcceleration,
-           size_t trackID,
+           track_id_t trackID,
            bool filterObjectSize,
            tracking::LostTrackType externalTrackerForLost);
 
@@ -46,7 +46,7 @@ public:
            track_t deltaTime,
            track_t accelNoiseMag,
            bool useAcceleration,
-           size_t trackID,
+           track_id_t trackID,
            bool filterObjectSize,
            tracking::LostTrackType externalTrackerForLost);
 
@@ -115,6 +115,7 @@ public:
     size_t& SkippedFrames();
 
     TrackingObject ConstructObject() const;
+    track_id_t GetID() const;
 
 private:
     TKalmanFilter m_kalman;
@@ -123,7 +124,7 @@ private:
     cv::RotatedRect m_predictionRect;
     Point_t m_predictionPoint;
 
-    size_t m_trackID = 0;
+    track_id_t m_trackID = 0;
     size_t m_skippedFrames = 0;
 
     objtype_t m_currType = bad_type;

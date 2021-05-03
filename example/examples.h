@@ -167,7 +167,7 @@ protected:
             {
                 DrawTrack(frame, track, false, framesCounter);
 
-				std::string label = "abandoned " + std::to_string(track.m_ID);
+				std::string label = "abandoned " + track.m_ID.ID2Str();
 				int baseLine = 0;
 				cv::Size labelSize = cv::getTextSize(label, cv::FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
 

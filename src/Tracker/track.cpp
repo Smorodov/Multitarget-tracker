@@ -21,7 +21,7 @@ CTrack::CTrack(const CRegion& region,
                track_t deltaTime,
                track_t accelNoiseMag,
                bool useAcceleration,
-               size_t trackID,
+               track_id_t trackID,
                bool filterObjectSize,
                tracking::LostTrackType externalTrackerForLost)
     :
@@ -62,7 +62,7 @@ CTrack::CTrack(const CRegion& region,
                track_t deltaTime,
                track_t accelNoiseMag,
                bool useAcceleration,
-               size_t trackID,
+               track_id_t trackID,
                bool filterObjectSize,
                tracking::LostTrackType externalTrackerForLost)
     :
@@ -489,6 +489,15 @@ TrackingObject CTrack::ConstructObject() const
 {
     return TrackingObject(GetLastRect(), m_trackID, m_trace, IsStatic(), IsOutOfTheFrame(),
                           m_currType, m_lastRegion.m_confidence, m_kalman.GetVelocity());
+}
+
+///
+/// \brief CTrack::GetID
+/// \return
+///
+track_id_t CTrack::GetID() const
+{
+    return m_trackID;
 }
 
 ///
