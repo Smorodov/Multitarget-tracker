@@ -344,7 +344,7 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
 
     // Update Kalman Filters state
     const ptrdiff_t stop_i = static_cast<ptrdiff_t>(assignment.size());
-#pragma omp parallel for
+//#pragma omp parallel for
     for (ptrdiff_t i = 0; i < stop_i; ++i)
     {
         // If track updated less than one time, than filter state is not correct.
@@ -474,8 +474,17 @@ void CTracker::CreateDistaceMatrix(const regions_t& regions,
                 {
                     if (reg.m_type == track->LastRegion().m_type)
                     {
-                        std::cout << "CalcCosine: " << TypeConverter::Type2Str(track->LastRegion().m_type) << ", reg = " << reg.m_brect << ", track = " << track->LastRegion().m_brect << std::endl;
-                        dist += m_settings.m_distType[ind] * track->CalcCosine(regionEmbeddings[j]);
+                        auto resCos = track->CalcCosine(regionEmbeddings[j]);
+                        if (resCos)
+                        {
+                            dist += m_settings.m_distType[ind] * resCos.value();
+                            //std::cout << "CalcCosine: " << TypeConverter::Type2Str(track->LastRegion().m_type) << ", reg = " << reg.m_brect << ", track = " << track->LastRegion().m_brect << ": res = " << resCos.value() << ", dist = " << dist << std::endl;
+                        }
+                        else
+                        {
+                            dist /= m_settings.m_distType[ind];
+                            //std::cout << "CalcCosine: " << TypeConverter::Type2Str(track->LastRegion().m_type) << ", reg = " << reg.m_brect << ", track = " << track->LastRegion().m_brect << ": res = 1, weight = " << m_settings.m_distType[ind] << ", dist = " << dist << std::endl;
+                        }
                     }
                 }
 				++ind;
@@ -531,18 +540,18 @@ void CTracker::CalcEmbeddins(std::vector<RegionEmbedding>& regionEmbeddings, con
             {
                 if (regionEmbeddings[j].m_embedding.empty())
                 {
-                    std::cout << "Search embCalc for " << TypeConverter::Type2Str(regions[j].m_type) << ": ";
+                    //std::cout << "Search embCalc for " << TypeConverter::Type2Str(regions[j].m_type) << ": ";
                     auto embCalc = m_embCalculators.find(regions[j].m_type);
                     if (embCalc != std::end(m_embCalculators))
                     {
                         embCalc->second->Calc(currFrame, regions[j].m_brect, regionEmbeddings[j].m_embedding);
                         regionEmbeddings[j].m_embDot = regionEmbeddings[j].m_embedding.dot(regionEmbeddings[j].m_embedding);
 
-                        std::cout << "Founded! m_embedding = " << regionEmbeddings[j].m_embedding.size() << ", m_embDot = " << regionEmbeddings[j].m_embDot << std::endl;
+                        //std::cout << "Founded! m_embedding = " << regionEmbeddings[j].m_embedding.size() << ", m_embDot = " << regionEmbeddings[j].m_embDot << std::endl;
                     }
                     else
                     {
-                        std::cout << "Not found" << std::endl;
+                        //std::cout << "Not found" << std::endl;
                     }
                 }
             }
