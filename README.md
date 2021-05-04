@@ -3,9 +3,7 @@
 
 # Last changes
 
-* New license Apache 2.0 instead GPLv3
-
-* Added new parameter Batch size - simultaneous detection on several consecutive frames. it can increase processing speed on a powerful GPU. Works with Darknet and TensorRT backends but can add some latency
+* Re-identification embeddings for persons and vehicles from OpenVINO correctly works!
 
 # New videos!
 
