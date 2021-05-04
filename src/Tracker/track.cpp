@@ -21,7 +21,7 @@ CTrack::CTrack(const CRegion& region,
                track_t deltaTime,
                track_t accelNoiseMag,
                bool useAcceleration,
-               size_t trackID,
+               track_id_t trackID,
                bool filterObjectSize,
                tracking::LostTrackType externalTrackerForLost)
     :
@@ -62,7 +62,7 @@ CTrack::CTrack(const CRegion& region,
                track_t deltaTime,
                track_t accelNoiseMag,
                bool useAcceleration,
-               size_t trackID,
+               track_id_t trackID,
                bool filterObjectSize,
                tracking::LostTrackType externalTrackerForLost)
     :
@@ -163,27 +163,31 @@ track_t CTrack::CalcDistHist(const RegionEmbedding& embedding) const
 /// \param embedding
 /// \return
 ///
-track_t CTrack::CalcCosine(const RegionEmbedding& embedding) const
+std::optional<track_t> CTrack::CalcCosine(const RegionEmbedding& embedding) const
 {
 	track_t res = 1;
 	if (!embedding.m_embedding.empty() && !m_regionEmbedding.m_embedding.empty())
 	{
 		double xy = embedding.m_embedding.dot(m_regionEmbedding.m_embedding);
 		double norm = sqrt(embedding.m_embDot * m_regionEmbedding.m_embDot) + 1e-6;
-		//res = 1.f - 0.5f * fabs(static_cast<float>(xy / norm));
+#if 1
+        res = 1.f - 0.5f * fabs(static_cast<float>(xy / norm));
+#else
         res = 0.5f * static_cast<float>(1.0 - xy / norm);
         if (res < 0)
             res += 1;
         //res = static_cast<float>(-xy / norm);
+#endif
+        //std::cout << "CTrack::CalcCosine: " << embedding.m_embedding.size() << " - " << m_regionEmbedding.m_embedding.size() << " = " << res << std::endl;
+        return res;
 	}
     else
     {
-        assert(0);
-        CV_Assert(!embedding.m_embedding.empty());
-        CV_Assert(!m_regionEmbedding.m_embedding.empty());
+        //assert(0);
+        //CV_Assert(!embedding.m_embedding.empty());
+        //CV_Assert(!m_regionEmbedding.m_embedding.empty());
+        return {};
     }
-    std::cout << "CalcCosine: " << embedding.m_embedding.size() << " - " << m_regionEmbedding.m_embedding.size() << " = " << res << std::endl;
-	return res;
 }
 
 ///
@@ -489,6 +493,15 @@ TrackingObject CTrack::ConstructObject() const
 {
     return TrackingObject(GetLastRect(), m_trackID, m_trace, IsStatic(), IsOutOfTheFrame(),
                           m_currType, m_lastRegion.m_confidence, m_kalman.GetVelocity());
+}
+
+///
+/// \brief CTrack::GetID
+/// \return
+///
+track_id_t CTrack::GetID() const
+{
+    return m_trackID;
 }
 
 ///

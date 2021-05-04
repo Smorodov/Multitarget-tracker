@@ -73,7 +73,7 @@ public:
 		Clamp(rect.y, rect.height, img.rows);
 
 		cv::UMat obj;
-		cv::resize(img(rect), obj, m_inputLayer, 0., 0., cv::INTER_LINEAR);
+		cv::resize(img(rect), obj, m_inputLayer, 0., 0., cv::INTER_LANCZOS4);
 		cv::Mat blob = cv::dnn::blobFromImage(obj, 1.0, cv::Size(), cv::Scalar(), false, false);
 		
 		m_net.setInput(blob);

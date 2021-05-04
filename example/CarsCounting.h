@@ -1,5 +1,6 @@
 #pragma once
 
+#include <unordered_set>
 #include "VideoExample.h"
 
 ///
@@ -180,7 +181,7 @@ public:
     /// \param pt2
     /// \return
     ///
-    int IsIntersect(size_t objID, cv::Point2f pt1, cv::Point2f pt2)
+    int IsIntersect(track_id_t objID, cv::Point2f pt1, cv::Point2f pt2)
     {
         int direction = 0;
 
@@ -240,7 +241,7 @@ public:
 
 private:
 
-    std::set<size_t> m_lastIntersections;
+    std::unordered_set<track_id_t> m_lastIntersections;
 
     ///
     /// \brief CheckIntersection

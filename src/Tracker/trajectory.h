@@ -176,7 +176,7 @@ private:
 struct TrackingObject
 {
 	Trace m_trace;                     // Trajectory
-	size_t m_ID = 0;                   // Objects ID
+	track_id_t m_ID = 0;               // Objects ID
 	cv::RotatedRect m_rrect;           // Coordinates
 	cv::Vec<track_t, 2> m_velocity;    // pixels/sec
 	objtype_t m_type = bad_type;       // Objects type name or empty value
@@ -186,7 +186,7 @@ struct TrackingObject
 	mutable bool m_lastRobust = false; // saved latest robust value
 
 	///
-    TrackingObject(const cv::RotatedRect& rrect, size_t ID, const Trace& trace,
+    TrackingObject(const cv::RotatedRect& rrect, track_id_t ID, const Trace& trace,
 		bool isStatic, bool outOfTheFrame, objtype_t type, float confidence, cv::Vec<track_t, 2> velocity)
 		:
         m_trace(trace), m_ID(ID), m_rrect(rrect), m_velocity(velocity), m_type(type), m_confidence(confidence), m_isStatic(isStatic), m_outOfTheFrame(outOfTheFrame)
