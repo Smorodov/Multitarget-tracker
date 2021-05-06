@@ -30,7 +30,7 @@ private:
 
 	tracks_t m_tracks;
 
-    track_id_t m_nextTrackID = 0;
+    track_id_t m_nextTrackID;
     std::vector<track_id_t> m_removedObjects;
 
     cv::UMat m_prevFrame;
@@ -344,7 +344,7 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
 
     // Update Kalman Filters state
     const ptrdiff_t stop_i = static_cast<ptrdiff_t>(assignment.size());
-//#pragma omp parallel for
+#pragma omp parallel for
     for (ptrdiff_t i = 0; i < stop_i; ++i)
     {
         // If track updated less than one time, than filter state is not correct.

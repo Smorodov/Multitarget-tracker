@@ -176,7 +176,7 @@ private:
 struct TrackingObject
 {
 	Trace m_trace;                     // Trajectory
-	track_id_t m_ID = 0;               // Objects ID
+	track_id_t m_ID;                   // Objects ID
 	cv::RotatedRect m_rrect;           // Coordinates
 	cv::Vec<track_t, 2> m_velocity;    // pixels/sec
 	objtype_t m_type = bad_type;       // Objects type name or empty value

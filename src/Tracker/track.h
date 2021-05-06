@@ -125,7 +125,7 @@ private:
     cv::RotatedRect m_predictionRect;
     Point_t m_predictionPoint;
 
-    track_id_t m_trackID = 0;
+    track_id_t m_trackID;
     size_t m_skippedFrames = 0;
 
     objtype_t m_currType = bad_type;
