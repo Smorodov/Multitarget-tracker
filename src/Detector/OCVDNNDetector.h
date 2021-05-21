@@ -1,5 +1,7 @@
 #pragma once
 
+#ifdef USE_OCV_DNN
+
 #include "BaseDetector.h"
 
 #include <opencv2/dnn.hpp>
@@ -44,3 +46,5 @@ private:
     std::string m_outLayerType;
     cv::UMat m_inputBlob;
 };
+
+#endif
