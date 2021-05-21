@@ -14,7 +14,7 @@ project(mdetection)
              FaceDetector.cpp
              PedestrianDetector.cpp
              pedestrians/c4-pedestrian-detector.cpp
-             OCVDNNDetector.cpp
+
 
              BaseDetector.h
              MotionDetector.h
@@ -29,7 +29,7 @@ project(mdetection)
              FaceDetector.h
              PedestrianDetector.h
              pedestrians/c4-pedestrian-detector.h
-             OCVDNNDetector.h
+
 )
 
 if (BUILD_YOLO_LIB)
@@ -38,6 +38,12 @@ endif()
 
 if (BUILD_YOLO_TENSORRT)
     set(detector_sources ${detector_sources} YoloTensorRTDetector.cpp YoloTensorRTDetector.h)
+endif()
+
+option(USE_OCV_DNN "Use OpenCV DNN module?" ON)
+if (USE_OCV_DNN)
+    set(detector_sources ${detector_sources} OCVDNNDetector.cpp OCVDNNDetector.h)
+    add_definitions(-DUSE_OCV_DNN)
 endif()
 
   SOURCE_GROUP("Detector" FILES ${detector_sources})
@@ -67,7 +73,7 @@ include_directories(${PROJECT_SOURCE_DIR}/../src)
 include_directories(${PROJECT_SOURCE_DIR}/../common)
 
 if (CMAKE_COMPILER_IS_GNUCXX)
-    add_library(${PROJECT_NAME} SHARED 
+    add_library(${PROJECT_NAME} SHARED
 	${detector_sources})
 else(CMAKE_COMPILER_IS_GNUCXX)
     add_library(${PROJECT_NAME}
