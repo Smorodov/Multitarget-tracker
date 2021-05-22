@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.9)
 
 project(mdetection)
 
-  set(detector_sources
+set(detector_sources
              BaseDetector.cpp
              MotionDetector.cpp
              BackgroundSubtract.cpp
@@ -14,8 +14,9 @@ project(mdetection)
              FaceDetector.cpp
              PedestrianDetector.cpp
              pedestrians/c4-pedestrian-detector.cpp
+)
 
-
+set(detector_headers
              BaseDetector.h
              MotionDetector.h
              BackgroundSubtract.h
@@ -29,24 +30,26 @@ project(mdetection)
              FaceDetector.h
              PedestrianDetector.h
              pedestrians/c4-pedestrian-detector.h
-
 )
 
 if (BUILD_YOLO_LIB)
-    set(detector_sources ${detector_sources} YoloDarknetDetector.cpp YoloDarknetDetector.h)
+    set(detector_sources ${detector_sources} YoloDarknetDetector.cpp)
+    set(detector_headers ${detector_headers} YoloDarknetDetector.h)
 endif()
 
 if (BUILD_YOLO_TENSORRT)
-    set(detector_sources ${detector_sources} YoloTensorRTDetector.cpp YoloTensorRTDetector.h)
+    set(detector_sources ${detector_sources} YoloTensorRTDetector.cpp)
+    set(detector_headers ${detector_headers} YoloTensorRTDetector.h)
 endif()
 
 option(USE_OCV_DNN "Use OpenCV DNN module?" ON)
 if (USE_OCV_DNN)
-    set(detector_sources ${detector_sources} OCVDNNDetector.cpp OCVDNNDetector.h)
+    set(detector_sources ${detector_sources} OCVDNNDetector.cpp)
+    set(detector_headers ${detector_headers} OCVDNNDetector.h)
     add_definitions(-DUSE_OCV_DNN)
 endif()
 
-  SOURCE_GROUP("Detector" FILES ${detector_sources})
+  SOURCE_GROUP("Detector" FILES ${detector_sources} ${detector_headers})
 
 include(CheckIncludeFileCXX)
 check_include_file_cxx(opencv2/bgsegm.hpp HAVE_OPENCV_CONTRIB)
@@ -102,8 +105,9 @@ endif(BUILD_YOLO_TENSORRT)
 
 target_link_libraries(${PROJECT_NAME} ${LIBS})
 
-set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "BaseDetector.h")
+set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${detector_headers}")
 install(TARGETS ${PROJECT_NAME}
+        EXPORT MTTrackingExports
         LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
         RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
-        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
+        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_PREFIX}/include/${PROJECT_NAME})

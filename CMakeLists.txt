@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.9)
 
-project(MTTracking)
+project(MTTracking VERSION 1.0.0)
 
 unset(CMAKE_C_FLAGS CACHE)
 unset(CMAKE_CXX_FLAGS CACHE)
@@ -22,7 +22,7 @@ if (CMAKE_COMPILER_IS_GNUCXX)
     set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g -march=native -mtune=native -DDEBUG" CACHE STRING COMPILE_FLAGS FORCE)
 elseif (MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc /W4 -DGTL_STATIC" CACHE STRING COMPILE_FLAGS FORCE)
-    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MD /Ox /Ob2 /Oi /Ot /arch:AVX2 /fp:fast /DNDEBUG" CACHE STRING COMPILE_FLAGS FORCE)
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT /Ox /Ob2 /Oi /Ot /arch:AVX2 /fp:fast /DNDEBUG" CACHE STRING COMPILE_FLAGS FORCE)
     # set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MDd /Od /Ob0 /DDEBUG" CACHE STRING COMPILE_FLAGS FORCE)
 
     add_definitions(-D_USE_MATH_DEFINES -DNOMINMAX)
@@ -101,3 +101,31 @@ endif(BUILD_YOLO_TENSORRT)
 add_subdirectory(thirdparty)
 add_subdirectory(src)
 
+
+# Create CMake config files for distribution
+set(INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include/ )
+set(LIB_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/lib/ )
+
+install(EXPORT MTTrackingExports
+    FILE ${PROJECT_NAME}Targets.cmake
+    NAMESPACE ${PROJECT_NAME}::
+    DESTINATION ${LIB_INSTALL_DIR}/${PROJECT_NAME}/cmake
+)
+
+include(CMakePackageConfigHelpers)
+
+set(CONFIG_FILENAME ${PROJECT_NAME}Config.cmake)
+
+configure_package_config_file(${CONFIG_FILENAME}.in
+    ${CMAKE_CURRENT_BINARY_DIR}/${CONFIG_FILENAME}
+    INSTALL_DESTINATION ${LIB_INSTALL_DIR}/${PROJECT_NAME}/cmake
+    PATH_VARS INCLUDE_INSTALL_DIR)
+
+write_basic_package_version_file(
+    ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY SameMajorVersion )
+
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${CONFIG_FILENAME}
+              ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
+        DESTINATION ${LIB_INSTALL_DIR}/${PROJECT_NAME}/cmake )

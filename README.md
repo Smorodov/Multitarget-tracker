@@ -145,7 +145,7 @@ How to run cmake on Windows for Visual Studio 15 2017 Win64: [example](https://g
            * 'm' key for change mode: play|pause. When video is paused you can press any key for get next frame.
            * Press Esc to exit from video
 
-           Params: 
+           Params:
            1. Movie file, for example ../data/atrium.avi
            2. [Optional] Number of example: 0 - MouseTracking, 1 - MotionDetector, 2 - FaceDetector, 3 - PedestrianDetector, 4 - OpenCV dnn objects detector, 5 - Yolo Darknet detector, 6 - YOLO TensorRT Detector, Cars counting
               -e=0 or --example=1
@@ -171,6 +171,48 @@ How to run cmake on Windows for Visual Studio 15 2017 Win64: [example](https://g
               -bs=2 or --batch_size=1
 
 More details here: [How to run examples](https://github.com/Smorodov/Multitarget-tracker/wiki/Run-examples).
+
+#### Using MT Tracking as a library in your CMake project
+
+Build MTTracking in the usual way, and choose an installation prefix where the library will be installed
+(see [CMake Documentation](https://cmake.org/cmake/help/latest/variable/CMAKE_INSTALL_PREFIX.html) for the defaults).
+
+In the `build` directory run
+```
+$ cmake --install .
+```
+This will generate the CMake files needed to find the MTTracking package with libraries and include files for
+your project. E.g.
+```
+MTTrackingConfig.cmake
+MTTrackingConfigVersion.cmake
+MTTrackingTargets.cmake
+```
+
+In your CMake project, do the following:
+```
+    find_package(MTTracking REQUIRED)
+    target_include_directories(MyProjectTarget PUBLIC ${MTTracking_INCLUDE_DIR})
+    target_link_libraries(MyProjectTarget PUBLIC MTTracking::mtracking MTTracking::mdetection)
+```
+
+You may need to provide CMake with the location to find the above `.cmake` files, e.g.
+```
+$ cmake -DMTTracking_DIR=<location_of_cmake_files> ..
+```
+
+If CMake succeeds at finding the package, you can use MTTracking in your project e.g.
+```
+#include <mtracking/Ctracker.h>
+//...
+    std::unique_ptr<BaseTracker> m_tracker;
+
+	TrackerSettings settings;
+	settings.SetDistance(tracking::DistJaccard);
+    m_tracker = BaseTracker::CreateTracker(settings);
+//...
+```
+And so on.
 
 #### Thirdparty libraries
 * OpenCV (and contrib): https://github.com/opencv/opencv and https://github.com/opencv/opencv_contrib
@@ -200,7 +242,7 @@ Apache 2.0: [LICENSE text](https://github.com/Smorodov/Multitarget-tracker/blob/
 4. Ipek BARIS "CLASSIFICATION AND TRACKING OF VEHICLES WITH HYBRID CAMERA SYSTEMS", 2016 ( http://cvrg.iyte.edu.tr/publications/IpekBaris_MScThesis.pdf )
 5. Cheng-Ta Lee, Albert Y. Chen, Cheng-Yi Chang "In-building Coverage of Automated External Defibrillators Considering Pedestrian Flow", 2016 ( http://www.see.eng.osaka-u.ac.jp/seeit/icccbe2016/Proceedings/Full_Papers/092-132.pdf )
 6. Roberto Ciano, Dimitrij Klesev "Autonome Roboterschwarme in geschlossenen Raumen" in "informatikJournal 2016/17", 2017 ( https://docplayer.org/124538994-2016-17-informatikjournal-2016-17-aktuelle-berichte-aus-forschung-und-lehre-der-fakultaet-informatik.html )
-7. Omid Noorshams "Automated systems to assess weights and activity in grouphoused mice", 2017 ( https://pdfs.semanticscholar.org/e5ff/f04b4200c149fb39d56f171ba7056ab798d3.pdf ) 
+7. Omid Noorshams "Automated systems to assess weights and activity in grouphoused mice", 2017 ( https://pdfs.semanticscholar.org/e5ff/f04b4200c149fb39d56f171ba7056ab798d3.pdf )
 8. RADEK VOPÁLENSKÝ "DETECTION,TRACKING AND CLASSIFICATION OF VEHICLES", 2018 ( https://www.vutbr.cz/www_base/zav_prace_soubor_verejne.php?file_id=181063 )
 9. Márk Rátosi, Gyula Simon "Real-Time Localization and Tracking  using Visible Light Communication", 2018 ( https://ieeexplore.ieee.org/abstract/document/8533800 )
 10. Thi Nha Ngo, Kung-Chin Wu, En-Cheng Yang, Ta-Te Lin "Areal-time imaging system for multiple honey bee tracking and activity monitoring", 2019 ( https://www.sciencedirect.com/science/article/pii/S0168169919301498 )
