@@ -6,46 +6,49 @@ set(main_sources ../common/nms.h ../common/defines.h ../common/object_types.h ..
 
   set(tracker_sources
              Ctracker.cpp
-             Ctracker.h
              ShortPathCalculator.cpp
-             ShortPathCalculator.h
              track.cpp
-             track.h
-             trajectory.h
              Kalman.cpp
-             Kalman.h
              TrackerSettings.cpp
-             TrackerSettings.h
 
              HungarianAlg/HungarianAlg.cpp
-             HungarianAlg/HungarianAlg.h
 
              VOTTracker.hpp
-             EmbeddingsCalculator.hpp
              dat/dat_tracker.cpp
+             )
+set(tracker_headers
+             Ctracker.h
+             ShortPathCalculator.h
+             track.h
+             trajectory.h
+             Kalman.h
+             TrackerSettings.h
+             HungarianAlg/HungarianAlg.h
+             EmbeddingsCalculator.hpp
              dat/dat_tracker.hpp
 )
-
-if (${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm|ARM|aarch64|AARCH64") 
+if (${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm|ARM|aarch64|AARCH64")
 
 else()
     set(tracker_sources ${tracker_sources}
              staple/fhog.cpp
-             staple/fhog.h
-             staple/sse.hpp
              staple/staple_tracker.cpp
-             staple/staple_tracker.hpp
 
              ldes/correlation.cpp
-             ldes/correlation.h
              ldes/fft_functions.cpp
-             ldes/fft_functions.h
              ldes/fhog.cpp
-             ldes/fhog.hpp
              ldes/hann.cpp
-             ldes/hann.h
              ldes/ldes_tracker.cpp
              ldes/ldes_tracker.h
+             )
+    set(tracker_headers ${tracker_headers}
+             staple/fhog.h
+             staple/sse.hpp
+             staple/staple_tracker.hpp
+             ldes/correlation.h
+             ldes/fft_functions.h
+             ldes/fhog.hpp
+             ldes/hann.h
     )
     add_definitions(-DUSE_STAPLE_TRACKER)
 endif()
@@ -143,7 +146,7 @@ endif()
              )
 
   SOURCE_GROUP("Src" FILES ${main_sources})
-  SOURCE_GROUP("Tracker" FILES ${tracker_sources})
+  SOURCE_GROUP("Tracker" FILES ${tracker_sources} ${tracker_headers})
 
   SOURCE_GROUP("Tracker/graph" FILES ${graph_source} ${graph_header})
   SOURCE_GROUP("Tracker/GTL" FILES ${gtl_source} ${gtl_header})
@@ -191,36 +194,34 @@ include_directories(${PROJECT_SOURCE_DIR}/graph/GTL/include)
 include_directories(${PROJECT_SOURCE_DIR}/../../thirdparty)
 
 if (CMAKE_COMPILER_IS_GNUCXX)
-    add_library(${PROJECT_NAME} SHARED 
+    add_library(${PROJECT_NAME} SHARED
         ${main_sources}
 	${tracker_sources}
 	${graph_source} ${graph_header}
 	${gtl_source} ${gtl_header})
+    set(LIBS
+        ${OpenCV_LIBS}
+        inih
+        #iconv
+    )
 else(CMAKE_COMPILER_IS_GNUCXX)
     add_library(${PROJECT_NAME}
         ${main_sources}
-	${tracker_sources}
-	${graph_source} ${graph_header}
-	${gtl_source} ${gtl_header})
-endif()
-
-if (CMAKE_COMPILER_IS_GNUCXX)
-set(LIBS
-    ${OpenCV_LIBS}
-    inih
-    #iconv
-)
-else(CMAKE_COMPILER_IS_GNUCXX)
-set(LIBS
-    ${OpenCV_LIBS}
-    inih
-)
+        ${tracker_sources}
+        ${graph_source} ${graph_header}
+        ${gtl_source} ${gtl_header})
+    set(LIBS
+        # ${OpenCV_LIBS}
+        inih
+    )
+    target_include_directories(${PROJECT_NAME} PRIVATE ${OpenCV_INCLUDE_DIRS})
 endif()
 
 target_link_libraries(${PROJECT_NAME} ${LIBS})
 
-set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "Ctracker.h;TrackerSettings.h;trajectory.h;../common/defines.h;../common/object_types.h")
+set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${tracker_headers};../common/defines.h;../common/object_types.h")
 install(TARGETS ${PROJECT_NAME}
+        EXPORT MTTrackingExports
         LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
         RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
-        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
+        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_PREFIX}/include/${PROJECT_NAME})

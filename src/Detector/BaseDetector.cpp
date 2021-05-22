@@ -63,9 +63,11 @@ std::unique_ptr<BaseDetector> CreateDetector(
         detector = std::make_unique<PedestrianDetector>(frame);
         break;
 
+#ifdef USE_OCV_DNN
     case tracking::DNN_OCV:
         detector = std::make_unique<OCVDNNDetector>(frame);
         break;
+#endif
 
 	case tracking::Yolo_Darknet:
 #ifdef BUILD_YOLO_LIB
