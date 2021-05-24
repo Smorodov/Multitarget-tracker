@@ -37,11 +37,11 @@ public:
         m_val = id.m_val;
         return *this;
     }
-    TrackID(T val)
+    TrackID(value_type val)
         : m_val(val)
     {
     }
-    const TrackID& operator=(T val)
+    const TrackID& operator=(value_type val)
     {
         m_val = val;
     }
@@ -68,7 +68,7 @@ public:
         return m_val % module;
     }
 
-    T m_val{ 0 };
+    value_type m_val{ 0 };
 };
 
 typedef TrackID<size_t> track_id_t;

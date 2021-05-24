@@ -104,3 +104,9 @@ set(YOLO_LIBS
 # message("${YOLO_LIBS}")
 
 target_link_libraries(${libname} ${YOLO_LIBS})
+
+install(TARGETS ${libname}
+        EXPORT MTTrackingExports
+        LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
+        RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
+        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_PREFIX}/include/${PROJECT_NAME})
