@@ -103,8 +103,8 @@ add_subdirectory(src)
 
 
 # Create CMake config files for distribution
-set(INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include/ )
-set(LIB_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/lib/ )
+set(INCLUDE_INSTALL_DIR include/ )
+set(LIB_INSTALL_DIR lib/ )
 
 install(EXPORT MTTrackingExports
     FILE ${PROJECT_NAME}Targets.cmake
