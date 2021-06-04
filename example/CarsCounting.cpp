@@ -181,6 +181,8 @@ bool CarsCounting::InitDetector(cv::UMat frame)
 	config.emplace("nmsThreshold", "0.4");
 	config.emplace("swapRB", "0");
     config.emplace("maxCropRatio", "-1");
+    if (m_batchSize > 1)
+        config.emplace("maxBatch", std::to_string(m_batchSize));
 
 	config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_person));
 	config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_car));

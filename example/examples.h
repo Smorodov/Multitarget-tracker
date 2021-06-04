@@ -637,7 +637,7 @@ protected:
             }
             if (maxBatch < m_batchSize)
                 maxBatch = m_batchSize;
-            config.emplace("maxBatch", std::to_string(m_batchSize));
+            config.emplace("maxBatch", std::to_string(maxBatch));
             config.emplace("classNames", pathToModel + "coco.names");
             config.emplace("maxCropRatio", "-1");
         }
@@ -901,7 +901,7 @@ protected:
             }
             if (maxBatch < m_batchSize)
                 maxBatch = m_batchSize;
-            config.emplace("maxBatch", std::to_string(m_batchSize));
+            config.emplace("maxBatch", std::to_string(maxBatch));
             config.emplace("classNames", pathToModel + "coco.names");
         }
         else
