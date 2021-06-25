@@ -7,8 +7,7 @@
 ///
 MotionDetector::MotionDetector(
 	BackgroundSubtract::BGFG_ALGS algType,
-    cv::UMat& gray
-	)
+    cv::UMat& gray)
     :
       BaseDetector(gray),
       m_algType(algType)
@@ -71,6 +70,8 @@ void MotionDetector::DetectContour()
 void MotionDetector::Detect(const cv::UMat& gray)
 {
     m_backgroundSubst->Subtract(gray, m_fg);
+    if (!m_ignoreMask.empty())
+        cv::bitwise_and(m_fg, m_ignoreMask, m_fg);
 
 	DetectContour();
 }
@@ -117,4 +118,10 @@ void MotionDetector::CalcMotionMap(cv::Mat& frame)
 			++moPtr;
 		}
 	}
+
+#if 0
+    std::cout << "m_ignoreMask = " << m_ignoreMask.size() << std::endl;
+        if (!m_ignoreMask.empty())
+            cv::imshow("ignoreMask", m_ignoreMask);
+#endif
 }

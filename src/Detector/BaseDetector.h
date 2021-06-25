@@ -50,14 +50,50 @@ public:
         }
     }
 
+    ///
+    /// \brief ResetModel
+    /// \param img
+    /// \param roiRect
+    ///
+    virtual void ResetModel(const cv::UMat& /*img*/, const cv::Rect& /*roiRect*/)
+    {
+    }
+
+    ///
+    /// \brief ResetIgnoreMask
+    ///
+    virtual void ResetIgnoreMask()
+    {
+        if (!m_ignoreMask.empty())
+            m_ignoreMask = 255;
+    }
+
 	///
-	/// \brief ResetModel
+	/// \brief UpdateIgnoreMask
 	/// \param img
 	/// \param roiRect
 	///
-	virtual void ResetModel(const cv::UMat& /*img*/, const cv::Rect& /*roiRect*/)
+	virtual void UpdateIgnoreMask(const cv::UMat& img, cv::Rect roiRect)
 	{
-	}
+        if (m_ignoreMask.empty())
+            m_ignoreMask = cv::Mat(img.size(), CV_8UC1, cv::Scalar(255));
+
+        auto Clamp = [](int& v, int& size, int hi)
+        {
+            if (v < 0)
+            {
+                size += v;
+                v = 0;
+            }
+            else if (v + size > hi - 1)
+            {
+                size = hi - 1 - v;
+            }
+        };
+        Clamp(roiRect.x, roiRect.width, m_ignoreMask.cols);
+        Clamp(roiRect.y, roiRect.height, m_ignoreMask.rows);
+        m_ignoreMask(roiRect) = 0;
+    }
 
 	///
 	/// \brief CanGrayProcessing
@@ -100,7 +136,8 @@ public:
             cv::ellipse(foreground, region.m_rrect, cv::Scalar(255, 255, 255), cv::FILLED);
 #endif
         }
-
+        if (!m_ignoreMask.empty())
+            cv::bitwise_and(foreground, m_ignoreMask, foreground);
         cv::normalize(foreground, m_normFor, 255, 0, cv::NORM_MINMAX, m_motionMap.type());
 
         double alpha = 0.95;
@@ -123,6 +160,10 @@ public:
                 ++moPtr;
             }
         }
+#if 0
+        if (!m_ignoreMask.empty())
+            cv::imshow("ignoreMask", m_ignoreMask);
+#endif
     }
 
 protected:
@@ -130,11 +171,13 @@ protected:
 
     cv::Size m_minObjectSize;
 
-	// Motion map for visualization current detections
-    cv::Mat m_motionMap;
-	cv::Mat m_normFor;
+    cv::Mat m_ignoreMask;
 
-	std::set<objtype_t> m_classesWhiteList;
+    // Motion map for visualization current detections
+    cv::Mat m_motionMap;
+    cv::Mat m_normFor;
+
+    std::set<objtype_t> m_classesWhiteList;
 
     std::vector<cv::Rect> GetCrops(float maxCropRatio, cv::Size netSize, cv::Size imgSize) const
     {
@@ -205,10 +248,8 @@ protected:
 	///
 	objtype_t T2T(size_t typeInd) const
 	{
-		if (typeInd < m_typesMap.size())
-			return m_typesMap[typeInd];
-		else
-			return bad_type;
+		objtype_t res = (typeInd < m_typesMap.size()) ? m_typesMap[typeInd] : bad_type;
+		return res;
 	}
 
 private:

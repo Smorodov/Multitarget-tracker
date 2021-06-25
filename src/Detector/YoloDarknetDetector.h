@@ -16,17 +16,17 @@ class YoloDarknetDetector final : public BaseDetector
 {
 public:
     YoloDarknetDetector(const cv::UMat& colorFrame);
-	~YoloDarknetDetector(void) = default;
+    ~YoloDarknetDetector(void) = default;
 
-	bool Init(const config_t& config);
+    bool Init(const config_t& config) override;
 
-	void Detect(const cv::UMat& colorFrame);
-	void Detect(const std::vector<cv::UMat>& frames, std::vector<regions_t>& regions);
+    void Detect(const cv::UMat& colorFrame) override;
+    void Detect(const std::vector<cv::UMat>& frames, std::vector<regions_t>& regions) override;
 
-	bool CanGrayProcessing() const
-	{
-		return false;
-	}
+    bool CanGrayProcessing() const override
+    {
+        return false;
+    }
 
 private:
 	std::unique_ptr<Detector> m_detector;

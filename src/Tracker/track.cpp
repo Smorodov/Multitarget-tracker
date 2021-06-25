@@ -206,26 +206,29 @@ void CTrack::Update(const CRegion& region,
                     cv::UMat currFrame,
                     int trajLen, int maxSpeedForStatic)
 {
-    if (region.m_type == m_currType)
+    if (dataCorrect)
     {
-        m_anotherTypeCounter = 0;
-        m_lastType = region.m_type;
-    }
-    else
-    {
-        if (region.m_type == m_lastType)
+        if (region.m_type == m_currType)
         {
-            ++m_anotherTypeCounter;
-            if (m_anotherTypeCounter > m_changeTypeThreshold)
-            {
-                m_currType = region.m_type;
-                m_anotherTypeCounter = 0;
-            }
+            m_anotherTypeCounter = 0;
+            m_lastType = region.m_type;
         }
         else
         {
-            m_lastType = region.m_type;
-            m_anotherTypeCounter = 0;
+            if (region.m_type == m_lastType)
+            {
+                ++m_anotherTypeCounter;
+                if (m_anotherTypeCounter > m_changeTypeThreshold)
+                {
+                    m_currType = region.m_type;
+                    m_anotherTypeCounter = 0;
+                }
+            }
+            else
+            {
+                m_lastType = region.m_type;
+                m_anotherTypeCounter = 0;
+            }
         }
     }
 
@@ -491,7 +494,7 @@ objtype_t CTrack::GetCurrType() const
 ///
 TrackingObject CTrack::ConstructObject() const
 {
-    return TrackingObject(GetLastRect(), m_trackID, m_trace, IsStatic(), IsOutOfTheFrame(),
+    return TrackingObject(GetLastRect(), m_trackID, m_trace, IsStatic(), m_staticFrames, IsOutOfTheFrame(),
                           m_currType, m_lastRegion.m_confidence, m_kalman.GetVelocity());
 }
 
