@@ -46,7 +46,7 @@ private:
 
 ///
 /// \brief CTracker::CTracker
-/// Tracker. Manage tracks. Create, remove, update.
+/// Manage tracks: create, remove, update.
 /// \param settings
 ///
 CTracker::CTracker(const TrackerSettings& settings)

@@ -84,14 +84,18 @@ void gradMag( float *I, float *M, float *O, int h, int w, int d, bool full ) {
     float* Gx=(float*) alMalloc(s,16); _Gx=(__m128*) Gx;
     float* Gy=(float*) alMalloc(s,16); _Gy=(__m128*) Gy;
     // compute gradient magnitude and orientation for each column
-    for(int x=0; x<w; x++ ) {
+    for(int x=0; x<w; x++ )
+    {
         // compute gradients (Gx, Gy) with maximum squared magnitude (M2)
-        for(int c=0; c<d; c++) {
+        for(int c=0; c<d; c++)
+        {
             grad1( I+x*h+c*w*h, Gx+c*h4, Gy+c*h4, h, w, x );
             for( y=0; y<h4/4; y++ ) {
                 int y1=h4/4*c+y;
                 _M2[y1]=sse::ADD(sse::MUL(_Gx[y1],_Gx[y1]),sse::MUL(_Gy[y1],_Gy[y1]));
-                if( c==0 ) continue; _m = sse::CMPGT( _M2[y1], _M2[y] );
+                if( c==0 )
+                    continue;
+                _m = sse::CMPGT( _M2[y1], _M2[y] );
                 _M2[y] = sse::OR( sse::AND(_m,_M2[y1]), sse::ANDNOT(_m,_M2[y]) );
                 _Gx[y] = sse::OR( sse::AND(_m,_Gx[y1]), sse::ANDNOT(_m,_Gx[y]) );
                 _Gy[y] = sse::OR( sse::AND(_m,_Gy[y1]), sse::ANDNOT(_m,_Gy[y]) );
@@ -123,8 +127,14 @@ void gradMagNorm( float *M, float *S, int h, int w, float norm ) {
     __m128 *_M, *_S, _norm; int i=0, n=h*w, n4=n/4;
     _S = (__m128*) S; _M = (__m128*) M; _norm = sse::SET(norm);
     bool sse = !(size_t(M)&15) && !(size_t(S)&15);
-    if(sse) for(; i<n4; i++) { *_M=sse::MUL(*_M,sse::RCP(sse::ADD(*_S++,_norm))); _M++; }
-    if(sse) i*=4; for(; i<n; i++) M[i] /= (S[i] + norm);
+    if(sse)
+        for(; i<n4; i++)
+        {
+            *_M=sse::MUL(*_M,sse::RCP(sse::ADD(*_S++,_norm))); _M++;
+        }
+    if(sse)
+        i*=4;
+    for(; i<n; i++) M[i] /= (S[i] + norm);
 }
 
 // helper for gradHist, quantize O and M into O0, O1 and M0, M1 (uses sse)

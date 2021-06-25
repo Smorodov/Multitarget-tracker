@@ -20,14 +20,8 @@
 class YoloDectector
 {
 public:
-	YoloDectector()
-	{
-
-	}
-	~YoloDectector()
-	{
-
-	}
+	YoloDectector() = default;
+	~YoloDectector() = default;
 
 	void init(const tensor_rt::Config &config)
 	{

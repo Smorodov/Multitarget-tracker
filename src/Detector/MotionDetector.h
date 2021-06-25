@@ -12,18 +12,18 @@ public:
     MotionDetector(BackgroundSubtract::BGFG_ALGS algType, cv::UMat& gray);
     ~MotionDetector(void) = default;
 
-    bool Init(const config_t& config);
+    bool Init(const config_t& config) override;
 
-    void Detect(const cv::UMat& gray);
+    void Detect(const cv::UMat& gray) override;
 
-	bool CanGrayProcessing() const
-	{
-		return true;
-	}
+    bool CanGrayProcessing() const override
+    {
+        return true;
+    }
 
-	void CalcMotionMap(cv::Mat& frame);
+    void CalcMotionMap(cv::Mat& frame) override;
 
-	void ResetModel(const cv::UMat& img, const cv::Rect& roiRect);
+    void ResetModel(const cv::UMat& img, const cv::Rect& roiRect) override;
 
 private:
     void DetectContour();

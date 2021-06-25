@@ -16,11 +16,11 @@ public:
     OCVDNNDetector(const cv::UMat& colorFrame);
     ~OCVDNNDetector(void) = default;
 
-    bool Init(const config_t& config);
+    bool Init(const config_t& config) override;
 
-    void Detect(const cv::UMat& colorFrame);
+    void Detect(const cv::UMat& colorFrame) override;
 
-    bool CanGrayProcessing() const
+    bool CanGrayProcessing() const override
     {
         return false;
     }

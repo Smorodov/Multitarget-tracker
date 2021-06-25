@@ -4,7 +4,6 @@
 #include <numeric>
 
 #include "defines.h"
-// ----------------------------------------------------------------------
 
 ///
 /// \brief The TrackerSettings struct
@@ -20,7 +19,7 @@ struct TrackerSettings
     tracking::LostTrackType m_lostTrackType = tracking::TrackKCF; // Used if m_filterGoal == tracking::FilterRect
     tracking::MatchType m_matchType = tracking::MatchHungrian;
 
-	std::array<track_t, tracking::DistsCount> m_distType;
+    std::array<track_t, tracking::DistsCount> m_distType;
 
     ///
     /// \brief m_dt
@@ -34,11 +33,11 @@ struct TrackerSettings
     ///
     track_t m_accelNoiseMag = 0.1f;
 
-	///
-	/// \brief m_useAcceleration
-	/// Constant velocity or constant acceleration motion model
-	///
-	bool m_useAcceleration = false;
+    ///
+    /// \brief m_useAcceleration
+    /// Constant velocity or constant acceleration motion model
+    ///
+    bool m_useAcceleration = false;
 
     ///
     /// \brief m_distThres
@@ -52,11 +51,11 @@ struct TrackerSettings
     ///
     track_t m_minAreaRadiusPix = 20.f;
 
-	///
-	/// \brief m_minAreaRadius
-	/// Minimal area radius in ration for object size. Used if m_minAreaRadiusPix < 0
-	///
-	track_t m_minAreaRadiusK = 0.5f;
+    ///
+    /// \brief m_minAreaRadius
+    /// Minimal area radius in ration for object size. Used if m_minAreaRadiusPix < 0
+    ///
+    track_t m_minAreaRadiusK = 0.5f;
 
     ///
     /// \brief m_maximumAllowedSkippedFrames
@@ -93,11 +92,11 @@ struct TrackerSettings
     ///
     int m_maxSpeedForStatic = 10;
 
-	///
-	/// \brief m_nearTypes
-	/// Object types that can be matched while tracking
-	///
-	std::map<objtype_t, std::set<objtype_t>> m_nearTypes;
+    ///
+    /// \brief m_nearTypes
+    /// Object types that can be matched while tracking
+    ///
+    std::map<objtype_t, std::set<objtype_t>> m_nearTypes;
 
 
     ///
@@ -265,9 +264,7 @@ struct TrackerSettings
 		{
 			auto it = m_nearTypes.find(type1);
 			if (it != std::end(m_nearTypes))
-			{
 				res = it->second.find(type2) != std::end(it->second);
-			}
 		}
 		return res;
 	}
