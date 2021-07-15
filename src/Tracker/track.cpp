@@ -163,7 +163,7 @@ track_t CTrack::CalcDistHist(const RegionEmbedding& embedding) const
 /// \param embedding
 /// \return
 ///
-std::optional<track_t> CTrack::CalcCosine(const RegionEmbedding& embedding) const
+std::pair<track_t, bool> CTrack::CalcCosine(const RegionEmbedding& embedding) const
 {
 	track_t res = 1;
 	if (!embedding.m_embedding.empty() && !m_regionEmbedding.m_embedding.empty())
@@ -179,14 +179,14 @@ std::optional<track_t> CTrack::CalcCosine(const RegionEmbedding& embedding) cons
         //res = static_cast<float>(-xy / norm);
 #endif
         //std::cout << "CTrack::CalcCosine: " << embedding.m_embedding.size() << " - " << m_regionEmbedding.m_embedding.size() << " = " << res << std::endl;
-        return res;
+        return { res, true };
 	}
     else
     {
         //assert(0);
         //CV_Assert(!embedding.m_embedding.empty());
         //CV_Assert(!m_regionEmbedding.m_embedding.empty());
-        return {};
+        return { 0, false };
     }
 }
 

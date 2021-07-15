@@ -385,6 +385,17 @@ extern "C" void resize_window_cv(char const* window_name, int width, int height)
 }
 // ----------------------------------------
 
+extern "C" void move_window_cv(char const* window_name, int x, int y)
+{
+    try {
+        cv::moveWindow(window_name, x, y);
+    }
+    catch (...) {
+        cerr << "OpenCV exception: create_window_cv \n";
+    }
+}
+// ----------------------------------------
+
 extern "C" void destroy_all_windows_cv()
 {
     try {
@@ -833,6 +844,15 @@ extern "C" image get_image_from_stream_letterbox(cap_cv *cap, int w, int h, int 
     return im;
 }
 // ----------------------------------------
+
+extern "C" void consume_frame(cap_cv *cap){
+    cv::Mat *src = NULL;
+    src = (cv::Mat *)get_capture_frame_cv(cap);
+    if (src)
+        delete src;
+}
+// ----------------------------------------
+
 
 // ====================================================================
 // Image Saving

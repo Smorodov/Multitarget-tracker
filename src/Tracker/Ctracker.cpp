@@ -475,9 +475,9 @@ void CTracker::CreateDistaceMatrix(const regions_t& regions,
                     if (reg.m_type == track->LastRegion().m_type)
                     {
                         auto resCos = track->CalcCosine(regionEmbeddings[j]);
-                        if (resCos)
+                        if (resCos.second)
                         {
-                            dist += m_settings.m_distType[ind] * resCos.value();
+                            dist += m_settings.m_distType[ind] * resCos.first;
                             //std::cout << "CalcCosine: " << TypeConverter::Type2Str(track->LastRegion().m_type) << ", reg = " << reg.m_brect << ", track = " << track->LastRegion().m_brect << ": res = " << resCos.value() << ", dist = " << dist << std::endl;
                         }
                         else

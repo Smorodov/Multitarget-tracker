@@ -4,7 +4,6 @@
 #include <deque>
 #include <memory>
 #include <array>
-#include <optional>
 
 #ifdef USE_OCV_KCF
 #include <opencv2/tracking.hpp>
@@ -85,7 +84,7 @@ public:
 	/// \param embedding
 	/// \return
 	///
-	std::optional<track_t> CalcCosine(const RegionEmbedding& embedding) const;
+	std::pair<track_t, bool> CalcCosine(const RegionEmbedding& embedding) const;
 
 	cv::RotatedRect CalcPredictionEllipse(cv::Size_<track_t> minRadius) const;
 	///

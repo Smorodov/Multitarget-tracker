@@ -235,11 +235,24 @@ void backward_network_gpu(network net, network_state state)
         cuda_pull_array(original_input, original_input_cpu, img_size);
         cuda_pull_array(original_delta, original_delta_cpu, img_size);
 
-        image attention_img = make_attention_image(img_size, original_delta_cpu, original_input_cpu, net.w, net.h, net.c);
+        image attention_img = make_attention_image(img_size, original_delta_cpu, original_input_cpu, net.w, net.h, net.c, 0.7);
         show_image(attention_img, "attention_img");
         resize_window_cv("attention_img", 500, 500);
 
+        //static int img_counter = 0;
+        //img_counter++;
+        //char buff[256];
+        //sprintf(buff, "attention_img_%d.png", img_counter);
+        //save_image_png(attention_img, buff);
         free_image(attention_img);
+
+        image attention_mask_img = make_attention_image(img_size, original_delta_cpu, original_delta_cpu, net.w, net.h, net.c, 1.0);
+        show_image(attention_mask_img, "attention_mask_img");
+        resize_window_cv("attention_mask_img", 500, 500);
+
+        //sprintf(buff, "attention_mask_img_%d.png", img_counter);
+        //save_image_png(attention_mask_img, buff);
+        free_image(attention_mask_img);
 
         free(original_input_cpu);
         free(original_delta_cpu);
@@ -271,6 +284,8 @@ void update_network_gpu(network net)
     float rate = get_current_rate(net);
     for(i = 0; i < net.n; ++i){
         layer l = net.layers[i];
+        if (l.train == 0) continue;
+
         l.t = get_current_batch(net);
         if (iteration_num > (net.max_batches * 1 / 2)) l.deform = 0;
         if (l.burnin_update && (l.burnin_update*net.burn_in > iteration_num)) continue;
@@ -664,7 +679,7 @@ float train_networks(network *nets, int n, data d, int interval)
 float *get_network_output_layer_gpu(network net, int i)
 {
     layer l = net.layers[i];
-    if(l.type != REGION) cuda_pull_array(l.output_gpu, l.output, l.outputs*l.batch);
+    if(l.type != REGION && l.type != YOLO && (*net.cuda_graph_ready) == 0) cuda_pull_array(l.output_gpu, l.output, l.outputs*l.batch);
     return l.output;
 }
 
@@ -686,12 +701,49 @@ float *network_predict_gpu(network net, float *input)
     //state.input = cuda_make_array(input, size);   // memory will be allocated in the parse_network_cfg_custom()
     state.input = net.input_state_gpu;
     memcpy(net.input_pinned_cpu, input, size * sizeof(float));
-    cuda_push_array(state.input, net.input_pinned_cpu, size);
     state.truth = 0;
     state.train = 0;
     state.delta = 0;
-    forward_network_gpu(net, state);
+
+    //cudaGraphExec_t instance = (cudaGraphExec_t)net.cuda_graph_exec;
+    static cudaGraphExec_t instance;
+
+    if ((*net.cuda_graph_ready) == 0) {
+        static cudaGraph_t graph;
+        if (net.use_cuda_graph == 1) {
+            int i;
+            for (i = 0; i < 16; ++i) switch_stream(i);
+
+            cudaStream_t stream0 = switch_stream(0);
+            CHECK_CUDA(cudaDeviceSynchronize());
+            printf("Try to capture graph... \n");
+            //cudaGraph_t graph = (cudaGraph_t)net.cuda_graph;
+            CHECK_CUDA(cudaStreamBeginCapture(stream0, cudaStreamCaptureModeGlobal));
+        }
+
+        cuda_push_array(state.input, net.input_pinned_cpu, size);
+        forward_network_gpu(net, state);
+
+        if (net.use_cuda_graph == 1) {
+            cudaStream_t stream0 = switch_stream(0);
+            CHECK_CUDA(cudaStreamEndCapture(stream0, &graph));
+            CHECK_CUDA(cudaGraphInstantiate(&instance, graph, NULL, NULL, 0));
+            (*net.cuda_graph_ready) = 1;
+            printf(" graph is captured... \n");
+            CHECK_CUDA(cudaDeviceSynchronize());
+        }
+        CHECK_CUDA(cudaStreamSynchronize(get_cuda_stream()));
+    }
+    else {
+        cudaStream_t stream0 = switch_stream(0);
+        //printf(" cudaGraphLaunch \n");
+        CHECK_CUDA( cudaGraphLaunch(instance, stream0) );
+        CHECK_CUDA( cudaStreamSynchronize(stream0) );
+        //printf(" ~cudaGraphLaunch \n");
+    }
+
     float *out = get_network_output_gpu(net);
+    reset_wait_stream_events();
     //cuda_free(state.input);   // will be freed in the free_network()
     return out;
 }
