@@ -48,6 +48,7 @@ image mat_to_image_cv(mat_cv *mat);
 // Window
 void create_window_cv(char const* window_name, int full_screen, int width, int height);
 void resize_window_cv(char const* window_name, int width, int height);
+void move_window_cv(char const* window_name, int x, int y);
 void destroy_all_windows_cv();
 int wait_key_cv(int delay);
 int wait_until_press_key_cv();
@@ -83,7 +84,7 @@ int set_capture_position_frame_cv(cap_cv *cap, int index);
 image get_image_from_stream_cpp(cap_cv *cap);
 image get_image_from_stream_resize(cap_cv *cap, int w, int h, int c, mat_cv** in_img, int dont_close);
 image get_image_from_stream_letterbox(cap_cv *cap, int w, int h, int c, mat_cv** in_img, int dont_close);
-
+void consume_frame(cap_cv *cap);
 
 // Image Saving
 void save_cv_png(mat_cv *img, const char *name);

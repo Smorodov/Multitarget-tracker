@@ -170,9 +170,12 @@ void stretch_sway_flip_weights_gpu(const float *src_weight_gpu, float *weight_de
 void rotate_weights_gpu(const float *src_weight_gpu, float *weight_deform_gpu, int nweights, int n, int size, int reverse);
 void reduce_and_expand_array_gpu(const float *src_gpu, float *dst_gpu, int size, int groups);
 void expand_array_gpu(const float *src_gpu, float *dst_gpu, int size, int groups);
-void mult_inverse_array_gpu(const float *src_gpu, float *dst_gpu, int size, float eps);
+void mult_inverse_array_gpu(const float *src_gpu, float *dst_gpu, int size, float eps, float divider, float clip, float abs_add);
 void P_constrastive_f_det_gpu(int *labels, unsigned int feature_size, float temperature, contrastive_params *contrast_p, const int contrast_p_size);
 void coord_conv_gpu(float *dst, int size, int w, int h, int chan, int b, int type);
+
+void forward_implicit_gpu(int batch, int nweights, float *weight_gpu, float *output_gpu);
+void backward_implicit_gpu(int batch, int nweights, float *weight_updates_gpu, float *delta_gpu);
 
 #endif // GPU
 #ifdef __cplusplus

@@ -56,7 +56,9 @@ extern "C" {
 #endif // __cplusplus
     void check_error(cudaError_t status);
     void check_error_extended(cudaError_t status, const char *file, int line, const char *date_time);
+    void cublas_check_error_extended(cublasStatus_t status, const char *file, int line, const char *date_time);
 #define CHECK_CUDA(X) check_error_extended(X, __FILE__ " : " __FUNCTION__, __LINE__,  __DATE__ " - " __TIME__ );
+#define CHECK_CUBLAS(X) cublas_check_error_extended(X, __FILE__ " : " __FUNCTION__, __LINE__,  __DATE__ " - " __TIME__ );
 
     cublasHandle_t blas_handle();
     void free_pinned_memory();
@@ -77,10 +79,14 @@ extern "C" {
     float cuda_compare(float *x_gpu, float *x, size_t n, char *s);
     dim3 cuda_gridsize(size_t n);
     cudaStream_t get_cuda_stream();
-    cudaStream_t get_cuda_memcpy_stream();
+    //cudaStream_t get_cuda_memcpy_stream();
     int get_number_of_blocks(int array_size, int block_size);
     int get_gpu_compute_capability(int i, char *device_name);
     void show_cuda_cudnn_info();
+
+    cudaStream_t switch_stream(int i);
+    void wait_stream(int i);
+    void reset_wait_stream_events();
 
 #ifdef CUDNN
 cudnnHandle_t cudnn_handle();

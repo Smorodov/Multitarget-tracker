@@ -192,7 +192,8 @@ typedef enum {
     L2NORM,
     EMPTY,
     BLANK,
-    CONTRASTIVE
+    CONTRASTIVE,
+    IMPLICIT
 } LAYER_TYPE;
 
 // layer.h
@@ -557,6 +558,9 @@ struct layer {
 //#ifdef GPU
     int *indexes_gpu;
 
+    int stream;
+    int wait_stream_id;
+
     float *z_gpu;
     float *r_gpu;
     float *h_gpu;
@@ -817,6 +821,11 @@ typedef struct network {
     size_t *max_input16_size;
     size_t *max_output16_size;
     int wait_stream;
+    
+    void *cuda_graph;
+    void *cuda_graph_exec;
+    int use_cuda_graph;
+    int *cuda_graph_ready;
 
     float *global_delta_gpu;
     float *state_delta_gpu;
@@ -1047,7 +1056,7 @@ LIB_API void optimize_picture(network *net, image orig, int max_layer, float sca
 
 // image.h
 LIB_API void make_image_red(image im);
-LIB_API image make_attention_image(int img_size, float *original_delta_cpu, float *original_input_cpu, int w, int h, int c);
+LIB_API image make_attention_image(int img_size, float *original_delta_cpu, float *original_input_cpu, int w, int h, int c, float alpha);
 LIB_API image resize_image(image im, int w, int h);
 LIB_API void quantize_image(image im);
 LIB_API void copy_image_from_bytes(image im, char *pdata);

@@ -245,6 +245,7 @@ network make_network(int n)
     net.n = n;
     net.layers = (layer*)xcalloc(net.n, sizeof(layer));
     net.seen = (uint64_t*)xcalloc(1, sizeof(uint64_t));
+    net.cuda_graph_ready = (int*)xcalloc(1, sizeof(int));
     net.badlabels_reject_threshold = (float*)xcalloc(1, sizeof(float));
     net.delta_rolling_max = (float*)xcalloc(1, sizeof(float));
     net.delta_rolling_avg = (float*)xcalloc(1, sizeof(float));
@@ -272,7 +273,7 @@ void forward_network(network net, network_state state)
     for(i = 0; i < net.n; ++i){
         state.index = i;
         layer l = net.layers[i];
-        if(l.delta && state.train){
+        if(l.delta && state.train && l.train){
             scal_cpu(l.outputs * l.batch, 0, l.delta, 1);
         }
         //double time = get_time_point();
@@ -296,6 +297,7 @@ void update_network(network net)
     float rate = get_current_rate(net);
     for(i = 0; i < net.n; ++i){
         layer l = net.layers[i];
+        if (l.train == 0) continue;
         if(l.update){
             l.update(l, update_batch, rate, net.momentum, net.decay);
         }
@@ -445,8 +447,7 @@ float train_network_waitkey(network net, data d, int wait_key)
             printf(" ema_apply() \n");
         }
         else
-        if ((*net.cur_iteration) < ema_apply_point &&
-            (*net.cur_iteration) % ema_period == 0)
+        if ((*net.cur_iteration) < ema_apply_point)// && (*net.cur_iteration) % ema_period == 0)
         {
             ema_update(net, net.ema_alpha); // update EMA
             printf(" ema_update(), ema_alpha = %f \n", net.ema_alpha);
@@ -1225,6 +1226,7 @@ void free_network(network net)
     free(net.scales);
     free(net.steps);
     free(net.seen);
+    free(net.cuda_graph_ready);
     free(net.badlabels_reject_threshold);
     free(net.delta_rolling_max);
     free(net.delta_rolling_avg);
@@ -1457,6 +1459,7 @@ void copy_weights_net(network net_train, network *net_map)
         }
         net_map->layers[k].batch = 1;
         net_map->layers[k].steps = 1;
+        net_map->layers[k].train = 0;
     }
 }
 
