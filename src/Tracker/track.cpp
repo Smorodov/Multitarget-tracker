@@ -598,6 +598,7 @@ void CTrack::RectUpdate(const CRegion& region,
         case tracking::TrackGOTURN:
         case tracking::TrackMOSSE:
         case tracking::TrackCSRT:
+        case tracking::TrackDaSiamRPN:
 #ifdef USE_OCV_KCF
             {
                 roiRect.width = std::max(3 * brect.width, currFrame.cols / 4);
@@ -696,6 +697,7 @@ void CTrack::RectUpdate(const CRegion& region,
     case tracking::TrackGOTURN:
     case tracking::TrackMOSSE:
 	case tracking::TrackCSRT:
+    case tracking::TrackDaSiamRPN:
 #ifdef USE_OCV_KCF
         {
             cv::Rect roiRect;
@@ -982,6 +984,20 @@ void CTrack::CreateExternalTracker(int channels)
 				params.use_rgb = true;
 			}
 			m_tracker = cv::TrackerCSRT::create(params);
+#endif
+		}
+#endif
+        if (m_VOTTracker)
+            m_VOTTracker = nullptr;
+		break;
+        
+    case tracking::TrackDaSiamRPN:
+#ifdef USE_OCV_KCF
+		if (!m_tracker || m_tracker.empty())
+		{
+#if (((CV_VERSION_MAJOR == 4) && (CV_VERSION_MINOR > 5)) || ((CV_VERSION_MAJOR == 4) && (CV_VERSION_MINOR == 5) && (CV_VERSION_REVISION > 2))  || (CV_VERSION_MAJOR > 4))
+			cv::TrackerDaSiamRPN::Params params;
+			m_tracker = cv::TrackerDaSiamRPN::create(params);
 #endif
 		}
 #endif
