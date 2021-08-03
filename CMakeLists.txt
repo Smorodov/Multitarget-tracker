@@ -98,6 +98,14 @@ if (BUILD_YOLO_TENSORRT)
     add_definitions(-DBUILD_YOLO_TENSORRT)
 endif(BUILD_YOLO_TENSORRT)
 
+option(MTRACKER_PYTHON "Build mtracking Python bindings?" ON)
+if(MTRACKER_PYTHON)
+    set(PYBIND11_LTO_CXX_FLAGS "")
+    set(PYBIND11_PYTHON_VERSION 3)
+    add_subdirectory(thirdparty/pybind11)
+endif(MTRACKER_PYTHON)
+
+
 add_subdirectory(thirdparty)
 add_subdirectory(src)
 
