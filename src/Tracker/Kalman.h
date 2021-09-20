@@ -28,6 +28,8 @@ public:
 
 	cv::Vec<track_t, 2> GetVelocity() const;
 
+    void GetPtStateAndResCov(cv::Mat& covar, cv::Mat& state) const;
+
 private:
     cv::KalmanFilter m_linearKalman;
 #ifdef USE_OCV_UKF

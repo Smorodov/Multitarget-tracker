@@ -72,6 +72,12 @@ public:
     ///
     track_t CalcDistJaccard(const CRegion& reg) const;
 	///
+	/// \brief CTrack::CalcMahalanobisDist
+	/// \param reg
+	/// \return
+	///
+	track_t CalcMahalanobisDist(const cv::RotatedRect& rrect) const;
+	///
 	/// \brief CalcDistHist
 	/// Distance from 0 to 1 between objects histogramms on two N and N+1 frames
 	/// \param embedding
@@ -116,6 +122,10 @@ public:
 
     TrackingObject ConstructObject() const;
     track_id_t GetID() const;
+
+    bool GetFilterObjectSize() const;
+    void KalmanPredictRect();
+    void KalmanPredictPoint();
 
 private:
     TKalmanFilter m_kalman;

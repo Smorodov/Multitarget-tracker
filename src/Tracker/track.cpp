@@ -132,6 +132,34 @@ track_t CTrack::CalcDistJaccard(const CRegion& reg) const
 }
 
 ///
+/// \brief CTrack::CalcMahalanobisDist
+/// \param reg
+/// \return
+///
+track_t CTrack::CalcMahalanobisDist(const cv::RotatedRect& rrect) const
+{
+    cv::Mat res1, predictPoint;
+    // res1 = Hn * Pn+1|n+1 * Hn^T + Rn+1	error covariance
+    // res2 = Hn * Xn+1|n
+    m_kalman.GetPtStateAndResCov(res1, predictPoint);
+
+    double mahaDist = 0.0;
+    if (!res1.empty() && !predictPoint.empty())
+    {
+        cv::Mat icovar_Pn;
+        cv::invert(res1, icovar_Pn, cv::DECOMP_SVD);
+        cv::Mat measurePoint;
+        if (predictPoint.rows == 2)			// PointUpdate
+            measurePoint = (cv::Mat_<track_t>(2, 1) << rrect.center.x, rrect.center.y); // detection
+        else
+            measurePoint = (cv::Mat_<track_t>(4, 1) << rrect.center.x, rrect.center.y, rrect.size.width, rrect.size.height); // predict
+        mahaDist = cv::Mahalanobis(measurePoint, predictPoint, icovar_Pn);
+        mahaDist += std::log(cv::determinant(res1));
+    }
+    return static_cast<track_t>(mahaDist);
+}
+
+///
 /// \brief CTrack::CalcDistHist
 /// \param embedding
 /// \return
@@ -508,6 +536,33 @@ track_id_t CTrack::GetID() const
 }
 
 ///
+/// \brief CTrack::GetFilterObjectSize
+/// \return
+///
+bool CTrack::GetFilterObjectSize() const
+{
+    return m_filterObjectSize;
+}
+
+///
+/// \brief CTrack::KalmanPredictRect
+/// \return
+///
+void CTrack::KalmanPredictRect()
+{
+    m_kalman.GetRectPrediction();
+}
+
+///
+/// \brief CTrack::KalmanPredictPoint
+/// \return
+///
+void CTrack::KalmanPredictPoint()
+{
+    m_kalman.GetPointPrediction();
+}
+
+///
 /// \brief CTrack::SkippedFrames
 /// \return
 ///
@@ -537,8 +592,6 @@ void CTrack::RectUpdate(const CRegion& region,
                         cv::UMat prevFrame,
                         cv::UMat currFrame)
 {
-    m_kalman.GetRectPrediction();
-
     bool wasTracked = false;
     cv::RotatedRect trackedRRect;
 
@@ -1053,8 +1106,6 @@ void CTrack::PointUpdate(const Point_t& pt,
                          bool dataCorrect,
                          const cv::Size& frameSize)
 {
-    m_kalman.GetPointPrediction();
-
     m_predictionPoint = m_kalman.Update(pt, dataCorrect);
 
     if (dataCorrect)
