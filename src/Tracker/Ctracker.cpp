@@ -396,6 +396,12 @@ void CTracker::CreateDistaceMatrix(const regions_t& regions,
 	{
 		const auto& track = m_tracks[i];
 
+        // call kalman prediction fist 
+		if (track->GetFilterObjectSize())
+			track->KalmanPredictRect();
+		else
+			track->KalmanPredictPoint();
+
 		// Calc predicted area for track
 		cv::Size_<track_t> minRadius;
 		if (m_settings.m_minAreaRadiusPix < 0)
@@ -488,6 +494,12 @@ void CTracker::CreateDistaceMatrix(const regions_t& regions,
                     }
                 }
 				++ind;
+
+                // Mahalanobis
+				if (m_settings.m_distType[ind] > 0.0f && ind == tracking::DistMahalanobis)
+					dist += m_settings.m_distType[ind] * track->CalcMahalanobisDist(reg.m_rrect);
+				++ind;
+
 				assert(ind == tracking::DistsCount);
 			}
 

@@ -913,3 +913,30 @@ cv::Vec<track_t, 2> TKalmanFilter::GetVelocity() const
     }
     return res;
 }
+
+//---------------------------------------------------------------------------
+void TKalmanFilter::GetPtStateAndResCov(cv::Mat& covar, cv::Mat& state) const
+{
+    if (m_initialized)
+    {
+        switch (m_type)
+        {
+        case tracking::KalmanLinear:
+        {
+            state = m_linearKalman.statePost.clone();
+            covar = m_linearKalman.processNoiseCov.clone();
+            break;
+        }
+
+        case tracking::KalmanUnscented:
+        case tracking::KalmanAugmentedUnscented:
+#ifdef USE_OCV_UKF
+            state = m_uncsentedKalman->getState();
+#else
+            std::cerr << "UnscentedKalmanFilter was disabled in CMAKE! Set KalmanLinear in constructor." << std::endl;
+#endif
+            break;
+        }
+    }
+}
+
