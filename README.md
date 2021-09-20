@@ -246,4 +246,5 @@ Apache 2.0: [LICENSE text](https://github.com/Smorodov/Multitarget-tracker/blob/
 8. RADEK VOPÁLENSKÝ "DETECTION,TRACKING AND CLASSIFICATION OF VEHICLES", 2018 ( https://www.vutbr.cz/www_base/zav_prace_soubor_verejne.php?file_id=181063 )
 9. Márk Rátosi, Gyula Simon "Real-Time Localization and Tracking  using Visible Light Communication", 2018 ( https://ieeexplore.ieee.org/abstract/document/8533800 )
 10. Thi Nha Ngo, Kung-Chin Wu, En-Cheng Yang, Ta-Te Lin "Areal-time imaging system for multiple honey bee tracking and activity monitoring", 2019 ( https://www.sciencedirect.com/science/article/pii/S0168169919301498 )
-11. ROS, http://docs.ros.org/lunar/api/costmap_converter/html/Ctracker_8cpp_source.html
+11. Tiago Miguel, Rodrigues de Almeida "Multi-Camera and Multi-Algorithm Architecture for VisualPerception onboard the ATLASCAR2", 2019 ( http://lars.mec.ua.pt/public/LAR%20Projects/Vision/2019_TiagoAlmeida/Thesis_Tiago_AlmeidaVF_26Jul2019.pdf )
+12. ROS, http://docs.ros.org/lunar/api/costmap_converter/html/Ctracker_8cpp_source.html
