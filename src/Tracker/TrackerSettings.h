@@ -105,10 +105,10 @@ struct TrackerSettings
 
     ///
     std::string m_nnWeights = "data/yolov4-tiny_best.weights";
-    
+
     ///
     std::string m_nnConfig = "data/yolov4-tiny.cfg";
-    
+
     ///
     std::string m_classNames = "data/traffic.names";
 
@@ -205,6 +205,7 @@ struct TrackerSettings
 		m_distType[tracking::DistJaccard] = 0.5f;
 		m_distType[tracking::DistHist] = 0.5f;
 		m_distType[tracking::DistFeatureCos] = 0.0f;
+        m_distType[tracking::DistMahalanobis] = 0.0f;
 
 		assert(CheckDistance());
 	}
