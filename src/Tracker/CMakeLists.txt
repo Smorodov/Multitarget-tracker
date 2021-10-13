@@ -2,9 +2,13 @@ cmake_minimum_required(VERSION 3.9)
 
 project(mtracking)
 
-set(main_sources ../common/nms.h ../common/defines.h ../common/object_types.h ../common/object_types.cpp)
+set(main_sources
+             ../common/nms.h
+             ../common/defines.h
+             ../common/object_types.h
+             ../common/object_types.cpp)
 
-  set(tracker_sources
+set(tracker_sources
              Ctracker.cpp
              ShortPathCalculator.cpp
              track.cpp

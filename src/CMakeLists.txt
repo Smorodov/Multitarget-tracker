@@ -23,6 +23,8 @@ else()
     set(LIB_PTHREAD pthread)
 endif()
 
+    include_directories(common)
+
     pybind11_add_module(pymtracking ${mtracker_python_src} ${mtracker_python_inc})
     target_link_libraries(pymtracking PRIVATE mtracking mdetection ${OpenCV_LIBS} ${PYTHON_LIBRARY} pybind11::module)
 

@@ -23,30 +23,19 @@ class PyDetector : public BaseDetector
 public:
 	using BaseDetector::BaseDetector;
 
-	bool Init(const config_t& config) override {
-		PYBIND11_OVERLOAD_PURE(
-			bool,          // Return type
-			BaseDetector,  // Parent class
-			Init,          // Name of function in C++ (must match Python name)
-			config         // Argument(s)
-		);
+	bool Init(const config_t& config) override
+    {
+		PYBIND11_OVERLOAD_PURE(bool, BaseDetector,  Init, config);
 	}
 
-    void Detect(cv::Mat frame) override {
-		PYBIND11_OVERLOAD_PURE(
-			void,          // Return type
-			BaseDetector,  // Parent class
-			Detect,        // Name of function in C++ (must match Python name)
-			frame          // Argument(s)
-		);
+    void DetectMat(cv::Mat frame) override
+    {
+		PYBIND11_OVERLOAD(void, BaseDetector, DetectMat, frame);
 	}
 
-	bool CanGrayProcessing() const override {
-		PYBIND11_OVERLOAD_PURE(
-			bool,          // Return type
-			BaseDetector,  // Parent class
-			CanGrayProcessing
-		);
+	bool CanGrayProcessing() const override
+    {
+		PYBIND11_OVERLOAD_PURE(bool, BaseDetector, CanGrayProcessing);
 	}
 };
 
@@ -56,30 +45,14 @@ class PyMotionDetector : public MotionDetector
 public:
     using MotionDetector::MotionDetector;
 
-    bool Init(const config_t& config) override {
-        PYBIND11_OVERLOAD_PURE(
-            bool,          // Return type
-            BaseDetector,  // Parent class
-            Init,          // Name of function in C++ (must match Python name)
-            config         // Argument(s)
-        );
+    bool Init(const config_t& config) override
+    {
+        PYBIND11_OVERLOAD(bool, BaseDetector, Init, config);
     }
 
-    void Detect(cv::Mat frame) override {
-        PYBIND11_OVERLOAD_PURE(
-            void,          // Return type
-            BaseDetector,  // Parent class
-            Detect,        // Name of function in C++ (must match Python name)
-            frame          // Argument(s)
-        );
-    }
-
-    bool CanGrayProcessing() const override {
-        PYBIND11_OVERLOAD_PURE(
-            bool,          // Return type
-            BaseDetector,  // Parent class
-            CanGrayProcessing
-        );
+    bool CanGrayProcessing() const override
+    {
+        PYBIND11_OVERLOAD(bool, BaseDetector, CanGrayProcessing);
     }
 };
 
@@ -107,6 +80,42 @@ cv::Mat cloneimg(cv::Mat image)
 {
     return image.clone();
 }
+
+class PyBaseTracker : public BaseTracker
+{
+public:
+    using BaseTracker::BaseTracker;
+
+    void Update(const regions_t& regions, cv::UMat currFrame, float fps) override
+    {
+        PYBIND11_OVERLOAD_PURE(void, BaseTracker, Update, regions, currFrame, fps);
+    }
+
+    bool CanGrayFrameToTrack() const override
+    {
+        PYBIND11_OVERLOAD_PURE(bool, BaseTracker, CanGrayFrameToTrack);
+    }
+
+    bool CanColorFrameToTrack() const override
+    {
+        PYBIND11_OVERLOAD_PURE(bool, BaseTracker, CanColorFrameToTrack);
+    }
+
+    size_t GetTracksCount() const override
+    {
+        PYBIND11_OVERLOAD_PURE(size_t, BaseTracker, GetTracksCount);
+    }
+
+    void GetTracks(std::vector<TrackingObject>& tracks) const override
+    {
+        PYBIND11_OVERLOAD_PURE(void, BaseTracker, GetTracks, tracks);
+    }
+
+    void GetRemovedTracks(std::vector<track_id_t>& trackIDs) const override
+    {
+        PYBIND11_OVERLOAD_PURE(void, BaseTracker, GetRemovedTracks, trackIDs);
+    }
+};
 
 ///
 PYBIND11_MODULE(pymtracking, m)
@@ -148,23 +157,28 @@ PYBIND11_MODULE(pymtracking, m)
             .def_readwrite("useAbandonedDetection", &TrackerSettings::m_useAbandonedDetection)
             .def_readwrite("minStaticTime", &TrackerSettings::m_minStaticTime)
             .def_readwrite("maxStaticTime", &TrackerSettings::m_maxStaticTime);
+    
+    py::class_<cv::Rect>(m, "CvRect")
+            .def(py::init<>())
+            .def_readwrite("x", &cv::Rect::x)
+            .def_readwrite("y", &cv::Rect::y)
+            .def_readwrite("width", &cv::Rect::width)
+            .def_readwrite("height", &cv::Rect::height);
 
+    py::class_<cv::RotatedRect>(m, "CvRRect")
+            .def(py::init<>())
+            .def("brect", &cv::RotatedRect::boundingRect);
+            
     py::class_<CRegion>(m, "CRegion")
             .def(py::init<>())
-            .def("x", &CRegion::x)
-            .def("y", &CRegion::y)
-            .def("width", &CRegion::width)
-            .def("height", &CRegion::height)
+            .def_readwrite("brect", &CRegion::m_brect)
             .def_readwrite("type", &CRegion::m_type)
             .def_readwrite("confidence", &CRegion::m_confidence);
 
     py::class_<TrackingObject>(m, "TrackingObject")
             .def(py::init<>())
             .def("IsRobust", &TrackingObject::IsRobust)
-            .def("x", &TrackingObject::x)
-            .def("y", &TrackingObject::y)
-            .def("width", &TrackingObject::width)
-            .def("height", &TrackingObject::height)
+            .def_readwrite("rrect", &TrackingObject::m_rrect)
             .def_readwrite("ID", &TrackingObject::m_ID)
             .def_readwrite("isStatic", &TrackingObject::m_isStatic)
             .def_readwrite("outOfTheFrame", &TrackingObject::m_outOfTheFrame)
@@ -172,13 +186,13 @@ PYBIND11_MODULE(pymtracking, m)
             .def_readwrite("confidence", &TrackingObject::m_confidence)
             .def_readwrite("velocity", &TrackingObject::m_velocity);
 
-    py::class_<CTracker> mtracker(m, "MTracker");
+    py::class_<BaseTracker, PyBaseTracker> mtracker(m, "MTracker");
     mtracker.def(py::init<const TrackerSettings&>());
-    mtracker.def("Update", &CTracker::Update);
-    mtracker.def("CanGrayFrameToTrack", &CTracker::CanGrayFrameToTrack);
-    mtracker.def("CanColorFrameToTrack", &CTracker::CanColorFrameToTrack);
-    mtracker.def("GetTracksCount", &CTracker::GetTracksCount);
-    mtracker.def("GetTracks", &CTracker::GetTracks);
+    mtracker.def("Update", &BaseTracker::Update);
+    mtracker.def("CanGrayFrameToTrack", &BaseTracker::CanGrayFrameToTrack);
+    mtracker.def("CanColorFrameToTrack", &BaseTracker::CanColorFrameToTrack);
+    mtracker.def("GetTracksCount", &BaseTracker::GetTracksCount);
+    mtracker.def("GetTracks", &BaseTracker::GetTracks);
 
     py::enum_<tracking::DistType>(mtracker, "DistType")
             .value("DistCenters", tracking::DistType::DistCenters)
@@ -218,7 +232,7 @@ PYBIND11_MODULE(pymtracking, m)
 	py::class_<BaseDetector, PyDetector>(m, "BaseDetector")
 		.def(py::init<cv::Mat>())
 		.def("Init", &BaseDetector::Init)
-		.def("Detect", &BaseDetector::Detect)
+		.def("Detect", &BaseDetector::DetectMat)
 		.def("ResetModel", &BaseDetector::ResetModel)
 		.def("CanGrayProcessing", &BaseDetector::CanGrayProcessing)
 		.def("SetMinObjectSize", &BaseDetector::SetMinObjectSize)

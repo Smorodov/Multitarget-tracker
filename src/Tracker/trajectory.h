@@ -196,6 +196,8 @@ struct TrackingObject
 	{
 	}
 
+    ///
+	TrackingObject() = default;
 	///
 	TrackingObject(TrackingObject&&) = default;
 

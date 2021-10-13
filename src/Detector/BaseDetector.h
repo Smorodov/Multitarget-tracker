@@ -34,6 +34,11 @@ public:
     /// \param frame
     ///
     virtual void Detect(const cv::UMat& frame) = 0;
+    virtual void DetectMat(cv::Mat frame)
+    {
+        cv::UMat um = frame.getUMat(cv::ACCESS_READ);
+        return Detect(um);
+    }
 
     ///
     /// \brief Detect
