@@ -187,7 +187,7 @@ PYBIND11_MODULE(pymtracking, m)
             .def_readwrite("velocity", &TrackingObject::m_velocity);
 
     py::class_<BaseTracker, PyBaseTracker> mtracker(m, "MTracker");
-    mtracker.def(py::init<const TrackerSettings&>());
+    mtracker.def(py::init(&BaseTracker::CreateTracker));
     mtracker.def("Update", &BaseTracker::Update);
     mtracker.def("CanGrayFrameToTrack", &BaseTracker::CanGrayFrameToTrack);
     mtracker.def("CanColorFrameToTrack", &BaseTracker::CanColorFrameToTrack);
