@@ -96,7 +96,7 @@ protected:
 			config.emplace("detectShadows", "1");
 			break;
 		}
-        m_detector = CreateDetector(detectorType, config, frame);
+        m_detector = BaseDetector::CreateDetector(detectorType, config, frame);
 
         if (m_detector.get())
         {
@@ -240,7 +240,7 @@ protected:
 
         config_t config;
         config.emplace("cascadeFileName", pathToModel + "haarcascade_frontalface_alt2.xml");
-        m_detector = CreateDetector(tracking::Detectors::Face_HAAR, config, frame);
+        m_detector = BaseDetector::CreateDetector(tracking::Detectors::Face_HAAR, config, frame);
         if (m_detector.get())
         {
             m_detector->SetMinObjectSize(cv::Size(frame.cols / 20, frame.rows / 20));
@@ -330,7 +330,7 @@ protected:
         config.emplace("detectorType", (detectorType == tracking::Pedestrian_HOG) ? "HOG" : "C4");
         config.emplace("cascadeFileName1", pathToModel + "combined.txt.model");
         config.emplace("cascadeFileName2", pathToModel + "combined.txt.model_");
-        m_detector = CreateDetector(detectorType, config, frame);
+        m_detector = BaseDetector::CreateDetector(detectorType, config, frame);
         if (m_detector.get())
         {
             m_detector->SetMinObjectSize(cv::Size(frame.cols / 20, frame.rows / 20));
@@ -466,7 +466,7 @@ protected:
 		config.emplace("dnnTarget", "DNN_TARGET_CPU");
 		config.emplace("dnnBackend", "DNN_BACKEND_DEFAULT");
 
-		m_detector = CreateDetector(tracking::Detectors::DNN_OCV, config, frame);
+		m_detector = BaseDetector::CreateDetector(tracking::Detectors::DNN_OCV, config, frame);
 		if (m_detector.get())
 			m_detector->SetMinObjectSize(cv::Size(frame.cols / 40, frame.rows / 40));
 		return (m_detector.get() != nullptr);
@@ -661,7 +661,7 @@ protected:
         config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_bus));
         config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_truck));
 
-        m_detector = CreateDetector(tracking::Detectors::Yolo_Darknet, config, frame);
+        m_detector = BaseDetector::CreateDetector(tracking::Detectors::Yolo_Darknet, config, frame);
         if (m_detector.get())
         {
             m_detector->SetMinObjectSize(cv::Size(frame.cols / 40, frame.rows / 40));
@@ -924,7 +924,7 @@ protected:
 		config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_bus));
 		config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_truck));
 
-		m_detector = CreateDetector(tracking::Detectors::Yolo_TensorRT, config, frame);
+		m_detector = BaseDetector::CreateDetector(tracking::Detectors::Yolo_TensorRT, config, frame);
 		if (m_detector.get())
 		{
 			m_detector->SetMinObjectSize(cv::Size(frame.cols / 40, frame.rows / 40));

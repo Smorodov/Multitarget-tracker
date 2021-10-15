@@ -229,16 +229,16 @@ PYBIND11_MODULE(pymtracking, m)
             .value("TrackLDES", tracking::LostTrackType::TrackLDES)
             .export_values();
 
-	py::class_<BaseDetector, PyDetector>(m, "BaseDetector")
-		.def(py::init<cv::Mat>())
-		.def("Init", &BaseDetector::Init)
-		.def("Detect", &BaseDetector::DetectMat)
-		.def("ResetModel", &BaseDetector::ResetModel)
-		.def("CanGrayProcessing", &BaseDetector::CanGrayProcessing)
-		.def("SetMinObjectSize", &BaseDetector::SetMinObjectSize)
-		.def("GetDetects", &BaseDetector::GetDetects)
-		.def("CalcMotionMap", &BaseDetector::CalcMotionMap);
-
+	py::class_<BaseDetector, PyDetector> base_detector(m, "BaseDetector");
+    base_detector.def(py::init(&BaseDetector::CreateDetector));
+    base_detector.def("Init", &BaseDetector::Init);
+    base_detector.def("Detect", &BaseDetector::DetectMat);
+    base_detector.def("ResetModel", &BaseDetector::ResetModel);
+    base_detector.def("CanGrayProcessing", &BaseDetector::CanGrayProcessing);
+    base_detector.def("SetMinObjectSize", &BaseDetector::SetMinObjectSize);
+    base_detector.def("GetDetects", &BaseDetector::GetDetects);
+    base_detector.def("CalcMotionMap", &BaseDetector::CalcMotionMap);
+#if 0
     py::class_<MotionDetector, PyMotionDetector> mdetector(m, "MotionDetector");
     mdetector.def(py::init<BackgroundSubtract::BGFG_ALGS, cv::Mat&>());
     mdetector.def("Init", &MotionDetector::Init);
@@ -258,6 +258,23 @@ PYBIND11_MODULE(pymtracking, m)
             .value("LOBSTER", BackgroundSubtract::BGFG_ALGS::ALG_LOBSTER)
             .value("MOG2", BackgroundSubtract::BGFG_ALGS::ALG_MOG2)
             .export_values();
+#endif
+
+    py::enum_<tracking::Detectors>(base_detector, "Detectors")
+        .value("VIBE", tracking::Detectors::Motion_VIBE)
+        .value("MOG", tracking::Detectors::Motion_MOG)
+        .value("GMG", tracking::Detectors::Motion_GMG)
+        .value("CNT", tracking::Detectors::Motion_CNT)
+        .value("SuBSENSE", tracking::Detectors::Motion_SuBSENSE)
+        .value("LOBSTER", tracking::Detectors::Motion_LOBSTER)
+        .value("MOG2", tracking::Detectors::Motion_MOG2)
+        .value("Face_HAAR", tracking::Detectors::Face_HAAR)
+        .value("Pedestrian_HOG", tracking::Detectors::Pedestrian_HOG)
+        .value("Pedestrian_C4", tracking::Detectors::Pedestrian_C4)
+        .value("Yolo_Darknet", tracking::Detectors::Yolo_Darknet)
+        .value("Yolo_TensorRT", tracking::Detectors::Yolo_TensorRT)
+        .value("DNN_OCV", tracking::Detectors::DNN_OCV)
+        .export_values();
 
     m.def("read_image", &read_image, "A function that read an image",
           py::arg("image"));

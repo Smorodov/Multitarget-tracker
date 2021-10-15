@@ -28,8 +28,6 @@ def main():
     except:
         video_src = 0
     args = dict(args)
-    #cascade_fn = args.get('--cascade', "data/haarcascades/haarcascade_frontalface_alt.xml")
-    #nested_fn  = args.get('--nested-cascade', "data/haarcascades/haarcascade_eye.xml")
 
     cam = cv.VideoCapture(video_src)
 
@@ -43,7 +41,7 @@ def main():
     configBGFG["distanceThreshold"] = "18"
     configBGFG["matchingThreshold"] = "3"
     configBGFG["updateFactor"] = "16"
-    mdetector = mt.MotionDetector(mt.MotionDetector.VIBE, img)
+    mdetector = mt.BaseDetector(mt.BaseDetector.Detectors.VIBE, configBGFG, img)
     mdetector.Init(configBGFG)
     mdetector.SetMinObjectSize(int(img.shape[0] / 100), int(img.shape[0] / 100))
     print(mdetector.CanGrayProcessing())

@@ -198,8 +198,13 @@ struct TrackingObject
 
     ///
 	TrackingObject() = default;
+    ///
+	TrackingObject(const TrackingObject&) = default;
 	///
 	TrackingObject(TrackingObject&&) = default;
+
+    ///
+	~TrackingObject() = default;
 
     ///
     /// \brief IsRobust

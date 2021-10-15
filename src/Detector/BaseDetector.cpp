@@ -17,10 +17,9 @@
 /// \param gray
 /// \return
 ///
-std::unique_ptr<BaseDetector> CreateDetector(
-        tracking::Detectors detectorType,
-        const config_t& config,
-        cv::UMat& frame)
+std::unique_ptr<BaseDetector> BaseDetector::CreateDetector(tracking::Detectors detectorType,
+                                                           const config_t& config,
+                                                           cv::UMat& frame)
 {
     std::unique_ptr<BaseDetector> detector;
 

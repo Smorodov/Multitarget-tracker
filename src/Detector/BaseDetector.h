@@ -171,6 +171,10 @@ public:
 #endif
     }
 
+    ///
+    static std::unique_ptr<BaseDetector> CreateDetector(tracking::Detectors detectorType, const config_t& config, cv::UMat& gray);
+
+
 protected:
     regions_t m_regions;
 
@@ -260,12 +264,3 @@ protected:
 private:
     std::vector<objtype_t> m_typesMap;
 };
-
-
-///
-/// \brief CreateDetector
-/// \param detectorType
-/// \param gray
-/// \return
-///
-std::unique_ptr<BaseDetector> CreateDetector(tracking::Detectors detectorType, const config_t& config, cv::UMat& gray);
