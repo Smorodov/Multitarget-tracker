@@ -98,7 +98,7 @@ if (BUILD_YOLO_TENSORRT)
     add_definitions(-DBUILD_YOLO_TENSORRT)
 endif(BUILD_YOLO_TENSORRT)
 
-option(MTRACKER_PYTHON "Build mtracking Python bindings?" ON)
+option(MTRACKER_PYTHON "Build mtracking Python bindings?" OFF)
 if(MTRACKER_PYTHON)
     set(NUMPY_INCLUDE_DIR "" CACHE FILEPATH "Path to numpy header if cmake can't find them.")
     if (NOT ${NUMPY_INCLUDE_DIR} STREQUAL "")
