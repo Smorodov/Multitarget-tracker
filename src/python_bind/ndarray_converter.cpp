@@ -1,3 +1,6 @@
+// borrowed in spirit from https://github.com/yati-sagade/opencv-ndarray-conversion
+// MIT License
+
 #include "ndarray_converter.h"
 
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
@@ -22,10 +25,9 @@ bool NDArrayConverter::init_numpy() {
     return true;
 }
 
-/*
- * The following conversion functions are taken/adapted from OpenCV's cv2.cpp file
- * inside modules/python/src2 folder (OpenCV 3.1.0)
- */
+// The following conversion functions are taken/adapted from OpenCV's cv2.cpp file
+// inside modules/python/src2 folder (OpenCV 4.5.2)
+
 
 static PyObject* opencv_error = 0;
 
@@ -126,7 +128,13 @@ public:
             _sizes[i] = sizes[i];
         if( cn > 1 )
             _sizes[dims++] = cn;
-        PyObject* o = PyArray_SimpleNew(dims, _sizes, typenum);
+#if CV_MAJOR_VERSION >= 4 || (CV_MAJOR_VERSION == 3 && CV_VERSION_MINOR >= 5) || (CV_MAJOR_VERSION == 3 && CV_VERSION_MINOR == 4 && CV_VERSION_REVISION >= 3)
+        // Use cv::AutoBuffer::data() in OpenCV 3.4.3 and above
+        PyObject* o = PyArray_SimpleNew(dims, _sizes.data(), typenum);
+#else
+        // Use older cv::AutoBuffer::operator _Tp*()
+        PyObject* o = PyArray_SimpleNew(dims, &(_sizes[0]), typenum);
+#endif
         if(!o)
             CV_Error_(Error::StsError, ("The numpy array of typenum=%d, ndims=%d can not be created", typenum, dims));
         return allocate(o, dims0, sizes, type, step);
@@ -189,7 +197,7 @@ bool NDArrayConverter::toMat(PyObject *o, Mat &m)
         m = Mat(sz, 1, CV_64F);
         for( i = 0; i < sz; i++ )
         {
-            PyObject* oi = PyTuple_GET_ITEM(o, i);
+            PyObject* oi = PyTuple_GetItem(o, i);
             if( PyInt_Check(oi) )
                 m.at<double>(i) = (double)PyInt_AsLong(oi);
             else if( PyFloat_Check(oi) )
@@ -273,11 +281,11 @@ bool NDArrayConverter::toMat(PyObject *o, Mat &m)
 
     if (needcopy)
     {
-        //if (info.outputarg)
-        //{
-        //    failmsg("Layout of the output array %s is incompatible with cv::Mat (step[ndims-1] != elemsize or step[1] != elemsize*nchannels)", info.name);
-        //    return false;
-        //}
+        // if (info.outputarg)
+        // {
+        //     failmsg("Layout of the output array %s is incompatible with cv::Mat (step[ndims-1] != elemsize or step[1] != elemsize*nchannels)", info.name);
+        //     return false;
+        // }
 
         if( needcast ) {
             o = PyArray_Cast(oarr, new_typenum);

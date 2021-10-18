@@ -5,8 +5,6 @@
 #include <pybind11/chrono.h>
 #include <pybind11/stl_bind.h>
 
-PYBIND11_MAKE_OPAQUE(std::map<std::string, std::string>)
-
 #include <algorithm>
 
 #include "../common/defines.h"
@@ -16,6 +14,11 @@ PYBIND11_MAKE_OPAQUE(std::map<std::string, std::string>)
 #include "ndarray_converter.h"
 
 namespace py = pybind11;
+
+PYBIND11_MAKE_OPAQUE(std::multimap<std::string, std::string>)
+PYBIND11_MAKE_OPAQUE(std::map<std::string, std::string>)
+PYBIND11_MAKE_OPAQUE(std::map<std::string, double>)
+
 
 ///
 class PyDetector : public BaseDetector
@@ -132,7 +135,11 @@ PYBIND11_MODULE(pymtracking, m)
            subtract
     )pbdoc";
 
-    py::bind_map<std::map<std::string, std::string>>(m, "MapStringString");
+    py::class_<KeyVal>(m, "KeyVal")
+            .def(py::init<>())
+            .def("Add", &KeyVal::Add);
+
+    py::bind_map<std::multimap<std::string, std::string>>(m, "MapStringString");
     py::bind_map<std::map<std::string, double>>(m, "MapStringDouble");
 
     py::class_<TrackerSettings>(m, "TrackerSettings")
@@ -230,7 +237,7 @@ PYBIND11_MODULE(pymtracking, m)
             .export_values();
 
 	py::class_<BaseDetector, PyDetector> base_detector(m, "BaseDetector");
-    base_detector.def(py::init(&BaseDetector::CreateDetector));
+    base_detector.def(py::init(&BaseDetector::CreateDetectorKV));
     base_detector.def("Init", &BaseDetector::Init);
     base_detector.def("Detect", &BaseDetector::DetectMat);
     base_detector.def("ResetModel", &BaseDetector::ResetModel);

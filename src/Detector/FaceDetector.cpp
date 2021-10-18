@@ -10,6 +10,15 @@ FaceDetector::FaceDetector(const cv::UMat& gray)
 }
 
 ///
+/// \brief FaceDetector::FaceDetector
+/// \param gray
+///
+FaceDetector::FaceDetector(const cv::Mat& gray)
+    : BaseDetector(gray)
+{
+}
+
+///
 /// \brief FaceDetector::Init
 /// \param cascadeFileName
 /// \return

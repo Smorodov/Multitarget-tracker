@@ -4,9 +4,30 @@
 
 ///
 /// \brief YoloTensorRTDetector::YoloTensorRTDetector
-/// \param gray
+/// \param colorFrame
 ///
 YoloTensorRTDetector::YoloTensorRTDetector(const cv::UMat& colorFrame)
+    : BaseDetector(colorFrame)
+{
+    m_classNames = { "background",
+                     "aeroplane", "bicycle", "bird", "boat",
+                     "bottle", "bus", "car", "cat", "chair",
+                     "cow", "diningtable", "dog", "horse",
+                     "motorbike", "person", "pottedplant",
+                     "sheep", "sofa", "train", "tvmonitor" };
+
+	m_localConfig.calibration_image_list_file_txt = "";
+	m_localConfig.inference_precison = tensor_rt::FP32;
+	m_localConfig.net_type = tensor_rt::YOLOV4;
+	m_localConfig.detect_thresh = 0.5f;
+	m_localConfig.gpu_id = 0;
+}
+
+///
+/// \brief YoloTensorRTDetector::YoloTensorRTDetector
+/// \param colorFrame
+///
+YoloTensorRTDetector::YoloTensorRTDetector(const cv::Mat& colorFrame)
     : BaseDetector(colorFrame)
 {
     m_classNames = { "background",

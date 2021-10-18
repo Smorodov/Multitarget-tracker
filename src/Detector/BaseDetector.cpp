@@ -19,7 +19,7 @@
 ///
 std::unique_ptr<BaseDetector> BaseDetector::CreateDetector(tracking::Detectors detectorType,
                                                            const config_t& config,
-                                                           cv::UMat& frame)
+                                                           const cv::UMat& frame)
 {
     std::unique_ptr<BaseDetector> detector;
 
@@ -91,4 +91,16 @@ std::unique_ptr<BaseDetector> BaseDetector::CreateDetector(tracking::Detectors d
     if (!detector->Init(config))
         detector.reset();
     return std::move(detector);
+}
+
+///
+std::unique_ptr<BaseDetector> BaseDetector::CreateDetectorKV(tracking::Detectors detectorType, const KeyVal& config, const cv::Mat& gray)
+{
+    config_t mconfig;
+    for (auto kv : config.m_config)
+    {
+        mconfig.emplace(kv.first, kv.second);
+    }
+    cv::UMat uframe = gray.getUMat(cv::ACCESS_READ);
+    return CreateDetector(detectorType, mconfig, uframe);
 }

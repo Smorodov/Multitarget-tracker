@@ -16,6 +16,7 @@ class YoloDarknetDetector final : public BaseDetector
 {
 public:
     YoloDarknetDetector(const cv::UMat& colorFrame);
+    YoloDarknetDetector(const cv::Mat& colorFrame);
     ~YoloDarknetDetector(void) = default;
 
     bool Init(const config_t& config) override;
