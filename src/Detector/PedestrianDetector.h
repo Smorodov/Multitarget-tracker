@@ -16,6 +16,7 @@ public:
     };
 
     PedestrianDetector(const cv::UMat& gray);
+    PedestrianDetector(const cv::Mat& gray);
     ~PedestrianDetector(void) = default;
 
     bool Init(const config_t& config) override;

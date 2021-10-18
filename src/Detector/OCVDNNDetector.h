@@ -14,6 +14,7 @@ class OCVDNNDetector final : public BaseDetector
 {
 public:
     OCVDNNDetector(const cv::UMat& colorFrame);
+    OCVDNNDetector(const cv::Mat& colorFrame);
     ~OCVDNNDetector(void) = default;
 
     bool Init(const config_t& config) override;

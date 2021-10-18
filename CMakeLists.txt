@@ -98,6 +98,23 @@ if (BUILD_YOLO_TENSORRT)
     add_definitions(-DBUILD_YOLO_TENSORRT)
 endif(BUILD_YOLO_TENSORRT)
 
+option(MTRACKER_PYTHON "Build mtracking Python bindings?" OFF)
+if(MTRACKER_PYTHON)
+    set(NUMPY_INCLUDE_DIR "" CACHE FILEPATH "Path to numpy header if cmake can't find them.")
+    if (NOT ${NUMPY_INCLUDE_DIR} STREQUAL "")
+      message( " *** NUMPY_INCLUDE_DIR : ${NUMPY_INCLUDE_DIR}" )
+      if(NOT EXISTS ${NUMPY_INCLUDE_DIR}/numpy/ndarrayobject.h)
+          message(SEND_ERROR "Can't find numpy/ndarrayobject.h in ${NUMPY_INCLUDE_DIR}")
+      endif()
+    include_directories(${NUMPY_INCLUDE_DIR})
+endif()
+
+    set(PYBIND11_LTO_CXX_FLAGS "")
+    set(PYBIND11_PYTHON_VERSION 3)
+    add_subdirectory(thirdparty/pybind11)
+endif(MTRACKER_PYTHON)
+
+
 add_subdirectory(thirdparty)
 add_subdirectory(src)
 

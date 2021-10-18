@@ -4,9 +4,24 @@
 
 ///
 /// \brief YoloDarknetDetector::YoloDarknetDetector
-/// \param gray
+/// \param colorFrame
 ///
 YoloDarknetDetector::YoloDarknetDetector(const cv::UMat& colorFrame)
+    : BaseDetector(colorFrame)
+{
+    m_classNames = { "background",
+                     "aeroplane", "bicycle", "bird", "boat",
+                     "bottle", "bus", "car", "cat", "chair",
+                     "cow", "diningtable", "dog", "horse",
+                     "motorbike", "person", "pottedplant",
+                     "sheep", "sofa", "train", "tvmonitor" };
+}
+
+///
+/// \brief YoloDarknetDetector::YoloDarknetDetector
+/// \param colorFrame
+///
+YoloDarknetDetector::YoloDarknetDetector(const cv::Mat& colorFrame)
     : BaseDetector(colorFrame)
 {
     m_classNames = { "background",

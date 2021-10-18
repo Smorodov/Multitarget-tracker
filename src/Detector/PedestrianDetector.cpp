@@ -6,8 +6,17 @@
 /// \param gray
 ///
 PedestrianDetector::PedestrianDetector(const cv::UMat& gray)
-    :
-      BaseDetector(gray),
+    : BaseDetector(gray),
+      m_scannerC4(HUMAN_height, HUMAN_width, HUMAN_xdiv, HUMAN_ydiv, 256, 0.8)
+{
+}
+
+///
+/// \brief PedestrianDetector::PedestrianDetector
+/// \param gray
+///
+PedestrianDetector::PedestrianDetector(const cv::Mat& gray)
+    : BaseDetector(gray),
       m_scannerC4(HUMAN_height, HUMAN_width, HUMAN_xdiv, HUMAN_ydiv, 256, 0.8)
 {
 }

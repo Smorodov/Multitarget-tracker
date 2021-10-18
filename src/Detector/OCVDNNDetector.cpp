@@ -4,9 +4,25 @@
 
 ///
 /// \brief OCVDNNDetector::OCVDNNDetector
-/// \param gray
+/// \param colorFrame
 ///
 OCVDNNDetector::OCVDNNDetector(const cv::UMat& colorFrame)
+    : BaseDetector(colorFrame)
+
+{
+    m_classNames = { "background",
+                     "aeroplane", "bicycle", "bird", "boat",
+                     "bottle", "bus", "car", "cat", "chair",
+                     "cow", "diningtable", "dog", "horse",
+                     "motorbike", "person", "pottedplant",
+                     "sheep", "sofa", "train", "tvmonitor" };
+}
+
+///
+/// \brief OCVDNNDetector::OCVDNNDetector
+/// \param colorFrame
+///
+OCVDNNDetector::OCVDNNDetector(const cv::Mat& colorFrame)
     : BaseDetector(colorFrame)
 
 {

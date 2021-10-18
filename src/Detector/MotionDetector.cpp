@@ -5,14 +5,22 @@
 /// \param algType
 /// \param gray
 ///
-MotionDetector::MotionDetector(
-	BackgroundSubtract::BGFG_ALGS algType,
-    cv::UMat& gray)
-    :
-      BaseDetector(gray),
-      m_algType(algType)
+MotionDetector::MotionDetector(BackgroundSubtract::BGFG_ALGS algType, const cv::UMat& gray)
+    : BaseDetector(gray), m_algType(algType)
 {
-	m_fg = gray.clone();
+	m_fg.create(gray.size(), CV_8UC1);
+	m_backgroundSubst = std::make_unique<BackgroundSubtract>(algType, gray.channels());
+}
+
+///
+/// \brief MotionDetector::MotionDetector
+/// \param algType
+/// \param gray
+///
+MotionDetector::MotionDetector(BackgroundSubtract::BGFG_ALGS algType, const cv::Mat& gray)
+    : BaseDetector(gray), m_algType(algType)
+{
+	m_fg.create(gray.size(), CV_8UC1);
 	m_backgroundSubst = std::make_unique<BackgroundSubtract>(algType, gray.channels());
 }
 

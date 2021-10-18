@@ -6,6 +6,20 @@
 ///
 /// \brief The BaseDetector class
 ///
+struct KeyVal
+{
+    KeyVal() = default;
+    void Add(const std::string& key, const std::string& val)
+    {
+        m_config.emplace_back(key, val);
+    }
+
+    std::vector<std::pair<std::string, std::string>> m_config;
+};
+
+///
+/// \brief The BaseDetector class
+///
 class BaseDetector
 {
 public:
@@ -14,6 +28,15 @@ public:
     /// \param frame
     ///
     BaseDetector(const cv::UMat& frame)
+    {
+        m_minObjectSize.width = std::max(5, frame.cols / 100);
+        m_minObjectSize.height = m_minObjectSize.width;
+    }
+    ///
+    /// \brief BaseDetector
+    /// \param frame
+    ///
+    BaseDetector(const cv::Mat& frame)
     {
         m_minObjectSize.width = std::max(5, frame.cols / 100);
         m_minObjectSize.height = m_minObjectSize.width;
@@ -34,6 +57,11 @@ public:
     /// \param frame
     ///
     virtual void Detect(const cv::UMat& frame) = 0;
+    virtual void DetectMat(cv::Mat frame)
+    {
+        cv::UMat um = frame.getUMat(cv::ACCESS_READ);
+        return Detect(um);
+    }
 
     ///
     /// \brief Detect
@@ -166,6 +194,11 @@ public:
 #endif
     }
 
+    ///
+    static std::unique_ptr<BaseDetector> CreateDetector(tracking::Detectors detectorType, const config_t& config, const cv::UMat& gray);
+    static std::unique_ptr<BaseDetector> CreateDetectorKV(tracking::Detectors detectorType, const KeyVal& config, const cv::Mat& gray);
+
+
 protected:
     regions_t m_regions;
 
@@ -255,12 +288,3 @@ protected:
 private:
     std::vector<objtype_t> m_typesMap;
 };
-
-
-///
-/// \brief CreateDetector
-/// \param detectorType
-/// \param gray
-/// \return
-///
-std::unique_ptr<BaseDetector> CreateDetector(tracking::Detectors detectorType, const config_t& config, cv::UMat& gray);
