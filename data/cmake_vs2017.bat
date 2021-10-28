@@ -11,9 +11,9 @@ cmake.exe . ..  -G "Visual Studio 15 2017 Win64" ^
           -DBUILD_ASYNC_DETECTOR=ON ^
           -DBUILD_CARS_COUNTING=ON ^
           -DBUILD_YOLO_LIB=ON ^
-          -DCUDNN_INCLUDE_DIR=C:/cudnn-10.0-windows10-x64-v7.6.5.32/cuda/include ^
-          -DCUDNN_LIBRARY=C:/cudnn-10.0-windows10-x64-v7.6.5.32/cuda/lib/x64/cudnn.lib ^
+          -DCUDNN_INCLUDE_DIR=C:/cudnn-11.1-windows-x64-v8.0.5.39/cuda/include ^
+          -DCUDNN_LIBRARY=C:/cudnn-11.1-windows-x64-v8.0.5.39/cuda/lib/x64/cudnn.lib ^
           -DBUILD_YOLO_TENSORRT=ON ^
-          -DTensorRT_LIBRARY=C:/TensorRT-5.1.5.0/lib/*.lib ^
-          -DTensorRT_INCLUDE_DIR=C:/TensorRT-5.1.5.0/include
+          -DTensorRT_LIBRARY=C:/TensorRT-7.2.3.4/lib/*.lib ^
+          -DTensorRT_INCLUDE_DIR=C:/TensorRT-7.2.3.4/include
 cmake.exe --build . -j 6 --config Release

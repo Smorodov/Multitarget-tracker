@@ -205,7 +205,7 @@ struct TrackerSettings
 		m_distType[tracking::DistJaccard] = 0.5f;
 		m_distType[tracking::DistHist] = 0.5f;
 		m_distType[tracking::DistFeatureCos] = 0.0f;
-        m_distType[tracking::DistMahalanobis] = 0.0f;
+		m_distType[tracking::DistMahalanobis] = 0.0f;
 
 		assert(CheckDistance());
 	}
