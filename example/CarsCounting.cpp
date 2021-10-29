@@ -1,4 +1,5 @@
 #include "CarsCounting.h"
+#include <inih/INIReader.h>
 
 ///
 /// \brief CarsCounting::CarsCounting
@@ -38,6 +39,8 @@ CarsCounting::CarsCounting(const cv::CommandLineParser& parser)
 		m_detectorType = tracking::Detectors::Yolo_Darknet;
 
 	std::cout << "Inference framework set " << inference << " used " << m_detectorType << ", weights: " << m_weightsFile << ", config: " << m_configFile << ", names: " << m_namesFile << std::endl;
+
+    m_geoBindFile = parser.get<std::string>("geo_bind");
 }
 
 ///
@@ -273,6 +276,8 @@ bool CarsCounting::InitTracker(cv::UMat frame)
     std::vector<cv::Point2f> geoPoints{ cv::Point2f(30.258855, 60.006536), cv::Point2f(30.258051, 60.006855), cv::Point2f(30.258080, 60.007414), cv::Point2f(30.259066, 60.007064) };
 #endif
     m_geoParams.SetKeyPoints(framePoints, geoPoints);
+#else
+    ReadGeobindings(frame.size());
 #endif
     return true;
 }
@@ -286,6 +291,7 @@ void CarsCounting::DrawData(cv::Mat frame, const std::vector<TrackingObject>& tr
     if (m_showLogs)
         std::cout << "Frame " << framesCounter << ": tracks = " << tracks.size() << ", time = " << currTime << std::endl;
 
+#if 0 // Debug output
 	if (!m_geoParams.Empty())
 	{
 		std::vector<cv::Point> points = m_geoParams.GetFramePoints();
@@ -294,6 +300,7 @@ void CarsCounting::DrawData(cv::Mat frame, const std::vector<TrackingObject>& tr
 			cv::line(frame, points[i % points.size()], points[(i + 1) % points.size()], cv::Scalar(255, 255, 255), 1, cv::LINE_AA);
 		}
 	}
+#endif
 	
     for (const auto& track : tracks)
     {
@@ -315,6 +322,13 @@ void CarsCounting::DrawData(cv::Mat frame, const std::vector<TrackingObject>& tr
         }
     }
     //m_detector->CalcMotionMap(frame);
+
+    if (!m_geoParams.Empty())
+    {
+        cv::Mat geoMap = m_geoParams.DrawTracksOnMap(tracks);
+        if (!geoMap.empty())
+            cv::imshow("Geo map", geoMap);
+    }
 
     for (const auto& rl : m_lines)
     {
@@ -376,7 +390,7 @@ bool CarsCounting::RemoveLine(unsigned int lineUid)
 ///
 void CarsCounting::CheckLinesIntersection(const TrackingObject& track, float xMax, float yMax)
 {
-    auto Pti2f = [&](cv::Point pt) -> cv::Point2f
+    auto Pti2f = [&](cv::Point pt)
     {
         return cv::Point2f(pt.x / xMax, pt.y / yMax);
     };
@@ -423,4 +437,82 @@ void CarsCounting::AddToHeatMap(const cv::Rect& rect)
 			heatPtr[x] += w;
 		}
 	}
+}
+
+///
+/// \brief CarsCounting::ReadGeobindings
+///
+bool CarsCounting::ReadGeobindings(cv::Size frameSize)
+{
+    bool res = true;
+    INIReader reader(m_geoBindFile);
+    
+    int parseError = reader.ParseError();
+    if (parseError < 0)
+    {
+        std::cerr << "GeoBindFile file " << m_geoBindFile << " does not exist!" << std::endl;
+        res = false;
+    }
+    else if (parseError > 0)
+    {
+        std::cerr << "GeoBindFile file " << m_geoBindFile << " parse error in line: " << parseError << std::endl;
+        res = false;
+    }
+    if (!res)
+        return res;
+
+    // Read frame-map bindings
+    std::vector<cv::Point2d> geoPoints;
+    std::vector<cv::Point> framePoints;
+    for (size_t i = 0;; ++i)
+    {
+        cv::Point2d geoPoint;
+        std::string lat = "lat" + std::to_string(i);
+        std::string lon = "lon" + std::to_string(i);
+        std::string px_x = "px_x" + std::to_string(i);
+        std::string px_y = "px_y" + std::to_string(i);
+        if (reader.HasValue("points", lat) && reader.HasValue("points", lon) && reader.HasValue("points", px_x), reader.HasValue("points", px_y))
+        {
+            geoPoints.emplace_back(reader.GetReal("points", lat, 0), reader.GetReal("points", lon, 0));
+            framePoints.emplace_back(cvRound(reader.GetReal("points", px_x, 0) * frameSize.width), cvRound(reader.GetReal("points", px_y, 0) * frameSize.height));
+        }
+        else
+        {
+            break;
+        }
+    }
+    res = m_geoParams.SetKeyPoints(framePoints, geoPoints);
+
+    // Read map image
+    std::string mapFile = reader.GetString("map", "file", "");
+    std::vector<cv::Point2d> mapGeoCorners;
+    mapGeoCorners.emplace_back(reader.GetReal("map", "left_top_lat", 0), reader.GetReal("map", "left_top_lon", 0));
+    mapGeoCorners.emplace_back(reader.GetReal("map", "right_top_lat", 0), reader.GetReal("map", "right_top_lon", 0));
+    mapGeoCorners.emplace_back(reader.GetReal("map", "right_bottom_lat", 0), reader.GetReal("map", "right_bottom_lon", 0));
+    mapGeoCorners.emplace_back(reader.GetReal("map", "left_bottom_lat", 0), reader.GetReal("map", "left_bottom_lon", 0));
+    m_geoParams.SetMapParams(mapFile, mapGeoCorners);
+
+    // Read lines
+    std::cout <<"Read lines:" << std::endl;
+    for (size_t i = 0;; ++i)
+    {
+        std::string line = "line" + std::to_string(i);
+        std::string x0 = line + "_x0";
+        std::string y0 = line + "_y0";
+        std::string x1 = line + "_x1";
+        std::string y1 = line + "_y1";
+        if (reader.HasValue("lines", x0) && reader.HasValue("lines", y0) && reader.HasValue("lines", x1), reader.HasValue("lines", y1))
+        {
+            cv::Point2f p0(reader.GetReal("lines", x0, 0), reader.GetReal("lines", y0, 0));
+            cv::Point2f p1(reader.GetReal("lines", x1, 0), reader.GetReal("lines", y1, 0));
+            std::cout << "Line" << i << ": " << p0 << " - " << p1 << std::endl;
+            AddLine(RoadLine(p0, p1, i));
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    return res;
 }

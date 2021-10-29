@@ -30,6 +30,34 @@ T DistanceInMeters(const cv::Point_<T>& from, const cv::Point_<T>& to)
 	return EarthRadius * Haversine(from, to);
 }
 
+// Fix cv::getPerspectiveTransform for double
+template<class T>
+cv::Mat GetPerspectiveTransform(const std::vector<cv::Point_<T>>& src, const std::vector<cv::Point_<T>>& dst, int solveMethod)
+{
+    cv::Mat M(3, 3, CV_64F), X(8, 1, CV_64F, M.ptr());
+    double a[8][8], b[8];
+    cv::Mat A(8, 8, CV_64F, a), B(8, 1, CV_64F, b);
+
+    for (int i = 0; i < 4; ++i)
+    {
+        a[i][0] = a[i + 4][3] = src[i].x;
+        a[i][1] = a[i + 4][4] = src[i].y;
+        a[i][2] = a[i + 4][5] = 1;
+        a[i][3] = a[i][4] = a[i][5] = a[i + 4][0] = a[i + 4][1] = a[i + 4][2] = 0;
+        a[i][6] = -src[i].x * dst[i].x;
+        a[i][7] = -src[i].y * dst[i].x;
+        a[i + 4][6] = -src[i].x * dst[i].y;
+        a[i + 4][7] = -src[i].y * dst[i].y;
+        b[i] = dst[i].x;
+        b[i + 4] = dst[i].y;
+    }
+
+    cv::solve(A, B, X, solveMethod);
+    M.ptr<double>()[8] = 1.;
+
+    return M;
+}
+
 ///
 /// \brief The GeoParams class
 ///
@@ -71,8 +99,8 @@ public:
 		}
 		std::cout << std::endl;
 #endif
-		cv::Mat toGeo = cv::getPerspectiveTransform(tmpPix, m_geoPoints);
-		cv::Mat toPix = cv::getPerspectiveTransform(m_geoPoints, tmpPix);
+		cv::Mat toGeo = GetPerspectiveTransform(tmpPix, m_geoPoints, (int)cv::DECOMP_LU);
+		cv::Mat toPix = GetPerspectiveTransform(m_geoPoints, tmpPix, (int)cv::DECOMP_LU);
 		m_toGeo = toGeo;
 		m_toPix = toPix;
 		//std::cout << "To Geo: " << m_toGeo << std::endl;
@@ -80,6 +108,18 @@ public:
 
 		return res;
 	}
+
+    ///
+    bool SetMapParams(const std::string& mapfile, const std::vector<cv::Point_<T>>& mapGeoCorners)
+    {
+        m_map = cv::imread(mapfile);
+        m_mapGeoCorners.assign(std::begin(mapGeoCorners), std::end(mapGeoCorners));
+
+        if (!m_map.empty())
+            m_p2mParams.Init(m_mapGeoCorners, m_map.cols, m_map.rows);
+
+        return !m_map.empty();
+    }
 
 	///
 	cv::Point Geo2Pix(const cv::Point_<T>& geo) const
@@ -109,12 +149,85 @@ public:
 		return m_framePoints.size() != m_geoPoints.size() || m_framePoints.size() < 4;
 	}
 
+    ///
+    cv::Mat DrawTracksOnMap(const std::vector<TrackingObject>& tracks)
+    {
+        if (m_map.empty())
+            return cv::Mat();
+
+        cv::Mat map = m_map.clone();
+
+#if 0 // Debug output
+        // Draw bindings points
+        for (size_t i = 0; i < m_geoPoints.size(); ++i)
+        {
+            cv::Point_<T> gp1(m_geoPoints[i % m_geoPoints.size()]);
+            cv::Point p1(m_p2mParams.Geo2Pix(gp1));
+
+            cv::Point_<T> gp2(m_geoPoints[(i + 1) % m_geoPoints.size()]);
+            cv::Point p2(m_p2mParams.Geo2Pix(gp2));
+
+            cv::line(map, p1, p2, cv::Scalar(255, 255, 255), 1, cv::LINE_AA);
+
+            std::cout << p1 << " - " << p2 << std::endl;
+
+            std::stringstream label;
+            label << std::fixed << std::setw(5) << std::setprecision(5) << "[" << m_geoPoints[i].x << ", " << m_geoPoints[i].y << "]";
+            int baseLine = 0;
+            double fontScale = 0.5;
+            cv::Size labelSize = cv::getTextSize(label.str(), cv::FONT_HERSHEY_SIMPLEX, fontScale, 1, &baseLine);
+            cv::putText(map, label.str(), p1, cv::FONT_HERSHEY_SIMPLEX, fontScale, cv::Scalar(255, 255, 255));
+        }
+#endif
+
+        // Draw tracks
+        for (const auto& track : tracks)
+        {
+            if (track.m_lastRobust)
+            {
+                auto geoCenter = Pix2Geo(track.m_rrect.center);
+                auto center = m_p2mParams.Geo2Pix(geoCenter);
+                //std::cout << "Convert: " << track.m_rrect.center << " -> " << geoCenter << " -> " << center << std::endl;
+                if (center.x > 0 && center.x < map.cols && center.y > 0 && center.y < map.rows)
+                    cv::ellipse(map, center, cv::Size(3, 3), 0, 0, 360, cv::Scalar(255, 0, 255), cv::FILLED, 8);
+            }
+        }
+ 
+        return map;
+    }
+
 private:
 	std::vector<cv::Point> m_framePoints;
 	std::vector<cv::Point_<T>> m_geoPoints;
 
 	cv::Matx<T, 3, 3> m_toGeo;
 	cv::Matx<T, 3, 3> m_toPix;
+
+    cv::Mat m_map;
+    std::vector<cv::Point_<T>> m_mapGeoCorners;
+
+    ///
+    struct Pix2MapParams
+    {
+        cv::Matx<T, 3, 3> m_toPix;
+
+        ///
+        cv::Point Geo2Pix(const cv::Point_<T>& geo) const
+        {
+            cv::Vec<T, 3> g(geo.x, geo.y, 1);
+            auto p = m_toPix * g;
+            return cv::Point(cvRound(p[0] / p[2]), cvRound(p[1] / p[2]));
+        }
+
+        ///
+        void Init(const std::vector<cv::Point_<T>>& geoCorners, int mapWidth, int mapHeight)
+        {
+            std::vector<cv::Point_<T>> frameCorners { cv::Point_<T>(0, 0), cv::Point_<T>(mapWidth, 0), cv::Point_<T>(mapWidth, mapHeight), cv::Point_<T>(0, mapHeight) };
+            cv::Mat toPix = GetPerspectiveTransform(geoCorners, frameCorners, (int)cv::DECOMP_LU);
+            m_toPix = toPix;
+        }
+    };
+    Pix2MapParams m_p2mParams;
 };
 
 ///
@@ -157,7 +270,7 @@ public:
     ///
     void Draw(cv::Mat frame) const
     {
-        auto Ptf2i = [&](cv::Point2f pt) -> cv::Point
+        auto Ptf2i = [&](cv::Point2f pt)
         {
             return cv::Point(cvRound(frame.cols * pt.x), cvRound(frame.rows * pt.y));
         };
@@ -362,7 +475,9 @@ private:
     void CheckLinesIntersection(const TrackingObject& track, float xMax, float yMax);
 
 	// Binding frame coordinates to geographical coordinates
-	GeoParams<float> m_geoParams;
+	GeoParams<double> m_geoParams;
+	std::string m_geoBindFile;
+	bool ReadGeobindings(cv::Size frameSize);
 
 	// Heat map for visualization long term detections
 	cv::Mat m_keyFrame;
