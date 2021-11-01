@@ -19,16 +19,12 @@ namespace tensor_rt
 		}
 	};
 	
-	typedef std::vector<Result> BatchResult;
+	using BatchResult = std::vector<Result>;
 
 	enum ModelType
 	{
-        YOLOV2 = 0,
         YOLOV3,
-        YOLOV2_TINY,
-        YOLOV3_TINY,
         YOLOV4,
-        YOLOV4_TINY,
         YOLOV5
 	};
 
@@ -45,9 +41,9 @@ namespace tensor_rt
 
 		std::string file_model_weights = "yolov4.weights";
 
-		float detect_thresh = 0.9f;
+		float detect_thresh = 0.5f;
 
-		ModelType	net_type = YOLOV3;
+		ModelType	net_type = YOLOV4;
 
 		Precision	inference_precison = FP32;
 

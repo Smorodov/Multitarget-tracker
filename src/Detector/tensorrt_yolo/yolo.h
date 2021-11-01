@@ -27,13 +27,15 @@ SOFTWARE.
 #define _YOLO_H_
 
 #include "calibrator.h"
-#include "plugin_factory.h"
+//#include "plugin_factory.h"
 #include "trt_utils.h"
 
 #include "NvInfer.h"
 #include "NvInferPlugin.h"
 #include "NvInferRuntimeCommon.h"
 #include "cuda_runtime_api.h"
+#include <algorithm>
+#include <cmath>
 #include <stdint.h>
 #include <string>
 #include <vector>
@@ -157,8 +159,8 @@ protected:
     std::vector<void*> m_DeviceBuffers;
     int m_InputBindingIndex;
     cudaStream_t m_CudaStream;
-    PluginFactory* m_PluginFactory;
-    std::unique_ptr<YoloTinyMaxpoolPaddingFormula> m_TinyMaxpoolPaddingFormula;
+    //PluginFactory* m_PluginFactory;
+   // std::unique_ptr<YoloTinyMaxpoolPaddingFormula> m_TinyMaxpoolPaddingFormula;
 
     virtual std::vector<BBoxInfo> decodeTensor(const int imageIdx, const int imageH,
                                                const int imageW, const TensorInfo& tensor)
@@ -189,11 +191,12 @@ protected:
 		float &sh,float &sw,
 		int &xOffset,int &yOffset)
 	{
-		float dim = std::max(imageW, imageH);
-		int resizeH = ((imageH / dim) * m_InputH);
-		int resizeW = ((imageW / dim) * m_InputW);
-		sh = static_cast<float>(resizeH) / static_cast<float>(imageH);
-		sw = static_cast<float>(resizeW) / static_cast<float>(imageW);
+        float r = std::min(static_cast<float>(m_InputH) / static_cast<float>(imageH), static_cast<float>(m_InputW) / static_cast<float>(imageW));
+        int resizeH = (std::round(imageH*r));
+        int resizeW = (std::round(imageW*r));
+
+		sh = r;
+		sw = r;
 		if ((m_InputW - resizeW) % 2) resizeW--;
 		if ((m_InputH - resizeH) % 2) resizeH--;
 		assert((m_InputW - resizeW) % 2 == 0);
