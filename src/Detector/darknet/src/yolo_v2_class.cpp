@@ -338,7 +338,7 @@ LIB_API std::vector<bbox_t> Detector::detect(image_t img, float thresh, bool use
     return bbox_vec;
 }
 
-LIB_API std::vector<std::vector<bbox_t>> Detector::detectBatch(image_t img, int batch_size, int width, int height, float thresh)
+LIB_API std::vector<std::vector<bbox_t>> Detector::detectBatch(image_t img, int batch_size, int width, int height, float thresh, bool make_nms)
 {
     detector_gpu_t &detector_gpu = *static_cast<detector_gpu_t *>(detector_gpu_ptr.get());
     network &net = detector_gpu.net;
@@ -367,6 +367,10 @@ LIB_API std::vector<std::vector<bbox_t>> Detector::detectBatch(image_t img, int 
     for (int bi = 0; bi < batch_size; ++bi)
     {
         auto dets = prediction[bi].dets;
+
+        if (make_nms && nms)
+            do_nms_sort(dets, prediction[bi].num, l.classes, nms);
+
         for (int i = 0; i < prediction[bi].num; ++i)
         {
             box b = dets[i].bbox;
