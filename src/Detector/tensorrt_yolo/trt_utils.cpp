@@ -940,8 +940,6 @@ nvinfer1::ILayer * layer_bottleneck_csp(std::vector<nvinfer1::Weights> &trtWeigh
 	const float e_ )
 {
 	std::vector<int> chw=dims2chw(input_->getDimensions());
-	//int c1 = dims2chw(input_->getDimensions())[0];
-	int c1 = chw[0];
 	int c_ = int(c2_*0.5);
 	//cv1
 	auto out = layer_conv_bn_act(trtWeights_, s_model_name_ +".cv1", map_wts_, input_, network_, c_, 1);
@@ -1093,7 +1091,6 @@ nvinfer1::ILayer * layer_conv_bn_act(std::vector<nvinfer1::Weights> &trtWeights_
 	const bool b_bn_,
 	const std::string s_act_)
 {
-	int pad = b_padding_ ? ((n_kernel_size_ - 1) / 2) : 0;
 	std::vector<int> chw = dims2chw(input_->getDimensions());
 
 	//conv

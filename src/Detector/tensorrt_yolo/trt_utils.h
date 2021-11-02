@@ -49,15 +49,18 @@ SOFTWARE.
 class DsImage;
 struct BBox
 {
-    float x1, y1, x2, y2;
+    float x1 = 0;
+    float y1 = 0;
+    float x2 = 0;
+    float y2 = 0;
 };
 
 struct BBoxInfo
 {
     BBox box;
-    int label;
-    int classId; // For coco benchmarking
-    float prob;
+    int label = 0;
+    int classId = 0; // For coco benchmarking
+    float prob = 0;
 };
 
 class Logger : public nvinfer1::ILogger
@@ -68,10 +71,8 @@ public:
 		severity = severity;
 	}
 
-	~Logger()
-	{
+	~Logger() = default;
 
-	}
 	nvinfer1::ILogger& getTRTLogger()
 	{
 		return *this;
