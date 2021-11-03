@@ -834,6 +834,7 @@ protected:
         {
 #ifdef _WIN32
             std::string pathToModel = "../../data/";
+            pathToModel = "C:/work/home/mtracker/Multitarget-tracker/data/";
 #else
             std::string pathToModel = "../data/";
 #endif
@@ -846,7 +847,7 @@ protected:
                 TinyYOLOv4,
                 YOLOv5
             };
-            YOLOModels usedModel = YOLOModels::YOLOv4;
+            YOLOModels usedModel = YOLOModels::TinyYOLOv4;
             switch (usedModel)
             {
             case YOLOModels::TinyYOLOv3:
@@ -885,7 +886,7 @@ protected:
                 config.emplace("confidenceThreshold", "0.5");
                 config.emplace("inference_precison", "FP32");
                 config.emplace("net_type", "YOLOV4");
-                maxBatch = 4;
+                maxBatch = 1;
                 config.emplace("maxCropRatio", "1");
                 break;
 
