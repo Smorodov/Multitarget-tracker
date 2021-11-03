@@ -1076,7 +1076,8 @@ void Yolo::parseConfigBlocks()
             m_InputH = std::stoul(trim(block.at("height")));
             m_InputW = std::stoul(trim(block.at("width")));
             m_InputC = std::stoul(trim(block.at("channels")));
-			m_BatchSize = std::stoi(trim(block.at("batch")));
+			if (m_BatchSize < 1)
+                m_BatchSize = std::stoi(trim(block.at("batch")));
          //   assert(m_InputW == m_InputH);
             m_InputSize = m_InputC * m_InputH * m_InputW;
         }

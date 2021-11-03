@@ -132,6 +132,7 @@ bool YoloTensorRTDetector::Init(const config_t& config)
 	m_detector = std::make_unique<tensor_rt::Detector>();
 	if (m_detector)
         m_detector->init(m_localConfig);
+
 	return m_detector.get() != nullptr;
 }
 
