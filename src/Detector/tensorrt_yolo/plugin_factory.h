@@ -32,7 +32,7 @@ SOFTWARE.
 #include <iostream>
 #include <memory>
 #include <vector>
-#include "Nvinfer.h"
+#include "NvInfer.h"
 
 #define NV_CUDA_CHECK(status)                                                                      \
     {                                                                                              \
