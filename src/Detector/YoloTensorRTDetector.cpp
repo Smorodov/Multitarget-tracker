@@ -89,12 +89,8 @@ bool YoloTensorRTDetector::Init(const config_t& config)
 	if (net_type != config.end())
 	{
 		std::map<std::string, tensor_rt::ModelType> dictNetType;
-		dictNetType["YOLOV2"] = tensor_rt::YOLOV2;
 		dictNetType["YOLOV3"] = tensor_rt::YOLOV3;
-		dictNetType["YOLOV2_TINY"] = tensor_rt::YOLOV2_TINY;
-		dictNetType["YOLOV3_TINY"] = tensor_rt::YOLOV3_TINY;
 		dictNetType["YOLOV4"] = tensor_rt::YOLOV4;
-		dictNetType["YOLOV4_TINY"] = tensor_rt::YOLOV4_TINY;
         dictNetType["YOLOV5"] = tensor_rt::YOLOV5;
 
 		auto netType = dictNetType.find(net_type->second);
@@ -136,6 +132,7 @@ bool YoloTensorRTDetector::Init(const config_t& config)
 	m_detector = std::make_unique<tensor_rt::Detector>();
 	if (m_detector)
         m_detector->init(m_localConfig);
+
 	return m_detector.get() != nullptr;
 }
 

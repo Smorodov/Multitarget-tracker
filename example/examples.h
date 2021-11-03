@@ -854,7 +854,7 @@ protected:
                 config.emplace("modelBinary", pathToModel + "yolov3-tiny.weights");
                 config.emplace("confidenceThreshold", "0.5");
                 config.emplace("inference_precison", "FP32");
-                config.emplace("net_type", "YOLOV3_TINY");
+                config.emplace("net_type", "YOLOV3");
                 maxBatch = 4;
                 config.emplace("maxCropRatio", "2");
                 break;
@@ -884,7 +884,7 @@ protected:
                 config.emplace("modelBinary", pathToModel + "yolov4-tiny.weights");
                 config.emplace("confidenceThreshold", "0.5");
                 config.emplace("inference_precison", "FP32");
-                config.emplace("net_type", "YOLOV4_TINY");
+                config.emplace("net_type", "YOLOV4");
                 maxBatch = 4;
                 config.emplace("maxCropRatio", "1");
                 break;

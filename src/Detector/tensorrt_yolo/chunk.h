@@ -18,37 +18,44 @@
 
 namespace nvinfer1
 {
-	class Chunk : public IPluginV2IOExt
+	class Chunk : public IPluginV2
 	{
 	public:
 		Chunk();
 		Chunk(const void* buffer, size_t length);
 		~Chunk();
-		int getNbOutputs()const override;
-		Dims getOutputDimensions(int index, const Dims* inputs, int nbInputDims) override;
-		int initialize() override;
-		void terminate() override;
-		size_t getWorkspaceSize(int maxBatchSize) const override;
-		int enqueue(int batchSize, const void* const* inputs, void** outputs, void* workspace, cudaStream_t stream)override;
-		size_t getSerializationSize() const override;
-		void serialize(void* buffer) const override;
-		const char* getPluginType() const override;
-		const char* getPluginVersion() const override;
-		void destroy() override;
-		void setPluginNamespace(const char* pluginNamespace) override;
-		const char* getPluginNamespace() const override;
-		DataType getOutputDataType(int index, const nvinfer1::DataType* inputTypes, int nbInputs) const override;
-		bool isOutputBroadcastAcrossBatch(int outputIndex, const bool* inputIsBroadcasted, int nbInputs) const override;
-		bool canBroadcastInputAcrossBatch(int inputIndex) const override;
+		int getNbOutputs()const noexcept override;
+		Dims getOutputDimensions(int index, const Dims* inputs, int nbInputDims)noexcept  override;
+		int initialize()noexcept  override;
+		void terminate()noexcept  override;
+		size_t getWorkspaceSize(int maxBatchSize) const noexcept  override;
+	//	int enqueue(int batchSize, const void* const* inputs, void** outputs, void* workspace, cudaStream_t stream)noexcept override;
+
+		int enqueue(int batchSize, const void* const* inputs, void* const* outputs, void* workspace, cudaStream_t stream) noexcept;
+        int enqueue(int batchSize, const void* const* inputs, void** outputs, void* workspace, cudaStream_t stream) noexcept;
+
+		size_t getSerializationSize() const noexcept  override;
+		void serialize(void* buffer) const noexcept  override;
+		const char* getPluginType() const noexcept  override;
+		const char* getPluginVersion() const noexcept  override;
+		void destroy()noexcept  override;
+		void setPluginNamespace(const char* pluginNamespace)noexcept  override;
+		const char* getPluginNamespace() const noexcept  override;
+		DataType getOutputDataType(int index, const nvinfer1::DataType* inputTypes, int nbInputs) const noexcept;
+		bool isOutputBroadcastAcrossBatch(int outputIndex, const bool* inputIsBroadcasted, int nbInputs) const noexcept;
+		bool canBroadcastInputAcrossBatch(int inputIndex) const noexcept;
 		void attachToContext(
-			cudnnContext* cudnnContext, cublasContext* cublasContext, IGpuAllocator* gpuAllocator) override;
-		void configurePlugin(const PluginTensorDesc* in, int nbInput, const PluginTensorDesc* out, int nbOutput) override;
-		void detachFromContext() override;
-		bool supportsFormatCombination(int pos, const PluginTensorDesc* inOut, int /*nbInputs*/, int /*nbOutputs*/) const override
+			cudnnContext* cudnnContext, cublasContext* cublasContext, IGpuAllocator* gpuAllocator);
+		void configurePlugin(const PluginTensorDesc* in, int nbInput, const PluginTensorDesc* out, int nbOutput);
+		void detachFromContext();
+		bool supportsFormatCombination(int pos, const PluginTensorDesc* inOut, int nbInputs, int nbOutputs) const
 		{
 			return inOut[pos].format == TensorFormat::kLINEAR && inOut[pos].type == DataType::kFLOAT;
 		}
-		IPluginV2IOExt* clone() const override;
+		IPluginV2* clone() const noexcept  override;
+		bool supportsFormat(DataType type, PluginFormat format) const noexcept override;
+		void configureWithFormat(const Dims* inputDims, int nbInputs, const Dims* outputDims, int nbOutputs, DataType type, PluginFormat format, int maxBatchSize) noexcept override;
+
 	private:
 		std::string _s_plugin_namespace;
 		int _n_size_split;
@@ -59,13 +66,13 @@ namespace nvinfer1
 	public:
 		ChunkPluginCreator();
 		~ChunkPluginCreator() override = default;
-		const char* getPluginName()const override;
-		const char* getPluginVersion() const override;
-		const PluginFieldCollection* getFieldNames() override;
-		IPluginV2IOExt* createPlugin(const char* name, const PluginFieldCollection* fc) override;
-		IPluginV2IOExt* deserializePlugin(const char* name, const void* serialData, size_t serialLength) override;
-		void setPluginNamespace(const char* libNamespace) override;
-		const char* getPluginNamespace() const override;
+		const char* getPluginName()const noexcept  override;
+		const char* getPluginVersion() const noexcept  override;
+		const PluginFieldCollection* getFieldNames()noexcept  override;
+		IPluginV2* createPlugin(const char* name, const PluginFieldCollection* fc)noexcept  override;
+		IPluginV2* deserializePlugin(const char* name, const void* serialData, size_t serialLength)noexcept  override;
+		void setPluginNamespace(const char* libNamespace)noexcept  override;
+		const char* getPluginNamespace() const noexcept  override;
 	private:
 		std::string _s_name_space;
 		static PluginFieldCollection _fc;

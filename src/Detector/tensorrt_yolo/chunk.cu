@@ -30,28 +30,28 @@ namespace nvinfer1
 	{
 
 	}
-	int Chunk::getNbOutputs() const
+	int Chunk::getNbOutputs() const noexcept
 	{
 		return 2;
 	}
 
-	Dims Chunk::getOutputDimensions(int index, const Dims* inputs, int nbInputDims)
+	Dims Chunk::getOutputDimensions(int index, const Dims* inputs, int nbInputDims)noexcept
 	{
 		assert(nbInputDims == 1);
 		assert(index == 0 || index == 1);
 		return Dims3(inputs[0].d[0] / 2, inputs[0].d[1], inputs[0].d[2]);
 	}
 
-	int Chunk::initialize()
+	int Chunk::initialize() noexcept
 	{
 		return 0;
 	}
 
-	void Chunk::terminate()
+	void Chunk::terminate() noexcept
 	{
 	}
 
-	size_t Chunk::getWorkspaceSize(int maxBatchSize) const
+	size_t Chunk::getWorkspaceSize(int maxBatchSize) const noexcept
 	{
 		return 0;
 	}
@@ -60,7 +60,16 @@ namespace nvinfer1
 		const void* const* inputs,
 		void** outputs,
 		void* workspace,
-		cudaStream_t stream)
+		cudaStream_t stream)noexcept
+    {
+        return enqueue(batchSize, inputs, (void* const*)outputs, workspace, stream);
+    }
+
+	int Chunk::enqueue(int batchSize, 
+		const void* const* inputs,
+		void* const* outputs, 
+		void* workspace,
+		cudaStream_t stream) noexcept
 	{
 		//batch
 		for (int b = 0; b < batchSize; ++b)
@@ -73,54 +82,54 @@ namespace nvinfer1
 		return 0;
 	}
 
-	size_t Chunk::getSerializationSize() const
+	size_t Chunk::getSerializationSize() const noexcept
 	{
 		return sizeof(_n_size_split);
 	}
 
-	void Chunk::serialize(void *buffer)const
+	void Chunk::serialize(void *buffer)const noexcept
 	{
 		*reinterpret_cast<int*>(buffer) = _n_size_split;
 	}
 	
-	const char* Chunk::getPluginType()const
+	const char* Chunk::getPluginType()const noexcept
 	{
 		return "CHUNK_TRT";
 	}
-	const char* Chunk::getPluginVersion() const
+	const char* Chunk::getPluginVersion() const noexcept
 	{	
 		return "1.0";
 	}
 
-	void Chunk::destroy()
+	void Chunk::destroy() noexcept
 	{
 		delete this;
 	}
 	
-	void Chunk::setPluginNamespace(const char* pluginNamespace)
+	void Chunk::setPluginNamespace(const char* pluginNamespace) noexcept
 	{
 		_s_plugin_namespace = pluginNamespace;
 	}
 
-	const char* Chunk::getPluginNamespace() const
+	const char* Chunk::getPluginNamespace() const noexcept
 	{
 		return _s_plugin_namespace.c_str();
 	}
 
 	DataType Chunk::getOutputDataType(int index,
 		const nvinfer1::DataType* inputTypes,
-		int nbInputs) const
+		int nbInputs) const noexcept
 	{
 		assert(index == 0 || index == 1);
 		return DataType::kFLOAT;
 	}
 
-	bool Chunk::isOutputBroadcastAcrossBatch(int outputIndex, const bool* inputIsBroadcasted, int nbInputs) const
+	bool Chunk::isOutputBroadcastAcrossBatch(int outputIndex, const bool* inputIsBroadcasted, int nbInputs) const noexcept
 	{
 		return false;
 	}
 
-	bool Chunk::canBroadcastInputAcrossBatch(int inputIndex) const
+	bool Chunk::canBroadcastInputAcrossBatch(int inputIndex) const noexcept
 	{
 		return false;
 	}
@@ -133,8 +142,18 @@ namespace nvinfer1
 	}
 	void Chunk::detachFromContext() {}
 
+	bool Chunk::supportsFormat(DataType type, PluginFormat format) const noexcept
+	{
+		return (type == DataType::kFLOAT && format == PluginFormat::kLINEAR);
+	}
+
+	void Chunk::configureWithFormat(const Dims* inputDims, int nbInputs, const Dims* outputDims, int nbOutputs, DataType type, PluginFormat format, int maxBatchSize) noexcept
+	{
+
+	}
+
 	// Clone the plugin
-	IPluginV2IOExt* Chunk::clone() const
+	IPluginV2* Chunk::clone() const noexcept
 	{
 		Chunk *p = new Chunk();
 		p->_n_size_split = _n_size_split;
@@ -153,41 +172,41 @@ namespace nvinfer1
 		_fc.fields = _vec_plugin_attributes.data();
 	}
 
-	const char* ChunkPluginCreator::getPluginName() const
+	const char* ChunkPluginCreator::getPluginName() const noexcept
 	{
 		return "CHUNK_TRT";
 	}
 	
-	const char* ChunkPluginCreator::getPluginVersion() const
+	const char* ChunkPluginCreator::getPluginVersion() const noexcept
 	{
 		return "1.0";
 	}
 
-	const PluginFieldCollection* ChunkPluginCreator::getFieldNames()
+	const PluginFieldCollection* ChunkPluginCreator::getFieldNames()noexcept
 	{
 		return &_fc;
 	}
 
-	IPluginV2IOExt* ChunkPluginCreator::createPlugin(const char* name, const PluginFieldCollection* fc)
+	IPluginV2* ChunkPluginCreator::createPlugin(const char* name, const PluginFieldCollection* fc)noexcept
 	{
 		Chunk* obj = new Chunk();
 		obj->setPluginNamespace(_s_name_space.c_str());
 		return obj;
 	}
 
-	IPluginV2IOExt* ChunkPluginCreator::deserializePlugin(const char* name, const void* serialData, size_t serialLength)
+	IPluginV2* ChunkPluginCreator::deserializePlugin(const char* name, const void* serialData, size_t serialLength)noexcept
 	{
 		Chunk* obj = new Chunk(serialData,serialLength);
 		obj->setPluginNamespace(_s_name_space.c_str());
 		return obj;
 	}
 
-	void ChunkPluginCreator::setPluginNamespace(const char* libNamespace)
+	void ChunkPluginCreator::setPluginNamespace(const char* libNamespace)noexcept
 	{
 		_s_name_space = libNamespace;
 	}
 
-	const char* ChunkPluginCreator::getPluginNamespace() const
+	const char* ChunkPluginCreator::getPluginNamespace() const noexcept
 	{
 		return _s_name_space.c_str();
 	}

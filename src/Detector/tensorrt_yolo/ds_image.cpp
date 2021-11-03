@@ -68,11 +68,9 @@ DsImage::DsImage(const cv::Mat& mat_image_, const std::string &s_net_type_, cons
 	if ("yolov5" == s_net_type_)
 	{
 		// resize the DsImage with scale
-		float dim = std::max(m_Height, m_Width);
-		int resizeH = ((m_Height / dim) * inputH);
-		int resizeW = ((m_Width / dim) * inputW);
-		m_ScalingFactor = static_cast<float>(resizeH) / static_cast<float>(m_Height);
-		float	m_ScalingFactorw = static_cast<float>(resizeW) / static_cast<float>(m_Width);
+		float r = std::min(static_cast<float>(inputH) / static_cast<float>(m_Height), static_cast<float>(inputW) / static_cast<float>(m_Width));
+        int resizeH = (std::round(m_Height*r));
+        int resizeW = (std::round(m_Width*r));
 
 		// Additional checks for images with non even dims
 		if ((inputW - resizeW) % 2) resizeW--;

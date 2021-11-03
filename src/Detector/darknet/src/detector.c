@@ -23,7 +23,7 @@ int check_mistakes = 0;
 
 static int coco_ids[] = { 1,2,3,4,5,6,7,8,9,10,11,13,14,15,16,17,18,19,20,21,22,23,24,25,27,28,31,32,33,34,35,36,37,38,39,40,41,42,43,44,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,67,70,72,73,74,75,76,77,78,79,80,81,82,84,85,86,87,88,89,90 };
 
-void train_detector(char *datacfg, char *cfgfile, char *weightfile, int *gpus, int ngpus, int clear, int dont_show, int calc_map, int mjpeg_port, int show_imgs, int benchmark_layers, char* chart_path)
+void train_detector(char *datacfg, char *cfgfile, char *weightfile, int *gpus, int ngpus, int clear, int dont_show, int calc_map, float thresh, float iou_thresh, int mjpeg_port, int show_imgs, int benchmark_layers, char* chart_path)
 {
     list *options = read_data_cfg(datacfg);
     char *train_images = option_find_str(options, "train", "data/train.txt");
@@ -305,7 +305,7 @@ void train_detector(char *datacfg, char *cfgfile, char *weightfile, int *gpus, i
         //next_map_calc = fmax(next_map_calc, 400);
         if (calc_map) {
             printf("\n (next mAP calculation at %d iterations) ", next_map_calc);
-            if (mean_average_precision > 0) printf("\n Last accuracy mAP@0.5 = %2.2f %%, best = %2.2f %% ", mean_average_precision * 100, best_map * 100);
+            if (mean_average_precision > 0) printf("\n Last accuracy mAP@%0.2f = %2.2f %%, best = %2.2f %% ", iou_thresh, mean_average_precision * 100, best_map * 100);
         }
 
         if (net.cudnn_half) {
@@ -353,8 +353,8 @@ void train_detector(char *datacfg, char *cfgfile, char *weightfile, int *gpus, i
             //network net_combined = combine_train_valid_networks(net, net_map);
 
             iter_map = iteration;
-            mean_average_precision = validate_detector_map(datacfg, cfgfile, weightfile, 0.25, 0.5, 0, net.letter_box, &net_map);// &net_combined);
-            printf("\n mean_average_precision (mAP@0.5) = %f \n", mean_average_precision);
+            mean_average_precision = validate_detector_map(datacfg, cfgfile, weightfile, thresh, iou_thresh, 0, net.letter_box, &net_map);// &net_combined);
+            printf("\n mean_average_precision (mAP@%0.2f) = %f \n", iou_thresh, mean_average_precision);
             if (mean_average_precision > best_map) {
                 best_map = mean_average_precision;
                 printf("New best mAP!\n");
@@ -1204,6 +1204,7 @@ float validate_detector_map(char *datacfg, char *cfgfile, char *weightfile, floa
     qsort(detections, detections_count, sizeof(box_prob), detections_comparator);
 
     typedef struct {
+        double prob;
         double precision;
         double recall;
         int tp, fp, fn;
@@ -1238,6 +1239,7 @@ float validate_detector_map(char *datacfg, char *cfgfile, char *weightfile, floa
         }
 
         box_prob d = detections[rank];
+        pr[d.class_id][rank].prob = d.p;
         // if (detected && isn't detected before)
         if (d.truth_flag == 1) {
             if (truth_flags[d.unique_truth_index] == 0)
@@ -1310,15 +1312,17 @@ float validate_detector_map(char *datacfg, char *cfgfile, char *weightfile, floa
             for (point = 0; point < map_points; ++point) {
                 double cur_recall = point * 1.0 / (map_points-1);
                 double cur_precision = 0;
+                double cur_prob = 0;
                 for (rank = 0; rank < detections_count; ++rank)
                 {
                     if (pr[i][rank].recall >= cur_recall) {    // > or >=
                         if (pr[i][rank].precision > cur_precision) {
                             cur_precision = pr[i][rank].precision;
+                            cur_prob = pr[i][rank].prob;
                         }
                     }
                 }
-                //printf("class_id = %d, point = %d, cur_recall = %.4f, cur_precision = %.4f \n", i, point, cur_recall, cur_precision);
+                //printf("class_id = %d, point = %d, cur_prob = %.4f, cur_recall = %.4f, cur_precision = %.4f \n", i, point, cur_prob, cur_recall, cur_precision);
 
                 avg_precision += cur_precision;
             }
@@ -1631,7 +1635,7 @@ void test_detector(char *datacfg, char *cfgfile, char *weightfile, char *filenam
     if (outfile) {
         json_file = fopen(outfile, "wb");
         if(!json_file) {
-          error("fopen failed");
+            error("fopen failed", DARKNET_LOC);
         }
         char *tmp = "[\n";
         fwrite(tmp, sizeof(char), strlen(tmp), json_file);
@@ -2013,7 +2017,7 @@ void run_detector(int argc, char **argv)
             if (weights[strlen(weights) - 1] == 0x0d) weights[strlen(weights) - 1] = 0;
     char *filename = (argc > 6) ? argv[6] : 0;
     if (0 == strcmp(argv[2], "test")) test_detector(datacfg, cfg, weights, filename, thresh, hier_thresh, dont_show, ext_output, save_labels, outfile, letter_box, benchmark_layers);
-    else if (0 == strcmp(argv[2], "train")) train_detector(datacfg, cfg, weights, gpus, ngpus, clear, dont_show, calc_map, mjpeg_port, show_imgs, benchmark_layers, chart_path);
+    else if (0 == strcmp(argv[2], "train")) train_detector(datacfg, cfg, weights, gpus, ngpus, clear, dont_show, calc_map, thresh, iou_thresh, mjpeg_port, show_imgs, benchmark_layers, chart_path);
     else if (0 == strcmp(argv[2], "valid")) validate_detector(datacfg, cfg, weights, outfile);
     else if (0 == strcmp(argv[2], "recall")) validate_detector_recall(datacfg, cfg, weights);
     else if (0 == strcmp(argv[2], "map")) validate_detector_map(datacfg, cfg, weights, thresh, iou_thresh, map_points, letter_box, NULL);

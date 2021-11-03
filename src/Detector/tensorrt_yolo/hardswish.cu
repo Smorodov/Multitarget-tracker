@@ -73,20 +73,32 @@ namespace nvinfer1
 		return cudaGetLastError();
 	}
 
-	int Hardswish::enqueue(int batchSize, const void* const* inputs, void** outputs, void* workspace,
-		cudaStream_t stream)
+	int Hardswish::enqueue(int batchSize,
+		const void* const* inputs,
+		void* const* outputs,
+		void* workspace,
+		cudaStream_t stream) noexcept
 	{
 		//printf("batch_size:%d,output_size:%d,threads:%d\n", batchSize, _n_output_size, _n_max_thread_pre_block);
 		NV_CUDA_CHECK(cuda_hardswish_layer(inputs[0], outputs[0], batchSize, _n_output_size , _n_max_thread_pre_block,stream));
 		return 0;
 	}
 
-	size_t Hardswish::getSerializationSize() const
+    int Hardswish::enqueue(int batchSize,
+		const void* const* inputs,
+		void** outputs,
+		void* workspace,
+		cudaStream_t stream) noexcept
+	{
+		return enqueue(batchSize, inputs, (void* const*)outputs, workspace, stream);
+	}
+
+	size_t Hardswish::getSerializationSize() const noexcept
 	{
 		return sizeof(_n_max_thread_pre_block) +sizeof(_n_output_size);
 	}
 
-	void Hardswish::serialize(void *buffer) const
+	void Hardswish::serialize(void *buffer) const noexcept
 	{
 		char *d = static_cast<char*>(buffer), *a = d;
 		w(d, _n_max_thread_pre_block);
@@ -94,13 +106,26 @@ namespace nvinfer1
 		assert(d == a + getSerializationSize());
 	}
 
-	void Hardswish::configurePlugin(const PluginTensorDesc* in, int nbInput, const PluginTensorDesc* out, int nbOutput)
+
+	bool Hardswish::supportsFormat(DataType type, PluginFormat format) const noexcept
+	{
+		return (type == DataType::kFLOAT && format == PluginFormat::kLINEAR);
+	}
+
+	void Hardswish::configureWithFormat(const Dims* inputDims, int nbInputs,
+		const Dims* outputDims, int nbOutputs, DataType type, PluginFormat format, int maxBatchSize) noexcept
+	{
+	
+	}
+
+
+	void Hardswish::configurePlugin(const PluginTensorDesc* in, int nbInput, const PluginTensorDesc* out, int nbOutput) noexcept
 	{
 		
 		_n_output_size = in->dims.d[0] * in->dims.d[1] * in->dims.d[2];
 	//	printf("output_size:%d,threads:%d\n", _n_output_size, _n_max_thread_pre_block);
 	}
-	IPluginV2IOExt* Hardswish::clone() const
+	IPluginV2* Hardswish::clone() const noexcept
 	{
 		Hardswish *p = new Hardswish();
 		p->setPluginNamespace(_s_plugin_namespace.c_str());
@@ -121,41 +146,41 @@ namespace nvinfer1
 		_fc.fields = _vec_plugin_attributes.data();
 	}
 
-	const char* HardswishPluginCreator::getPluginName() const
+	const char* HardswishPluginCreator::getPluginName() const noexcept
 	{
 		return "HARDSWISH_TRT";
 	}
 
-	const char* HardswishPluginCreator::getPluginVersion() const
+	const char* HardswishPluginCreator::getPluginVersion() const noexcept
 	{
 		return "1.0";
 	}
 
-	const PluginFieldCollection* HardswishPluginCreator::getFieldNames()
+	const PluginFieldCollection* HardswishPluginCreator::getFieldNames() noexcept
 	{
 		return &_fc;
 	}
 
-	IPluginV2IOExt* HardswishPluginCreator::createPlugin(const char* name, const PluginFieldCollection* fc)
+	IPluginV2* HardswishPluginCreator::createPlugin(const char* name, const PluginFieldCollection* fc) noexcept
 	{
 		Hardswish* obj = new Hardswish();
 		obj->setPluginNamespace(_s_name_space.c_str());
 		return obj;
 	}
 
-	IPluginV2IOExt* HardswishPluginCreator::deserializePlugin(const char* name, const void* serialData, size_t serialLength)
+	IPluginV2* HardswishPluginCreator::deserializePlugin(const char* name, const void* serialData, size_t serialLength) noexcept
 	{
 		Hardswish* obj = new Hardswish(serialData, serialLength);
 		obj->setPluginNamespace(_s_name_space.c_str());
 		return obj;
 	}
 
-	void HardswishPluginCreator::setPluginNamespace(const char* libNamespace)
+	void HardswishPluginCreator::setPluginNamespace(const char* libNamespace) noexcept
 	{
 		_s_name_space = libNamespace;
 	}
 
-	const char* HardswishPluginCreator::getPluginNamespace() const
+	const char* HardswishPluginCreator::getPluginNamespace() const noexcept
 	{
 		return _s_name_space.c_str();
 	}

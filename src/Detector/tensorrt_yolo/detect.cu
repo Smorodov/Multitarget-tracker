@@ -122,20 +122,42 @@ namespace nvinfer1
 		return cudaGetLastError();
 	}
 
-	int Detect::enqueue(int batchSize, const void* const* inputs, void** outputs, void* workspace,
-		cudaStream_t stream)
+	int Detect::enqueue(int batchSize,
+		const void* const* inputs,
+		void* const* outputs,
+		void* workspace,
+		cudaStream_t stream) noexcept
 	{
 		NV_CUDA_CHECK(cuda_detect_layer(inputs[0], outputs[0], batchSize, _n_grid_h, _n_grid_w, _n_classes, _n_anchor, _n_output_size, stream));
 		return 0;
 	}
 
-	size_t Detect::getSerializationSize() const
+    int Detect::enqueue(int batchSize,
+		const void* const* inputs,
+		void** outputs,
+		void* workspace,
+		cudaStream_t stream) noexcept
+	{
+		return enqueue(batchSize, inputs, (void* const*)outputs, workspace, stream);
+	}
+
+	bool Detect::supportsFormat(DataType type, PluginFormat format) const noexcept
+	{
+		return (type == DataType::kFLOAT && format == PluginFormat::kLINEAR);
+	}
+
+	void Detect::configureWithFormat(const Dims* inputDims, int nbInputs, const Dims* outputDims, int nbOutputs, DataType type, PluginFormat format, int maxBatchSize) noexcept
+	{
+
+	}
+
+	size_t Detect::getSerializationSize() const noexcept
 	{
 		return sizeof(_n_anchor) + sizeof(_n_classes) + sizeof(_n_grid_h) + sizeof(_n_grid_w)
 			+ sizeof(_n_output_size);
 	}
 
-	void Detect::serialize(void *buffer) const
+	void Detect::serialize(void *buffer) const noexcept
 	{
 		char *d = static_cast<char*>(buffer), *a = d;
 		write(d,_n_anchor);
@@ -150,7 +172,7 @@ namespace nvinfer1
 	{
 
 	}
-	IPluginV2IOExt* Detect::clone() const
+	IPluginV2* Detect::clone() const noexcept
 	{
 		Detect *p = new Detect(_n_anchor,_n_classes,_n_grid_h,_n_grid_w);
 		p->setPluginNamespace(_s_plugin_namespace.c_str());
@@ -169,41 +191,41 @@ namespace nvinfer1
 		_fc.fields = _vec_plugin_attributes.data();
 	}
 
-	const char* DetectPluginCreator::getPluginName() const
+	const char* DetectPluginCreator::getPluginName() const noexcept
 	{
 		return "DETECT_TRT";
 	}
 
-	const char* DetectPluginCreator::getPluginVersion() const
+	const char* DetectPluginCreator::getPluginVersion() const noexcept
 	{
 		return "1.0";
 	}
 
-	const PluginFieldCollection* DetectPluginCreator::getFieldNames()
+	const PluginFieldCollection* DetectPluginCreator::getFieldNames() noexcept
 	{
 		return &_fc;
 	}
 
-	IPluginV2IOExt* DetectPluginCreator::createPlugin(const char* name, const PluginFieldCollection* fc)
+	IPluginV2* DetectPluginCreator::createPlugin(const char* name, const PluginFieldCollection* fc) noexcept
 	{
 		Detect* obj = new Detect();
 		obj->setPluginNamespace(_s_name_space.c_str());
 		return obj;
 	}
 
-	IPluginV2IOExt* DetectPluginCreator::deserializePlugin(const char* name, const void* serialData, size_t serialLength)
+	IPluginV2* DetectPluginCreator::deserializePlugin(const char* name, const void* serialData, size_t serialLength) noexcept
 	{
 		Detect* obj = new Detect(serialData, serialLength);
 		obj->setPluginNamespace(_s_name_space.c_str());
 		return obj;
 	}
 
-	void DetectPluginCreator::setPluginNamespace(const char* libNamespace)
+	void DetectPluginCreator::setPluginNamespace(const char* libNamespace) noexcept
 	{
 		_s_name_space = libNamespace;
 	}
 
-	const char* DetectPluginCreator::getPluginNamespace() const
+	const char* DetectPluginCreator::getPluginNamespace() const noexcept
 	{
 		return _s_name_space.c_str();
 	}
