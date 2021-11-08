@@ -198,13 +198,10 @@ std::pair<track_t, bool> CTrack::CalcCosine(const RegionEmbedding& embedding) co
 	{
 		double xy = embedding.m_embedding.dot(m_regionEmbedding.m_embedding);
 		double norm = sqrt(embedding.m_embDot * m_regionEmbedding.m_embDot) + 1e-6;
-#if 1
+#if 0
         res = 1.f - 0.5f * fabs(static_cast<float>(xy / norm));
 #else
         res = 0.5f * static_cast<float>(1.0 - xy / norm);
-        if (res < 0)
-            res += 1;
-        //res = static_cast<float>(-xy / norm);
 #endif
         //std::cout << "CTrack::CalcCosine: " << embedding.m_embedding.size() << " - " << m_regionEmbedding.m_embedding.size() << " = " << res << std::endl;
         return { res, true };
