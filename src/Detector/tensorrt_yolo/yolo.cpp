@@ -1195,7 +1195,8 @@ void Yolo::parse_cfg_blocks_v5(const  std::vector<std::map<std::string, std::str
 			m_InputH = std::stoul(trim(block.at("height")));
 			m_InputW = std::stoul(trim(block.at("width")));
 			m_InputC = std::stoul(trim(block.at("channels")));
-			m_BatchSize = std::stoi(trim(block.at("batch")));
+			if (m_BatchSize < 1)
+                m_BatchSize = std::stoi(trim(block.at("batch")));
 			_f_depth_multiple = std::stof(trim(block.at("depth_multiple")));
 			_f_width_multiple = std::stof(trim(block.at("width_multiple")));
 			_n_classes = std::stoi(trim(block.at("nc")));
