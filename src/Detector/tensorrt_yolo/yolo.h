@@ -130,10 +130,10 @@ protected:
     const std::string m_InputBlobName;
     std::vector<TensorInfo> m_OutputTensors;
     std::vector<std::map<std::string, std::string>> m_configBlocks;
-    uint32_t m_InputH;
-    uint32_t m_InputW;
-    uint32_t m_InputC;
-    uint64_t m_InputSize;
+    uint32_t m_InputH = 0;
+    uint32_t m_InputW = 0;
+    uint32_t m_InputC = 0;
+    uint64_t m_InputSize = 0;
 	uint32_t _n_classes = 0;
 	float _f_depth_multiple = 0;
 	float _f_width_multiple = 0;

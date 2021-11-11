@@ -42,17 +42,52 @@ REGISTER_TENSORRT_PLUGIN(ChunkPluginCreator);
 REGISTER_TENSORRT_PLUGIN(HardswishPluginCreator);
 REGISTER_TENSORRT_PLUGIN(YoloLayerPluginCreator);
 
-cv::Mat blobFromDsImages(const std::vector<DsImage>& inputImages,
-						const int& inputH,
-                         const int& inputW)
+void blobFromDsImages(const std::vector<DsImage>& inputImages, cv::Mat& blob,  const int& inputH, const int& inputW)
 {
-    std::vector<cv::Mat> letterboxStack;
-	letterboxStack.reserve(inputImages.size());
-    for (uint32_t i = 0; i < inputImages.size(); ++i)
+    cv::Size size(inputW, inputH);
+    constexpr bool swapRB = true;
+    constexpr int ddepth = CV_32F;
+    constexpr int nch = 3;
+    size_t nimages = inputImages.size();
+
+    int sz[] = { (int)nimages, nch, inputH, inputW };
+    blob.create(4, sz, ddepth);
+    cv::Mat ch[4];
+
+    for (size_t i = 0; i < nimages; ++i)
     {
-		letterboxStack.emplace_back(inputImages[i].getLetterBoxedImage());
+        const cv::Mat& image = inputImages[i].getLetterBoxedImage();
+
+        for (int j = 0; j < nch; ++j)
+        {
+            ch[j] = cv::Mat(size, ddepth, blob.ptr((int)i, j));
+        }
+
+        if(swapRB)
+            std::swap(ch[0], ch[2]);
+
+        for (int y = 0; y < image.rows; ++y)
+        {
+            const uchar* imPtr = image.ptr(y);
+            float* ch0 = ch[0].ptr<float>(y);
+            float* ch1 = ch[1].ptr<float>(y);
+            float* ch2 = ch[2].ptr<float>(y);
+            constexpr size_t stepSize = 32;
+            for (int x = 0; x < image.cols; x += stepSize)
+            {
+                for (size_t k = 0; k < stepSize; ++k)
+                {
+                    ch0[k] = static_cast<float>(imPtr[0 + 3 * k]);
+                    ch1[k] = static_cast<float>(imPtr[1 + 3 * k]);
+                    ch2[k] = static_cast<float>(imPtr[2 + 3 * k]);
+                }
+                imPtr += 3 * stepSize;
+                ch0 += stepSize;
+                ch1 += stepSize;
+                ch2 += stepSize;
+            }
+        }
     }
-    return cv::dnn::blobFromImages(letterboxStack, 1.0, cv::Size(inputW, inputH), cv::Scalar(0.0, 0.0, 0.0),true);
 }
 
 static void leftTrim(std::string& s)
