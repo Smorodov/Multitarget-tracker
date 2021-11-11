@@ -45,16 +45,13 @@ public:
 		{
 			vec_ds_images.emplace_back(img, _vec_net_type[_config.net_type], _p_net->getInputH(), _p_net->getInputW());
 		}
-		cv::Mat trtInput = blobFromDsImages(vec_ds_images, _p_net->getInputH(),_p_net->getInputW());
-		_p_net->doInference(trtInput.data, static_cast<uint32_t>(vec_ds_images.size()));
+        blobFromDsImages(vec_ds_images, m_blob, _p_net->getInputH(),_p_net->getInputW());
+        _p_net->doInference(m_blob.data, static_cast<uint32_t>(vec_ds_images.size()));
 		for (size_t i = 0; i < vec_ds_images.size(); ++i)
 		{
 			auto curImage = vec_ds_images.at(i);
 			auto binfo = _p_net->decodeDetections(static_cast<int>(i), curImage.getImageHeight(), curImage.getImageWidth());
-			auto remaining = nmsAllClasses(_p_net->getNMSThresh(),
-				binfo,
-				_p_net->getNumClasses(),
-				_vec_net_type[_config.net_type]);
+            auto remaining = (_p_net->getNMSThresh() > 0) ? nmsAllClasses(_p_net->getNMSThresh(), binfo, _p_net->getNumClasses(), _vec_net_type[_config.net_type]) : binfo;
 
 			std::vector<tensor_rt::Result> vec_result;
 			if (!remaining.empty())
@@ -141,6 +138,7 @@ private:
 	std::vector<std::string> _vec_precision{ "kINT8","kHALF","kFLOAT" };
 	std::unique_ptr<Yolo> _p_net = nullptr;
 	Timer _m_timer;
+    cv::Mat m_blob;
 };
 
 

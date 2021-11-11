@@ -57,6 +57,8 @@ private:
     void* m_DeviceInput{nullptr};
     std::vector<std::string> m_ImageList;
     std::vector<char> m_CalibrationCache;
+
+    cv::Mat m_blob;
 };
 
 #endif

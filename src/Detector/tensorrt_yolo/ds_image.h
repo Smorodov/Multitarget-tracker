@@ -32,12 +32,12 @@ struct BBoxInfo;
 class DsImage
 {
 public:
-    DsImage();
+    DsImage() = default;
     DsImage(const std::string& path, const std::string &s_net_type_, const int& inputH, const int& inputW);
     DsImage(const cv::Mat& mat_image_, const std::string &s_net_type_, const int& inputH, const int& inputW);
     int getImageHeight() const { return m_Height; }
     int getImageWidth() const { return m_Width; }
-    cv::Mat getLetterBoxedImage() const { return m_LetterboxImage; }
+    const cv::Mat& getLetterBoxedImage() const { return m_LetterboxImage; }
     cv::Mat getOriginalImage() const { return m_OrigImage; }
     std::string getImageName() const { return m_ImageName; }
     void addBBox(BBoxInfo box, const std::string& labelName);
@@ -45,14 +45,15 @@ public:
     void saveImageJPEG(const std::string& dirPath) const;
     std::string exportJson() const;
 	void letterbox(const int& inputH, const int& inputW);
+
 private:
-    int m_Height;
-    int m_Width;
-    int m_XOffset;
-    int m_YOffset;
-    float m_ScalingFactor;
+    int m_Height = 0;
+    int m_Width = 0;
+    int m_XOffset = 0;
+    int m_YOffset = 0;
+    float m_ScalingFactor = 0.0f;
     std::string m_ImagePath;
-    cv::RNG m_RNG;
+    cv::RNG m_RNG { cv::RNG(unsigned(std::time(0))) };
     std::string m_ImageName;
     std::vector<BBoxInfo> m_Bboxes;
 

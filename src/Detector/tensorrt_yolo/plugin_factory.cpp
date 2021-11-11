@@ -114,7 +114,6 @@ namespace nvinfer1
 
 	void YoloLayer::configureWithFormat(const Dims* inputDims, int nbInputs, const Dims* outputDims, int nbOutputs, DataType type, PluginFormat format, int maxBatchSize) noexcept
 	{
-
 	}
 
 	IPluginV2* YoloLayer::clone() const noexcept
