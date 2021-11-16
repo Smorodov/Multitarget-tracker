@@ -1,0 +1,60 @@
+name: build Ubuntu
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+env:
+  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
+  BUILD_TYPE: Release
+
+jobs:
+  build:
+    # The CMake configure and build commands are platform agnostic and should work equally
+    # well on Windows or Mac.  You can convert this to a matrix build if you need
+    # cross-platform coverage.
+    # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - uses: Dovyski/setup-opencv-action@v1
+      with:
+        opencv-version: '4.5.0'
+        ENABLE_PRECOMPILED_HEADERS: OFF
+        INSTALL_C_EXAMPLES: OFF
+        BUILD_EXAMPLES: OFF
+        CMAKE_BUILD_TYPE: RELEASE
+        BUILD_JAVA: OFF
+        BUILD_opencv_java_bindings_generator: OFF
+        BUILD_opencv_js: OFF
+        WITH_QT: OFF
+        BUILD_opencv_apps: OFF
+        CPU_BASELINE: AVX2
+        CPU_DISPATCH: AVX2
+        BUILD_opencv_python3: OFF
+        BUILD_opencv_python_tests: OFF
+        INSTALL_PYTHON_EXAMPLES: OFF
+        BUILD_NEW_PYTHON_SUPPORT: OFF
+        BUILD_opencv_python_bindings_generator: OFF
+        BUILD_TESTS: OFF
+        BUILD_PERF_TESTS: OFF
+        INSTALL_TESTS: OFF
+
+    - name: Configure CMake
+      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
+      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+
+    - name: Build
+      # Build your program with the given configuration
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+
+    - name: Test
+      working-directory: ${{github.workspace}}/build
+      # Execute tests defined by the CMake configuration.  
+      # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
+      run: ctest -C ${{env.BUILD_TYPE}}
+      

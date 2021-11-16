@@ -1,4 +1,4 @@
-![travis ci:](https://travis-ci.org/Smorodov/Multitarget-tracker.svg?branch=master)
+[![Status](https://github.com/Nuzhny007/Multitarget-tracker/actions/workflows/cmake.yml/badge.svg?branch=master)](https://github.com/Nuzhny007/Multitarget-tracker/actions?query=workflow%3Aci-build)
 [![CodeQL](https://github.com/Smorodov/Multitarget-tracker/workflows/CodeQL/badge.svg?branch=master)](https://github.com/Smorodov/Multitarget-tracker/actions?query=workflow%3ACodeQL)
 
 # Last changes
