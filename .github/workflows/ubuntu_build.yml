@@ -1,4 +1,4 @@
-name: CMake
+name: build Ubuntu
 
 on:
   push:
@@ -20,6 +20,28 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - uses: Dovyski/setup-opencv-action@v1
+      with:
+        opencv-version: '4.5.0'
+        ENABLE_PRECOMPILED_HEADERS: OFF
+        INSTALL_C_EXAMPLES: OFF
+        BUILD_EXAMPLES: OFF
+        CMAKE_BUILD_TYPE: RELEASE
+        BUILD_JAVA: OFF
+        BUILD_opencv_java_bindings_generator: OFF
+        BUILD_opencv_js: OFF
+        WITH_QT: OFF
+        BUILD_opencv_apps: OFF
+        CPU_BASELINE: AVX2
+        CPU_DISPATCH: AVX2
+        BUILD_opencv_python3: OFF
+        BUILD_opencv_python_tests: OFF
+        INSTALL_PYTHON_EXAMPLES: OFF
+        BUILD_NEW_PYTHON_SUPPORT: OFF
+        BUILD_opencv_python_bindings_generator: OFF
+        BUILD_TESTS: OFF
+        BUILD_PERF_TESTS: OFF
+        INSTALL_TESTS: OFF
 
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
