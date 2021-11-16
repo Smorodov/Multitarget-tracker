@@ -14,7 +14,7 @@ public:
 	CTracker(CTracker&&) = delete;
 	CTracker& operator=(const CTracker&) = delete;
 	CTracker& operator=(CTracker&&) = delete;
-	
+
 	~CTracker(void) = default;
 
     void Update(const regions_t& regions, cv::UMat currFrame, float fps) override;
@@ -41,6 +41,8 @@ private:
     void CreateDistaceMatrix(const regions_t& regions, const std::vector<RegionEmbedding>& regionEmbeddings, distMatrix_t& costMatrix, track_t maxPossibleCost, track_t& maxCost);
     void UpdateTrackingState(const regions_t& regions, cv::UMat currFrame, float fps);
 	void CalcEmbeddins(std::vector<RegionEmbedding>& regionEmbeddings, const regions_t& regions, cv::UMat currFrame) const;
+
+	track_t GetEllipseDist(const CTrack& trackRef, const CRegion& reg);
 };
 // ----------------------------------------------------------------------
 
@@ -396,25 +398,11 @@ void CTracker::CreateDistaceMatrix(const regions_t& regions,
 	{
 		const auto& track = m_tracks[i];
 
-        // call kalman prediction fist 
+        // call kalman prediction fist
 		if (track->GetFilterObjectSize())
 			track->KalmanPredictRect();
 		else
 			track->KalmanPredictPoint();
-
-		// Calc predicted area for track
-		cv::Size_<track_t> minRadius;
-		if (m_settings.m_minAreaRadiusPix < 0)
-		{
-			minRadius.width = m_settings.m_minAreaRadiusK * track->LastRegion().m_rrect.size.width;
-			minRadius.height = m_settings.m_minAreaRadiusK * track->LastRegion().m_rrect.size.height;
-		}
-		else
-		{
-			minRadius.width = m_settings.m_minAreaRadiusPix;
-			minRadius.height = m_settings.m_minAreaRadiusPix;
-		}
-		cv::RotatedRect predictedArea = track->CalcPredictionEllipse(minRadius);
 
 		// Calc distance between track and regions
 		for (size_t j = 0; j < regions.size(); ++j)
@@ -426,11 +414,12 @@ void CTracker::CreateDistaceMatrix(const regions_t& regions,
 			{
 				dist = 0;
 				size_t ind = 0;
+
 				// Euclidean distance between centers
 				if (m_settings.m_distType[ind] > 0.0f && ind == tracking::DistCenters)
 				{
 #if 1
-                    track_t ellipseDist = track->IsInsideArea(reg.m_rrect.center, predictedArea);
+					track_t ellipseDist = GetEllipseDist(*track, reg);
                     if (ellipseDist > 1)
                         dist += m_settings.m_distType[ind];
                     else
@@ -445,7 +434,7 @@ void CTracker::CreateDistaceMatrix(const regions_t& regions,
 				if (m_settings.m_distType[ind] > 0.0f && ind == tracking::DistRects)
 				{
 #if 1
-                    track_t ellipseDist = track->IsInsideArea(reg.m_rrect.center, predictedArea);
+					track_t ellipseDist = GetEllipseDist(*track, reg);
 					if (ellipseDist < 1)
 					{
 						track_t dw = track->WidthDist(reg);
@@ -569,6 +558,33 @@ void CTracker::CalcEmbeddins(std::vector<RegionEmbedding>& regionEmbeddings, con
             }
         }
     }
+}
+
+///
+/// \brief CTracker::GetEllipseDist
+/// \param trackRef
+/// \param reg
+/// \return
+///
+track_t CTracker::GetEllipseDist(const CTrack& trackRef, const CRegion& reg)
+{
+	cv::Size_<track_t> minRadius;
+
+	if (m_settings.m_minAreaRadiusPix < 0)
+	{
+		minRadius.width = m_settings.m_minAreaRadiusK * trackRef.LastRegion().m_rrect.size.width;
+		minRadius.height = m_settings.m_minAreaRadiusK * trackRef.LastRegion().m_rrect.size.height;
+	}
+	else
+	{
+		minRadius.width = m_settings.m_minAreaRadiusPix;
+		minRadius.height = m_settings.m_minAreaRadiusPix;
+	}
+
+	// Calc predicted area for track
+	cv::RotatedRect predictedArea = trackRef.CalcPredictionEllipse(minRadius);
+
+	return trackRef.IsInsideArea(reg.m_rrect.center, predictedArea);
 }
 
 ///
