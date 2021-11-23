@@ -17,19 +17,12 @@
 
 namespace nvinfer1
 {
-	Chunk::Chunk()
-	{
-
-	}
 	Chunk::Chunk(const void* buffer, size_t size) 
 	{
 		assert(size == sizeof(_n_size_split));
 		_n_size_split = *reinterpret_cast<const int*>(buffer);
-	}
-	Chunk::~Chunk()
-	{
+ 	}
 
-	}
 	int Chunk::getNbOutputs() const noexcept
 	{
 		return 2;
@@ -77,8 +70,6 @@ namespace nvinfer1
 			NV_CUDA_CHECK(cudaMemcpy((char*)outputs[0] + b * _n_size_split, (char*)inputs[0] + b * 2 * _n_size_split, _n_size_split, cudaMemcpyDeviceToDevice));
 			NV_CUDA_CHECK(cudaMemcpy((char*)outputs[1] + b * _n_size_split, (char*)inputs[0] + b * 2 * _n_size_split + _n_size_split, _n_size_split, cudaMemcpyDeviceToDevice));
 		}
-	//	NV_CUDA_CHECK(cudaMemcpy(outputs[0], inputs[0], _n_size_split, cudaMemcpyDeviceToDevice));
-	//	NV_CUDA_CHECK(cudaMemcpy(outputs[1], (void*)((char*)inputs[0] + _n_size_split), _n_size_split, cudaMemcpyDeviceToDevice));
 		return 0;
 	}
 
@@ -97,7 +88,7 @@ namespace nvinfer1
 		return "CHUNK_TRT";
 	}
 	const char* Chunk::getPluginVersion() const noexcept
-	{	
+	{
 		return "1.0";
 	}
 
@@ -134,13 +125,17 @@ namespace nvinfer1
 		return false;
 	}
 
-	void Chunk::attachToContext(cudnnContext* cudnnContext, cublasContext* cublasContext, IGpuAllocator* gpuAllocator) {}
+	void Chunk::attachToContext(cudnnContext* cudnnContext, cublasContext* cublasContext, IGpuAllocator* gpuAllocator)
+	{
+	}
 
 	void Chunk::configurePlugin(const PluginTensorDesc* in, int nbInput, const PluginTensorDesc* out, int nbOutput)
 	{
 		_n_size_split = in->dims.d[0] / 2 * in->dims.d[1] * in->dims.d[2] *sizeof(float);
 	}
-	void Chunk::detachFromContext() {}
+	void Chunk::detachFromContext()
+	{
+	}
 
 	bool Chunk::supportsFormat(DataType type, PluginFormat format) const noexcept
 	{
@@ -149,7 +144,26 @@ namespace nvinfer1
 
 	void Chunk::configureWithFormat(const Dims* inputDims, int nbInputs, const Dims* outputDims, int nbOutputs, DataType type, PluginFormat format, int maxBatchSize) noexcept
 	{
-
+		size_t typeSize = sizeof(float);
+		switch (type)
+        {
+        case DataType::kFLOAT:
+            typeSize = sizeof(float);
+            break;
+        case DataType::kHALF:
+            typeSize = sizeof(float) / 2;
+            break;
+        case DataType::kINT8:
+            typeSize = 1;
+            break;
+        case DataType::kINT32:
+            typeSize = 4;
+            break;
+        case DataType::kBOOL:
+            typeSize = 1;
+            break;
+        }
+		_n_size_split = inputDims->d[0] / 2 * inputDims->d[1] * inputDims->d[2] * typeSize;
 	}
 
 	// Clone the plugin

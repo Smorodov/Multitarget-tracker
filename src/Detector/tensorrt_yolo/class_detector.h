@@ -25,6 +25,7 @@ namespace tensor_rt
 	{
         YOLOV3,
         YOLOV4,
+        YOLOV4_TINY,
         YOLOV5
 	};
 

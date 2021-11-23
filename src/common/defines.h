@@ -96,7 +96,7 @@ typedef std::multimap<std::string, std::string> config_t;
 class CRegion
 {
 public:
-	CRegion() = default;
+    CRegion() = default;
 
     CRegion(const cv::Rect& rect) noexcept
         : m_brect(rect)
@@ -116,10 +116,10 @@ public:
         B2RRect();
     }
 
-	objtype_t m_type = bad_type;
+    objtype_t m_type = bad_type;
     cv::RotatedRect m_rrect;
     cv::Rect m_brect;
-	float m_confidence = -1;
+    float m_confidence = -1;
 
 private:
     ///

@@ -26,7 +26,7 @@ public:
     cv::Rect GetRectPrediction();
     cv::Rect Update(cv::Rect rect, bool dataCorrect);
 
-	cv::Vec<track_t, 2> GetVelocity() const;
+    cv::Vec<track_t, 2> GetVelocity() const;
 
     void GetPtStateAndResCov(cv::Mat& covar, cv::Mat& state) const;
 

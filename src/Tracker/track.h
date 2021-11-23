@@ -71,18 +71,18 @@ public:
     /// \return
     ///
     track_t CalcDistJaccard(const CRegion& reg) const;
-	///
-	/// \brief CTrack::CalcMahalanobisDist
-	/// \param reg
-	/// \return
-	///
-	track_t CalcMahalanobisDist(const cv::RotatedRect& rrect) const;
-	///
-	/// \brief CalcDistHist
-	/// Distance from 0 to 1 between objects histogramms on two N and N+1 frames
-	/// \param embedding
-	/// \return
-	///
+    ///
+    /// \brief CTrack::CalcMahalanobisDist
+    /// \param reg
+    /// \return
+    ///
+    track_t CalcMahalanobisDist(const cv::RotatedRect& rrect) const;
+    ///
+    /// \brief CalcDistHist
+    /// Distance from 0 to 1 between objects histogramms on two N and N+1 frames
+    /// \param embedding
+    /// \return
+    ///
     track_t CalcDistHist(const RegionEmbedding& embedding) const;
 	///
 	/// \brief CalcCosine
@@ -92,15 +92,16 @@ public:
 	///
 	std::pair<track_t, bool> CalcCosine(const RegionEmbedding& embedding) const;
 
-	cv::RotatedRect CalcPredictionEllipse(cv::Size_<track_t> minRadius) const;
-	///
-	/// \brief IsInsideArea
-	/// Test point inside in prediction area: prediction area + object velocity
-	/// \param pt
-	/// \param minVal
-	/// \return
-	///
-	track_t IsInsideArea(const Point_t& pt, const cv::RotatedRect& rrect) const;
+    cv::RotatedRect CalcPredictionEllipse(cv::Size_<track_t> minRadius) const;
+    ///
+    /// \brief IsInsideArea
+    /// Test point inside in prediction area: prediction area + object velocity
+    /// \param pt
+    /// \param minVal
+    /// \return
+    ///
+    track_t IsInsideArea(const Point_t& pt, const cv::RotatedRect& rrect) const;
+
     track_t WidthDist(const CRegion& reg) const;
     track_t HeightDist(const CRegion& reg) const;
 

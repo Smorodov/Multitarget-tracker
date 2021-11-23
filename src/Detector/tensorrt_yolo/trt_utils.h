@@ -40,7 +40,7 @@ SOFTWARE.
 #include "hardswish.h"
 #include <set>
 #include <math.h>
-#include <algorithm> 
+#include <algorithm>
 #include "NvInfer.h"
 
 #include "ds_image.h"

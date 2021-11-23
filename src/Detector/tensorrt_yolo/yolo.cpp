@@ -43,25 +43,17 @@ Yolo::Yolo( const NetworkInfo& networkInfo, const InferParams& inferParams) :
 
 	m_configBlocks = parseConfigFile(m_ConfigFilePath);
 	if (m_NetworkType == "yolov5")
-	{
 		parse_cfg_blocks_v5(m_configBlocks);
-	}
 	else
-	{
 		parseConfigBlocks();
-	}
+
 	m_EnginePath = networkInfo.data_path + "-" + m_Precision + "-batch" + std::to_string(m_BatchSize) + ".engine";
 	if (m_Precision == "kFLOAT")
 	{
 		if ("yolov5" == m_NetworkType)
-		{
-
 			create_engine_yolov5();
-		}
 		else
-		{
 			createYOLOEngine();
-		}
 	}
 	else if (m_Precision == "kINT8")
 	{
@@ -69,24 +61,16 @@ Yolo::Yolo( const NetworkInfo& networkInfo, const InferParams& inferParams) :
 			m_CalibTableFilePath, m_InputSize, m_InputH, m_InputW,
 			m_InputBlobName, m_NetworkType);
 		if ("yolov5" == m_NetworkType)
-		{
 			create_engine_yolov5(nvinfer1::DataType::kINT8, &calibrator);
-		}
 		else
-		{
 			createYOLOEngine(nvinfer1::DataType::kINT8, &calibrator);
-		}
 	}
 	else if (m_Precision == "kHALF")
 	{
 		if ("yolov5" == m_NetworkType)
-		{
 			create_engine_yolov5(nvinfer1::DataType::kHALF, nullptr);
-		}
 		else
-		{
 			createYOLOEngine(nvinfer1::DataType::kHALF, nullptr);
-		}
 	}
 	else
 	{
@@ -123,14 +107,6 @@ Yolo::~Yolo()
         m_Engine->destroy();
         m_Engine = nullptr;
     }
-
-   /* if (m_PluginFactory)
-    {
-        m_PluginFactory->destroy();
-        m_PluginFactory = nullptr;
-    }*/
-
-//    m_TinyMaxpoolPaddingFormula.reset();
 }
 
 std::vector<int> split_layer_index(const std::string &s_,const std::string &delimiter_)
@@ -192,13 +168,6 @@ void Yolo::createYOLOEngine(const nvinfer1::DataType dataType, Int8EntropyCalibr
     nvinfer1::ITensor* previous = elementDivide->getOutput(0);
     std::vector<nvinfer1::ITensor*> tensorOutputs;
     uint32_t outputTensorCount = 0;
-
-	if (/*"yolov3" == m_NetworkType || */"yolov3-tiny" == m_NetworkType)
-	{
-		// Set the output dimensions formula for pooling layers
-	//	assert(m_TinyMaxpoolPaddingFormula && "Tiny maxpool padding formula not created");
-	//	m_Network->setPoolingOutputDimensionsFormula(m_TinyMaxpoolPaddingFormula.get());
-	}
 
     // build the network using the network API
     for (uint32_t i = 0; i < m_configBlocks.size(); ++i)
@@ -319,9 +288,7 @@ void Yolo::createYOLOEngine(const nvinfer1::DataType dataType, Int8EntropyCalibr
 				for (auto &ind_layer:vec_index)
 				{
 					if (ind_layer < 0)
-					{
 						ind_layer = static_cast<int>(tensorOutputs.size()) + ind_layer;
-					}
 					assert(ind_layer < static_cast<int>(tensorOutputs.size()) && ind_layer >= 0);
 				}
                 nvinfer1::ITensor** concatInputs
@@ -354,9 +321,7 @@ void Yolo::createYOLOEngine(const nvinfer1::DataType dataType, Int8EntropyCalibr
             {
                 int idx = std::stoi(trim(m_configBlocks.at(i).at("layers")));
                 if (idx < 0)
-                {
                     idx = static_cast<int>(tensorOutputs.size()) + idx;
-                }
                 assert(idx < static_cast<int>(tensorOutputs.size()) && idx >= 0);
 
 				//route
@@ -369,15 +334,12 @@ void Yolo::createYOLOEngine(const nvinfer1::DataType dataType, Int8EntropyCalibr
 					channels = getNumChannels(tensorOutputs[idx]);
 					tensorOutputs.push_back(tensorOutputs[idx]);
 					printLayerInfo(layerIndex, "route", "        -", outputVol, std::to_string(weightPtr));
-
 				}
 				//yolov4-tiny route split layer
 				else
 				{
 					if (m_configBlocks.at(i).find("group_id") == m_configBlocks.at(i).end())
-					{
 						assert(0);
-					}
 					int chunk_idx = std::stoi(trim(m_configBlocks.at(i).at("group_id")));
 					nvinfer1::ILayer* out = layer_split(i, tensorOutputs[idx], m_Network);
 					std::string inputVol = dimsToString(previous->getDimensions());
@@ -402,11 +364,6 @@ void Yolo::createYOLOEngine(const nvinfer1::DataType dataType, Int8EntropyCalibr
         }
         else if (m_configBlocks.at(i).at("type") == "maxpool")
         {
-            // Add same padding layers
-            if (m_configBlocks.at(i).at("size") == "2" && m_configBlocks.at(i).at("stride") == "1")
-            {
-              //  m_TinyMaxpoolPaddingFormula->addSamePaddingLayer("maxpool_" + std::to_string(i));
-            }
             std::string inputVol = dimsToString(previous->getDimensions());
             nvinfer1::ILayer* out = netAddMaxpool(i, m_configBlocks.at(i), previous, m_Network);
             previous = out->getOutput(0);
@@ -990,6 +947,7 @@ void Yolo::load_weights_v5(const std::string s_weights_path_,
 	}
 	std::cout << "Loading complete!" << std::endl;
 }
+
 void Yolo::doInference(const unsigned char* input, const uint32_t batchSize)
 {
 	//Timer timer;
@@ -1045,14 +1003,14 @@ std::vector<std::map<std::string, std::string>> Yolo::parseConfigFile(const std:
             }
             std::string key = "type";
             std::string value = trim(line.substr(1, line.size() - 2));
-            block.insert(std::pair<std::string, std::string>(key, value));
+            block.emplace(key, value);
         }
         else
         {
             size_t cpos = line.find('=');
             std::string key = trim(line.substr(0, cpos));
             std::string value = trim(line.substr(cpos + 1));
-            block.insert(std::pair<std::string, std::string>(key, value));
+            block.emplace(key, value);
         }
     }
     blocks.push_back(block);
@@ -1272,11 +1230,11 @@ void Yolo::parse_cfg_blocks_v5(const  std::vector<std::map<std::string, std::str
 					}
 				}
 			}
-			
 		}
 	}
 	std::cout << "Config Done!" << std::endl;
 }
+
 void Yolo::allocateBuffers()
 {
     m_DeviceBuffers.resize(m_Engine->getNbBindings(), nullptr);
@@ -1304,8 +1262,10 @@ bool Yolo::verifyYoloEngine()
     {
         assert(!strcmp(m_Engine->getBindingName(tensor.bindingIndex), tensor.blobName.c_str())
                && "Blobs names dont match between cfg and engine file \n");
-        assert(get3DTensorVolume(m_Engine->getBindingDimensions(tensor.bindingIndex))
-                   == tensor.volume
+        auto volSize = get3DTensorVolume(m_Engine->getBindingDimensions(tensor.bindingIndex));
+        if (volSize != tensor.volume)
+            std::cerr << "get3DTensorVolume[" << tensor.bindingIndex << "]: " << volSize << " != " << tensor.volume << std::endl;
+        assert(volSize == tensor.volume
                && "Tensor volumes dont match between cfg and engine file \n");
     }
 

@@ -91,6 +91,7 @@ bool YoloTensorRTDetector::Init(const config_t& config)
 		std::map<std::string, tensor_rt::ModelType> dictNetType;
 		dictNetType["YOLOV3"] = tensor_rt::YOLOV3;
 		dictNetType["YOLOV4"] = tensor_rt::YOLOV4;
+		dictNetType["YOLOV4_TINY"] = tensor_rt::YOLOV4_TINY;
         dictNetType["YOLOV5"] = tensor_rt::YOLOV5;
 
 		auto netType = dictNetType.find(net_type->second);
