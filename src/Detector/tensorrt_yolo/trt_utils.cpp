@@ -42,8 +42,18 @@ REGISTER_TENSORRT_PLUGIN(ChunkPluginCreator);
 REGISTER_TENSORRT_PLUGIN(HardswishPluginCreator);
 REGISTER_TENSORRT_PLUGIN(YoloLayerPluginCreator);
 
-void blobFromDsImages(const std::vector<DsImage>& inputImages, cv::Mat& blob,  const int& inputH, const int& inputW)
+void blobFromDsImages(const std::vector<DsImage>& inputImages, cv::Mat& blob, const int& inputH, const int& inputW)
 {
+#if 0
+    std::vector<cv::Mat> letterboxStack;
+    letterboxStack.reserve(inputImages.size());
+    for (uint32_t i = 0; i < inputImages.size(); ++i)
+    {
+		letterboxStack.emplace_back(inputImages[i].getLetterBoxedImage());
+    }
+    blob = cv::dnn::blobFromImages(letterboxStack, 1.0, cv::Size(inputW, inputH), cv::Scalar(0.0, 0.0, 0.0), true);
+
+#else
     cv::Size size(inputW, inputH);
     constexpr bool swapRB = true;
     constexpr int ddepth = CV_32F;
@@ -88,6 +98,7 @@ void blobFromDsImages(const std::vector<DsImage>& inputImages, cv::Mat& blob,  c
             }
         }
     }
+#endif
 }
 
 static void leftTrim(std::string& s)

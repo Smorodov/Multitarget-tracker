@@ -20,9 +20,9 @@ public:
     void Update(const regions_t& regions, cv::UMat currFrame, float fps) override;
 
     bool CanGrayFrameToTrack() const override;
-	bool CanColorFrameToTrack() const override;
+    bool CanColorFrameToTrack() const override;
     size_t GetTracksCount() const override;
-	void GetTracks(std::vector<TrackingObject>& tracks) const override;
+    void GetTracks(std::vector<TrackingObject>& tracks) const override;
     void GetRemovedTracks(std::vector<track_id_t>& trackIDs) const override;
 
 private:
@@ -67,27 +67,27 @@ CTracker::CTracker(const TrackerSettings& settings)
     }
     assert(m_SPCalculator);
 
-	for (const auto& embParam : settings.m_embeddings)
-	{
-		std::shared_ptr<EmbeddingsCalculator> embCalc = std::make_shared<EmbeddingsCalculator>();
-		if (!embCalc->Initialize(embParam.m_embeddingCfgName, embParam.m_embeddingWeightsName, embParam.m_inputLayer))
-		{
-			std::cerr << "EmbeddingsCalculator initialization error: " << embParam.m_embeddingCfgName << ", " << embParam.m_embeddingWeightsName << std::endl;
-		}
-		else
-		{
-			for (auto objType : embParam.m_objectTypes)
-			{
-				m_embCalculators.try_emplace((objtype_t)objType, embCalc);
-			}
-		}
-	}
+    for (const auto& embParam : settings.m_embeddings)
+    {
+        std::shared_ptr<EmbeddingsCalculator> embCalc = std::make_shared<EmbeddingsCalculator>();
+        if (!embCalc->Initialize(embParam.m_embeddingCfgName, embParam.m_embeddingWeightsName, embParam.m_inputLayer))
+        {
+            std::cerr << "EmbeddingsCalculator initialization error: " << embParam.m_embeddingCfgName << ", " << embParam.m_embeddingWeightsName << std::endl;
+        }
+        else
+        {
+            for (auto objType : embParam.m_objectTypes)
+            {
+                m_embCalculators.try_emplace((objtype_t)objType, embCalc);
+            }
+        }
+    }
 }
 
 ///
-    /// \brief CanGrayFrameToTrack
-    /// \return
-    ///
+/// \brief CanGrayFrameToTrack
+/// \return
+///
 bool CTracker::CanGrayFrameToTrack() const
 {
     bool needColor = (m_settings.m_lostTrackType == tracking::LostTrackType::TrackGOTURN) ||
@@ -302,17 +302,17 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
         for (size_t i = 0; i < m_tracks.size();)
         {
             if (m_tracks[i]->SkippedFrames() > m_settings.m_maximumAllowedSkippedFrames ||
-				m_tracks[i]->IsOutOfTheFrame() ||
+                    m_tracks[i]->IsOutOfTheFrame() ||
                     m_tracks[i]->IsStaticTimeout(cvRound(fps * (m_settings.m_maxStaticTime - m_settings.m_minStaticTime))))
             {
                 m_removedObjects.push_back(m_tracks[i]->GetID());
                 m_tracks.erase(m_tracks.begin() + i);
                 assignment.erase(assignment.begin() + i);
             }
-			else
-			{
-				++i;
-			}
+            else
+            {
+                ++i;
+            }
         }
     }
 
@@ -353,7 +353,7 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
         if (assignment[i] != -1) // If we have assigned detect, then update using its coordinates,
         {
             m_tracks[i]->SkippedFrames() = 0;
-            //std::cout << "Update track " << i << " for " << assignment[i] << " region, regionEmbeddings.size = " << regionEmbeddings.size() << std::endl;
+            // std::cout << "Update track " << i << " for " << assignment[i] << " region, regionEmbeddings.size = " << regionEmbeddings.size() << std::endl;
             if (regionEmbeddings.empty())
                 m_tracks[i]->Update(regions[assignment[i]],
                         true, m_settings.m_maxTraceLength,
@@ -372,6 +372,7 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
     }
 
 #if DRAW_DBG_ASSIGNMENT
+    cv::namedWindow("dbgAssignment", cv::WINDOW_NORMAL);
     cv::imshow("dbgAssignment", dbgAssignment);
     //cv::waitKey(1);
 #endif
@@ -394,9 +395,9 @@ void CTracker::CreateDistaceMatrix(const regions_t& regions,
     const size_t N = m_tracks.size();	// Tracking objects
     maxCost = 0;
 
-	for (size_t i = 0; i < N; ++i)
-	{
-		const auto& track = m_tracks[i];
+    for (size_t i = 0; i < N; ++i)
+    {
+        const auto& track = m_tracks[i];
 
         // call kalman prediction fist
 		if (track->GetFilterObjectSize())
@@ -404,37 +405,44 @@ void CTracker::CreateDistaceMatrix(const regions_t& regions,
 		else
 			track->KalmanPredictPoint();
 
-		// Calc distance between track and regions
-		for (size_t j = 0; j < regions.size(); ++j)
-		{
-			const auto& reg = regions[j];
+        constexpr bool DIST_LOGS = false;
 
-			auto dist = maxPossibleCost;
-			if (m_settings.CheckType(m_tracks[i]->LastRegion().m_type, reg.m_type))
-			{
-				dist = 0;
-				size_t ind = 0;
+        // Calc distance between track and regions
+        for (size_t j = 0; j < regions.size(); ++j)
+        {
+            const auto& reg = regions[j];
 
-				// Euclidean distance between centers
-				if (m_settings.m_distType[ind] > 0.0f && ind == tracking::DistCenters)
-				{
+            auto dist = maxPossibleCost;
+            if (m_settings.CheckType(m_tracks[i]->LastRegion().m_type, reg.m_type))
+            {
+                dist = 0;
+                size_t ind = 0;
+                // Euclidean distance between centers
+                if (m_settings.m_distType[ind] > 0.0f && ind == tracking::DistCenters)
+                {
 #if 1
-					track_t ellipseDist = GetEllipseDist(*track, reg);
+                    track_t ellipseDist = GetEllipseDist(*track, reg);
                     if (ellipseDist > 1)
                         dist += m_settings.m_distType[ind];
                     else
                         dist += ellipseDist * m_settings.m_distType[ind];
 #else
-					dist += m_settings.m_distType[ind] * track->CalcDistCenter(reg);
+                    dist += m_settings.m_distType[ind] * track->CalcDistCenter(reg);
 #endif
+                    if constexpr (DIST_LOGS)
+                    {
+                        std::cout << "DistCenters : " << m_settings.m_distType[ind] << ", dist = " << dist << "\n";
+                        //std::cout << "dist = " << dist << ", ed = " << ellipseDist << ", reg.m_rrect.center = " << reg.m_rrect.center << ", predictedArea: center = " << predictedArea.center << ", size = " << predictedArea.size << ", angle = " << predictedArea.angle << "\n";
+                        std::cout << "track id = " << m_tracks[i]->GetID().ID2Str() << " type = " << TypeConverter::Type2Str(m_tracks[i]->LastRegion().m_type) << " (" << m_tracks[i]->LastRegion().m_type << "), region id = " << j << ", type = " << TypeConverter::Type2Str(reg.m_type) << " (" << reg.m_type << ")" << std::endl;
+                    }
 				}
-				++ind;
+                ++ind;
 
-				// Euclidean distance between bounding rectangles
-				if (m_settings.m_distType[ind] > 0.0f && ind == tracking::DistRects)
-				{
+                // Euclidean distance between bounding rectangles
+                if (m_settings.m_distType[ind] > 0.0f && ind == tracking::DistRects)
+                {
 #if 1
-					track_t ellipseDist = GetEllipseDist(*track, reg);
+                    track_t ellipseDist = GetEllipseDist(*track, reg);
 					if (ellipseDist < 1)
 					{
 						track_t dw = track->WidthDist(reg);
@@ -445,7 +453,16 @@ void CTracker::CreateDistaceMatrix(const regions_t& regions,
 					{
 						dist += m_settings.m_distType[ind];
 					}
-					//std::cout << "dist = " << dist << ", ed = " << ellipseDist << ", dw = " << dw << ", dh = " << dh << std::endl;
+
+                    if constexpr (DIST_LOGS)
+                    {
+                        std::cout << "DistRects : " << m_settings.m_distType[ind] << ", dist = " << dist << "\n";
+                        track_t dw = track->WidthDist(reg);
+                        track_t dh = track->HeightDist(reg);
+                        std::cout << "dist = " << dist << ", ed = " << ellipseDist << ", dw = " << dw << ", dh = " << dh << "\n";
+                        std::cout << "track type = " << TypeConverter::Type2Str(m_tracks[i]->LastRegion().m_type) << " (" << m_tracks[i]->LastRegion().m_type << "), region type = " << TypeConverter::Type2Str(reg.m_type) << " (" << reg.m_type << ")\n";
+                        std::cout << "track = " << m_tracks[i]->LastRegion().m_brect << ", reg = " << reg.m_brect << std::endl;
+                    }
 #else
 					dist += m_settings.m_distType[ind] * track->CalcDistRect(reg);
 #endif
@@ -454,13 +471,23 @@ void CTracker::CreateDistaceMatrix(const regions_t& regions,
 
 				// Intersection over Union, IoU
 				if (m_settings.m_distType[ind] > 0.0f && ind == tracking::DistJaccard)
+                {
 					dist += m_settings.m_distType[ind] * track->CalcDistJaccard(reg);
+                    if constexpr (DIST_LOGS)
+                    {
+                        std::cout << "DistJaccard : " << m_settings.m_distType[ind] << ", dist = " << dist << std::endl;
+                    }
+                }
 				++ind;
 
 				// Bhatacharia distance between histograms
 				if (m_settings.m_distType[ind] > 0.0f && ind == tracking::DistHist)
                 {
                     dist += m_settings.m_distType[ind] * track->CalcDistHist(regionEmbeddings[j]);
+                    if constexpr (DIST_LOGS)
+                    {
+                        std::cout << "DistHist : " << m_settings.m_distType[ind] << ", dist = " << dist << std::endl;
+                    }
                 }
 				++ind;
 
@@ -480,6 +507,10 @@ void CTracker::CreateDistaceMatrix(const regions_t& regions,
                             dist /= m_settings.m_distType[ind];
                             //std::cout << "CalcCosine: " << TypeConverter::Type2Str(track->LastRegion().m_type) << ", reg = " << reg.m_brect << ", track = " << track->LastRegion().m_brect << ": res = 1, weight = " << m_settings.m_distType[ind] << ", dist = " << dist << std::endl;
                         }
+                    }
+                    if constexpr (DIST_LOGS)
+                    {
+                        std::cout << "DistFeatureCos : " << m_settings.m_distType[ind] << ", dist = " << dist << std::endl;
                     }
                 }
 				++ind;
@@ -541,18 +572,18 @@ void CTracker::CalcEmbeddins(std::vector<RegionEmbedding>& regionEmbeddings, con
             {
                 if (regionEmbeddings[j].m_embedding.empty())
                 {
-                    //std::cout << "Search embCalc for " << TypeConverter::Type2Str(regions[j].m_type) << ": ";
+                    // std::cout << "Search embCalc for " << TypeConverter::Type2Str(regions[j].m_type) << ": ";
                     auto embCalc = m_embCalculators.find(regions[j].m_type);
                     if (embCalc != std::end(m_embCalculators))
                     {
                         embCalc->second->Calc(currFrame, regions[j].m_brect, regionEmbeddings[j].m_embedding);
                         regionEmbeddings[j].m_embDot = regionEmbeddings[j].m_embedding.dot(regionEmbeddings[j].m_embedding);
 
-                        //std::cout << "Founded! m_embedding = " << regionEmbeddings[j].m_embedding.size() << ", m_embDot = " << regionEmbeddings[j].m_embDot << std::endl;
+                        // std::cout << "Founded! m_embedding = " << regionEmbeddings[j].m_embedding.size() << ", m_embDot = " << regionEmbeddings[j].m_embDot << std::endl;
                     }
                     else
                     {
-                        //std::cout << "Not found" << std::endl;
+                        // std::cout << "Not found" << std::endl;
                     }
                 }
             }

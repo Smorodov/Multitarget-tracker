@@ -21,15 +21,14 @@ namespace nvinfer1
 	class Chunk : public IPluginV2
 	{
 	public:
-		Chunk();
+        Chunk() = default;
 		Chunk(const void* buffer, size_t length);
-		~Chunk();
+		~Chunk() = default;
 		int getNbOutputs()const noexcept override;
 		Dims getOutputDimensions(int index, const Dims* inputs, int nbInputDims)noexcept  override;
 		int initialize()noexcept  override;
 		void terminate()noexcept  override;
 		size_t getWorkspaceSize(int maxBatchSize) const noexcept  override;
-	//	int enqueue(int batchSize, const void* const* inputs, void** outputs, void* workspace, cudaStream_t stream)noexcept override;
 
 		int enqueue(int batchSize, const void* const* inputs, void* const* outputs, void* workspace, cudaStream_t stream) noexcept;
         int enqueue(int batchSize, const void* const* inputs, void** outputs, void* workspace, cudaStream_t stream) noexcept;
@@ -58,7 +57,7 @@ namespace nvinfer1
 
 	private:
 		std::string _s_plugin_namespace;
-		int _n_size_split;
+		int _n_size_split = 0;
 	};
 
 	class ChunkPluginCreator : public IPluginCreator

@@ -1,6 +1,6 @@
 
 #ifndef _HARDSWISH_H_
-#define _HARDSWISH_H_ 
+#define _HARDSWISH_H_
 
 #include <string>
 #include <vector>

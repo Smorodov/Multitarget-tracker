@@ -116,7 +116,7 @@ private:
 		{
 			_p_net = std::unique_ptr<Yolo>{ new YoloV3(_yolo_info, _infer_param) };
 		}
-		else if (_config.net_type == tensor_rt::YOLOV4)
+		else if (_config.net_type == tensor_rt::YOLOV4 || _config.net_type == tensor_rt::YOLOV4_TINY)
 		{
 			_p_net = std::unique_ptr<Yolo>{ new YoloV4(_yolo_info,_infer_param) };
 		}
@@ -134,7 +134,7 @@ private:
 	tensor_rt::Config _config;
 	NetworkInfo _yolo_info;
 	InferParams _infer_param;
-	std::vector<std::string> _vec_net_type{ "yolov3", "yolov4", "yolov5" };
+	std::vector<std::string> _vec_net_type{ "yolov3", "yolov4", "yolov4-tiny", "yolov5" };
 	std::vector<std::string> _vec_precision{ "kINT8","kHALF","kFLOAT" };
 	std::unique_ptr<Yolo> _p_net = nullptr;
 	Timer _m_timer;

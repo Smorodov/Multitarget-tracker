@@ -27,7 +27,6 @@ SOFTWARE.
 #define _YOLO_H_
 
 #include "calibrator.h"
-//#include "plugin_factory.h"
 #include "trt_utils.h"
 
 #include "NvInfer.h"
@@ -159,8 +158,6 @@ protected:
     std::vector<void*> m_DeviceBuffers;
     int m_InputBindingIndex;
     cudaStream_t m_CudaStream;
-    //PluginFactory* m_PluginFactory;
-   // std::unique_ptr<YoloTinyMaxpoolPaddingFormula> m_TinyMaxpoolPaddingFormula;
 
     virtual std::vector<BBoxInfo> decodeTensor(const int imageIdx, const int imageH,
                                                const int imageW, const TensorInfo& tensor)

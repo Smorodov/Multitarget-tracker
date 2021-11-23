@@ -61,7 +61,7 @@ Int8EntropyCalibrator::Int8EntropyCalibrator(const uint32_t& batchSize, const st
 
 Int8EntropyCalibrator::~Int8EntropyCalibrator() { NV_CUDA_CHECK(cudaFree(m_DeviceInput)); }
 
-bool Int8EntropyCalibrator::getBatch(void* bindings[], const char* names[], int nbBindings)noexcept
+bool Int8EntropyCalibrator::getBatch(void* bindings[], const char* names[], int /*nbBindings*/) noexcept
 {
     if (m_ImageIndex + m_BatchSize >= m_ImageList.size()) return false;
 

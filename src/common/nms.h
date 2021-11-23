@@ -142,15 +142,15 @@ inline void nms2(const std::vector<cv::Rect>& srcRects,
  * @param thresh
  * @param neighbors
  */
-template<typename OBJ, typename GET_RECT_FUNC, typename GET_SCORE_FUNC, typename GET_TYPE_FUNC>
+template<typename OBJ, typename GET_RECT_FUNC, typename GET_SCORE_FUNC, typename GET_TYPE_FUNC, typename T>
 inline void nms3(const std::vector<OBJ>& srcRects,
                  std::vector<OBJ>& resRects,
-                 float thresh,
+                 T thresh,
                  GET_RECT_FUNC GetRect,
                  GET_SCORE_FUNC GetScore,
                  GET_TYPE_FUNC GetType,
                  int neighbors = 0,
-                 float minScoresSum = 0.f)
+                 T minScoresSum = 0)
 {
     resRects.clear();
 
@@ -159,7 +159,7 @@ inline void nms3(const std::vector<OBJ>& srcRects,
         return;
 
     // Sort the bounding boxes by the detection score
-    std::multimap<float, size_t> idxs;
+    std::multimap<T, size_t> idxs;
     for (size_t i = 0; i < size; ++i)
     {
         idxs.emplace(GetScore(srcRects[i]), i);
@@ -175,7 +175,7 @@ inline void nms3(const std::vector<OBJ>& srcRects,
         auto type1 = GetType(srcRects[lastPos]);
 
         int neigborsCount = 0;
-        float scoresSum = lastElem->first;
+        T scoresSum = lastElem->first;
 
         idxs.erase(lastElem);
 
