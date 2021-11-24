@@ -3,6 +3,8 @@
 
 # Last changes
 
+* TensorRT 8 for YOLO detectors
+
 * Re-identification embeddings for persons and vehicles from OpenVINO correctly works!
 
 # New videos!
