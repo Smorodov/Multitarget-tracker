@@ -221,7 +221,7 @@ else(CMAKE_COMPILER_IS_GNUCXX)
     target_include_directories(${PROJECT_NAME} PRIVATE ${OpenCV_INCLUDE_DIRS})
 endif()
 
-target_link_libraries(${PROJECT_NAME} ${LIBS})
+target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBS})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${tracker_headers};../common/defines.h;../common/object_types.h")
 install(TARGETS ${PROJECT_NAME}

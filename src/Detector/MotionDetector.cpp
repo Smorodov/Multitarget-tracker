@@ -81,7 +81,7 @@ void MotionDetector::Detect(const cv::UMat& gray)
     if (!m_ignoreMask.empty())
         cv::bitwise_and(m_fg, m_ignoreMask, m_fg);
 
-	DetectContour();
+    DetectContour();
 }
 
 ///
