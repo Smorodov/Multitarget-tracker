@@ -32,6 +32,7 @@ set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -gencode arch=compute_52,code=sm_52")
 set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -gencode arch=compute_50,code=sm_50")
 set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -gencode arch=compute_35,code=sm_35")
 set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -gencode arch=compute_30,code=sm_30")
+set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -gencode arch=compute_72,code=sm_72")
 set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -gencode arch=compute_75,code=sm_75")
 set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -gencode arch=compute_75,code=compute_75")
 
@@ -45,7 +46,7 @@ include_directories(${CUDNN_INCLUDE_DIR})
 include_directories(${TensorRT_INCLUDE_DIRS})
 
 file(GLOB TENSORRT_SOURCE_FILES *.cpp)
-file(GLOB TENSORRT_HEADER_FILES *.h)
+file(GLOB TENSORRT_HEADER_FILES *.h*)
 
 file(GLOB TENSORRT_CUDA_FILES *.cu)
 

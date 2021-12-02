@@ -90,7 +90,7 @@ std::unique_ptr<BaseDetector> BaseDetector::CreateDetector(tracking::Detectors d
 
     if (!detector->Init(config))
         detector.reset();
-    return std::move(detector);
+    return detector;
 }
 
 ///
