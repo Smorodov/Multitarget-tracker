@@ -846,7 +846,7 @@ protected:
                 TinyYOLOv4,
                 YOLOv5
             };
-            YOLOModels usedModel = YOLOModels::TinyYOLOv4;
+            YOLOModels usedModel = YOLOModels::YOLOv4;
             switch (usedModel)
             {
             case YOLOModels::TinyYOLOv3:
@@ -872,7 +872,7 @@ protected:
             case YOLOModels::YOLOv4:
                 config.emplace("modelConfiguration", pathToModel + "yolov4.cfg");
                 config.emplace("modelBinary", pathToModel + "yolov4.weights");
-                config.emplace("confidenceThreshold", "0.8");
+                config.emplace("confidenceThreshold", "0.4");
                 config.emplace("inference_precison", "FP32");
                 config.emplace("net_type", "YOLOV4");
                 maxBatch = 1;
