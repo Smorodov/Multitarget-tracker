@@ -235,15 +235,18 @@ void VideoExample::AsyncProcess()
 			else
 				break;
 #else
-			std::this_thread::sleep_for(std::chrono::milliseconds(1));
+			//std::this_thread::sleep_for(std::chrono::milliseconds(1));
 #endif
 		}
 
+        {
+            std::unique_lock<std::mutex> lock(frameInfo.m_mutex);
 #if SHOW_ASYNC_LOGS
-        std::cout << "--- tracking m_captured " << (processCounter % 2) << " - captured still " << frameInfo.m_captured.load() << std::endl;
+            std::cout << "--- tracking m_captured " << (processCounter % 2) << " - captured still " << frameInfo.m_captured.load() << std::endl;
 #endif
-        assert(frameInfo.m_captured.load());
-        frameInfo.m_captured = false;
+            assert(frameInfo.m_captured.load());
+            frameInfo.m_captured = false;
+        }
         frameInfo.m_cond.notify_one();
 
         if (key == 27)
@@ -354,11 +357,14 @@ void VideoExample::CaptureAndDetect(VideoExample* thisPtr, std::atomic<bool>& st
         int64 t2 = cv::getTickCount();
         frameInfo.m_dt = t2 - t1;
 
+        {
+            std::unique_lock<std::mutex> lock(frameInfo.m_mutex);
 #if SHOW_ASYNC_LOGS
-        std::cout << "+++ capture m_captured " << (processCounter % 2) << " - captured still " << frameInfo.m_captured.load() << std::endl;
+            std::cout << "+++ capture m_captured " << (processCounter % 2) << " - captured still " << frameInfo.m_captured.load() << std::endl;
 #endif
-        assert(!frameInfo.m_captured.load());
-        frameInfo.m_captured = true;
+            assert(!frameInfo.m_captured.load());
+            frameInfo.m_captured = true;
+        }
         frameInfo.m_cond.notify_one();
 
 		++processCounter;
