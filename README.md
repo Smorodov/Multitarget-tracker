@@ -3,7 +3,7 @@
 
 # Last changes
 
-* Re-identification embeddings for persons and vehicles from OpenVINO correctly works!
+* Robust tracking a small and fast objects with background subtraction algorithm
 
 * TensorRT 8 for YOLO detectors
 
