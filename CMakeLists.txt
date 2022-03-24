@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.9)
 
-project(MTTracking VERSION 1.0.1)
+project(MTTracking VERSION 1.0.2)
 
 unset(CMAKE_C_FLAGS CACHE)
 unset(CMAKE_CXX_FLAGS CACHE)

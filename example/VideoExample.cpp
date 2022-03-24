@@ -507,7 +507,36 @@ void VideoExample::DrawTrack(cv::Mat frame,
         }
     }
 
-	cv::Rect brect = track.m_rrect.boundingRect();
+    cv::Rect brect = track.m_rrect.boundingRect();
+    std::string label = track.m_ID.ID2Str();
+    if (track.m_type != bad_type)
+        label += " (" + TypeConverter::Type2Str(track.m_type) + ")";
+    int baseLine = 0;
+    double fontScale = 0.5;
+    cv::Size labelSize = cv::getTextSize(label, cv::FONT_HERSHEY_SIMPLEX, fontScale, 1, &baseLine);
+    if (brect.x < 0)
+    {
+        brect.width = std::min(brect.width, frame.cols - 1);
+        brect.x = 0;
+    }
+    else if (brect.x + brect.width >= frame.cols)
+    {
+        brect.x = std::max(0, frame.cols - brect.width - 1);
+        brect.width = std::min(brect.width, frame.cols - 1);
+    }
+    if (brect.y - labelSize.height < 0)
+    {
+        brect.height = std::min(brect.height, frame.rows - 1);
+        brect.y = labelSize.height;
+    }
+    else if (brect.y + brect.height >= frame.rows)
+    {
+        brect.y = std::max(0, frame.rows - brect.height - 1);
+        brect.height = std::min(brect.height, frame.rows - 1);
+    }
+    cv::rectangle(frame, cv::Rect(cv::Point(brect.x, brect.y - labelSize.height), cv::Size(labelSize.width, labelSize.height + baseLine)), cv::Scalar(200, 200, 200), cv::FILLED);
+    cv::putText(frame, label, brect.tl(), cv::FONT_HERSHEY_SIMPLEX, fontScale, cv::Scalar(0, 0, 0));
+
 	m_resultsLog.AddTrack(framesCounter, track.m_ID, brect, track.m_type, track.m_confidence);
 	m_resultsLog.AddRobustTrack(track.m_ID);
 }

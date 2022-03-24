@@ -886,11 +886,11 @@ void CTrack::RectUpdate(const CRegion& region,
     m_predictionRect.center.x += dx;
     m_predictionRect.center.y += dy;
 #endif
-    m_outOfTheFrame = (dx != 0) || (dy != 0) || (brect.width < 2) || (brect.height < 2);
+    m_outOfTheFrame = (dx != 0) || (dy != 0) || (brect.width < 1) || (brect.height < 1);
 
     m_predictionPoint = m_predictionRect.center;
 
-	//std::cout << "brect = " << brect << ", dx = " << dx << ", dy = " << dy << ", outOfTheFrame = " << m_outOfTheFrame << ", predictionPoint = " << m_predictionPoint << std::endl;
+    //std::cout << GetID().ID2Str() << ": brect = " << brect << ", dx = " << dx << ", dy = " << dy << ", outOfTheFrame = " << m_outOfTheFrame << ", predictionPoint = " << m_predictionPoint << std::endl;
 }
 
 ///
@@ -1128,7 +1128,7 @@ void CTrack::PointUpdate(const Point_t& pt,
         return false;
     };
 	auto p = m_predictionPoint;
-    m_outOfTheFrame = Clamp(p.x, frameSize.width) || Clamp(p.y, frameSize.height) || (m_predictionRect.size.width < 2) || (m_predictionRect.size.height < 2);
+    m_outOfTheFrame = Clamp(p.x, frameSize.width) || Clamp(p.y, frameSize.height) || (m_predictionRect.size.width < 1) || (m_predictionRect.size.height < 1);
 
-	//std::cout << "predictionRect = " << m_predictionRect.boundingRect() << ", outOfTheFrame = " << m_outOfTheFrame << ", predictionPoint = " << m_predictionPoint << std::endl;
+    //std::cout << GetID().ID2Str() << ": predictionRect = " << m_predictionRect.boundingRect() << ", outOfTheFrame = " << m_outOfTheFrame << ", predictionPoint = " << m_predictionPoint << std::endl;
 }

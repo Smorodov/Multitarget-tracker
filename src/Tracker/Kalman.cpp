@@ -612,7 +612,7 @@ Point_t TKalmanFilter::Update(Point_t pt, bool dataCorrect)
                 m_lastPointResult = pt;
             }
         }
-        if (m_initialPoints.size() == MIN_INIT_VALS)
+        if (m_initialPoints.size() >= MIN_INIT_VALS)
         {
             track_t kx = 0;
             track_t bx = 0;

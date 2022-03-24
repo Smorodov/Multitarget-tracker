@@ -306,6 +306,7 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
                     m_tracks[i]->IsStaticTimeout(cvRound(fps * (m_settings.m_maxStaticTime - m_settings.m_minStaticTime))))
             {
                 m_removedObjects.push_back(m_tracks[i]->GetID());
+                //std::cout << "Remove: " << m_tracks[i]->GetID().ID2Str() << ": skipped = " << m_tracks[i]->SkippedFrames() << ", out of frame " << m_tracks[i]->IsOutOfTheFrame() << std::endl;
                 m_tracks.erase(m_tracks.begin() + i);
                 assignment.erase(assignment.begin() + i);
             }

@@ -3,13 +3,13 @@
 
 # Last changes
 
-* TensorRT 8 for YOLO detectors
+* Robust tracking a small and fast objects with background subtraction algorithm
 
-* Re-identification embeddings for persons and vehicles from OpenVINO correctly works!
+* TensorRT 8 for YOLO detectors
 
 # New videos!
 
-* Vehicles speed calculation with YOLO v4 (Thanks [Sam Blake for great idea!](https://medium.com/hal24k-techblog/how-to-track-objects-in-the-real-world-with-tensorflow-sort-and-opencv-a64d9564ccb1))
+* Vehicles speed calculation with YOLO v4
 
 [![Vehicles speed:](https://img.youtube.com/vi/qOHYvDwpsO0/0.jpg)](https://youtu.be/qOHYvDwpsO0)
 
