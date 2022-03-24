@@ -54,12 +54,12 @@ protected:
     ///
     bool InitDetector(cv::UMat frame)
     {
-        m_minObjWidth = frame.cols / 20;
+        m_minObjWidth = 0;//frame.cols / 20;
 
         config_t config;
 		config.emplace("useRotatedRect", "0");
 
-		tracking::Detectors detectorType = tracking::Detectors::Motion_VIBE;
+        tracking::Detectors detectorType = tracking::Detectors::Motion_MOG;
 
 		switch (detectorType)
 		{
@@ -71,7 +71,7 @@ protected:
 			config.emplace("updateFactor", "16");
 			break;
 		case tracking::Detectors::Motion_MOG:
-			config.emplace("history", std::to_string(cvRound(50 * m_minStaticTime * m_fps)));
+            config.emplace("history", std::to_string(cvRound(50 * m_fps)));
 			config.emplace("nmixtures", "3");
 			config.emplace("backgroundRatio", "0.7");
 			config.emplace("noiseSigma", "0");
@@ -114,23 +114,23 @@ protected:
     {
 		if (!m_trackerSettingsLoaded)
 		{
-			m_trackerSettings.SetDistance(tracking::DistRects);
+            m_trackerSettings.SetDistance(tracking::DistRects);
 			m_trackerSettings.m_kalmanType = tracking::KalmanLinear;
 			m_trackerSettings.m_filterGoal = tracking::FilterCenter;
-			m_trackerSettings.m_lostTrackType = tracking::TrackCSRT; // Use visual objects tracker for collisions resolving. Used if m_filterGoal == tracking::FilterRect
+            m_trackerSettings.m_lostTrackType = tracking::TrackNone; // Use visual objects tracker for collisions resolving. Used if m_filterGoal == tracking::FilterRect
 			m_trackerSettings.m_matchType = tracking::MatchHungrian;
 			m_trackerSettings.m_useAcceleration = false;             // Use constant acceleration motion model
-			m_trackerSettings.m_dt = m_trackerSettings.m_useAcceleration ? 0.05f : 0.2f; // Delta time for Kalman filter
-			m_trackerSettings.m_accelNoiseMag = 0.2f;                // Accel noise magnitude for Kalman filter
-			m_trackerSettings.m_distThres = 0.95f;                   // Distance threshold between region and object on two frames
-#if 0
-			m_trackerSettings.m_minAreaRadiusPix = frame.rows / 20.f;
+            m_trackerSettings.m_dt = m_trackerSettings.m_useAcceleration ? 0.05f : 0.5f; // Delta time for Kalman filter
+            m_trackerSettings.m_accelNoiseMag = 0.1f;                // Accel noise magnitude for Kalman filter
+            m_trackerSettings.m_distThres = 0.95f;                   // Distance threshold between region and object on two frames
+#if 1
+            m_trackerSettings.m_minAreaRadiusPix = frame.rows / 5.f;
 #else
 			m_trackerSettings.m_minAreaRadiusPix = -1.f;
 #endif
 			m_trackerSettings.m_minAreaRadiusK = 0.8f;
 
-			m_trackerSettings.m_useAbandonedDetection = true;
+            m_trackerSettings.m_useAbandonedDetection = false;
 			if (m_trackerSettings.m_useAbandonedDetection)
 			{
 				m_trackerSettings.m_minStaticTime = m_minStaticTime;
@@ -141,7 +141,7 @@ protected:
 			else
 			{
 				m_trackerSettings.m_maximumAllowedSkippedFrames = cvRound(2 * m_fps); // Maximum allowed skipped frames
-				m_trackerSettings.m_maxTraceLength = cvRound(4 * m_fps);              // Maximum trace length
+                m_trackerSettings.m_maxTraceLength = cvRound(2 * m_fps);              // Maximum trace length
 			}
 		}
 
@@ -197,9 +197,9 @@ protected:
             }
             else
             {
-                if (track.IsRobust(cvRound(m_fps / 4),          // Minimal trajectory size
-                                    0.7f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
-                                    cv::Size2f(0.1f, 8.0f)))      // Min and max ratio: width / height
+                if (track.IsRobust(4,          // Minimal trajectory size
+                                    0.3f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
+                                    cv::Size2f(0.2f, 5.0f)))      // Min and max ratio: width / height
                     DrawTrack(frame, track, true, framesCounter);
             }
         }
@@ -846,7 +846,7 @@ protected:
                 TinyYOLOv4,
                 YOLOv5
             };
-            YOLOModels usedModel = YOLOModels::YOLOv4;
+            YOLOModels usedModel = YOLOModels::TinyYOLOv4;
             switch (usedModel)
             {
             case YOLOModels::TinyYOLOv3:
