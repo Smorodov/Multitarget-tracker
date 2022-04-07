@@ -176,6 +176,8 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
     CalcEmbeddins(regionEmbeddings, regions, currFrame);
 
 #if DRAW_DBG_ASSIGNMENT
+    std::cout << "CTracker::UpdateTrackingState: m_tracks = " << N << ", regions = " << M << std::endl;
+
     cv::Mat dbgAssignment = currFrame.getMat(cv::ACCESS_READ).clone();
     {
         cv::Mat foreground(dbgAssignment.size(), CV_8UC1, cv::Scalar(0, 0, 100));
@@ -216,15 +218,33 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
     if (!m_tracks.empty())
     {
         // Distance matrix between all tracks to all regions
+#if DRAW_DBG_ASSIGNMENT
+        std::cout << "CTracker::UpdateTrackingState: Distance matrix between all tracks to all regions" << std::endl;
+#endif
         distMatrix_t costMatrix(N * M);
         const track_t maxPossibleCost = static_cast<track_t>(currFrame.cols * currFrame.rows);
         track_t maxCost = 0;
         CreateDistaceMatrix(regions, regionEmbeddings, costMatrix, maxPossibleCost, maxCost);
+#if DRAW_DBG_ASSIGNMENT
+        std::cout << "CTracker::UpdateTrackingState: maxPossibleCost = " << maxPossibleCost << ", maxCost = " << maxCost << std::endl;
+        std::cout << "costMatrix: ";
+        for (auto costv : costMatrix)
+        {
+            std::cout << costv << " ";
+        }
+        std::cout << std::endl;
+#endif
 
         // Solving assignment problem (shortest paths)
+#if DRAW_DBG_ASSIGNMENT
+        std::cout << "CTracker::UpdateTrackingState: Solving assignment problem (shortest paths)" << std::endl;
+#endif
         m_SPCalculator->Solve(costMatrix, N, M, assignment, maxCost);
 
-        // clean assignment from pairs with large distance
+        // Clean assignment from pairs with large distance
+#if DRAW_DBG_ASSIGNMENT
+        std::cout << "CTracker::UpdateTrackingState: Clean assignment from pairs with large distance" << std::endl;
+#endif
         for (size_t i = 0; i < assignment.size(); i++)
         {
 #if DRAW_DBG_ASSIGNMENT
@@ -248,7 +268,7 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
 
                 for (size_t ri = 0; ri < regions.size(); ++ri)
                 {
-                    if (ri != assignment[i] && costMatrix[i + ri * N] < 1)
+                    if (static_cast<int>(ri) != assignment[i] && costMatrix[i + ri * N] < 1)
                     {
                         std::stringstream liness;
                         liness << std::fixed << std::setprecision(2) << costMatrix[i + ri * N];
@@ -298,7 +318,10 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
             }
         }
 
-        // If track didn't get detects long time, remove it.
+        // If track didn't get detects long time, remove it
+#if DRAW_DBG_ASSIGNMENT
+        std::cout << "CTracker::UpdateTrackingState: If track did not get detects long time, remove it" << std::endl;
+#endif
         for (size_t i = 0; i < m_tracks.size();)
         {
             if (m_tracks[i]->SkippedFrames() > m_settings.m_maximumAllowedSkippedFrames ||
@@ -317,7 +340,10 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
         }
     }
 
-    // Search for unassigned detects and start new tracks for them.
+    // Search for unassigned detects and start new tracks for them
+#if DRAW_DBG_ASSIGNMENT
+    std::cout << "CTracker::UpdateTrackingState: Search for unassigned detects and start new tracks for them" << std::endl;
+#endif
     for (size_t i = 0; i < regions.size(); ++i)
     {
         if (find(assignment.begin(), assignment.end(), i) == assignment.end())
@@ -346,6 +372,10 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
     }
 
     // Update Kalman Filters state
+#if DRAW_DBG_ASSIGNMENT
+    std::cout << "CTracker::UpdateTrackingState: Update Kalman Filters state" << std::endl;
+#endif
+
     const ptrdiff_t stop_i = static_cast<ptrdiff_t>(assignment.size());
 #pragma omp parallel for
     for (ptrdiff_t i = 0; i < stop_i; ++i)
@@ -373,6 +403,7 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
     }
 
 #if DRAW_DBG_ASSIGNMENT
+    std::cout << "CTracker::UpdateTrackingState: show results" << std::endl;
     cv::namedWindow("dbgAssignment", cv::WINDOW_NORMAL);
     cv::imshow("dbgAssignment", dbgAssignment);
     //cv::waitKey(1);
@@ -462,7 +493,7 @@ void CTracker::CreateDistaceMatrix(const regions_t& regions,
                         track_t dh = track->HeightDist(reg);
                         std::cout << "dist = " << dist << ", ed = " << ellipseDist << ", dw = " << dw << ", dh = " << dh << "\n";
                         std::cout << "track type = " << TypeConverter::Type2Str(m_tracks[i]->LastRegion().m_type) << " (" << m_tracks[i]->LastRegion().m_type << "), region type = " << TypeConverter::Type2Str(reg.m_type) << " (" << reg.m_type << ")\n";
-                        std::cout << "track = " << m_tracks[i]->LastRegion().m_brect << ", reg = " << reg.m_brect << std::endl;
+                        std::cout << "track = " << m_tracks[i]->LastRegion().m_brect << ", reg = " << reg.m_brect << ", rrect = [" << reg.m_rrect.size << " from " << reg.m_rrect.center << ", " << reg.m_rrect.angle << "]" << std::endl;
                     }
 #else
 					dist += m_settings.m_distType[ind] * track->CalcDistRect(reg);
@@ -475,9 +506,7 @@ void CTracker::CreateDistaceMatrix(const regions_t& regions,
                 {
 					dist += m_settings.m_distType[ind] * track->CalcDistJaccard(reg);
                     if constexpr (DIST_LOGS)
-                    {
                         std::cout << "DistJaccard : " << m_settings.m_distType[ind] << ", dist = " << dist << std::endl;
-                    }
                 }
 				++ind;
 
@@ -486,9 +515,7 @@ void CTracker::CreateDistaceMatrix(const regions_t& regions,
                 {
                     dist += m_settings.m_distType[ind] * track->CalcDistHist(regionEmbeddings[j]);
                     if constexpr (DIST_LOGS)
-                    {
                         std::cout << "DistHist : " << m_settings.m_distType[ind] << ", dist = " << dist << std::endl;
-                    }
                 }
 				++ind;
 
@@ -510,9 +537,7 @@ void CTracker::CreateDistaceMatrix(const regions_t& regions,
                         }
                     }
                     if constexpr (DIST_LOGS)
-                    {
                         std::cout << "DistFeatureCos : " << m_settings.m_distType[ind] << ", dist = " << dist << std::endl;
-                    }
                 }
 				++ind;
 
@@ -525,6 +550,15 @@ void CTracker::CreateDistaceMatrix(const regions_t& regions,
 			}
 
 			costMatrix[i + j * N] = dist;
+            if constexpr (DIST_LOGS)
+                    std::cout << "costMatrix[" << j << "][" << i << "] (or " << (i + j * N) << ") = " << dist << std::endl;
+
+            if (dist < 0 || dist > maxPossibleCost)
+            {
+                assert(0);
+                exit(-1);
+            }
+
 			if (dist > maxCost)
 				maxCost = dist;
 		}

@@ -3,9 +3,9 @@
 
 # Last changes
 
-* Robust tracking a small and fast objects with background subtraction algorithm
+* Works Python example with Motion detector
 
-* TensorRT 8 for YOLO detectors
+* Robust tracking a small and fast objects with background subtraction algorithm
 
 # New videos!
 

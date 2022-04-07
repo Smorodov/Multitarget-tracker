@@ -11,13 +11,170 @@
 #include "../Tracker/Ctracker.h"
 #include "../Detector/BaseDetector.h"
 #include "../Detector/MotionDetector.h"
-#include "ndarray_converter.h"
 
 namespace py = pybind11;
 
 PYBIND11_MAKE_OPAQUE(std::multimap<std::string, std::string>)
 PYBIND11_MAKE_OPAQUE(std::map<std::string, std::string>)
 PYBIND11_MAKE_OPAQUE(std::map<std::string, double>)
+
+#include <Python.h>
+#include <pybind11/numpy.h>
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+#include <numpy/ndarrayobject.h>
+
+#if PY_VERSION_HEX >= 0x03000000
+    #define PyInt_Check PyLong_Check
+    #define PyInt_AsLong PyLong_AsLong
+#endif
+
+namespace pybind11 { namespace detail{
+template<>
+struct type_caster<cv::Mat>{
+public:
+    PYBIND11_TYPE_CASTER(cv::Mat, _("numpy.ndarray"));
+
+    //! 1. cast numpy.ndarray to cv::Mat
+    bool load(handle obj, bool)
+    {
+        array b = reinterpret_borrow<array>(obj);
+        buffer_info info = b.request();
+
+        //const int ndims = (int)info.ndim;
+        int nh = 1;
+        int nw = 1;
+        int nc = 1;
+        int ndims = info.ndim;
+        if(ndims == 2){
+            nh = info.shape[0];
+            nw = info.shape[1];
+        } else if(ndims == 3){
+            nh = info.shape[0];
+            nw = info.shape[1];
+            nc = info.shape[2];
+        }else{
+            char msg[64];
+            std::sprintf(msg, "Unsupported dim %d, only support 2d, or 3-d", ndims);
+            throw std::logic_error(msg);
+            return false;
+        }
+
+        int dtype;
+        if(info.format == format_descriptor<unsigned char>::format()){
+            dtype = CV_8UC(nc);
+        }else if (info.format == format_descriptor<int>::format()){
+            dtype = CV_32SC(nc);
+        }else if (info.format == format_descriptor<float>::format()){
+            dtype = CV_32FC(nc);
+        }else{
+            throw std::logic_error("Unsupported type, only support uchar, int32, float");
+            return false;
+        }
+
+        value = cv::Mat(nh, nw, dtype, info.ptr);
+        return true;
+    }
+
+    //! 2. cast cv::Mat to numpy.ndarray
+    static handle cast(const cv::Mat& mat, return_value_policy, handle /*defval*/)
+    {
+        std::string format = format_descriptor<unsigned char>::format();
+        size_t elemsize = sizeof(unsigned char);
+        int nw = mat.cols;
+        int nh = mat.rows;
+        int nc = mat.channels();
+        int depth = mat.depth();
+        int type = mat.type();
+        int dim = (depth == type)? 2 : 3;
+
+        if(depth == CV_8U){
+            format = format_descriptor<unsigned char>::format();
+            elemsize = sizeof(unsigned char);
+        }else if(depth == CV_32S){
+            format = format_descriptor<int>::format();
+            elemsize = sizeof(int);
+        }else if(depth == CV_32F){
+            format = format_descriptor<float>::format();
+            elemsize = sizeof(float);
+        }else{
+            throw std::logic_error("Unsupport type, only support uchar, int32, float");
+        }
+
+        std::vector<size_t> bufferdim;
+        std::vector<size_t> strides;
+        if (dim == 2) {
+            bufferdim = {(size_t) nh, (size_t) nw};
+            strides = {elemsize * (size_t) nw, elemsize};
+        } else if (dim == 3) {
+            bufferdim = {(size_t) nh, (size_t) nw, (size_t) nc};
+            strides = {(size_t) elemsize * nw * nc, (size_t) elemsize * nc, (size_t) elemsize};
+        }
+        return array(buffer_info( mat.data,  elemsize,  format, dim, bufferdim, strides )).release();
+    }
+};
+
+template<typename T>
+struct type_caster<cv::Size_<T>>{
+
+    PYBIND11_TYPE_CASTER(cv::Size_<T>, _("tuple_wh"));
+
+    bool load(handle obj, bool)
+    {
+        if(!py::isinstance<py::tuple>(obj))
+        {
+            std::logic_error("Size(w, h) should be a tuple!");
+            return false;
+        }
+
+        py::tuple pt = reinterpret_borrow<py::tuple>(obj);
+        if (pt.size() != 2)
+        {
+            std::logic_error("Size(w, h) tuple should be size of 2");
+            return false;
+        }
+
+        value = cv::Size(pt[0].cast<T>(), pt[1].cast<T>());
+        return true;
+    }
+
+    static handle cast(const cv::Size_<T>& sz, return_value_policy, handle)
+    {
+        return py::make_tuple(sz.width, sz.height).release();
+    }
+};
+
+template<>
+struct type_caster<cv::Point>{
+
+    PYBIND11_TYPE_CASTER(cv::Point, _("tuple_xy"));
+
+    bool load(handle obj, bool)
+    {
+        if (!py::isinstance<py::tuple>(obj))
+        {
+            std::logic_error("Point(x,y) should be a tuple!");
+            return false;
+        }
+
+        py::tuple pt = reinterpret_borrow<py::tuple>(obj);
+        if(pt.size()!=2)
+        {
+            std::logic_error("Point(x,y) tuple should be size of 2");
+            return false;
+        }
+
+        value = cv::Point(pt[0].cast<int>(), pt[1].cast<int>());
+        return true;
+    }
+
+    static handle cast(const cv::Point& pt, return_value_policy, handle)
+    {
+        return py::make_tuple(pt.x, pt.y).release();
+    }
+};
+
+
+}}//! end namespace pybind11::detail
 
 
 ///
@@ -26,9 +183,14 @@ class PyDetector : public BaseDetector
 public:
 	using BaseDetector::BaseDetector;
 
+    PyDetector()
+    {
+        std::cout << "PyDetector" << std::endl;
+    }
+
 	bool Init(const config_t& config) override
     {
-		PYBIND11_OVERLOAD_PURE(bool, BaseDetector,  Init, config);
+        PYBIND11_OVERLOAD_PURE(bool, BaseDetector, Init, config);
 	}
 
     void DetectMat(cv::Mat frame) override
@@ -50,12 +212,12 @@ public:
 
     bool Init(const config_t& config) override
     {
-        PYBIND11_OVERLOAD(bool, BaseDetector, Init, config);
+        PYBIND11_OVERLOAD(bool, MotionDetector, Init, config);
     }
 
     bool CanGrayProcessing() const override
     {
-        PYBIND11_OVERLOAD(bool, BaseDetector, CanGrayProcessing);
+        PYBIND11_OVERLOAD(bool, MotionDetector, CanGrayProcessing);
     }
 };
 
@@ -89,7 +251,7 @@ class PyBaseTracker : public BaseTracker
 public:
     using BaseTracker::BaseTracker;
 
-    void Update(const regions_t& regions, cv::UMat currFrame, float fps) override
+    void UpdateMat(const regions_t& regions, cv::Mat currFrame, float fps) override
     {
         PYBIND11_OVERLOAD_PURE(void, BaseTracker, Update, regions, currFrame, fps);
     }
@@ -109,9 +271,9 @@ public:
         PYBIND11_OVERLOAD_PURE(size_t, BaseTracker, GetTracksCount);
     }
 
-    void GetTracks(std::vector<TrackingObject>& tracks) const override
+    std::vector<TrackingObject> GetTracksCopy() const override
     {
-        PYBIND11_OVERLOAD_PURE(void, BaseTracker, GetTracks, tracks);
+        PYBIND11_OVERLOAD(std::vector<TrackingObject>, BaseTracker, GetTracksCopy);
     }
 
     void GetRemovedTracks(std::vector<track_id_t>& trackIDs) const override
@@ -123,8 +285,6 @@ public:
 ///
 PYBIND11_MODULE(pymtracking, m)
 {
-    NDArrayConverter::init_numpy();
-
 	m.doc() = R"pbdoc(
         mtracking library
         -----------------------
@@ -185,6 +345,8 @@ PYBIND11_MODULE(pymtracking, m)
     py::class_<TrackingObject>(m, "TrackingObject")
             .def(py::init<>())
             .def("IsRobust", &TrackingObject::IsRobust)
+            .def("GetTrajectory", &TrackingObject::GetTrajectory)
+            .def("GetBoundingRect", &TrackingObject::GetBoundingRect)
             .def_readwrite("rrect", &TrackingObject::m_rrect)
             .def_readwrite("ID", &TrackingObject::m_ID)
             .def_readwrite("isStatic", &TrackingObject::m_isStatic)
@@ -195,11 +357,11 @@ PYBIND11_MODULE(pymtracking, m)
 
     py::class_<BaseTracker, PyBaseTracker> mtracker(m, "MTracker");
     mtracker.def(py::init(&BaseTracker::CreateTracker));
-    mtracker.def("Update", &BaseTracker::Update);
+    mtracker.def("Update", &BaseTracker::UpdateMat);
     mtracker.def("CanGrayFrameToTrack", &BaseTracker::CanGrayFrameToTrack);
     mtracker.def("CanColorFrameToTrack", &BaseTracker::CanColorFrameToTrack);
     mtracker.def("GetTracksCount", &BaseTracker::GetTracksCount);
-    mtracker.def("GetTracks", &BaseTracker::GetTracks);
+    mtracker.def("GetTracks", &BaseTracker::GetTracksCopy);
 
     py::enum_<tracking::DistType>(mtracker, "DistType")
             .value("DistCenters", tracking::DistType::DistCenters)
@@ -245,7 +407,7 @@ PYBIND11_MODULE(pymtracking, m)
     base_detector.def("SetMinObjectSize", &BaseDetector::SetMinObjectSize);
     base_detector.def("GetDetects", &BaseDetector::GetDetects);
     base_detector.def("CalcMotionMap", &BaseDetector::CalcMotionMap);
-#if 0
+#if 1
     py::class_<MotionDetector, PyMotionDetector> mdetector(m, "MotionDetector");
     mdetector.def(py::init<BackgroundSubtract::BGFG_ALGS, cv::Mat&>());
     mdetector.def("Init", &MotionDetector::Init);

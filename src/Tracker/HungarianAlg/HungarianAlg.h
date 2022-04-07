@@ -38,4 +38,6 @@ private:
 	void assignmentsuboptimal2(assignments_t& assignment, track_t& cost, const distMatrix_t& distMatrixIn, size_t nOfRows, size_t nOfColumns);
 
     std::vector<track_t> m_distMatrix;
+
+    static constexpr bool HUNGARIAN_LOGS = false;
 };
