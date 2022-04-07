@@ -4,7 +4,7 @@
 #include "defines.h"
 
 ///
-/// \brief The BaseDetector class
+/// \brief The KeyVal struct
 ///
 struct KeyVal
 {
@@ -23,6 +23,15 @@ struct KeyVal
 class BaseDetector
 {
 public:
+    ///
+    /// \brief BaseDetector
+    /// \param frame
+    ///
+    BaseDetector()
+    {
+        m_minObjectSize.width = 5;
+        m_minObjectSize.height = m_minObjectSize.width;
+    }
     ///
     /// \brief BaseDetector
     /// \param frame

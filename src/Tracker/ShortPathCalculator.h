@@ -38,10 +38,12 @@ public:
     SPHungrian(const SPSettings& settings)
         : ShortPathCalculator(settings)
     {
+        //std::cout << "SPHungrian" << std::endl;
     }
 
     void Solve(const distMatrix_t& costMatrix, size_t N, size_t M, assignments_t& assignment, track_t /*maxCost*/) override
     {
+        //std::cout << "SPHungrian::Solve" << std::endl;
         m_solver.Solve(costMatrix, N, M, assignment, AssignmentProblemSolver::optimal);
     }
 
@@ -58,6 +60,7 @@ public:
     SPBipart(const SPSettings& settings)
         : ShortPathCalculator(settings)
     {
+        //std::cout << "SPBipart" << std::endl;
     }
 
     void Solve(const distMatrix_t& costMatrix, size_t N, size_t M, assignments_t& assignment, track_t maxCost) override;

@@ -230,4 +230,27 @@ struct TrackingObject
 			m_lastRobust = false;
 		return m_lastRobust;
 	}
+
+    ///
+    /// \brief GetTrajectory
+    /// \return
+    ///
+    std::vector<cv::Point> GetTrajectory() const
+    {
+        std::vector<cv::Point> trajectory(m_trace.size());
+        for (size_t i = 0; i < m_trace.size(); ++i)
+        {
+            trajectory[i] = m_trace.at(i).m_prediction;
+        }
+        return trajectory;
+    }
+
+    ///
+    /// \brief GetTrajectory
+    /// \return
+    ///
+    cv::Rect GetBoundingRect() const
+    {
+        return m_rrect.boundingRect();
+    }
 };

@@ -107,6 +107,10 @@ public:
     CRegion(const cv::RotatedRect& rrect) noexcept
         : m_rrect(rrect)
     {
+        if (m_rrect.size.width < 1)
+            m_rrect.size.width = 1;
+        if (m_rrect.size.height < 1)
+            m_rrect.size.height = 1;
         R2BRect();
     }
 
@@ -138,6 +142,10 @@ private:
     cv::RotatedRect B2RRect() noexcept
     {
         m_rrect = cv::RotatedRect(m_brect.tl(), cv::Point2f(static_cast<float>(m_brect.x + m_brect.width), static_cast<float>(m_brect.y)), m_brect.br());
+        if (m_rrect.size.width < 1)
+            m_rrect.size.width = 1;
+        if (m_rrect.size.height < 1)
+            m_rrect.size.height = 1;
         return m_rrect;
     }
 };
