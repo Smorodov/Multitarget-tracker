@@ -9,6 +9,10 @@
 
 # New videos!
 
+* Very fast and small objects tracking [Thnx Scianand](https://github.com/Smorodov/Multitarget-tracker/issues/367)
+
+[![Fast and small motion:](https://img.youtube.com/vi/PalIIAfgX88/0.jpg)](https://youtu.be/PalIIAfgX88)
+
 * Vehicles speed calculation with YOLO v4
 
 [![Vehicles speed:](https://img.youtube.com/vi/qOHYvDwpsO0/0.jpg)](https://youtu.be/qOHYvDwpsO0)

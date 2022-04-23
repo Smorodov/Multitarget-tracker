@@ -7,35 +7,6 @@
 #include "VideoExample.h"
 
 ///
-/// \brief DrawFilledRect
-///
-void DrawFilledRect(cv::Mat& frame, const cv::Rect& rect, cv::Scalar cl, int alpha)
-{
-	if (alpha)
-	{
-		const int alpha_1 = 255 - alpha;
-		const int nchans = frame.channels();
-		int color[3] = { cv::saturate_cast<int>(cl[0]), cv::saturate_cast<int>(cl[1]), cv::saturate_cast<int>(cl[2]) };
-		for (int y = rect.y; y < rect.y + rect.height; ++y)
-		{
-			uchar* ptr = frame.ptr(y) + nchans * rect.x;
-			for (int x = rect.x; x < rect.x + rect.width; ++x)
-			{
-				for (int i = 0; i < nchans; ++i)
-				{
-					ptr[i] = cv::saturate_cast<uchar>((alpha_1 * ptr[i] + alpha * color[i]) / 255);
-				}
-				ptr += nchans;
-			}
-		}
-	}
-	else
-	{
-		cv::rectangle(frame, rect, cl, cv::FILLED);
-	}
-}
-
-///
 /// \brief The MotionDetectorExample class
 ///
 class MotionDetectorExample final : public VideoExample
@@ -169,7 +140,7 @@ protected:
 
 				std::string label = "abandoned " + track.m_ID.ID2Str();
 				int baseLine = 0;
-				cv::Size labelSize = cv::getTextSize(label, cv::FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
+				cv::Size labelSize = cv::getTextSize(label, cv::FONT_HERSHEY_TRIPLEX, 0.5, 1, &baseLine);
 
 				cv::Rect brect = track.m_rrect.boundingRect();
 				if (brect.x < 0)
@@ -193,14 +164,24 @@ protected:
 					brect.height = std::min(brect.height, frame.rows - 1);
 				}
 				DrawFilledRect(frame, cv::Rect(cv::Point(brect.x, brect.y - labelSize.height), cv::Size(labelSize.width, labelSize.height + baseLine)), cv::Scalar(255, 0, 255), 150);
-				cv::putText(frame, label, brect.tl(), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 0, 0));
+				cv::putText(frame, label, brect.tl(), cv::FONT_HERSHEY_TRIPLEX, 0.5, cv::Scalar(0, 0, 0));
             }
             else
             {
-                if (track.IsRobust(4,          // Minimal trajectory size
-                                    0.3f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
-                                    cv::Size2f(0.2f, 5.0f)))      // Min and max ratio: width / height
-                    DrawTrack(frame, track, true, framesCounter);
+				auto velocity = sqrt(sqr(track.m_velocity[0]) + sqr(track.m_velocity[1]));
+				if (track.IsRobust(4,             // Minimal trajectory size
+					0.3f,                         // Minimal ratio raw_trajectory_points / trajectory_lenght
+					cv::Size2f(0.2f, 5.0f)) &&    // Min and max ratio: width / height
+					velocity > 30)                // Velocity more than 30 pixels per second
+				{
+					track_t mean = 0;
+					track_t stddev = 0;
+					TrackingObject::LSParams lsParams;
+					if (track.LeastSquares2(20, mean, stddev, lsParams) && mean > stddev)
+					{
+						DrawTrack(frame, track, true, framesCounter);
+					}
+				}
             }
         }
         m_detector->CalcMotionMap(frame);
@@ -528,7 +509,7 @@ protected:
 				label << TypeConverter::Type2Str(track.m_type) << std::setprecision(2) << ": " << track.m_confidence;
 
 				int baseLine = 0;
-				cv::Size labelSize = cv::getTextSize(label.str(), cv::FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
+				cv::Size labelSize = cv::getTextSize(label.str(), cv::FONT_HERSHEY_TRIPLEX, 0.5, 1, &baseLine);
 
 				cv::Rect brect = track.m_rrect.boundingRect();
 				if (brect.x < 0)
@@ -551,8 +532,8 @@ protected:
 					brect.y = std::max(0, frame.rows - brect.height - 1);
 					brect.height = std::min(brect.height, frame.rows - 1);
 				}
-				DrawFilledRect(frame, cv::Rect(cv::Point(brect.x, brect.y - labelSize.height), cv::Size(labelSize.width, labelSize.height + baseLine)), cv::Scalar(200, 200, 200), 150);
-				cv::putText(frame, label.str(), brect.tl(), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 0, 0));
+				//DrawFilledRect(frame, cv::Rect(cv::Point(brect.x, brect.y - labelSize.height), cv::Size(labelSize.width, labelSize.height + baseLine)), cv::Scalar(200, 200, 200), 150);
+				//cv::putText(frame, label.str(), brect.tl(), cv::FONT_HERSHEY_TRIPLEX, 0.5, cv::Scalar(0, 0, 0));
 			}
 		}
 
@@ -773,7 +754,7 @@ protected:
 				label << TypeConverter::Type2Str(track.m_type) << " " << std::setprecision(2) << track.m_velocity << ": " << track.m_confidence;
 #endif
 				int baseLine = 0;
-				cv::Size labelSize = cv::getTextSize(label.str(), cv::FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
+				cv::Size labelSize = cv::getTextSize(label.str(), cv::FONT_HERSHEY_TRIPLEX, 0.5, 1, &baseLine);
 
                 cv::Rect brect = track.m_rrect.boundingRect();
 				if (brect.x < 0)
@@ -796,8 +777,8 @@ protected:
 					brect.y = std::max(0, frame.rows - brect.height - 1);
 					brect.height = std::min(brect.height, frame.rows - 1);
 				}
-				DrawFilledRect(frame, cv::Rect(cv::Point(brect.x, brect.y - labelSize.height), cv::Size(labelSize.width, labelSize.height + baseLine)), cv::Scalar(200, 200, 200), 150);
-                cv::putText(frame, label.str(), brect.tl(), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 0, 0));
+				//DrawFilledRect(frame, cv::Rect(cv::Point(brect.x, brect.y - labelSize.height), cv::Size(labelSize.width, labelSize.height + baseLine)), cv::Scalar(200, 200, 200), 150);
+                //cv::putText(frame, label.str(), brect.tl(), cv::FONT_HERSHEY_TRIPLEX, 0.5, cv::Scalar(0, 0, 0));
 			}
 		}
 
@@ -988,7 +969,7 @@ protected:
 				std::stringstream label;
 				label << TypeConverter::Type2Str(track.m_type) << " " << std::setprecision(2) << track.m_velocity << ": " << track.m_confidence;
 				int baseLine = 0;
-				cv::Size labelSize = cv::getTextSize(label.str(), cv::FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
+				cv::Size labelSize = cv::getTextSize(label.str(), cv::FONT_HERSHEY_TRIPLEX, 0.5, 1, &baseLine);
 
 				cv::Rect brect = track.m_rrect.boundingRect();
 				if (brect.x < 0)
@@ -1011,8 +992,8 @@ protected:
 					brect.y = std::max(0, frame.rows - brect.height - 1);
 					brect.height = std::min(brect.height, frame.rows - 1);
 				}
-				DrawFilledRect(frame, cv::Rect(cv::Point(brect.x, brect.y - labelSize.height), cv::Size(labelSize.width, labelSize.height + baseLine)), cv::Scalar(200, 200, 200), 150);
-				cv::putText(frame, label.str(), brect.tl(), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 0, 0));
+				//DrawFilledRect(frame, cv::Rect(cv::Point(brect.x, brect.y - labelSize.height), cv::Size(labelSize.width, labelSize.height + baseLine)), cv::Scalar(200, 200, 200), 150);
+				//cv::putText(frame, label.str(), brect.tl(), cv::FONT_HERSHEY_TRIPLEX, 0.5, cv::Scalar(0, 0, 0));
 			}
 		}
 
