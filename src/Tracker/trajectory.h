@@ -246,6 +246,104 @@ struct TrackingObject
     }
 
     ///
+    /// \brief LeastSquarespoly2
+    /// \return
+    ///
+	void LeastSquarespoly2(size_t posFrom, size_t count, track_t& ax, track_t& v0x, track_t& x0, track_t& ay, track_t& v0y, track_t& y0) const
+	{
+		double b1_x(0), b2_x(0), b3_x(0);
+		double b1_y(0), b2_y(0), b3_y(0);
+		double t_0(0.), t_1(0.), t_2(0.), t_3(0.), t_4(0.);
+        double j = static_cast<double>(posFrom);
+		for (size_t i = posFrom; i < count; ++i, j += 1.)
+		{
+			double sqr_j = sqr(j);
+
+			t_0 += 1.;
+			t_1 += j;
+			t_2 += sqr_j;
+			t_3 += j * sqr_j;
+			t_4 += sqr(sqr_j);
+
+            const auto& pt = m_trace.at(i).m_prediction;
+
+			b1_x += pt.x;
+			b2_x += j * pt.x;
+			b3_x += sqr_j * pt.x;
+
+			b1_y += pt.y;
+			b2_y += j * pt.y;
+			b3_y += sqr_j * pt.y;
+		}
+
+		// Cramers rule for system of linear equations 3x3
+        double a11(t_0), a12(t_1), a13(t_2), a21(t_1), a22(t_2), a23(t_3), a31(t_2), a32(t_3), a33(t_4);
+
+        double det_1 = 1. / (a11 * a22 * a33 + a21 * a32 * a13 + a12 * a23 * a31 - a31 * a22 * a13 - a11 * a23 * a32 - a12 * a21 * a33);
+		x0 =  static_cast<track_t>(det_1 * (b1_x * a22 * a33 + b2_x * a32 * a13 + a12 * a23 * b3_x - b3_x * a22 * a13 - b1_x * a23 * a32 - a12 * b2_x * a33));
+		v0x = static_cast<track_t>(det_1 * (a11 * b2_x * a33 + a21 * b3_x * a13 + b1_x * a23 * a31 - a31 * b2_x * a13 - a11 * a23 * b3_x - b1_x * a21 * a33));
+		ax =  static_cast<track_t>(det_1 * (a11 * a22 * b3_x + a21 * a32 * b1_x + a12 * b2_x * a31 - a31 * a22 * b1_x - a11 * b2_x * a32 - a12 * a21 * b3_x));
+		y0 =  static_cast<track_t>(det_1 * (b1_y * a22 * a33 + b2_y * a32 * a13 + a12 * a23 * b3_y - b3_y * a22 * a13 - b1_y * a23 * a32 - a12 * b2_y * a33));
+		v0y = static_cast<track_t>(det_1 * (a11 * b2_y * a33 + a21 * b3_y * a13 + b1_y * a23 * a31 - a31 * b2_y * a13 - a11 * a23 * b3_y - b1_y * a21 * a33));
+		ay =  static_cast<track_t>(det_1 * (a11 * a22 * b3_y + a21 * a32 * b1_y + a12 * b2_y * a31 - a31 * a22 * b1_y - a11 * b2_y * a32 - a12 * a21 * b3_y));
+	}
+
+	///
+	struct LSParams
+	{
+		track_t m_ax = 0;
+		track_t m_v0x = 0;
+		track_t m_x0 = 0;
+		track_t m_ay = 0;
+		track_t m_v0y = 0;
+		track_t m_y0 = 0;
+
+		friend std::ostream& operator<<(std::ostream& os, const LSParams& lsParaml)
+		{
+			os << "(" << lsParaml.m_ax << ", " << lsParaml.m_v0x << ", " << lsParaml.m_x0 << "), (" << lsParaml.m_ay << ", " << lsParaml.m_v0y << ", " << lsParaml.m_y0 << ")";
+			return os;
+		}
+	};
+
+    ///
+    /// \brief LeastSquares2
+    /// \return
+    ///
+    bool LeastSquares2(size_t framesCount, track_t& mean, track_t& stddev, LSParams& lsParams) const
+    {
+        bool res = m_trace.size() > 3;
+
+        if (res)
+        {
+            size_t startPos = 0;
+#if 0
+            if (framesCount < m_trace.size())
+                startPos = m_trace.size() - framesCount;
+            else
+                framesCount = m_trace.size();
+#else
+			framesCount = m_trace.size();
+#endif
+
+            LeastSquarespoly2(startPos, framesCount, lsParams.m_ax, lsParams.m_v0x, lsParams.m_x0, lsParams.m_ay, lsParams.m_v0y, lsParams.m_y0);
+
+            track_t sum = 0;
+            track_t sum2 = 0;
+            for (size_t i = startPos; i < framesCount; ++i)
+            {
+                track_t t = static_cast<track_t>(i);
+                track_t dist = distance<track_t>(m_trace[i], Point_t(lsParams.m_ax * sqr(t) + lsParams.m_v0x * t + lsParams.m_x0,
+                                                                     lsParams.m_ay * sqr(t) + lsParams.m_v0y * t + lsParams.m_y0));
+                sum += dist;
+                sum2 += sqr(dist);
+            }
+            mean = sum / static_cast<track_t>(framesCount);
+            stddev = sqrt(sum2 / static_cast<track_t>(framesCount) - sqr(mean));
+        }
+        return res;
+    }
+
+    ///
     /// \brief GetTrajectory
     /// \return
     ///

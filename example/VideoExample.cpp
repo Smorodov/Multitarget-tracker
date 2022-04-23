@@ -4,6 +4,35 @@
 #include "VideoExample.h"
 
 ///
+/// \brief DrawFilledRect
+///
+void DrawFilledRect(cv::Mat& frame, const cv::Rect& rect, cv::Scalar cl, int alpha)
+{
+    if (alpha)
+    {
+        const int alpha_1 = 255 - alpha;
+        const int nchans = frame.channels();
+        int color[3] = { cv::saturate_cast<int>(cl[0]), cv::saturate_cast<int>(cl[1]), cv::saturate_cast<int>(cl[2]) };
+        for (int y = rect.y; y < rect.y + rect.height; ++y)
+        {
+            uchar* ptr = frame.ptr(y) + nchans * rect.x;
+            for (int x = rect.x; x < rect.x + rect.width; ++x)
+            {
+                for (int i = 0; i < nchans; ++i)
+                {
+                    ptr[i] = cv::saturate_cast<uchar>((alpha_1 * ptr[i] + alpha * color[i]) / 255);
+                }
+                ptr += nchans;
+            }
+        }
+    }
+    else
+    {
+        cv::rectangle(frame, rect, cl, cv::FILLED);
+    }
+}
+
+///
 /// \brief VideoExample::VideoExample
 /// \param parser
 ///
@@ -63,6 +92,44 @@ void VideoExample::SyncProcess()
         std::cerr << "Can't open " << m_inFile << std::endl;
         return;
     }
+
+#if 0
+	// Write preview
+	cv::Mat prFrame;
+	capture >> prFrame;
+	cv::Mat textFrame(prFrame.size(), CV_8UC3);
+	textFrame = cv::Scalar(0, 0, 0);
+	std::string label{ "Original video" };
+	int baseLine = 0;
+	double fontScale = (textFrame.cols < 1920) ? 2.0 : 3.0;
+	int thickness = 2;
+	int lineType = cv::LINE_AA;
+	int fontFace = cv::FONT_HERSHEY_TRIPLEX;
+	cv::Size labelSize = cv::getTextSize(label, fontFace, fontScale, thickness, &baseLine);
+	cv::putText(textFrame, label, cv::Point(textFrame.cols / 2 - labelSize.width / 2, textFrame.rows / 2 - labelSize.height / 2), fontFace, fontScale, cv::Scalar(255, 255, 255), thickness, lineType);
+	for (size_t fi = 0; fi < cvRound(2 * m_fps); ++fi)
+	{
+		WriteFrame(writer, textFrame);
+	}
+	WriteFrame(writer, prFrame);
+	for (;;)
+	{
+		capture >> prFrame;
+		if (prFrame.empty())
+			break;
+		WriteFrame(writer, prFrame);
+	}
+	textFrame = cv::Scalar(0, 0, 0);
+	label = "Detection result";
+	labelSize = cv::getTextSize(label, fontFace, fontScale, thickness, &baseLine);
+	cv::putText(textFrame, label, cv::Point(textFrame.cols / 2 - labelSize.width / 2, textFrame.rows / 2 - labelSize.height / 2), fontFace, fontScale, cv::Scalar(255, 255, 255), thickness, lineType);
+	for (size_t fi = 0; fi < cvRound(2 * m_fps); ++fi)
+	{
+		WriteFrame(writer, textFrame);
+	}
+	capture.release();
+	OpenCapture(capture);
+#endif
 
 	FrameInfo frameInfo(m_batchSize);
 	frameInfo.m_frames.resize(frameInfo.m_batchSize);
@@ -511,9 +578,34 @@ void VideoExample::DrawTrack(cv::Mat frame,
     std::string label = track.m_ID.ID2Str();
     if (track.m_type != bad_type)
         label += " (" + TypeConverter::Type2Str(track.m_type) + ")";
+#if 0
+    track_t mean = 0;
+    track_t stddev = 0;
+	TrackingObject::LSParams lsParams;
+	if (track.LeastSquares2(10, mean, stddev, lsParams))
+	{
+		std::cout << "LSParams: " << lsParams << std::endl;
+		cv::Scalar cl(255, 0, 255);
+		label += ", [" + std::to_string(cvRound(mean)) + ", " + std::to_string(cvRound(stddev)) + "]";
+		for (size_t j = 0; j < track.m_trace.size() - 1; ++j)
+		{
+			track_t t1 = j;
+			track_t t2 = j + 1;
+			cv::Point pt1(lsParams.m_ax * sqr(t1) + lsParams.m_v0x * t1 + lsParams.m_x0, lsParams.m_ay * sqr(t1) + lsParams.m_v0y * t1 + lsParams.m_y0);
+			cv::Point pt2(lsParams.m_ax * sqr(t2) + lsParams.m_v0x * t2 + lsParams.m_x0, lsParams.m_ay * sqr(t2) + lsParams.m_v0y * t2 + lsParams.m_y0);
+			//std::cout << pt1 << " - " << pt2 << std::endl;
+#if (CV_VERSION_MAJOR >= 4)
+			cv::line(frame, pt1, pt2, cl, 1, cv::LINE_AA);
+#else
+			cv::line(frame, pt1, pt2, cl, 1, CV_AA);
+#endif
+		}
+	}
+    label += ", " + std::to_string(cvRound(sqrt(sqr(track.m_velocity[0]) + sqr(track.m_velocity[1]))));
+#endif
     int baseLine = 0;
-    double fontScale = 0.5;
-    cv::Size labelSize = cv::getTextSize(label, cv::FONT_HERSHEY_SIMPLEX, fontScale, 1, &baseLine);
+    double fontScale = (frame.cols < 1920) ? 0.5 : 0.7;
+    cv::Size labelSize = cv::getTextSize(label, cv::FONT_HERSHEY_TRIPLEX, fontScale, 1, &baseLine);
     if (brect.x < 0)
     {
         brect.width = std::min(brect.width, frame.cols - 1);
@@ -534,8 +626,8 @@ void VideoExample::DrawTrack(cv::Mat frame,
         brect.y = std::max(0, frame.rows - brect.height - 1);
         brect.height = std::min(brect.height, frame.rows - 1);
     }
-    cv::rectangle(frame, cv::Rect(cv::Point(brect.x, brect.y - labelSize.height), cv::Size(labelSize.width, labelSize.height + baseLine)), cv::Scalar(200, 200, 200), cv::FILLED);
-    cv::putText(frame, label, brect.tl(), cv::FONT_HERSHEY_SIMPLEX, fontScale, cv::Scalar(0, 0, 0));
+    DrawFilledRect(frame, cv::Rect(cv::Point(brect.x, brect.y - labelSize.height), cv::Size(labelSize.width, labelSize.height + baseLine)), cv::Scalar(200, 200, 200), 150);
+    cv::putText(frame, label, brect.tl(), cv::FONT_HERSHEY_TRIPLEX, fontScale, cv::Scalar(0, 0, 0));
 
 	m_resultsLog.AddTrack(framesCounter, track.m_ID, brect, track.m_type, track.m_confidence);
 	m_resultsLog.AddRobustTrack(track.m_ID);
@@ -565,7 +657,7 @@ bool VideoExample::OpenCapture(cv::VideoCapture& capture)
     {
         capture.set(cv::CAP_PROP_POS_FRAMES, m_startFrame);
 
-        m_fps = std::max(25.f, (float)capture.get(cv::CAP_PROP_FPS));
+        m_fps = std::max(1.f, (float)capture.get(cv::CAP_PROP_FPS));
 
 		std::cout << "Video " << m_inFile << " was started from " << m_startFrame << " frame with " << m_fps << " fps" << std::endl;
 

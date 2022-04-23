@@ -93,7 +93,7 @@ void CarsCounting::DrawTrack(cv::Mat frame, const TrackingObject& track, bool dr
 
                 int baseLine = 0;
                 double fontScale = 0.5;
-                cv::Size labelSize = cv::getTextSize(label.str(), cv::FONT_HERSHEY_SIMPLEX, fontScale, 1, &baseLine);
+                cv::Size labelSize = cv::getTextSize(label.str(), cv::FONT_HERSHEY_TRIPLEX, fontScale, 1, &baseLine);
 
                 if (brect.x < 0)
                 {
@@ -116,7 +116,7 @@ void CarsCounting::DrawTrack(cv::Mat frame, const TrackingObject& track, bool dr
                     brect.height = std::min(brect.height, frame.rows - 1);
                 }
                 cv::rectangle(frame, cv::Rect(cv::Point(brect.x, brect.y - labelSize.height), cv::Size(labelSize.width, labelSize.height + baseLine)), cv::Scalar(200, 200, 200), cv::FILLED);
-                cv::putText(frame, label.str(), brect.tl(), cv::FONT_HERSHEY_SIMPLEX, fontScale, cv::Scalar(0, 0, 0));
+                cv::putText(frame, label.str(), brect.tl(), cv::FONT_HERSHEY_TRIPLEX, fontScale, cv::Scalar(0, 0, 0));
 
                 if (velocity > 3)
                     AddToHeatMap(brect);

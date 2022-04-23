@@ -126,7 +126,7 @@ track_t CTrack::CalcDistRect(const CRegion& reg) const
 track_t CTrack::CalcDistJaccard(const CRegion& reg) const
 {
     track_t intArea = static_cast<track_t>((reg.m_brect & m_lastRegion.m_brect).area());
-    track_t unionArea = static_cast<track_t>(reg.m_brect.area() + m_lastRegion.m_brect.area() - intArea) + 1e-6;
+    track_t unionArea = static_cast<track_t>(reg.m_brect.area() + m_lastRegion.m_brect.area() - intArea + 1e-6);
 
     return std::fabs(1 - intArea / unionArea);
 }
