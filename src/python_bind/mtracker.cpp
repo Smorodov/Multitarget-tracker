@@ -191,17 +191,17 @@ public:
 	bool Init(const config_t& config) override
     {
         PYBIND11_OVERLOAD_PURE(bool, BaseDetector, Init, config);
-	}
+    }
 
     void DetectMat(cv::Mat frame) override
     {
-		PYBIND11_OVERLOAD(void, BaseDetector, DetectMat, frame);
-	}
+        PYBIND11_OVERLOAD(void, BaseDetector, DetectMat, frame);
+    }
 
-	bool CanGrayProcessing() const override
+    bool CanGrayProcessing() const override
     {
-		PYBIND11_OVERLOAD_PURE(bool, BaseDetector, CanGrayProcessing);
-	}
+        PYBIND11_OVERLOAD_PURE(bool, BaseDetector, CanGrayProcessing, );
+    }
 };
 
 ///
@@ -217,7 +217,7 @@ public:
 
     bool CanGrayProcessing() const override
     {
-        PYBIND11_OVERLOAD(bool, MotionDetector, CanGrayProcessing);
+        PYBIND11_OVERLOAD(bool, MotionDetector, CanGrayProcessing, );
     }
 };
 
@@ -258,17 +258,17 @@ public:
 
     bool CanGrayFrameToTrack() const override
     {
-        PYBIND11_OVERLOAD_PURE(bool, BaseTracker, CanGrayFrameToTrack);
+        PYBIND11_OVERLOAD_PURE(bool, BaseTracker, CanGrayFrameToTrack, );
     }
 
     bool CanColorFrameToTrack() const override
     {
-        PYBIND11_OVERLOAD_PURE(bool, BaseTracker, CanColorFrameToTrack);
+        PYBIND11_OVERLOAD_PURE(bool, BaseTracker, CanColorFrameToTrack, );
     }
 
     size_t GetTracksCount() const override
     {
-        PYBIND11_OVERLOAD_PURE(size_t, BaseTracker, GetTracksCount);
+        PYBIND11_OVERLOAD_PURE(size_t, BaseTracker, GetTracksCount, );
     }
 
     std::vector<TrackingObject> GetTracksCopy() const override
