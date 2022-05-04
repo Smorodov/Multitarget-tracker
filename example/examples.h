@@ -621,6 +621,13 @@ protected:
             config.emplace("maxBatch", std::to_string(maxBatch));
             config.emplace("classNames", pathToModel + "coco.names");
             config.emplace("maxCropRatio", "-1");
+
+			config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_person));
+			config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_car));
+			config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_bicycle));
+			config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_motorbike));
+			config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_bus));
+			config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_truck));
         }
         else
         {
@@ -634,13 +641,6 @@ protected:
             config.emplace("net_type", m_trackerSettings.m_netType);
             config.emplace("inference_precison", m_trackerSettings.m_inferencePrecison);
         }
-
-        config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_person));
-        config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_car));
-        config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_bicycle));
-        config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_motorbike));
-        config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_bus));
-        config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_truck));
 
         m_detector = BaseDetector::CreateDetector(tracking::Detectors::Yolo_Darknet, config, frame);
         if (m_detector.get())
