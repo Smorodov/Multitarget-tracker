@@ -290,7 +290,7 @@ void OCVDNNDetector::DetectInCrop(const cv::UMat& colorFrame, const cv::Rect& cr
     }
     else if (m_outLayerType == "Region")
     {
-        for (size_t i = 0; i < detections.size(); ++i)
+        for (size_t i = 0; i < detections.size(); ++i) //-V654 //-V621
         {
             // Network produces output blob with a shape NxC where N is a number of detected objects and C is a number of classes + 4 where the first 4
             // numbers are [center_x, center_y, width, height]

@@ -471,7 +471,7 @@ bool CarsCounting::ReadGeobindings(cv::Size frameSize)
         std::string lon = "lon" + std::to_string(i);
         std::string px_x = "px_x" + std::to_string(i);
         std::string px_y = "px_y" + std::to_string(i);
-        if (reader.HasValue("points", lat) && reader.HasValue("points", lon) && reader.HasValue("points", px_x), reader.HasValue("points", px_y))
+        if (reader.HasValue("points", lat) && reader.HasValue("points", lon) && reader.HasValue("points", px_x) && reader.HasValue("points", px_y))
         {
             geoPoints.emplace_back(reader.GetReal("points", lat, 0), reader.GetReal("points", lon, 0));
             framePoints.emplace_back(cvRound(reader.GetReal("points", px_x, 0) * frameSize.width), cvRound(reader.GetReal("points", px_y, 0) * frameSize.height));
@@ -501,7 +501,7 @@ bool CarsCounting::ReadGeobindings(cv::Size frameSize)
         std::string y0 = line + "_y0";
         std::string x1 = line + "_x1";
         std::string y1 = line + "_y1";
-        if (reader.HasValue("lines", x0) && reader.HasValue("lines", y0) && reader.HasValue("lines", x1), reader.HasValue("lines", y1))
+        if (reader.HasValue("lines", x0) && reader.HasValue("lines", y0) && reader.HasValue("lines", x1) && reader.HasValue("lines", y1))
         {
             cv::Point2f p0(reader.GetReal("lines", x0, 0), reader.GetReal("lines", y0, 0));
             cv::Point2f p1(reader.GetReal("lines", x1, 0), reader.GetReal("lines", y1, 0));

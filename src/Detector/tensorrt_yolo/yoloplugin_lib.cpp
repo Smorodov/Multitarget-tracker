@@ -140,7 +140,8 @@ YoloPluginCtx* YoloPluginCtxInit(YoloPluginInitParams* initParams, size_t batchS
         std::cerr << "Network Type has to be one among the following : yolov2, yolov2-tiny, yolov3 "
                      "and yolov3-tiny"
                   << std::endl;
-        return nullptr;
+        delete ctx;
+        ctx = nullptr;
     }
 
     delete[] gArgV;

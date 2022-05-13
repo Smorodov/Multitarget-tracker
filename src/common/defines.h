@@ -44,6 +44,7 @@ public:
     const TrackID& operator=(value_type val)
     {
         m_val = val;
+        return *this;
     }
 
     bool operator==(const TrackID& id) const
