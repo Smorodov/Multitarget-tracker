@@ -38,19 +38,19 @@ public:
 								size_t nBGSamples=BGSLOBSTER_DEFAULT_NB_BG_SAMPLES,
 								size_t nRequiredBGSamples=BGSLOBSTER_DEFAULT_REQUIRED_NB_BG_SAMPLES);
 	//! default destructor
-	virtual ~BackgroundSubtractorLOBSTER();
+	~BackgroundSubtractorLOBSTER();
 	//! (re)initiaization method; needs to be called before starting background subtraction
-	virtual void initialize(const cv::Mat& oInitImg, const cv::Mat& oROI);
+	void initialize(const cv::Mat& oInitImg, const cv::Mat& oROI);
 	//! refreshes all samples based on the last analyzed frame
-	virtual void refreshModel(float fSamplesRefreshFrac, bool bForceFGUpdate=false);
+	void refreshModel(float fSamplesRefreshFrac, bool bForceFGUpdate=false);
 	//! primary model update function; the learning param is reinterpreted as an integer and should be > 0 (smaller values == faster adaptation)
-	virtual void operator()(cv::InputArray image, cv::OutputArray fgmask, double learningRate=BGSLOBSTER_DEFAULT_LEARNING_RATE);
+	void operator()(cv::InputArray image, cv::OutputArray fgmask, double learningRate=BGSLOBSTER_DEFAULT_LEARNING_RATE);
 	//! returns a copy of the latest reconstructed background image
 	void getBackgroundImage(cv::OutputArray backgroundImage) const;
 	//! returns a copy of the latest reconstructed background descriptors image
-	virtual void getBackgroundDescriptorsImage(cv::OutputArray backgroundDescImage) const;
+	void getBackgroundDescriptorsImage(cv::OutputArray backgroundDescImage) const;
     //! compute foreground mask
-    virtual void apply(cv::InputArray image, cv::OutputArray fgmask, double learningRateOverride=BGSLOBSTER_DEFAULT_LEARNING_RATE);
+    void apply(cv::InputArray image, cv::OutputArray fgmask, double learningRateOverride=BGSLOBSTER_DEFAULT_LEARNING_RATE);
     
 protected:
 	//! absolute color distance threshold

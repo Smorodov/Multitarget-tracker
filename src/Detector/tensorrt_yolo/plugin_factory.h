@@ -170,12 +170,12 @@ namespace nvinfer1
 	private:
 	
 		std::string _s_plugin_namespace;
-		uint32_t m_NumBoxes;
-		uint32_t m_NumClasses;
-		uint32_t m_GridSize;
-		uint64_t m_OutputSize;
-		uint32_t _n_grid_h;
-		uint32_t _n_grid_w;
+		uint32_t m_NumBoxes = 0;
+		uint32_t m_NumClasses = 0;
+		uint32_t m_GridSize = 0;
+		uint64_t m_OutputSize = 0;
+		uint32_t _n_grid_h = 0;
+		uint32_t _n_grid_w = 0;
 	};
 
 

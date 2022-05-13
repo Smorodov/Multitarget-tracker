@@ -832,7 +832,7 @@ float *make_float_array(float* src, size_t size)
 }
 
 struct detection_t : detection {
-    int det_count;
+    int det_count = 0;
     detection_t(detection det) : detection(det), det_count(0)
     {
         if (embeddings) embeddings = make_float_array(det.embeddings, embedding_size);
@@ -840,7 +840,7 @@ struct detection_t : detection {
         if (uc) uc = make_float_array(det.uc, 4);
     }
 
-    detection_t(detection_t const& det) : detection(det)
+    detection_t(detection_t const& det) : detection(det), det_count(0)
     {
         if (embeddings) embeddings = make_float_array(det.embeddings, embedding_size);
         if (prob) prob = make_float_array(det.prob, classes);

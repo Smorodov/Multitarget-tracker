@@ -51,7 +51,7 @@ void MotionDetector::DetectContour()
 #else
     cv::findContours(m_fg, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE, cv::Point());
 #endif
-	for (size_t i = 0; i < contours.size(); i++)
+	for (size_t i = 0; i < contours.size(); i++) //-V654 //-V621
 	{
 		cv::Rect br = cv::boundingRect(contours[i]);
 

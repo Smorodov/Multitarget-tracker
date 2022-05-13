@@ -511,7 +511,7 @@ void fix_nan_and_inf_cpu(float *input, size_t size)
     int i;
     for (i = 0; i < size; ++i) {
         float val = input[i];
-        if (isnan(val) || isinf(val))
+        if (i > 0 && (isnan(val) || isinf(val)))
             input[i] = 1.0f / i;  // pseudo random value
     }
 }

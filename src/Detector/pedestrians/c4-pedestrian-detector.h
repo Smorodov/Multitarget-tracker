@@ -212,7 +212,7 @@ void Array2dC<T>::Clear()
 /*****************************************/
 
 template<class T>
-class IntImage:public Array2dC<T>
+class IntImage: public Array2dC<T>
 {
 private:
     IntImage(const IntImage<T> &source) { } // prohibit copy constructor

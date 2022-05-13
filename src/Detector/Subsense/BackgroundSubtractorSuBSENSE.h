@@ -36,19 +36,19 @@ public:
 									size_t nRequiredBGSamples=BGSSUBSENSE_DEFAULT_REQUIRED_NB_BG_SAMPLES,
 									size_t nSamplesForMovingAvgs=BGSSUBSENSE_DEFAULT_N_SAMPLES_FOR_MV_AVGS);
 	//! default destructor
-	virtual ~BackgroundSubtractorSuBSENSE();
+	~BackgroundSubtractorSuBSENSE();
 	//! (re)initiaization method; needs to be called before starting background subtraction
-	virtual void initialize(const cv::Mat& oInitImg, const cv::Mat& oROI);
+	void initialize(const cv::Mat& oInitImg, const cv::Mat& oROI);
 	//! refreshes all samples based on the last analyzed frame
-	virtual void refreshModel(float fSamplesRefreshFrac, bool bForceFGUpdate=false);
+	void refreshModel(float fSamplesRefreshFrac, bool bForceFGUpdate=false);
 	//! primary model update function; the learning param is used to override the internal learning thresholds (ignored when <= 0)
-	virtual void operator()(cv::InputArray image, cv::OutputArray fgmask, double learningRateOverride=0);
+	void operator()(cv::InputArray image, cv::OutputArray fgmask, double learningRateOverride=0);
 	//! returns a copy of the latest reconstructed background image
 	void getBackgroundImage(cv::OutputArray backgroundImage) const;
 	//! returns a copy of the latest reconstructed background descriptors image
 	void getBackgroundDescriptorsImage(cv::OutputArray backgroundDescImage) const;
     //! compute foreground mask
-    virtual void apply(cv::InputArray image, cv::OutputArray fgmask, double learningRateOverride=0);
+    void apply(cv::InputArray image, cv::OutputArray fgmask, double learningRateOverride=0);
 
 protected:
 	//! absolute minimal color distance threshold ('R' or 'radius' in the original ViBe paper, used as the default/initial 'R(x)' value here)
