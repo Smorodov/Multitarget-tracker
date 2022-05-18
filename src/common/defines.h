@@ -24,28 +24,11 @@ class TrackID
 public:
     typedef T value_type;
 
-    TrackID() = default;
-    TrackID(const TrackID& id) = default;
-    TrackID(TrackID&& id) = default;
-    TrackID& operator=(TrackID&& id) noexcept
-    {
-        m_val = std::move(id.m_val);
-        return *this;
-    }
-    TrackID& operator=(const TrackID& id) noexcept
-    {
-        m_val = id.m_val;
-        return *this;
-    }
-    TrackID(value_type val)
-        : m_val(val)
-    {
-    }
-    const TrackID& operator=(value_type val)
-    {
-        m_val = val;
-        return *this;
-    }
+	TrackID() = default;
+	TrackID(value_type val)
+		: m_val(val)
+	{
+	}
 
     bool operator==(const TrackID& id) const
     {

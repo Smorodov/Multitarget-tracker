@@ -87,7 +87,7 @@ public:
 
 		std::vector<cv::Point_<T>> tmpPix;
 		tmpPix.reserve(m_framePoints.size());
-		for (auto pix : m_framePoints)
+		for (const auto& pix : m_framePoints)
 		{
 			tmpPix.emplace_back(static_cast<T>(pix.x), static_cast<T>(pix.y));
 		}
