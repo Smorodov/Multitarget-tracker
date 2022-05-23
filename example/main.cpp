@@ -100,8 +100,6 @@ int main(int argc, char** argv)
     case 7:
     {
         auto carsCounting = new CarsCounting(parser);
-        carsCounting->AddLine(RoadLine(cv::Point2f(0.1f, 0.7f), cv::Point2f(0.47f, 0.7f), 0));
-        carsCounting->AddLine(RoadLine(cv::Point2f(0.52f, 0.6f), cv::Point2f(0.8f, 0.6f), 1));
         detector = std::unique_ptr<CarsCounting>(carsCounting);
         break;
     }

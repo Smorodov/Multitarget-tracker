@@ -204,7 +204,7 @@ void VideoExample::SyncProcess()
 			else if (k == 'm' || k == 'M')
 				manualMode = !manualMode;
 #else
-			std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            //std::this_thread::sleep_for(std::chrono::milliseconds(1));
 #endif
 
 			WriteFrame(writer, frameInfo.m_frames[i].GetMatBGR());

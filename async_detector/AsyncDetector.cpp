@@ -60,13 +60,6 @@ AsyncDetector::AsyncDetector(const cv::CommandLineParser& parser)
 }
 
 ///
-/// \brief AsyncDetector::~AsyncDetector
-///
-AsyncDetector::~AsyncDetector()
-{
-}
-
-///
 /// \brief AsyncDetector::Process
 ///
 void AsyncDetector::Process()
@@ -122,7 +115,7 @@ void AsyncDetector::Process()
         if (k == 27)
             break;
 #else
-		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        //std::this_thread::sleep_for(std::chrono::milliseconds(1));
 #endif
 
         ++framesCounter;
@@ -374,9 +367,9 @@ void AsyncDetector::CaptureThread(std::string fileName, int startFrame, float* f
         framesQue->AddNewFrame(frameInfo, 15);
 
 #if 1
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000 / cvRound(*fps) - 1));
+        //std::this_thread::sleep_for(std::chrono::milliseconds(1000 / cvRound(*fps) - 1));
 #else
-		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        //std::this_thread::sleep_for(std::chrono::milliseconds(1));
 #endif
 
 		++frameInd;
@@ -409,7 +402,6 @@ void AsyncDetector::DetectThread(const config_t& config, cv::Mat firstFrame, Fra
         if (frameInfo)
         {
             detector->Detect(frameInfo->m_clFrame);
-            //std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
             const regions_t& regions = detector->GetDetects();
             frameInfo->m_regions.assign(regions.begin(), regions.end());

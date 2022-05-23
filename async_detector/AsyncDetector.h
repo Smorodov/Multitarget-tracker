@@ -52,7 +52,7 @@ class AsyncDetector
 {
 public:
     AsyncDetector(const cv::CommandLineParser& parser);
-    ~AsyncDetector();
+    ~AsyncDetector() = default;
 
     void Process();
 
