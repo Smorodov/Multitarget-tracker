@@ -267,18 +267,7 @@ bool CarsCounting::InitTracker(cv::UMat frame)
 
     m_tracker = BaseTracker::CreateTracker(settings);
 
-#if 0
-#if 0
-    std::vector<cv::Point> framePoints{ cv::Point(420, 348), cv::Point(509, 283), cv::Point(731, 281), cv::Point(840, 343) };
-    std::vector<cv::Point2f> geoPoints{ cv::Point2f(45.526646, 5.974535), cv::Point2f(45.527566, 5.973849), cv::Point2f(45.527904, 5.974135), cv::Point2f(45.526867, 5.974826) };
-#else
-    std::vector<cv::Point> framePoints{ cv::Point(1665, 746), cv::Point(246, 521), cv::Point(570, 282), cv::Point(1773, 378) };
-    std::vector<cv::Point2f> geoPoints{ cv::Point2f(30.258855, 60.006536), cv::Point2f(30.258051, 60.006855), cv::Point2f(30.258080, 60.007414), cv::Point2f(30.259066, 60.007064) };
-#endif
-    m_geoParams.SetKeyPoints(framePoints, geoPoints);
-#else
     ReadGeobindings(frame.size());
-#endif
     return true;
 }
 
@@ -326,8 +315,11 @@ void CarsCounting::DrawData(cv::Mat frame, const std::vector<TrackingObject>& tr
     if (!m_geoParams.Empty())
     {
         cv::Mat geoMap = m_geoParams.DrawTracksOnMap(tracks);
-        if (!geoMap.empty())
-            cv::imshow("Geo map", geoMap);
+		if (!geoMap.empty())
+		{
+			cv::namedWindow("Geo map", cv::WINDOW_NORMAL);
+			cv::imshow("Geo map", geoMap);
+		}
     }
 
     for (const auto& rl : m_lines)

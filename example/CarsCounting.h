@@ -157,7 +157,7 @@ public:
 
         cv::Mat map = m_map.clone();
 
-#if 0 // Debug output
+#if 1 // Debug output
         // Draw bindings points
         for (size_t i = 0; i < m_geoPoints.size(); ++i)
         {
@@ -169,7 +169,7 @@ public:
 
             cv::line(map, p1, p2, cv::Scalar(255, 255, 255), 1, cv::LINE_AA);
 
-            std::cout << p1 << " - " << p2 << std::endl;
+            //std::cout << p1 << " - " << p2 << std::endl;
 
             std::stringstream label;
             label << std::fixed << std::setw(5) << std::setprecision(5) << "[" << m_geoPoints[i].x << ", " << m_geoPoints[i].y << "]";
