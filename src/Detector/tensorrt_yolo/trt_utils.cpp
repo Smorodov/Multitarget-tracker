@@ -908,11 +908,11 @@ nvinfer1::ILayer * layer_conv(std::vector<nvinfer1::Weights> &trtWeights_,
 	nvinfer1::Weights convWt{ nvinfer1::DataType::kFLOAT, nullptr, size };
 	float *conv_wts = new float[size];
 	std::vector<float> &vec_wts = map_wts_[s_layer_name_ + ".weight"];
+	assert(size == (vec_wts.size()));
 	for (int i = 0; i < size; ++i)
 	{
 		conv_wts[i] = vec_wts[i];
 	}
-	assert(size == (map_wts_[s_layer_name_ + ".weight"].size()));
 	convWt.values = conv_wts;
 	nvinfer1::Weights convBias{ nvinfer1::DataType::kFLOAT, nullptr, 0 };
 	if (b_bias_)

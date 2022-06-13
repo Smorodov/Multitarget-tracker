@@ -72,7 +72,7 @@ public:
 
 	cv::Size get_input_size() const
 	{
-		return cv::Size(_p_net->getInputH(), _p_net->getInputW());
+		return cv::Size(_p_net->getInputW(), _p_net->getInputH());
 	}
 
 private:
