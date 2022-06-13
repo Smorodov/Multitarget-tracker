@@ -203,6 +203,37 @@ T distance(const POINT_TYPE& p1, const POINT_TYPE& p2)
 }
 
 ///
+/// \brief Clamp: Fit rectangle to frame
+/// \param rect
+/// \param size
+/// \return
+///
+inline cv::Rect Clamp(cv::Rect rect, const cv::Size& size)
+{
+	if (rect.x < 0)
+	{
+		rect.width = std::min(rect.width, size.width - 1);
+		rect.x = 0;
+	}
+	else if (rect.x + rect.width >= size.width)
+	{
+		rect.x = std::max(0, size.width - rect.width - 1);
+		rect.width = std::min(rect.width, size.width - 1);
+	}
+	if (rect.y < 0)
+	{
+		rect.height = std::min(rect.height, size.height - 1);
+		rect.y = 0;
+	}
+	else if (rect.y + rect.height >= size.height)
+	{
+		rect.y = std::max(0, size.height - rect.height - 1);
+		rect.height = std::min(rect.height, size.height - 1);
+	}
+	return rect;
+}
+
+///
 ///
 ///
 namespace tracking
