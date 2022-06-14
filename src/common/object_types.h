@@ -86,6 +86,7 @@ enum class ObjectTypes
 	obj_hair_drier,
 	obj_toothbrush,
     obj_vehicle,
+	obj_face,
 	TypesCount
 };
 
