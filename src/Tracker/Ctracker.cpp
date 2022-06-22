@@ -180,6 +180,7 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
 
     cv::Mat dbgAssignment = currFrame.getMat(cv::ACCESS_READ).clone();
     {
+#if 0
         cv::Mat foreground(dbgAssignment.size(), CV_8UC1, cv::Scalar(0, 0, 100));
         for (const auto& track : m_tracks)
         {
@@ -207,10 +208,10 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
                 ++frgrndPtr;
             }
         }
-
+#endif
         for (const auto& reg : regions)
         {
-            cv::rectangle(dbgAssignment, reg.m_brect, cv::Scalar(255, 0, 0), 1);
+            cv::rectangle(dbgAssignment, reg.m_brect, cv::Scalar(0, 255, 255), 2, cv::LINE_4);
         }
     }
 #endif
@@ -275,7 +276,7 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
                         auto p1 = m_tracks[i]->GetLastRect().center;
                         auto p2 = regions[ri].m_rrect.center;
                         cv::line(dbgAssignment, p1, p2, cv::Scalar(255, 0, 255), 1);
-                        cv::putText(dbgAssignment, liness.str(), cv::Point((p1.x + p2.x) / 2, (p1.y + p2.y) / 2), cv::FONT_HERSHEY_DUPLEX, 0.7, cv::Scalar(0, 0, 0), 1, 8);
+                        cv::putText(dbgAssignment, liness.str(), cv::Point((p1.x + p2.x) / 2, (p1.y + p2.y) / 2), cv::FONT_HERSHEY_DUPLEX, 0.7, cv::Scalar(255, 255, 255), 1, 8);
                     }
                 }
             }
@@ -291,15 +292,15 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
                         liness << std::fixed << std::setprecision(2) << costMatrix[i + ri * N];
                         auto p1 = m_tracks[i]->GetLastRect().center;
                         auto p2 = regions[ri].m_rrect.center;
-                        cv::line(dbgAssignment, p1, p2, cv::Scalar(255, 0, 255), 1);
-                        cv::putText(dbgAssignment, liness.str(), cv::Point((p1.x + p2.x) / 2, (p1.y + p2.y) / 2), cv::FONT_HERSHEY_DUPLEX, 0.7, cv::Scalar(0, 0, 0), 1, 8);
+                        cv::line(dbgAssignment, p1, p2, cv::Scalar(255, 255, 255), 1);
+                        cv::putText(dbgAssignment, liness.str(), cv::Point((p1.x + p2.x) / 2, (p1.y + p2.y) / 2), cv::FONT_HERSHEY_DUPLEX, 0.7, cv::Scalar(255, 255, 255), 1, 8);
                     }
                 }
             }
             if (ss.str().length() > 0)
             {
                 auto brect = m_tracks[i]->LastRegion().m_brect;
-                cv::putText(dbgAssignment, ss.str(), cv::Point(brect.x, brect.y), cv::FONT_HERSHEY_DUPLEX, 0.7, cv::Scalar(0, 0, 0), 1, 8);
+                cv::putText(dbgAssignment, ss.str(), cv::Point(brect.x, brect.y), cv::FONT_HERSHEY_DUPLEX, 0.7, cv::Scalar(255, 0, 255), 1, 8);
             }
 #endif
 
