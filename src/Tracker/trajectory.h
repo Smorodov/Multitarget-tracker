@@ -213,9 +213,14 @@ struct TrackingObject
     /// \param sizeRatio
     /// \return
     ///
-	bool IsRobust(int minTraceSize, float minRawRatio, cv::Size2f sizeRatio) const
+	bool IsRobust(int minTraceSize, float minRawRatio, cv::Size2f sizeRatio, size_t lastDetectsCount = 0) const
 	{
 		m_lastRobust = m_trace.size() > static_cast<size_t>(minTraceSize);
+		if (lastDetectsCount)
+		{
+			size_t raws = m_trace.GetRawCount(lastDetectsCount);
+			m_lastRobust = (raws > 0);
+		}
 		m_lastRobust &= m_trace.GetRawCount(m_trace.size() - 1) / static_cast<float>(m_trace.size()) > minRawRatio;
 		if (sizeRatio.width + sizeRatio.height > 0)
 		{
