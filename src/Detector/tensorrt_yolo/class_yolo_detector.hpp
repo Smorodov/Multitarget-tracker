@@ -17,6 +17,10 @@
 
 #include "class_detector.h"
 #include "class_timer.hpp"
+
+///
+/// \brief The YoloDectector class
+///
 class YoloDectector
 {
 public:
@@ -72,7 +76,7 @@ public:
 
 	cv::Size get_input_size() const
 	{
-		return cv::Size(_p_net->getInputW(), _p_net->getInputH());
+		return cv::Size(_p_net->getInputH(), _p_net->getInputW());
 	}
 
 private:
@@ -140,6 +144,5 @@ private:
 	Timer _m_timer;
     cv::Mat m_blob;
 };
-
 
 #endif

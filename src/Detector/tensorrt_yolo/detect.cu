@@ -22,10 +22,6 @@
 
 namespace nvinfer1
 {
-	Detect::Detect()
-	{
-	}
-
 	Detect::Detect(const void* data, size_t length)
 	{
 		const char *d = reinterpret_cast<const char*>(data), *a = d;
@@ -48,10 +44,11 @@ namespace nvinfer1
 	{
 		_n_output_size = (5 + _n_classes)*_n_anchor*_n_grid_h*_n_grid_w;
 	}
-	Detect::~Detect()
-	{}
 
-	inline __device__ float sigmoidGPU(const float& x) { return 1.0f / (1.0f + __expf(-x)); }
+    inline __device__ float sigmoidGPU(const float& x)
+    {
+        return 1.0f / (1.0f + __expf(-x));
+    }
 
 	__global__ void gpu_detect_layer(const float *input_,
 		float* output_,
@@ -181,7 +178,7 @@ namespace nvinfer1
 	 
 
 	//
-	PluginFieldCollection DetectPluginCreator::_fc{};
+    PluginFieldCollection DetectPluginCreator::_fc{};
 	std::vector<PluginField> DetectPluginCreator::_vec_plugin_attributes;
 
 	DetectPluginCreator::DetectPluginCreator()

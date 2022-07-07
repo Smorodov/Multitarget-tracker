@@ -24,7 +24,6 @@ SOFTWARE.
 */
 
 #include "yoloplugin_lib.h"
-#include "yolo_config_parser.h"
 #include "yolov2.h"
 #include "yolov3.h"
 
@@ -95,18 +94,11 @@ static void dsPreProcessBatchInput(const std::vector<cv::Mat*>& cvmats, cv::Mat&
 
 YoloPluginCtx* YoloPluginCtxInit(YoloPluginInitParams* initParams, size_t batchSize)
 {
-    char** gArgV = new char*[2];
-    gArgV[0] = new char[64];
-    gArgV[1] = new char[512];
-    strcpy(gArgV[0], "yolo_plugin_ctx");
-    strcpy(gArgV[1], std::string("--flagfile=" + initParams->configFilePath).c_str());
-//    yoloConfigParserInit(2, gArgV);
-
     YoloPluginCtx* ctx = new YoloPluginCtx;
     ctx->initParams = *initParams;
     ctx->batchSize = batchSize;
-	ctx->networkInfo;// = getYoloNetworkInfo();
-	ctx->inferParams;// = getYoloInferParams();
+    // ctx->networkInfo;// = getYoloNetworkInfo();
+    // ctx->inferParams;// = getYoloInferParams();
 	uint32_t configBatchSize = 0;// = getBatchSize();
 
     // Check if config batchsize matches buffer batch size in the pipeline
@@ -144,7 +136,6 @@ YoloPluginCtx* YoloPluginCtxInit(YoloPluginInitParams* initParams, size_t batchS
         ctx = nullptr;
     }
 
-    delete[] gArgV;
     return ctx;
 }
 
@@ -158,33 +149,27 @@ std::vector<YoloPluginOutput*> YoloPluginProcess(YoloPluginCtx* ctx, std::vector
 
     if (cvmats.size() > 0)
     {
-//		preStart = std::chrono::high_resolution_clock::now();
+        preStart = std::chrono::steady_clock::now();
         dsPreProcessBatchInput(cvmats, preprocessedImages, ctx->initParams.processingWidth,
                                ctx->initParams.processingHeight, ctx->inferenceNetwork->getInputH(),
                                ctx->inferenceNetwork->getInputW());
-//		preEnd = std::chrono::high_resolution_clock::now();
+        preEnd = std::chrono::steady_clock::now();
 
-//		inferStart = std::chrono::high_resolution_clock::now();
+        inferStart = std::chrono::steady_clock::now();
         ctx->inferenceNetwork->doInference(preprocessedImages.data, cvmats.size());
-  //      inferEnd = std::chrono::high_resolution_clock::now();
+        inferEnd = std::chrono::steady_clock::now();
 
-//		postStart = std::chrono::high_resolution_clock::now();
+        postStart = std::chrono::steady_clock::now();
         decodeBatchDetections(ctx, outputs);
-//		postEnd = std::chrono::high_resolution_clock::now();
+        postEnd = std::chrono::steady_clock::now();
     }
 
     // Perf calc
     if (ctx->inferParams.printPerfInfo)
     {
-        preElapsed
-            = ((preEnd - preStart) + (preEnd - preStart) / 1000000.0)
-            * 1000;
-        inferElapsed = ((inferEnd - inferStart)
-                        + (inferEnd - inferStart) / 1000000.0)
-            * 1000;
-        postElapsed = ((postEnd - postStart)
-                       + (postEnd - postStart) / 1000000.0)
-            * 1000;
+        preElapsed = ((preEnd - preStart) + (preEnd - preStart) / 1000000.0) * 1000;
+        inferElapsed = ((inferEnd - inferStart) + (inferEnd - inferStart) / 1000000.0) * 1000;
+        postElapsed = ((postEnd - postStart) + (postEnd - postStart) / 1000000.0) * 1000;
 
         ctx->inferTime += inferElapsed.count();
         ctx->preTime += preElapsed.count();

@@ -120,7 +120,7 @@ namespace nvinfer1
 	class YoloLayer : public IPluginV2
 	{
 	public:
-		explicit YoloLayer();
+        explicit YoloLayer() = default;
 		YoloLayer(const void* data, size_t length);
 		YoloLayer(const uint32_t& numBoxes, const uint32_t& numClasses, const uint32_t& grid_h_, const uint32_t &grid_w_);
 		int getNbOutputs() const noexcept override;
@@ -139,22 +139,22 @@ namespace nvinfer1
 		int enqueue(int batchSize, const void* const* inputs, void** outputs, void* workspace, cudaStream_t stream) noexcept;
         int enqueue(int batchSize, const void* const* inputs, void* const* outputs, void* workspace, cudaStream_t stream) noexcept;
 
-		size_t getSerializationSize() const noexcept  override;
-		void serialize(void* buffer) const noexcept  override;
+		size_t getSerializationSize() const noexcept override;
+		void serialize(void* buffer) const noexcept override;
 		
-		const char* getPluginType() const noexcept  override
+		const char* getPluginType() const noexcept override
 		{
 			return "YOLO_TRT";
 		}
 		bool supportsFormat(DataType type, PluginFormat format) const noexcept override;
 		void configureWithFormat(const Dims* inputDims, int nbInputs, const Dims* outputDims, int nbOutputs, DataType type, PluginFormat format, int maxBatchSize) noexcept override;
 
-		const char* getPluginVersion() const noexcept  override
+		const char* getPluginVersion() const noexcept override
 		{
 			return "1.0";
 		}
 
-		void setPluginNamespace(const char* pluginNamespace) noexcept  override
+		void setPluginNamespace(const char* pluginNamespace) noexcept override
 		{
 			_s_plugin_namespace = pluginNamespace;
 		}
@@ -162,7 +162,7 @@ namespace nvinfer1
 		{
 			return _s_plugin_namespace.c_str();
 		}
-		void destroy() noexcept  override
+		void destroy() noexcept override
 		{
 			delete this;
 		}
@@ -187,19 +187,19 @@ namespace nvinfer1
 
 		~YoloLayerPluginCreator() override = default;
 
-		const char* getPluginName() const noexcept  override;
+		const char* getPluginName() const noexcept override;
 
 		const char* getPluginVersion() const  noexcept override;
 
-		const PluginFieldCollection* getFieldNames() noexcept  override;
+		const PluginFieldCollection* getFieldNames() noexcept override;
 
-		IPluginV2* createPlugin(const char* name, const PluginFieldCollection* fc)  noexcept override;
+		IPluginV2* createPlugin(const char* name, const PluginFieldCollection* fc) noexcept override;
 
-		IPluginV2* deserializePlugin(const char* name, const void* serialData, size_t serialLength) noexcept  override;
+		IPluginV2* deserializePlugin(const char* name, const void* serialData, size_t serialLength) noexcept override;
 
-		void setPluginNamespace(const char* libNamespace) noexcept  override;
+		void setPluginNamespace(const char* libNamespace) noexcept override;
 
-		const char* getPluginNamespace() const noexcept  override;
+		const char* getPluginNamespace() const noexcept override;
 
 	private:
 		std::string mNamespace;

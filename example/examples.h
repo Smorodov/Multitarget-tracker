@@ -825,9 +825,10 @@ protected:
                 YOLOv3,
                 YOLOv4,
                 TinyYOLOv4,
-                YOLOv5
+                YOLOv5,
+                YOLOv6
             };
-            YOLOModels usedModel = YOLOModels::TinyYOLOv4;
+            YOLOModels usedModel = YOLOModels::YOLOv6;
             switch (usedModel)
             {
             case YOLOModels::TinyYOLOv3:
@@ -876,6 +877,16 @@ protected:
                 config.emplace("confidenceThreshold", "0.5");
                 config.emplace("inference_precison", "FP32");
                 config.emplace("net_type", "YOLOV5");
+                maxBatch = 1;
+                config.emplace("maxCropRatio", "-1");
+                break;
+
+            case YOLOModels::YOLOv6:
+                config.emplace("modelConfiguration", pathToModel + "yolov6s.onnx");
+                config.emplace("modelBinary", pathToModel + "yolov6s.onnx");
+                config.emplace("confidenceThreshold", "0.5");
+                config.emplace("inference_precison", "FP32");
+                config.emplace("net_type", "YOLOV6");
                 maxBatch = 1;
                 config.emplace("maxCropRatio", "-1");
                 break;

@@ -7,6 +7,9 @@
 
 namespace tensor_rt
 {
+    ///
+    /// \brief The Result struct
+    ///
 	struct Result
 	{
 		int		 id = -1;
@@ -21,14 +24,21 @@ namespace tensor_rt
 	
 	using BatchResult = std::vector<Result>;
 
-	enum ModelType
+    ///
+    /// \brief The ModelType enum
+    ///
+    enum ModelType
 	{
         YOLOV3,
         YOLOV4,
         YOLOV4_TINY,
-        YOLOV5
+        YOLOV5,
+        YOLOV6
 	};
 
+    ///
+    /// \brief The Precision enum
+    ///
 	enum Precision
 	{
 		INT8 = 0,
@@ -36,6 +46,9 @@ namespace tensor_rt
 		FP32
 	};
 
+    ///
+    /// \brief The Config struct
+    ///
 	struct Config
 	{
 		std::string file_model_cfg = "yolov4.cfg";
@@ -44,9 +57,9 @@ namespace tensor_rt
 
 		float detect_thresh = 0.5f;
 
-		ModelType	net_type = YOLOV4;
+        ModelType net_type = YOLOV4;
 
-		Precision	inference_precison = FP32;
+        Precision inference_precison = FP32;
 
 		int	gpu_id = 0;
 
@@ -55,25 +68,28 @@ namespace tensor_rt
 		std::string calibration_image_list_file_txt = "configs/calibration_images.txt";
 	};
 
+    ///
+    /// \brief The Detector class
+    ///
 	class API Detector
 	{
 	public:
-		explicit Detector();
+        explicit Detector() = default;
+        ~Detector();
 
-		~Detector();
+        bool Init(const Config& config);
 
-		void init(const Config &config);
+        void Detect(const std::vector<cv::Mat>& mat_image, std::vector<BatchResult>& vec_batch_result);
 
-		void detect(const std::vector<cv::Mat> &mat_image, std::vector<BatchResult> &vec_batch_result);
+        cv::Size GetInputSize() const;
 
-		cv::Size get_input_size() const;
+		class Impl;
 
 	private:
-
 		Detector(const Detector &);
 		const Detector &operator =(const Detector &);
-		class Impl;
-		Impl *_impl = nullptr;
+
+        Impl* m_impl = nullptr;
 	};
 }
 #endif // !CLASS_QH_DETECTOR_H_

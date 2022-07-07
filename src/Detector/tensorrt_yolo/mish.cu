@@ -6,14 +6,6 @@
 
 namespace nvinfer1
 {
-    MishPlugin::MishPlugin()
-    {
-    }
-
-    MishPlugin::~MishPlugin()
-    {
-    }
-
     // create the plugin at runtime from a byte stream
     MishPlugin::MishPlugin(const void* data, size_t length)
     {
@@ -31,7 +23,7 @@ namespace nvinfer1
         return sizeof(input_size_);
     }
 
-    int MishPlugin::initialize()noexcept
+    int MishPlugin::initialize() noexcept
     { 
         return 0;
     }
