@@ -74,7 +74,7 @@ namespace tensor_rt
 	class API Detector
 	{
 	public:
-        explicit Detector() = default;
+        explicit Detector() noexcept;
         ~Detector();
 
         bool Init(const Config& config);

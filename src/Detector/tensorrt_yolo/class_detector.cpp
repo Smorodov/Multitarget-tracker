@@ -116,6 +116,13 @@ namespace tensor_rt
         SampleYoloParams m_params;
     };
 
+	///
+	/// \brief Detector::Detector
+	///
+	Detector::Detector() noexcept
+	{
+	}
+
     ///
     /// \brief Detector::~Detector
     ///
