@@ -3,9 +3,7 @@
 
 # Last changes
 
-* Works Python example with Motion detector
-
-* Robust tracking a small and fast objects with background subtraction algorithm
+* YOLOv6 worked with TensorRT! Download pretrained onnx models [here (meituan/YOLOv6)](https://github.com/meituan/YOLOv6/releases/tag/0.1.0) and run Multitarget-tracker with -e=6 example
 
 # New videos!
 
