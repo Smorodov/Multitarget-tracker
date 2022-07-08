@@ -230,6 +230,7 @@ And so on.
 * YOLO v3 models: https://pjreddie.com/darknet/yolo/
 * Darknet inference and YOLO v4 models: https://github.com/AlexeyAB/darknet
 * NVidia TensorRT inference and YOLO v5 models: https://github.com/enazoe/yolo-tensorrt
+* YOLOv6 models: https://github.com/meituan/YOLOv6/releases
 * GOTURN models: https://github.com/opencv/opencv_extra/tree/c4219d5eb3105ed8e634278fad312a1a8d2c182d/testdata/tracking
 * DAT tracker: https://github.com/foolwood/DAT
 * STAPLE tracker: https://github.com/xuduo35/STAPLE
