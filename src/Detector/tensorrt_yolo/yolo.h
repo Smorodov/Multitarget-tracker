@@ -95,6 +95,9 @@ struct TensorInfo
     float* hostBuffer{nullptr};
 };
 
+///
+/// \brief The Yolo class
+///
 class Yolo
 {
 public:
@@ -150,24 +153,22 @@ protected:
     // TRT specific members
 	//Logger glogger;
     uint32_t m_BatchSize = 1;
-    nvinfer1::INetworkDefinition* m_Network;
-    nvinfer1::IBuilder* m_Builder;
-    nvinfer1::IHostMemory* m_ModelStream;
-    nvinfer1::ICudaEngine* m_Engine;
-    nvinfer1::IExecutionContext* m_Context;
+    nvinfer1::INetworkDefinition* m_Network = nullptr;
+    nvinfer1::IBuilder* m_Builder = nullptr;
+    nvinfer1::IHostMemory* m_ModelStream = nullptr;
+    nvinfer1::ICudaEngine* m_Engine = nullptr;
+    nvinfer1::IExecutionContext* m_Context = nullptr;
     std::vector<void*> m_DeviceBuffers;
-    int m_InputBindingIndex;
-    cudaStream_t m_CudaStream;
+    int m_InputBindingIndex = -1;
+    cudaStream_t m_CudaStream = nullptr;
 
-    virtual std::vector<BBoxInfo> decodeTensor(const int imageIdx, const int imageH,
-                                               const int imageW, const TensorInfo& tensor)
-        = 0;
+    virtual std::vector<BBoxInfo> decodeTensor(const int imageIdx, const int imageH, const int imageW, const TensorInfo& tensor) = 0;
 
     inline void addBBoxProposal(const float bx, const float by, const float bw, const float bh,
-                                const uint32_t stride, const float scalingFactor,
+                                const uint32_t stride, const float /*scalingFactor*/,
                                 const float /*xOffset*/, const float /*yOffset*/,
                                 const int maxIndex, const float maxProb,
-		const uint32_t 	image_w, const uint32_t image_h,
+                                const uint32_t /*image_w*/, const uint32_t /*image_h*/,
                                 std::vector<BBoxInfo>& binfo)
     {
         BBoxInfo bbi;
@@ -183,10 +184,9 @@ protected:
         binfo.push_back(bbi);
     }
 
-	void calcuate_letterbox_message(const int m_InputH, const int m_InputW,
-		const int imageH, const int imageW,
+	void calcuate_letterbox_message(const int imageH, const int imageW,
 		float &sh,float &sw,
-		int &xOffset,int &yOffset)
+		int &xOffset,int &yOffset) const
 	{
         float r = std::min(static_cast<float>(m_InputH) / static_cast<float>(imageH), static_cast<float>(m_InputW) / static_cast<float>(imageW));
         int resizeH = (std::round(imageH*r));
@@ -269,12 +269,11 @@ protected:
 		bbi.classId = getClassId(maxIndex);
 		binfo.push_back(bbi);
 	};
+
 private:
     Logger m_Logger;
-    void createYOLOEngine(const nvinfer1::DataType dataType = nvinfer1::DataType::kFLOAT,
-                          Int8EntropyCalibrator* calibrator = nullptr);
-	void create_engine_yolov5(const nvinfer1::DataType dataType = nvinfer1::DataType::kFLOAT,
-		Int8EntropyCalibrator* calibrator = nullptr);
+    void createYOLOEngine(const nvinfer1::DataType dataType = nvinfer1::DataType::kFLOAT, Int8EntropyCalibrator* calibrator = nullptr);
+    void create_engine_yolov5(const nvinfer1::DataType dataType = nvinfer1::DataType::kFLOAT, Int8EntropyCalibrator* calibrator = nullptr);
     std::vector<std::map<std::string, std::string>> parseConfigFile(const std::string cfgFilePath);
     void parseConfigBlocks();
 	void parse_cfg_blocks_v5(const  std::vector<std::map<std::string, std::string>> &vec_block_);

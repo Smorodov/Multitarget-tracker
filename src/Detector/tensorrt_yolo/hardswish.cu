@@ -37,9 +37,6 @@ namespace nvinfer1
 		assert(d == a + length);
 	}
 
-	Hardswish::~Hardswish()
-	{}
-	
 	__global__ void kernel_hardswish(const float *input_, float *output_, int n_data_size_)
 	{
 		int i = threadIdx.x + blockIdx.x * blockDim.x;

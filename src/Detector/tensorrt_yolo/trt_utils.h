@@ -45,7 +45,7 @@ SOFTWARE.
 
 #include "ds_image.h"
 #include "plugin_factory.h"
-//#include "logging.h"
+
 class DsImage;
 struct BBox
 {
@@ -78,7 +78,7 @@ public:
 		return *this;
 	}
 
-    void log(nvinfer1::ILogger::Severity severity, const char* msg)  noexcept override
+    void log(nvinfer1::ILogger::Severity severity, const char* msg) noexcept override
     {
         // suppress info-level messages
         if (severity == Severity::kINFO) return;

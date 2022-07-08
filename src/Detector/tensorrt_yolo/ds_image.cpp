@@ -108,11 +108,12 @@ DsImage::DsImage(const std::string& path, const std::string &s_net_type_, const 
 		int resizeH = ((m_Height / dim) * inputH);
 		int resizeW = ((m_Width / dim) * inputW);
 		m_ScalingFactor = static_cast<float>(resizeH) / static_cast<float>(m_Height);
-		float	m_ScalingFactorw = static_cast<float>(resizeW) / static_cast<float>(m_Width);
 
 		// Additional checks for images with non even dims
-		if ((inputW - resizeW) % 2) resizeW--;
-		if ((inputH - resizeH) % 2) resizeH--;
+        if ((inputW - resizeW) % 2)
+            resizeW--;
+        if ((inputH - resizeH) % 2)
+            resizeH--;
 		assert((inputW - resizeW) % 2 == 0);
 		assert((inputH - resizeH) % 2 == 0);
 
@@ -125,17 +126,16 @@ DsImage::DsImage(const std::string& path, const std::string &s_net_type_, const 
 		// resizing
 		cv::resize(m_OrigImage, m_LetterboxImage, cv::Size(resizeW, resizeH), 0, 0, cv::INTER_CUBIC);
 		// letterboxing
-		cv::copyMakeBorder(m_LetterboxImage, m_LetterboxImage, m_YOffset, m_YOffset, m_XOffset,
-			m_XOffset, cv::BORDER_CONSTANT, cv::Scalar(128, 128, 128));
+        cv::copyMakeBorder(m_LetterboxImage, m_LetterboxImage, m_YOffset, m_YOffset, m_XOffset, m_XOffset, cv::BORDER_CONSTANT, cv::Scalar(128, 128, 128));
 		//	cv::imwrite("letter.jpg", m_LetterboxImage);
-		// converting to RGB
-	//	cv::cvtColor(m_LetterboxImage, m_LetterboxImage, cv::COLOR_BGR2RGB);
+        // converting to RGB
+        //	cv::cvtColor(m_LetterboxImage, m_LetterboxImage, cv::COLOR_BGR2RGB);
 	}
 	else
 	{
 		cv::resize(m_OrigImage, m_LetterboxImage, cv::Size(inputW, inputH), 0, 0, cv::INTER_CUBIC);
-		// converting to RGB
-	//	cv::cvtColor(m_LetterboxImage, m_LetterboxImage, cv::COLOR_BGR2RGB);
+        // converting to RGB
+        //	cv::cvtColor(m_LetterboxImage, m_LetterboxImage, cv::COLOR_BGR2RGB);
 	}
 }
 
@@ -150,7 +150,6 @@ void DsImage::letterbox(const int& inputH, const int& inputW)
 	int resizeH = ((m_Height / dim) * inputH);
 	int resizeW = ((m_Width / dim) * inputW);
 	m_ScalingFactor = static_cast<float>(resizeH) / static_cast<float>(m_Height);
-	float	m_ScalingFactorw = static_cast<float>(resizeW) / static_cast<float>(m_Width);
 
 	// Additional checks for images with non even dims
 	if ((inputW - resizeW) % 2) resizeW--;
@@ -167,8 +166,7 @@ void DsImage::letterbox(const int& inputH, const int& inputW)
 	// resizing
 	cv::resize(m_OrigImage, m_LetterboxImage, cv::Size(resizeW, resizeH), 0, 0, cv::INTER_LINEAR);
 	// letterboxing
-	cv::copyMakeBorder(m_LetterboxImage, m_LetterboxImage, m_YOffset, m_YOffset, m_XOffset,
-		m_XOffset, cv::BORDER_CONSTANT, cv::Scalar(128, 128, 128));
+    cv::copyMakeBorder(m_LetterboxImage, m_LetterboxImage, m_YOffset, m_YOffset, m_XOffset, m_XOffset, cv::BORDER_CONSTANT, cv::Scalar(128, 128, 128));
 	//	cv::imwrite("letter.jpg", m_LetterboxImage);
 }
 

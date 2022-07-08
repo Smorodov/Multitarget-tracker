@@ -40,13 +40,15 @@ SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 find_package(CUDNN REQUIRED)
 find_package(TensorRT REQUIRED)
 
+message("TensorRT major version: " ${TensorRT_VERSION_MAJOR})
+
 include_directories(${OpenCV_INCLUDE_DIRS})
 include_directories(${CUDA_INCLUDE_DIRS})
 include_directories(${CUDNN_INCLUDE_DIR})
 include_directories(${TensorRT_INCLUDE_DIRS})
 
-file(GLOB TENSORRT_SOURCE_FILES *.cpp)
-file(GLOB TENSORRT_HEADER_FILES *.h*)
+file(GLOB TENSORRT_SOURCE_FILES *.cpp common/*.cpp)
+file(GLOB TENSORRT_HEADER_FILES *.h* common/*.h*)
 
 file(GLOB TENSORRT_CUDA_FILES *.cu)
 
@@ -73,7 +75,7 @@ set(TENSORRT_LIBS
 )
 
 if (CMAKE_COMPILER_IS_GNUCXX)
-    set(TENSORRT_LIBS ${TENSORRT_LIBS} stdc++fs nvinfer_plugin)
+    set(TENSORRT_LIBS ${TENSORRT_LIBS} stdc++fs nvinfer_plugin nvonnxparser)
 endif(CMAKE_COMPILER_IS_GNUCXX)
 
 target_link_libraries(${libname_rt} ${TENSORRT_LIBS})

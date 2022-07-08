@@ -38,10 +38,10 @@ public:
                           const std::string& inputBlobName, const std::string &s_net_type_);
     virtual ~Int8EntropyCalibrator();
 
-    int getBatchSize() const noexcept  override { return m_BatchSize; }
-    bool getBatch(void* bindings[], const char* names[], int nbBindings) noexcept  override;
-    const void* readCalibrationCache(size_t& length) noexcept  override;
-    void writeCalibrationCache(const void* cache, size_t length) noexcept  override;
+    int getBatchSize() const noexcept override { return m_BatchSize; }
+    bool getBatch(void* bindings[], const char* names[], int nbBindings) noexcept override;
+    const void* readCalibrationCache(size_t& length) noexcept override;
+    void writeCalibrationCache(const void* cache, size_t length) noexcept override;
 
 private:
     const uint32_t m_BatchSize;
@@ -52,7 +52,7 @@ private:
     const std::string m_InputBlobName;
     const std::string _s_net_type;
     const std::string m_CalibTableFilePath{nullptr};
-    uint32_t m_ImageIndex;
+    uint32_t m_ImageIndex = 0;
     bool m_ReadCache{true};
     void* m_DeviceInput{nullptr};
     std::vector<std::string> m_ImageList;

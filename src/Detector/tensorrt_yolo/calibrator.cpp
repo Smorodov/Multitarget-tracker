@@ -42,9 +42,8 @@ Int8EntropyCalibrator::Int8EntropyCalibrator(const uint32_t& batchSize, const st
     m_InputSize(inputSize),
     m_InputCount(batchSize * inputSize),
     m_InputBlobName(inputBlobName),
-    m_CalibTableFilePath(calibTableFilePath),
-    m_ImageIndex(0),
-    _s_net_type(s_net_type_)
+    _s_net_type(s_net_type_),
+    m_CalibTableFilePath(calibTableFilePath)
 {
     if (!fileExists(m_CalibTableFilePath, false))
     {
@@ -59,7 +58,10 @@ Int8EntropyCalibrator::Int8EntropyCalibrator(const uint32_t& batchSize, const st
     NV_CUDA_CHECK(cudaMalloc(&m_DeviceInput, m_InputCount * sizeof(float)));
 }
 
-Int8EntropyCalibrator::~Int8EntropyCalibrator() { NV_CUDA_CHECK(cudaFree(m_DeviceInput)); }
+Int8EntropyCalibrator::~Int8EntropyCalibrator()
+{
+    NV_CUDA_CHECK(cudaFree(m_DeviceInput));
+}
 
 bool Int8EntropyCalibrator::getBatch(void* bindings[], const char* names[], int /*nbBindings*/) noexcept
 {

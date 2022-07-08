@@ -7,10 +7,7 @@
 /*****************************/
 namespace nvinfer1
 {
-	YoloLayer::YoloLayer()
-	{}
-
-	YoloLayer::YoloLayer(const void* data, size_t length)
+    YoloLayer::YoloLayer(const void* data, size_t length)
 	{
 		const char *d = static_cast<const char*>(data), *a = d;
 		re(d, m_NumBoxes);
@@ -20,6 +17,7 @@ namespace nvinfer1
 		re(d, m_OutputSize);
 		assert(d = a + length);
 	}
+
 	void YoloLayer::serialize(void* buffer)const noexcept
 	{
 		char *d = static_cast<char*>(buffer), *a = d;
@@ -36,7 +34,7 @@ namespace nvinfer1
 		return (type == DataType::kFLOAT && format == PluginFormat::kLINEAR);
 	}
 
-	void YoloLayer::configureWithFormat(const Dims* inputDims, int nbInputs, const Dims* outputDims, int nbOutputs, DataType type, PluginFormat format, int maxBatchSize) noexcept
+    void YoloLayer::configureWithFormat(const Dims* /*inputDims*/, int /*nbInputs*/, const Dims* /*outputDims*/, int /*nbOutputs*/, DataType /*type*/, PluginFormat /*format*/, int /*maxBatchSize*/) noexcept
 	{
 	}
 
@@ -62,8 +60,7 @@ namespace nvinfer1
 
 	int YoloLayer::getNbOutputs() const noexcept { return 1; }
 
-	nvinfer1::Dims YoloLayer::getOutputDimensions(int index, const nvinfer1::Dims* inputs,
-		int nbInputDims) noexcept
+    nvinfer1::Dims YoloLayer::getOutputDimensions(int index, const nvinfer1::Dims* inputs, int nbInputDims) noexcept
 	{
 		assert(index == 0);
 		assert(nbInputDims == 1);
@@ -77,20 +74,25 @@ namespace nvinfer1
 	//    assert(inputDims != nullptr);
 	//}
 
-	int YoloLayer::initialize() noexcept { return 0; }
+    int YoloLayer::initialize() noexcept
+    {
+        return 0;
+    }
 
-	void YoloLayer::terminate() noexcept {}
+    void YoloLayer::terminate() noexcept
+    {
+    }
 
-	size_t YoloLayer::getWorkspaceSize(int maxBatchSize) const noexcept
+    size_t YoloLayer::getWorkspaceSize(int /*maxBatchSize*/) const noexcept
 	{
 		return 0;
 	}
 
-	int YoloLayer::enqueue(int batchSize,
-		const void* const* inputs,
-		void* const* outputs,
-		void* workspace,
-		cudaStream_t stream) noexcept
+    int YoloLayer::enqueue(int batchSize,
+                           const void* const* inputs,
+                           void* const* outputs,
+                           void* /*workspace*/,
+                           cudaStream_t stream) noexcept
 	{
 		NV_CUDA_CHECK(cudaYoloLayerV3(inputs[0], outputs[0], batchSize, _n_grid_h, _n_grid_w, m_NumClasses,
 			m_NumBoxes, m_OutputSize, stream));
@@ -98,10 +100,10 @@ namespace nvinfer1
 	}
 
     int YoloLayer::enqueue(int batchSize,
-		const void* const* inputs,
-		void** outputs,
-		void* workspace,
-		cudaStream_t stream) noexcept
+                           const void* const* inputs,
+                           void** outputs,
+                           void* workspace,
+                           cudaStream_t stream) noexcept
 	{
 		return enqueue(batchSize, inputs, (void* const*)outputs, workspace, stream);
 	}
@@ -140,17 +142,16 @@ namespace nvinfer1
 		return &mFC;
 	}
 
-	IPluginV2* YoloLayerPluginCreator::createPlugin(const char* name, const PluginFieldCollection* fc)noexcept
+    IPluginV2* YoloLayerPluginCreator::createPlugin(const char* /*name*/, const PluginFieldCollection* /*fc*/) noexcept
 	{
 		YoloLayer* obj = new YoloLayer();
 		obj->setPluginNamespace(mNamespace.c_str());
 		return obj;
 	}
 
-	IPluginV2* YoloLayerPluginCreator::deserializePlugin(const char* name, const void* serialData, size_t serialLength)noexcept
+    IPluginV2* YoloLayerPluginCreator::deserializePlugin(const char* /*name*/, const void* serialData, size_t serialLength) noexcept
 	{
-		// This object will be deleted when the network is destroyed, which will
-		// call MishPlugin::destroy()
+        // This object will be deleted when the network is destroyed, which will call MishPlugin::destroy()
 		YoloLayer* obj = new YoloLayer(serialData, serialLength);
 		obj->setPluginNamespace(mNamespace.c_str());
 		return obj;
@@ -166,6 +167,4 @@ namespace nvinfer1
 	{
 		return mNamespace.c_str();
 	}
-
-
 }

@@ -9,11 +9,11 @@ YoloV5::YoloV5(
 
 std::vector<BBoxInfo> YoloV5::decodeTensor(const int imageIdx, const int imageH, const int imageW, const TensorInfo& tensor)
 {
-	float	scale_h = 1.f;
-	float	scale_w = 1.f;
+	float scale_h = 1.f;
+	float scale_w = 1.f;
 	int	xOffset = 0;
 	int yOffset = 0;
-	calcuate_letterbox_message(m_InputH, m_InputW, imageH, imageW, scale_h, scale_w, xOffset, yOffset);
+	calcuate_letterbox_message(imageH, imageW, scale_h, scale_w, xOffset, yOffset);
 	const float* detections = &tensor.hostBuffer[imageIdx * tensor.volume];
 
 	std::vector<BBoxInfo> binfo;

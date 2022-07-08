@@ -6,38 +6,27 @@
 #include <sstream>
 #include <iomanip>
 
-using namespace nvinfer1;
+namespace nvinfer1
+{
 REGISTER_TENSORRT_PLUGIN(DetectPluginCreator);
+}
 
-Yolo::Yolo( const NetworkInfo& networkInfo, const InferParams& inferParams) :
-	m_NetworkType(networkInfo.networkType),
-	m_ConfigFilePath(networkInfo.configFilePath),
-	m_WtsFilePath(networkInfo.wtsFilePath),
-	m_LabelsFilePath(networkInfo.labelsFilePath),
-	m_Precision(networkInfo.precision),
-	m_DeviceType(networkInfo.deviceType),
-	m_CalibImages(inferParams.calibImages),
-	m_CalibImagesFilePath(inferParams.calibImagesPath),
-	m_CalibTableFilePath(networkInfo.calibrationTablePath),
-	m_InputBlobName(networkInfo.inputBlobName),
-	m_InputH(0),
-	m_InputW(0),
-	m_InputC(0),
-	m_InputSize(0),
-	m_ProbThresh(inferParams.probThresh),
-	m_NMSThresh(inferParams.nmsThresh),
-	m_PrintPerfInfo(inferParams.printPerfInfo),
-	m_PrintPredictions(inferParams.printPredictionInfo),
-	m_BatchSize(inferParams.batchSize),
-	m_Logger(Logger()),
-	m_Network(nullptr),
-	m_Builder(nullptr),
-	m_ModelStream(nullptr),
-	m_Engine(nullptr),
-	m_Context(nullptr),
-	m_InputBindingIndex(-1),
-	m_CudaStream(nullptr),
-	_n_yolo_ind(0)
+Yolo::Yolo(const NetworkInfo& networkInfo, const InferParams& inferParams)
+    : m_NetworkType(networkInfo.networkType),
+      m_ConfigFilePath(networkInfo.configFilePath),
+      m_WtsFilePath(networkInfo.wtsFilePath),
+      m_LabelsFilePath(networkInfo.labelsFilePath),
+      m_Precision(networkInfo.precision),
+      m_DeviceType(networkInfo.deviceType),
+      m_CalibImages(inferParams.calibImages),
+      m_CalibImagesFilePath(inferParams.calibImagesPath),
+      m_CalibTableFilePath(networkInfo.calibrationTablePath),
+      m_InputBlobName(networkInfo.inputBlobName),
+      m_ProbThresh(inferParams.probThresh),
+      m_NMSThresh(inferParams.nmsThresh),
+      m_PrintPerfInfo(inferParams.printPerfInfo),
+      m_PrintPredictions(inferParams.printPredictionInfo),
+      m_BatchSize(inferParams.batchSize)
 {
 	// m_ClassNames = loadListFromTextFile(m_LabelsFilePath);
 
@@ -98,13 +87,21 @@ Yolo::~Yolo()
     NV_CUDA_CHECK(cudaStreamDestroy(m_CudaStream));
     if (m_Context)
     {
-        m_Context->destroy();
+#if (NV_TENSORRT_MAJOR < 8)
+		m_Context->destroy();
+#else
+        delete m_Context;
+#endif
         m_Context = nullptr;
     }
 
     if (m_Engine)
     {
-        m_Engine->destroy();
+#if (NV_TENSORRT_MAJOR < 8)
+		m_Engine->destroy();
+#else
+        delete m_Engine;
+#endif
         m_Engine = nullptr;
     }
 }
@@ -144,8 +141,7 @@ void Yolo::createYOLOEngine(const nvinfer1::DataType dataType, Int8EntropyCalibr
 
     nvinfer1::ITensor* data = m_Network->addInput(
         m_InputBlobName.c_str(), nvinfer1::DataType::kFLOAT,
-		nvinfer1::Dims{ 3,static_cast<int>(m_InputC), static_cast<int>(m_InputH),
-						  static_cast<int>(m_InputW) });
+        nvinfer1::Dims{ 3, static_cast<int>(m_InputC), static_cast<int>(m_InputH), static_cast<int>(m_InputW) });
     assert(data != nullptr);
     // Add elementwise layer to normalize pixel values 0-1
     nvinfer1::Dims divDims{
@@ -421,10 +417,11 @@ void Yolo::createYOLOEngine(const nvinfer1::DataType dataType, Int8EntropyCalibr
     }
 
   //  m_Builder->allowGPUFallback(true);
+#if 0
     int nbLayers = m_Network->getNbLayers();
     int layersOnDLA = 0;
- //   std::cout << "Total number of layers: " << nbLayers << std::endl;
-   /* for (int i = 0; i < nbLayers; i++)
+    std::cout << "Total number of layers: " << nbLayers << std::endl;
+    for (int i = 0; i < nbLayers; i++)
     {
         nvinfer1::ILayer* curLayer = m_Network->getLayer(i);
         if (m_DeviceType == "kDLA" && m_Builder->canRunOnDLA(curLayer))
@@ -433,12 +430,13 @@ void Yolo::createYOLOEngine(const nvinfer1::DataType dataType, Int8EntropyCalibr
             layersOnDLA++;
             std::cout << "Set layer " << curLayer->getName() << " to run on DLA" << std::endl;
         }
-    }*/
- //   std::cout << "Total number of layers on DLA: " << layersOnDLA << std::endl;
+    }
+    std::cout << "Total number of layers on DLA: " << layersOnDLA << std::endl;
+#endif
 
     // Build the engine
     std::cout << "Building the TensorRT Engine..." << std::endl;
-    m_Engine = m_Builder->buildEngineWithConfig(*m_Network,*config);
+    m_Engine = m_Builder->buildEngineWithConfig(*m_Network, *config);
     assert(m_Engine != nullptr);
     std::cout << "Building complete!" << std::endl;
 
@@ -620,8 +618,7 @@ void Yolo::create_engine_yolov5(const nvinfer1::DataType dataType,
 	nvinfer1::ITensor* data = m_Network->addInput(
 		m_InputBlobName.c_str(),
 		nvinfer1::DataType::kFLOAT,
-		nvinfer1::Dims{3, static_cast<int>(m_InputC), static_cast<int>(m_InputH),
-		static_cast<int>(m_InputW) });
+        nvinfer1::Dims{3, static_cast<int>(m_InputC), static_cast<int>(m_InputH), static_cast<int>(m_InputW) });
 	assert(data != nullptr);
 	// Add elementwise layer to normalize pixel values 0-1
 	nvinfer1::Dims divDims{
@@ -893,22 +890,23 @@ void Yolo::create_engine_yolov5(const nvinfer1::DataType dataType,
 		//   m_Builder->setHalf2Mode(true);
 	}
 
-//	m_Builder->allowGPUFallback(true);
-	//int nbLayers = m_Network->getNbLayers();
-	//int layersOnDLA = 0;
-	////   std::cout << "Total number of layers: " << nbLayers << std::endl;
-	//for (int i = 0; i < nbLayers; i++)
-	//{
-	//	nvinfer1::ILayer* curLayer = m_Network->getLayer(i);
-	//	if (m_DeviceType == "kDLA" && m_Builder->canRunOnDLA(curLayer))
-	//	{
-	//		m_Builder->setDeviceType(curLayer, nvinfer1::DeviceType::kDLA);
-	//		layersOnDLA++;
-	//		std::cout << "Set layer " << curLayer->getName() << " to run on DLA" << std::endl;
-	//	}
-	//}
-	//   std::cout << "Total number of layers on DLA: " << layersOnDLA << std::endl;
-
+#if 0
+    m_Builder->allowGPUFallback(true);
+    int nbLayers = m_Network->getNbLayers();
+    int layersOnDLA = 0;
+    //   std::cout << "Total number of layers: " << nbLayers << std::endl;
+    for (int i = 0; i < nbLayers; i++)
+    {
+        nvinfer1::ILayer* curLayer = m_Network->getLayer(i);
+        if (m_DeviceType == "kDLA" && m_Builder->canRunOnDLA(curLayer))
+        {
+            m_Builder->setDeviceType(curLayer, nvinfer1::DeviceType::kDLA);
+            layersOnDLA++;
+            std::cout << "Set layer " << curLayer->getName() << " to run on DLA" << std::endl;
+        }
+    }
+       std::cout << "Total number of layers on DLA: " << layersOnDLA << std::endl;
+#endif
 	// Build the engine
 	std::cout << "Building the TensorRT Engine..." << std::endl;
 	m_Engine = m_Builder->buildEngineWithConfig(*m_Network, *config);
@@ -1258,7 +1256,7 @@ bool Yolo::verifyYoloEngine()
     assert((m_Engine->getNbBindings() == (1 + m_OutputTensors.size())
             && "Binding info doesn't match between cfg and engine file \n"));
 
-    for (auto tensor : m_OutputTensors)
+    for (const auto& tensor : m_OutputTensors)
     {
         assert(!strcmp(m_Engine->getBindingName(tensor.bindingIndex), tensor.blobName.c_str())
                && "Blobs names dont match between cfg and engine file \n");
@@ -1276,15 +1274,48 @@ bool Yolo::verifyYoloEngine()
 
 void Yolo::destroyNetworkUtils(std::vector<nvinfer1::Weights>& trtWeights)
 {
-    if (m_Network) m_Network->destroy();
-    if (m_Engine) m_Engine->destroy();
-    if (m_Builder) m_Builder->destroy();
-    if (m_ModelStream) m_ModelStream->destroy();
+    if (m_Network)
+    {
+#if (NV_TENSORRT_MAJOR < 8)
+		m_Network->destroy();
+#else
+        delete m_Network;
+#endif
+        m_Network = nullptr;
+    }
+    if (m_Engine)
+    {
+#if (NV_TENSORRT_MAJOR < 8)
+		m_Engine->destroy();
+#else
+        delete m_Engine;
+#endif
+        m_Engine = nullptr;
+    }
+    if (m_Builder)
+    {
+#if (NV_TENSORRT_MAJOR < 8)
+		m_Builder->destroy();
+#else
+        delete m_Builder;
+#endif
+        m_Builder = nullptr;
+    }
+    if (m_ModelStream)
+    {
+#if (NV_TENSORRT_MAJOR < 8)
+		m_ModelStream->destroy();
+#else
+        delete m_ModelStream;
+#endif
+        m_ModelStream = nullptr;
+    }
 
     // deallocate the weights
     for (auto & trtWeight : trtWeights)
     {
-        if (trtWeight.count > 0) free(const_cast<void*>(trtWeight.values));
+        if (trtWeight.count > 0)
+            free(const_cast<void*>(trtWeight.values));
     }
 }
 
