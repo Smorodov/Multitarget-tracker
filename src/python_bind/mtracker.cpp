@@ -230,8 +230,10 @@ cv::Mat read_image(std::string image_name)
 ///
 void show_image(cv::Mat image)
 {
+#ifndef SILENT_WORK
     cv::imshow("image_from_Cpp", image);
     cv::waitKey(0);
+#endif
 }
 
 ///

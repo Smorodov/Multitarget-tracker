@@ -33,7 +33,8 @@ namespace tensor_rt
         YOLOV4,
         YOLOV4_TINY,
         YOLOV5,
-        YOLOV6
+        YOLOV6,
+        YOLOV7
 	};
 
     ///
@@ -59,7 +60,7 @@ namespace tensor_rt
 
         ModelType net_type = YOLOV4;
 
-        Precision inference_precison = FP32;
+        Precision inference_precision = FP32;
 
 		int	gpu_id = 0;
 

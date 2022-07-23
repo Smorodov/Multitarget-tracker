@@ -639,7 +639,7 @@ protected:
             config.emplace("maxBatch", std::to_string(m_trackerSettings.m_maxBatch));
             config.emplace("gpuId", std::to_string(m_trackerSettings.m_gpuId));
             config.emplace("net_type", m_trackerSettings.m_netType);
-            config.emplace("inference_precison", m_trackerSettings.m_inferencePrecison);
+            config.emplace("inference_precision", m_trackerSettings.m_inferencePrecision);
         }
 
         m_detector = BaseDetector::CreateDetector(tracking::Detectors::Yolo_Darknet, config, frame);
@@ -826,16 +826,17 @@ protected:
                 YOLOv4,
                 TinyYOLOv4,
                 YOLOv5,
-                YOLOv6
+                YOLOv6,
+                YOLOv7
             };
-            YOLOModels usedModel = YOLOModels::YOLOv6;
+            YOLOModels usedModel = YOLOModels::YOLOv7;
             switch (usedModel)
             {
             case YOLOModels::TinyYOLOv3:
                 config.emplace("modelConfiguration", pathToModel + "yolov3-tiny.cfg");
                 config.emplace("modelBinary", pathToModel + "yolov3-tiny.weights");
                 config.emplace("confidenceThreshold", "0.5");
-                config.emplace("inference_precison", "FP32");
+                config.emplace("inference_precision", "FP32");
                 config.emplace("net_type", "YOLOV3");
                 maxBatch = 4;
                 config.emplace("maxCropRatio", "2");
@@ -845,7 +846,7 @@ protected:
                 config.emplace("modelConfiguration", pathToModel + "yolov3.cfg");
                 config.emplace("modelBinary", pathToModel + "yolov3.weights");
                 config.emplace("confidenceThreshold", "0.7");
-                config.emplace("inference_precison", "FP32");
+                config.emplace("inference_precision", "FP32");
                 config.emplace("net_type", "YOLOV3");
                 maxBatch = 2;
                 config.emplace("maxCropRatio", "-1");
@@ -855,7 +856,7 @@ protected:
                 config.emplace("modelConfiguration", pathToModel + "yolov4.cfg");
                 config.emplace("modelBinary", pathToModel + "yolov4.weights");
                 config.emplace("confidenceThreshold", "0.4");
-                config.emplace("inference_precison", "FP32");
+                config.emplace("inference_precision", "FP32");
                 config.emplace("net_type", "YOLOV4");
                 maxBatch = 1;
                 config.emplace("maxCropRatio", "-1");
@@ -865,7 +866,7 @@ protected:
                 config.emplace("modelConfiguration", pathToModel + "yolov4-tiny.cfg");
                 config.emplace("modelBinary", pathToModel + "yolov4-tiny.weights");
                 config.emplace("confidenceThreshold", "0.5");
-                config.emplace("inference_precison", "FP32");
+                config.emplace("inference_precision", "FP32");
                 config.emplace("net_type", "YOLOV4_TINY");
                 maxBatch = 1;
                 config.emplace("maxCropRatio", "-1");
@@ -875,7 +876,7 @@ protected:
                 config.emplace("modelConfiguration", pathToModel + "yolov5x.cfg");
                 config.emplace("modelBinary", pathToModel + "yolov5x.weights");
                 config.emplace("confidenceThreshold", "0.5");
-                config.emplace("inference_precison", "FP32");
+                config.emplace("inference_precision", "FP32");
                 config.emplace("net_type", "YOLOV5");
                 maxBatch = 1;
                 config.emplace("maxCropRatio", "-1");
@@ -885,8 +886,18 @@ protected:
                 config.emplace("modelConfiguration", pathToModel + "yolov6s.onnx");
                 config.emplace("modelBinary", pathToModel + "yolov6s.onnx");
                 config.emplace("confidenceThreshold", "0.5");
-                config.emplace("inference_precison", "FP32");
+                config.emplace("inference_precision", "FP32");
                 config.emplace("net_type", "YOLOV6");
+                maxBatch = 1;
+                config.emplace("maxCropRatio", "-1");
+                break;
+
+            case YOLOModels::YOLOv7:
+                config.emplace("modelConfiguration", pathToModel + "yolov7.onnx");
+                config.emplace("modelBinary", pathToModel + "yolov7.onnx");
+                config.emplace("confidenceThreshold", "0.2");
+                config.emplace("inference_precision", "FP32");
+                config.emplace("net_type", "YOLOV7");
                 maxBatch = 1;
                 config.emplace("maxCropRatio", "-1");
                 break;
@@ -906,15 +917,15 @@ protected:
             config.emplace("maxBatch", std::to_string(m_trackerSettings.m_maxBatch));
             config.emplace("gpuId", std::to_string(m_trackerSettings.m_gpuId));
             config.emplace("net_type", m_trackerSettings.m_netType);
-            config.emplace("inference_precison", m_trackerSettings.m_inferencePrecison);
+            config.emplace("inference_precision", m_trackerSettings.m_inferencePrecision);
         }
 
-		config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_person));
-		config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_car));
-		config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_bicycle));
-		config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_motorbike));
-		config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_bus));
-		config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_truck));
+        //config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_person));
+        //config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_car));
+        //config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_bicycle));
+        //config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_motorbike));
+        //config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_bus));
+        //config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_truck));
 
 		m_detector = BaseDetector::CreateDetector(tracking::Detectors::Yolo_TensorRT, config, frame);
 		if (m_detector.get())

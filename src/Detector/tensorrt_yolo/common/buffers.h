@@ -306,6 +306,15 @@ public:
     }
 
     //!
+    //! \brief Returns the host buffer corresponding to tensorName.
+    //!        Returns nullptr if no such tensor can be found.
+    //!
+    void* getHostBuffer(int bindingIndex) const
+    {
+        return getBuffer(true, bindingIndex);
+    }
+
+    //!
     //! \brief Returns the size of the host and device buffers that correspond to tensorName.
     //!        Returns kINVALID_SIZE_VALUE if no such tensor can be found.
     //!
@@ -429,6 +438,13 @@ private:
         if (index == -1)
             return nullptr;
         return (isHost ? mManagedBuffers[index]->hostBuffer.data() : mManagedBuffers[index]->deviceBuffer.data());
+    }
+
+    void* getBuffer(const bool isHost, int bindingIndex) const
+    {
+        if (bindingIndex == -1)
+            return nullptr;
+        return (isHost ? mManagedBuffers[bindingIndex]->hostBuffer.data() : mManagedBuffers[bindingIndex]->deviceBuffer.data());
     }
 
     void memcpyBuffers(const bool copyInput, const bool deviceToHost, const bool async, const cudaStream_t& stream = 0)

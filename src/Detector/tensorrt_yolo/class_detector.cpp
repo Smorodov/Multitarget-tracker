@@ -50,18 +50,14 @@ namespace tensor_rt
     public:
         bool Init(const Config& config) override
         {
-            // The engine file to generate or to load
-            // The engine file does not exist:
-            //     This program will try to load onnx file and convert onnx into engine
-            // The engine file exists:
-            //     This program will load the engine file directly
-            m_params.engingFileName = config.file_model_cfg + ".engine"; //"yolov6s.engine"
-
             // The onnx file to load
             m_params.onnxFileName = config.file_model_cfg; //"yolov6s.onnx"
 
             // Input tensor name of ONNX file & engine file
-            m_params.inputTensorNames.push_back("image_arrays");
+            if (config.net_type == ModelType::YOLOV6)
+                m_params.inputTensorNames.push_back("image_arrays");
+            else if (config.net_type == ModelType::YOLOV7)
+                m_params.inputTensorNames.push_back("images");
 
             // Old batch configuration, it is zero if explicitBatch flag is true for the tensorrt engine
             // May be deprecated in the future
@@ -72,22 +68,24 @@ namespace tensor_rt
 
             // Batch size, you can modify to other batch size values if needed
             m_params.explicitBatchSize = config.batch_size;
-            m_params.width = 640;
-            m_params.height = 640;
 
-            m_params.int8 = (config.inference_precison == INT8);
-            m_params.fp16 = (config.inference_precison == FP16);
-
-            m_params.inputShape = std::vector<int>{ m_params.explicitBatchSize, 3, m_params.width, m_params.height };
-
-            // Output shapes when BatchedNMSPlugin is available
-            m_params.outputShapes.push_back(std::vector<int>{m_params.explicitBatchSize, 1});
-            m_params.outputShapes.push_back(std::vector<int>{m_params.explicitBatchSize, m_params.keepTopK, 4});
-            m_params.outputShapes.push_back(std::vector<int>{m_params.explicitBatchSize, m_params.keepTopK});
-            m_params.outputShapes.push_back(std::vector<int>{m_params.explicitBatchSize, m_params.keepTopK});
+            m_params.m_precision = config.inference_precision;
 
             // Output tensors when BatchedNMSPlugin is available
-            m_params.outputTensorNames.push_back("outputs");
+            if (config.net_type == ModelType::YOLOV6)
+                m_params.outputTensorNames.push_back("outputs");
+            else if (config.net_type == ModelType::YOLOV7)
+                m_params.outputTensorNames.push_back("output");
+
+            std::string precisionStr;
+            std::map<tensor_rt::Precision, std::string> dictprecision;
+            dictprecision[tensor_rt::INT8] =  "kINT8";
+            dictprecision[tensor_rt::FP16] = "kHALF";
+            dictprecision[tensor_rt::FP32] = "kFLOAT";
+            auto precision = dictprecision.find(m_params.m_precision);
+            if (precision != dictprecision.end())
+                precisionStr = precision->second;
+            m_params.engingFileName = config.file_model_cfg + "-" + precisionStr + "-batch" + std::to_string(config.batch_size) + ".engine";
 
             return m_detector.Init(m_params);
         }
@@ -108,7 +106,7 @@ namespace tensor_rt
 
         cv::Size GetInputSize() const override
         {
-            return cv::Size(m_params.width, m_params.height);
+            return m_detector.GetInputSize();
         }
 
     private:
@@ -141,7 +139,7 @@ namespace tensor_rt
         if (m_impl)
             delete m_impl;
 
-        if (config.net_type == ModelType::YOLOV6)
+        if (config.net_type == ModelType::YOLOV6 || config.net_type == ModelType::YOLOV7)
             m_impl = new YoloONNXImpl();
         else
             m_impl = new YoloDectectorImpl();

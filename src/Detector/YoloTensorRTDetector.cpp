@@ -17,7 +17,7 @@ YoloTensorRTDetector::YoloTensorRTDetector(const cv::UMat& colorFrame)
                      "sheep", "sofa", "train", "tvmonitor" };
 
 	m_localConfig.calibration_image_list_file_txt = "";
-	m_localConfig.inference_precison = tensor_rt::FP32;
+    m_localConfig.inference_precision = tensor_rt::FP32;
 	m_localConfig.net_type = tensor_rt::YOLOV4;
 	m_localConfig.detect_thresh = 0.5f;
 	m_localConfig.gpu_id = 0;
@@ -38,7 +38,7 @@ YoloTensorRTDetector::YoloTensorRTDetector(const cv::Mat& colorFrame)
                      "sheep", "sofa", "train", "tvmonitor" };
 
 	m_localConfig.calibration_image_list_file_txt = "";
-	m_localConfig.inference_precison = tensor_rt::FP32;
+    m_localConfig.inference_precision = tensor_rt::FP32;
 	m_localConfig.net_type = tensor_rt::YOLOV4;
 	m_localConfig.detect_thresh = 0.5f;
 	m_localConfig.gpu_id = 0;
@@ -73,16 +73,16 @@ bool YoloTensorRTDetector::Init(const config_t& config)
 	m_localConfig.file_model_cfg = modelConfiguration->second;
 	m_localConfig.file_model_weights = modelBinary->second;
 
-	auto inference_precison = config.find("inference_precison");
-	if (inference_precison != config.end())
+    auto inference_precision = config.find("inference_precision");
+    if (inference_precision != config.end())
 	{
-		std::map<std::string, tensor_rt::Precision> dictPrecison;
-		dictPrecison["INT8"] = tensor_rt::INT8;
-		dictPrecison["FP16"] = tensor_rt::FP16;
-		dictPrecison["FP32"] = tensor_rt::FP32;
-		auto precison = dictPrecison.find(inference_precison->second);
-		if (precison != dictPrecison.end())
-			m_localConfig.inference_precison = precison->second;
+        std::map<std::string, tensor_rt::Precision> dictprecision;
+        dictprecision["INT8"] = tensor_rt::INT8;
+        dictprecision["FP16"] = tensor_rt::FP16;
+        dictprecision["FP32"] = tensor_rt::FP32;
+        auto precision = dictprecision.find(inference_precision->second);
+        if (precision != dictprecision.end())
+            m_localConfig.inference_precision = precision->second;
 	}
 
 	auto net_type = config.find("net_type");
@@ -94,6 +94,7 @@ bool YoloTensorRTDetector::Init(const config_t& config)
 		dictNetType["YOLOV4_TINY"] = tensor_rt::YOLOV4_TINY;
         dictNetType["YOLOV5"] = tensor_rt::YOLOV5;
         dictNetType["YOLOV6"] = tensor_rt::YOLOV6;
+        dictNetType["YOLOV7"] = tensor_rt::YOLOV7;
 
 		auto netType = dictNetType.find(net_type->second);
 		if (netType != dictNetType.end())

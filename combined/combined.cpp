@@ -131,7 +131,7 @@ void CombinedDetector::SyncProcess()
 #ifndef SILENT_WORK
         cv::imshow("Video", frame);
 
-		int waitTime = manualMode ? 0 : 1;// std::max<int>(1, cvRound(1000 / m_fps - currTime));
+        int waitTime = manualMode ? 0 : 1;// std::max<int>(1, cvRound(1000 / m_fps - currTime));
         int k = cv::waitKey(waitTime);
         if (k == 27)
             break;

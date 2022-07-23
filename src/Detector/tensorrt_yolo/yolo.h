@@ -174,10 +174,9 @@ protected:
         BBoxInfo bbi;
         bbi.box = convertBBoxNetRes(bx, by, bw, bh, stride, m_InputW, m_InputH);
         if ((bbi.box.x1 > bbi.box.x2) || (bbi.box.y1 > bbi.box.y2))
-        {
             return;
-        }
-      //  convertBBoxImgRes(scalingFactor, m_InputW,m_InputH,image_w,image_h, bbi.box);
+
+        //  convertBBoxImgRes(scalingFactor, m_InputW,m_InputH,image_w,image_h, bbi.box);
         bbi.label = maxIndex;
         bbi.prob = maxProb;
         bbi.classId = getClassId(maxIndex);
@@ -198,9 +197,10 @@ protected:
 		if ((m_InputH - resizeH) % 2) resizeH--;
 		assert((m_InputW - resizeW) % 2 == 0);
 		assert((m_InputH - resizeH) % 2 == 0);
-		xOffset = (m_InputW - resizeW) / 2;
-		 yOffset = (m_InputH - resizeH) / 2;
+        xOffset = (m_InputW - resizeW) / 2;
+        yOffset = (m_InputH - resizeH) / 2;
 	}
+
 	BBox convert_bbox_res(const float& bx, const float& by, const float& bw, const float& bh,
 		const uint32_t& stride_h_, const uint32_t& stride_w_, const uint32_t& netW, const uint32_t& netH)
 	{
@@ -249,9 +249,8 @@ protected:
 		BBoxInfo bbi;
 		bbi.box = convert_bbox_res(bx, by, bw, bh, stride_h_, stride_w_, m_InputW, m_InputH);
 		if ((bbi.box.x1 > bbi.box.x2) || (bbi.box.y1 > bbi.box.y2))
-		{
 			return;
-		}
+
 		if ("yolov5" == m_NetworkType)
 		{
 			cvt_box(scaleH, scaleW, xoffset_, yoffset, bbi.box);

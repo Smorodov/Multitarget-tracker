@@ -96,7 +96,7 @@ private:
 		_yolo_info.networkType = _vec_net_type[_config.net_type];
 		_yolo_info.configFilePath = _config.file_model_cfg;
 		_yolo_info.wtsFilePath = _config.file_model_weights;
-		_yolo_info.precision = _vec_precision[_config.inference_precison];
+		_yolo_info.precision = _vec_precision[_config.inference_precision];
 		_yolo_info.deviceType = "kGPU";
 		auto npos = _yolo_info.wtsFilePath.find(".weights");
 		assert(npos != std::string::npos

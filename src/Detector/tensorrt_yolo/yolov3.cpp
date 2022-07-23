@@ -24,17 +24,31 @@ SOFTWARE.
 */
 #include "yolov3.h"
 
-YoloV3::YoloV3(const NetworkInfo& networkInfo,
-               const InferParams& inferParams) :
-    Yolo(networkInfo, inferParams){}
+///
+/// \brief YoloV3::YoloV3
+/// \param networkInfo
+/// \param inferParams
+///
+YoloV3::YoloV3(const NetworkInfo& networkInfo, const InferParams& inferParams)
+    : Yolo(networkInfo, inferParams)
+{
+}
 
+///
+/// \brief YoloV3::decodeTensor
+/// \param imageIdx
+/// \param imageH
+/// \param imageW
+/// \param tensor
+/// \return
+///
 std::vector<BBoxInfo> YoloV3::decodeTensor(const int imageIdx,
 										   const int imageH, 
 										   const int imageW,
                                            const TensorInfo& tensor)
 {
-	float	scale_h = 1.f;
-	float	scale_w = 1.f;
+    float scale_h = 1.f;
+    float scale_w = 1.f;
 	int	xOffset = 0;
 	int yOffset = 0;
 
@@ -51,28 +65,20 @@ std::vector<BBoxInfo> YoloV3::decodeTensor(const int imageIdx,
                 const float ph = tensor.anchors[tensor.masks[b] * 2 + 1];
 
                 const int numGridCells = tensor.grid_h * tensor.grid_w;
-                const int bbindex = y * tensor.grid_w+ x;
-                const float bx
-                    = x + detections[bbindex + numGridCells * (b * (5 + tensor.numClasses) + 0)];
+                const int bbindex = y * tensor.grid_w + x;
+                const float bx = x + detections[bbindex + numGridCells * (b * (5 + tensor.numClasses) + 0)];
+                const float by = y + detections[bbindex + numGridCells * (b * (5 + tensor.numClasses) + 1)];
+                const float bw = pw * detections[bbindex + numGridCells * (b * (5 + tensor.numClasses) + 2)];
+                const float bh = ph * detections[bbindex + numGridCells * (b * (5 + tensor.numClasses) + 3)];
 
-                const float by
-                    = y + detections[bbindex + numGridCells * (b * (5 + tensor.numClasses) + 1)];
-                const float bw
-                    = pw * detections[bbindex + numGridCells * (b * (5 + tensor.numClasses) + 2)];
-                const float bh
-                    = ph * detections[bbindex + numGridCells * (b * (5 + tensor.numClasses) + 3)];
-
-                const float objectness
-                    = detections[bbindex + numGridCells * (b * (5 + tensor.numClasses) + 4)];
+                const float objectness = detections[bbindex + numGridCells * (b * (5 + tensor.numClasses) + 4)];
 
                 float maxProb = 0.0f;
                 int maxIndex = -1;
 
                 for (uint32_t i = 0; i < tensor.numClasses; ++i)
                 {
-                    float prob
-                        = (detections[bbindex
-                                      + numGridCells * (b * (5 + tensor.numClasses) + (5 + i))]);
+                    float prob = (detections[bbindex + numGridCells * (b * (5 + tensor.numClasses) + (5 + i))]);
 
                     if (prob > maxProb)
                     {
@@ -83,9 +89,7 @@ std::vector<BBoxInfo> YoloV3::decodeTensor(const int imageIdx,
                 maxProb = objectness * maxProb;
 
                 if (maxProb > m_ProbThresh)
-                {
 					add_bbox_proposal(bx, by, bw, bh, tensor.stride_h, tensor.stride_w, scale_h, scale_w, xOffset, yOffset, maxIndex, maxProb, imageW, imageH, binfo);
-                }
             }
         }
     }

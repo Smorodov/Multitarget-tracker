@@ -396,7 +396,7 @@ nvinfer1::ICudaEngine* loadTRTEngine(const std::string planFilePath, /*PluginFac
     trtModelStream.read((char*) modelMem, modelSize);
 
     nvinfer1::IRuntime* runtime = nvinfer1::createInferRuntime(logger);
-    nvinfer1::ICudaEngine* engine = runtime->deserializeCudaEngine(modelMem, modelSize/*, pluginFactory*/);
+    nvinfer1::ICudaEngine* engine = runtime->deserializeCudaEngine(modelMem, modelSize);
     free(modelMem);
 #if (NV_TENSORRT_MAJOR < 8)
 	runtime->destroy();
