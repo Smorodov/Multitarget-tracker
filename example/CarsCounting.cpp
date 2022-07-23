@@ -317,8 +317,10 @@ void CarsCounting::DrawData(cv::Mat frame, const std::vector<TrackingObject>& tr
         cv::Mat geoMap = m_geoParams.DrawTracksOnMap(tracks);
 		if (!geoMap.empty())
 		{
+#ifndef SILENT_WORK
 			cv::namedWindow("Geo map", cv::WINDOW_NORMAL);
 			cv::imshow("Geo map", geoMap);
+#endif
 		}
     }
 
@@ -328,8 +330,10 @@ void CarsCounting::DrawData(cv::Mat frame, const std::vector<TrackingObject>& tr
     }
 
     cv::Mat heatMap = DrawHeatMap();
+#ifndef SILENT_WORK
     if (!heatMap.empty())
         cv::imshow("Heat map", heatMap);
+#endif
 }
 
 ///

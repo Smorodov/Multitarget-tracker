@@ -626,11 +626,14 @@ int main(int argc, char *argv[])
                     //if (extrapolate_flag) {
                     //    cv::putText(draw_frame, "extrapolate", cv::Point2f(10, 40), cv::FONT_HERSHEY_COMPLEX_SMALL, 1.0, cv::Scalar(50, 50, 0), 2);
                     //}
-
+#ifndef SILENT_WORK
                     cv::imshow("window name", draw_frame);
                     int key = cv::waitKey(3);    // 3 or 16ms
+#endif
                     if (key == 'f') show_small_boxes = !show_small_boxes;
+#ifndef SILENT_WORK
                     if (key == 'p') while (true) if (cv::waitKey(100) == 'p') break;
+#endif
                     //if (key == 'e') extrapolate_flag = !extrapolate_flag;
                     if (key == 27) { exit_flag = true;}
 
@@ -678,9 +681,11 @@ int main(int argc, char *argv[])
 
                 //result_vec = detector.tracking_id(result_vec);    // comment it - if track_id is not required
                 draw_boxes(mat_img, result_vec, obj_names);
+#ifndef SILENT_WORK
                 cv::imshow("window name", mat_img);
                 show_console_result(result_vec, obj_names);
                 cv::waitKey(0);
+#endif
             }
 #else   // OPENCV
             //std::vector<bbox_t> result_vec = detector.detect(filename);

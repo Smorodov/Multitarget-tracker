@@ -138,7 +138,7 @@ struct TrackerSettings
     /// INT8
     /// FP16
     /// FP32
-    std::string m_inferencePrecison = "FP16";
+    std::string m_inferencePrecision = "FP16";
 
     // opencv_dnn = 12
     // darknet_cudnn = 10

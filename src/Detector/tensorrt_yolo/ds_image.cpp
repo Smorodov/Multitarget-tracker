@@ -177,22 +177,21 @@ void DsImage::addBBox(BBoxInfo box, const std::string& labelName)
     const int y = cvRound(box.box.y1);
     const int w = cvRound(box.box.x2 - box.box.x1);
     const int h = cvRound(box.box.y2 - box.box.y1);
-    const cv::Scalar color
-        = cv::Scalar(m_RNG.uniform(0, 255), m_RNG.uniform(0, 255), m_RNG.uniform(0, 255));
+    const cv::Scalar color = cv::Scalar(m_RNG.uniform(0, 255), m_RNG.uniform(0, 255), m_RNG.uniform(0, 255));
 
     cv::rectangle(m_MarkedImage, cv::Rect(x, y, w, h), color, 1);
-    const cv::Size tsize
-        = cv::getTextSize(labelName, cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, 1, nullptr);
+    const cv::Size tsize = cv::getTextSize(labelName, cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, 1, nullptr);
     cv::rectangle(m_MarkedImage, cv::Rect(x, y, tsize.width + 3, tsize.height + 4), color, -1);
-    cv::putText(m_MarkedImage, labelName.c_str(), cv::Point(x, y + tsize.height),
-                cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1);
+    cv::putText(m_MarkedImage, labelName.c_str(), cv::Point(x, y + tsize.height), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1);
 }
 
 void DsImage::showImage() const
 {
-    cv::namedWindow(m_ImageName);
-    cv::imshow(m_ImageName.c_str(), m_MarkedImage);
-    cv::waitKey(0);
+#ifndef SILENT_WORK
+    //cv::namedWindow(m_ImageName);
+    //cv::imshow(m_ImageName.c_str(), m_MarkedImage);
+    //cv::waitKey(0);
+#endif
 }
 
 void DsImage::saveImageJPEG(const std::string& dirPath) const

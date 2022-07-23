@@ -38,9 +38,7 @@ void MouseTracking(cv::CommandLineParser parser)
 	cv::Mat frame = cv::Mat(800, 800, CV_8UC3);
 
 	if (!writer.isOpened())
-	{
 		writer.open(outFile, cv::VideoWriter::fourcc('P', 'I', 'M', '1'), 20, frame.size(), true);
-	}
 
 	// Set mouse callback
 	cv::Point2f pointXY;

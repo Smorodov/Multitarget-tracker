@@ -405,9 +405,11 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
 
 #if DRAW_DBG_ASSIGNMENT
     std::cout << "CTracker::UpdateTrackingState: show results" << std::endl;
+#ifndef SILENT_WORK
     cv::namedWindow("dbgAssignment", cv::WINDOW_NORMAL);
     cv::imshow("dbgAssignment", dbgAssignment);
     //cv::waitKey(1);
+#endif
 #endif
 
 }

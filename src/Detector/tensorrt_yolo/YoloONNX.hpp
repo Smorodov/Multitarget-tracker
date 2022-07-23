@@ -1,9 +1,7 @@
-
 #pragma once
 
 #include "common/BatchStream.h"
 #include "common/EntropyCalibrator.h"
-#include "common/argsParser.h"
 #include "common/buffers.h"
 #include "common/common.h"
 #include "common/logger.h"
@@ -24,7 +22,7 @@
 //! \brief The SampleYoloParams structure groups the additional parameters required by
 //!         the SSD sample.
 //!
-struct SampleYoloParams : public samplesCommon::OnnxSampleParams
+struct SampleYoloParams
 {
     int outputClsSize = 80;              //!< The number of output classes
     int topK = 2000;
@@ -32,20 +30,18 @@ struct SampleYoloParams : public samplesCommon::OnnxSampleParams
     int nbCalBatches = 100;               //!< The number of batches for calibration
     float confThreshold = 0.3;
     float nmsThreshold = 0.5;
-    int width = 640;
-    int height = 640;
 
     int explicitBatchSize = 1;
-    std::vector<int> inputShape;
-    std::vector<std::vector<int>> outputShapes;
     std::string calibrationBatches; //!< The path to calibration batches
     std::string engingFileName;
-};
 
-enum NMS_TYPE
-{
-    MIN,
-    UNION,
+    std::string onnxFileName; //!< Filename of ONNX file of a network
+    int32_t batchSize{1};              //!< Number of inputs in a batch
+    int32_t dlaCore{-1};               //!< Specify the DLA core to run network on.
+    tensor_rt::Precision m_precision { tensor_rt::Precision::FP32 }; //!< Allow runnning the network in Int8 mode.
+    std::vector<std::string> dataDirs; //!< Directory paths where sample data files are stored
+    std::vector<std::string> inputTensorNames;
+    std::vector<std::string> outputTensorNames;
 };
 
 ///
@@ -57,7 +53,6 @@ class YoloONNX
     using YoloONNXUniquePtr = std::unique_ptr<T, samplesCommon::InferDeleter>;
 
 public:
-
     YoloONNX() = default;
 
     //!
@@ -75,12 +70,18 @@ public:
     //!
     bool teardown();
 
+    //!
+    //! \brief Return input size
+    //!
+    cv::Size GetInputSize() const;
+
 private:
-    SampleYoloParams mParams; //!< The parameters for the sample.
+    SampleYoloParams m_params; //!< The parameters for the sample.
 
-    nvinfer1::Dims mInputDims; //!< The dimensions of the input to the network.
+    nvinfer1::Dims m_inputDims; //!< The dimensions of the input to the network.
+    std::vector<nvinfer1::Dims> m_outpuDims; //!< The dimensions of the input to the network.
 
-    std::shared_ptr<nvinfer1::ICudaEngine> mEngine; //!< The TensorRT engine used to run the network
+    std::shared_ptr<nvinfer1::ICudaEngine> m_engine; //!< The TensorRT engine used to run the network
 
     size_t mImageIdx = 0;
     void* mCudaImg = nullptr;
@@ -94,8 +95,8 @@ private:
     //! \brief Parses an ONNX model for YOLO and creates a TensorRT network
     //!
     bool constructNetwork(YoloONNXUniquePtr<nvinfer1::IBuilder>& builder,
-        YoloONNXUniquePtr<nvinfer1::INetworkDefinition>& network, YoloONNXUniquePtr<nvinfer1::IBuilderConfig>& config,
-        YoloONNXUniquePtr<nvonnxparser::IParser>& parser);
+                          YoloONNXUniquePtr<nvinfer1::INetworkDefinition>& network, YoloONNXUniquePtr<nvinfer1::IBuilderConfig>& config,
+                          YoloONNXUniquePtr<nvonnxparser::IParser>& parser);
 
     //!
     //! \brief Reads the input and mean data, preprocesses, and stores the result in a managed buffer

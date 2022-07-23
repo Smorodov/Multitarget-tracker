@@ -364,9 +364,11 @@ extern "C" void create_window_cv(char const* window_name, int full_screen, int w
 #else
         if (full_screen) window_type = cv::WINDOW_FULLSCREEN;
 #endif
+#ifndef SILENT_WORK
         cv::namedWindow(window_name, window_type);
         cv::moveWindow(window_name, 0, 0);
         cv::resizeWindow(window_name, width, height);
+#endif
     }
     catch (...) {
         cerr << "OpenCV exception: create_window_cv \n";
@@ -410,7 +412,11 @@ extern "C" void destroy_all_windows_cv()
 extern "C" int wait_key_cv(int delay)
 {
     try {
+#ifndef SILENT_WORK
         return cv::waitKey(delay);
+#else
+        return 0;
+#endif
     }
     catch (...) {
         cerr << "OpenCV exception: wait_key_cv \n";
@@ -428,6 +434,7 @@ extern "C" int wait_until_press_key_cv()
 extern "C" void make_window(char *name, int w, int h, int fullscreen)
 {
     try {
+#ifndef SILENT_WORK
         cv::namedWindow(name, cv::WINDOW_NORMAL);
         if (fullscreen) {
 #ifdef CV_VERSION_EPOCH // OpenCV 2.x
@@ -440,6 +447,7 @@ extern "C" void make_window(char *name, int w, int h, int fullscreen)
             cv::resizeWindow(name, w, h);
             if (strcmp(name, "Demo") == 0) cv::moveWindow(name, 0, 0);
         }
+#endif
     }
     catch (...) {
         cerr << "OpenCV exception: make_window \n";
@@ -457,6 +465,7 @@ static float get_pixel(image m, int x, int y, int c)
 extern "C" void show_image_cv(image p, const char *name)
 {
     try {
+#ifndef SILENT_WORK
         image copy = copy_image(p);
         constrain_image(copy);
 
@@ -466,6 +475,7 @@ extern "C" void show_image_cv(image p, const char *name)
         cv::namedWindow(name, cv::WINDOW_NORMAL);
         cv::imshow(name, mat);
         free_image(copy);
+#endif
     }
     catch (...) {
         cerr << "OpenCV exception: show_image_cv \n";
@@ -488,10 +498,12 @@ extern "C" void show_image_cv_ipl(mat_cv *disp, const char *name)
 extern "C" void show_image_mat(mat_cv *mat_ptr, const char *name)
 {
     try {
+#ifndef SILENT_WORK
         if (mat_ptr == NULL) return;
         cv::Mat &mat = *(cv::Mat *)mat_ptr;
         cv::namedWindow(name, cv::WINDOW_NORMAL);
         cv::imshow(name, mat);
+#endif
     }
     catch (...) {
         cerr << "OpenCV exception: show_image_mat \n";
@@ -1093,11 +1105,13 @@ extern "C" mat_cv* draw_train_chart(char *windows_name, float max_img_loss, int 
 
         if (!dont_show) {
             printf(" If error occurs - run training with flag: -dont_show \n");
+#ifndef SILENT_WORK
             cv::namedWindow(windows_name, cv::WINDOW_NORMAL);
             cv::moveWindow(windows_name, 0, 0);
             cv::resizeWindow(windows_name, img_size, img_size);
             cv::imshow(windows_name, img);
             cv::waitKey(20);
+#endif
         }
     }
     catch (...) {
@@ -1177,8 +1191,10 @@ extern "C" void draw_train_loss(char *windows_name, mat_cv* img_src, int img_siz
 
         int k = 0;
         if (!dont_show) {
+#ifndef SILENT_WORK
             cv::imshow(windows_name, img);
             k = cv::waitKey(20);
+#endif
         }
         static int old_batch = 0;
         if (k == 's' || current_batch == (max_batches - 1) || (current_batch / 100 > old_batch / 100)) {
@@ -1406,14 +1422,14 @@ extern "C" void cv_draw_object(image sized, float *truth_cpu, int max_boxes, int
     if(frame.channels() == 3) cv::cvtColor(frame, frame, cv::COLOR_RGB2BGR);
     cv::Mat frame_clone = frame.clone();
 
-
+#ifndef SILENT_WORK
     std::string const window_name = "Marking image";
     cv::namedWindow(window_name, cv::WINDOW_NORMAL);
     cv::resizeWindow(window_name, 1280, 720);
     cv::imshow(window_name, frame);
     cv::moveWindow(window_name, 0, 0);
     cv::setMouseCallback(window_name, callback_mouse_click);
-
+#endif
 
     int it_trackbar_value = 200;
     std::string const it_trackbar_name = "iterations";
@@ -1433,10 +1449,14 @@ extern "C" void cv_draw_object(image sized, float *truth_cpu, int max_boxes, int
     int i = 0;
 
     while (!selected) {
+#ifndef SILENT_WORK
 #ifndef CV_VERSION_EPOCH
         int pressed_key = cv::waitKeyEx(20);	// OpenCV 3.x
 #else
         int pressed_key = cv::waitKey(20);		// OpenCV 2.x
+#endif
+#else
+        int pressed_key = 27;
 #endif
         if (pressed_key == 27 || pressed_key == 1048603) break;// break;  // ESC - save & exit
 
@@ -1461,9 +1481,9 @@ extern "C" void cv_draw_object(image sized, float *truth_cpu, int max_boxes, int
 
             rectangle(frame_clone, selected_rect, cv::Scalar(150, 200, 150));
         }
-
-
+#ifndef SILENT_WORK
         cv::imshow(window_name, frame_clone);
+#endif
     }
 
     if (selected) {
@@ -1475,9 +1495,10 @@ extern "C" void cv_draw_object(image sized, float *truth_cpu, int max_boxes, int
             x_start.load(), y_start.load(), x_size.load(), y_size.load());
 
         rectangle(frame, selected_rect, cv::Scalar(150, 200, 150));
+#ifndef SILENT_WORK
         cv::imshow(window_name, frame);
         cv::waitKey(100);
-
+#endif
         float width = x_end - x_start;
         float height = y_end - y_start;
 
@@ -1543,9 +1564,11 @@ extern "C" void show_acnhors(int number_of_boxes, int num_of_clusters, float *re
         cv::rectangle(img, pt1, pt2, CV_RGB(255, 255, 255), 1, 8, 0);
     }
     save_mat_png(img, "cloud.png");
+#ifndef SILENT_WORK
     cv::imshow("clusters", img);
     cv::waitKey(0);
     cv::destroyAllWindows();
+#endif
 }
 
 void show_opencv_info()

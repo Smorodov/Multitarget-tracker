@@ -249,16 +249,13 @@ void Yolo::createYOLOEngine(const nvinfer1::DataType dataType, Int8EntropyCalibr
             curYoloTensor.stride = m_InputW / curYoloTensor.gridSize;
             curYoloTensor.stride_h = m_InputH / curYoloTensor.grid_h;
             curYoloTensor.stride_w = m_InputW / curYoloTensor.grid_w;
-            m_OutputTensors.at(outputTensorCount).volume = curYoloTensor.grid_h
-                * curYoloTensor.grid_w
-                * (curYoloTensor.numBBoxes * (5 + curYoloTensor.numClasses));
+            m_OutputTensors.at(outputTensorCount).volume = curYoloTensor.grid_h * curYoloTensor.grid_w * (curYoloTensor.numBBoxes * (5 + curYoloTensor.numClasses));
             std::string layerName = "yolo_" + std::to_string(outputTensorCount);
             curYoloTensor.blobName = layerName;
-            nvinfer1::IPluginV2* yoloPlugin
-                = new nvinfer1::YoloLayer(m_OutputTensors.at(outputTensorCount).numBBoxes,
-                                  m_OutputTensors.at(outputTensorCount).numClasses,
-                                  m_OutputTensors.at(outputTensorCount).grid_h,
-                                  m_OutputTensors.at(outputTensorCount).grid_w);
+            nvinfer1::IPluginV2* yoloPlugin = new nvinfer1::YoloLayer(m_OutputTensors.at(outputTensorCount).numBBoxes,
+                                                                      m_OutputTensors.at(outputTensorCount).numClasses,
+                                                                      m_OutputTensors.at(outputTensorCount).grid_h,
+                                                                      m_OutputTensors.at(outputTensorCount).grid_w);
             assert(yoloPlugin != nullptr);
             nvinfer1::IPluginV2Layer* yolo = m_Network->addPluginV2(&previous, 1, *yoloPlugin);
 			
@@ -471,7 +468,6 @@ void parse_c3_args(const std::string s_args_, int &n_out_ch_, bool &b_shourt_cut
 			}
 			catch (const std::exception&)
 			{
-
 			}
 			if ("False" == trim(s_args))
 			{
@@ -505,7 +501,6 @@ void parse_bottleneck_args(const std::string s_args_, int &n_out_ch_, bool &b_sh
 			}
 			catch (const std::exception&)
 			{
-
 			}
 			if ("False" == trim(s_args))
 			{
@@ -583,7 +578,6 @@ void parse_upsample(const std::string s_args_, int &n_filters_)
 		}
 		catch (const std::exception&)
 		{
-
 		}
 		s_args.erase(0, pos + delimiter.length());
 	}
@@ -1119,9 +1113,8 @@ void Yolo::parseConfigBlocks()
 			outputTensor.stride = m_InputH / outputTensor.gridSize;
 			outputTensor.stride_h = m_InputH / outputTensor.grid_h;
 			outputTensor.stride_w = m_InputW / outputTensor.grid_w;
-			outputTensor.volume = outputTensor.grid_h* outputTensor.grid_w
-				*(outputTensor.numBBoxes*(5 + outputTensor.numClasses));
-                        m_OutputTensors.push_back(outputTensor);
+            outputTensor.volume = outputTensor.grid_h* outputTensor.grid_w * (outputTensor.numBBoxes * (5 + outputTensor.numClasses));
+            m_OutputTensors.push_back(outputTensor);
 			_n_yolo_ind++;
         }
     }

@@ -3,6 +3,8 @@
 
 # Last changes
 
+* YOLOv7 worked with TensorRT! Export pretrained Pytorch models [here (WongKinYiu/yolov7)](https://github.com/WongKinYiu/yolov7) to onnx format and run Multitarget-tracker with -e=6 example
+
 * YOLOv6 worked with TensorRT! Download pretrained onnx models [here (meituan/YOLOv6)](https://github.com/meituan/YOLOv6/releases/tag/0.1.0) and run Multitarget-tracker with -e=6 example
 
 # New videos!
@@ -231,6 +233,7 @@ And so on.
 * Darknet inference and YOLO v4 models: https://github.com/AlexeyAB/darknet
 * NVidia TensorRT inference and YOLO v5 models: https://github.com/enazoe/yolo-tensorrt
 * YOLOv6 models: https://github.com/meituan/YOLOv6/releases
+* YOLOv7 models: https://github.com/WongKinYiu/yolov7
 * GOTURN models: https://github.com/opencv/opencv_extra/tree/c4219d5eb3105ed8e634278fad312a1a8d2c182d/testdata/tracking
 * DAT tracker: https://github.com/foolwood/DAT
 * STAPLE tracker: https://github.com/xuduo35/STAPLE
