@@ -237,39 +237,6 @@ bool YoloONNX::constructNetwork(YoloONNXUniquePtr<nvinfer1::IBuilder>& builder,
     return true;
 }
 
-///
-/// \brief YoloONNX::infer_iteration
-/// \param context
-/// \param buffers
-/// \param image
-/// \param bboxes
-/// \return
-///
-bool YoloONNX::infer_iteration(YoloONNXUniquePtr<nvinfer1::IExecutionContext> &context, samplesCommon::BufferManager &buffers, const cv::Mat& image, std::vector<tensor_rt::Result>& bboxes)
-{
-    // Read the input data into the managed buffers
-    assert(mParams.inputTensorNames.size() == 1);
-
-    if (!processInput_aspectRatio(buffers, image))
-        return false;
-
-    // Memcpy from host input buffers to device input buffers
-    buffers.copyInputToDevice();
-
-    bool status = context->executeV2(buffers.getDeviceBindings().data());
-    if (!status)
-        return false;
-
-    // Memcpy from device output buffers to host output buffers
-    buffers.copyOutputToHost();
-
-    // Post-process detections and verify results
-    if (!verifyOutput_aspectRatio(buffers, bboxes, image.size()))
-        return false;
-
-    return true;
-}
-
 //!
 //! \brief Runs the TensorRT inference engine for this sample
 //!
@@ -278,8 +245,26 @@ bool YoloONNX::infer_iteration(YoloONNXUniquePtr<nvinfer1::IExecutionContext> &c
 //!
 bool YoloONNX::Detect(cv::Mat frame, std::vector<tensor_rt::Result>& bboxes)
 {
-    if (!infer_iteration(m_context, *m_buffers.get(), frame, bboxes))
+    // Read the input data into the managed buffers
+    assert(mParams.inputTensorNames.size() == 1);
+
+    if (!processInput_aspectRatio(frame))
         return false;
+
+    // Memcpy from host input buffers to device input buffers
+    m_buffers->copyInputToDevice();
+
+    bool status = m_context->executeV2(m_buffers->getDeviceBindings().data());
+    if (!status)
+        return false;
+
+    // Memcpy from device output buffers to host output buffers
+    m_buffers->copyOutputToHost();
+
+    // Post-process detections and verify results
+    if (!verifyOutput_aspectRatio(bboxes, frame.size()))
+        return false;
+
     return true;
 }
 
@@ -295,7 +280,7 @@ cv::Size YoloONNX::GetInputSize() const
 //!
 //! \brief Reads the input and mean data, preprocesses, and stores the result in a managed buffer
 //!
-bool YoloONNX::processInput_aspectRatio(const samplesCommon::BufferManager& buffers, const cv::Mat &mSampleImage)
+bool YoloONNX::processInput_aspectRatio(const cv::Mat& mSampleImage)
 {
     const int inputB = m_inputDims.d[0];
     const int inputC = m_inputDims.d[1];
@@ -304,14 +289,16 @@ bool YoloONNX::processInput_aspectRatio(const samplesCommon::BufferManager& buff
 
     float* hostInputBuffer = nullptr;
     if (m_params.inputTensorNames[0].empty())
-        hostInputBuffer = static_cast<float*>(buffers.getHostBuffer(0));
+        hostInputBuffer = static_cast<float*>(m_buffers->getHostBuffer(0));
     else
-        hostInputBuffer = static_cast<float*>(buffers.getHostBuffer(m_params.inputTensorNames[0]));
+        hostInputBuffer = static_cast<float*>(m_buffers->getHostBuffer(m_params.inputTensorNames[0]));
 
-    std::vector<std::vector<cv::Mat>> input_channels;
-    for (int b = 0; b < inputB; ++b)
+    if (static_cast<int>(m_inputChannels.size()) < inputB)
     {
-        input_channels.push_back(std::vector<cv::Mat> {static_cast<size_t>(inputC)});
+        for (int b = 0; b < inputB; ++b)
+        {
+            m_inputChannels.push_back(std::vector<cv::Mat> {static_cast<size_t>(inputC)});
+        }
     }
 
     auto scaleSize = cv::Size(inputW, inputH);
@@ -320,13 +307,14 @@ bool YoloONNX::processInput_aspectRatio(const samplesCommon::BufferManager& buff
     // Each element in batch share the same image matrix
     for (int b = 0; b < inputB; ++b)
     {
-        cv::split(m_resized, input_channels[b]);
-        std::swap(input_channels[b][0], input_channels[b][2]);
+        cv::split(m_resized, m_inputChannels[b]);
+        std::swap(m_inputChannels[b][0], m_inputChannels[b][2]);
     }
 
     int volBatch = inputC * inputH * inputW;
     int volChannel = inputH * inputW;
-    int volW = inputW;
+
+    constexpr float to1 =  1.f / 255.0f;
 
     int d_batch_pos = 0;
     for (int b = 0; b < inputB; b++)
@@ -334,21 +322,7 @@ bool YoloONNX::processInput_aspectRatio(const samplesCommon::BufferManager& buff
         int d_c_pos = d_batch_pos;
         for (int c = 0; c < inputC; c++)
         {
-            int s_h_pos = 0;
-            int d_h_pos = d_c_pos;
-            for (int h = 0; h < inputH; h++)
-            {
-                int s_pos = s_h_pos;
-                int d_pos = d_h_pos;
-                for (int w = 0; w < inputW; w++)
-                {
-                    hostInputBuffer[d_pos] = (float)input_channels[b][c].data[s_pos] / 255.0f;
-                    ++s_pos;
-                    ++d_pos;
-                }
-                s_h_pos += volW;
-                d_h_pos += volW;
-            }
+            m_inputChannels[b][c].convertTo(cv::Mat(inputH, inputW, CV_32FC1, &hostInputBuffer[d_c_pos]), CV_32FC1, to1, 0);
             d_c_pos += volChannel;
         }
         d_batch_pos += volBatch;
@@ -362,9 +336,9 @@ bool YoloONNX::processInput_aspectRatio(const samplesCommon::BufferManager& buff
 //!
 //! \return whether the detection output matches expectations
 //!
-bool YoloONNX::verifyOutput_aspectRatio(const samplesCommon::BufferManager& buffers, std::vector<tensor_rt::Result>& nms_bboxes, cv::Size frameSize)
+bool YoloONNX::verifyOutput_aspectRatio(std::vector<tensor_rt::Result>& nms_bboxes, cv::Size frameSize)
 {
-    float* output = static_cast<float*>(buffers.getHostBuffer(m_params.outputTensorNames[0]));
+    float* output = static_cast<float*>(m_buffers->getHostBuffer(m_params.outputTensorNames[0]));
     if (!output)
     {
         std::cout << "NULL value output detected!" << std::endl;
