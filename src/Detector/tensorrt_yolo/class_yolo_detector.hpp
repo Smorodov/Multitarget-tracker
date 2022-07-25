@@ -38,14 +38,14 @@ public:
 		this->build_net();
 	}
 
-	void detect(const std::vector<cv::Mat>	&vec_image,
-				std::vector<tensor_rt::BatchResult> &vec_batch_result)
+    void detect(const std::vector<cv::Mat>& vec_image,
+                std::vector<tensor_rt::BatchResult>& vec_batch_result)
 	{
 		std::vector<DsImage> vec_ds_images;
 		vec_batch_result.clear();
 		if (vec_batch_result.capacity() < vec_image.size())
 			vec_batch_result.reserve(vec_image.size());
-		for (const auto &img:vec_image)
+        for (const auto& img : vec_image)
 		{
 			vec_ds_images.emplace_back(img, _vec_net_type[_config.net_type], _p_net->getInputH(), _p_net->getInputW());
 		}

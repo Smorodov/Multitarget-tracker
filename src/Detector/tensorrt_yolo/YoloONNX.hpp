@@ -87,6 +87,7 @@ private:
     void* mCudaImg = nullptr;
 
     cv::Mat m_resized;
+    std::vector<std::vector<cv::Mat>> m_inputChannels;
 
     std::unique_ptr<samplesCommon::BufferManager> m_buffers;
     YoloONNXUniquePtr<nvinfer1::IExecutionContext> m_context;
@@ -101,19 +102,16 @@ private:
     //!
     //! \brief Reads the input and mean data, preprocesses, and stores the result in a managed buffer
     //!
-    bool processInput_aspectRatio(const samplesCommon::BufferManager& buffers, const cv::Mat &mSampleImage);
+    bool processInput_aspectRatio(const cv::Mat &mSampleImage);
 
     bool processInput(const samplesCommon::BufferManager& buffers);
 
     //!
     //! \brief Filters output detections and verify results
     //!
-    bool verifyOutput_aspectRatio(const samplesCommon::BufferManager& buffers, std::vector<tensor_rt::Result>& nms_bboxes, cv::Size frameSize);
+    bool verifyOutput_aspectRatio(std::vector<tensor_rt::Result>& nms_bboxes, cv::Size frameSize);
 
     bool verifyOutput(const samplesCommon::BufferManager& buffers);
 
-    bool infer_iteration(YoloONNXUniquePtr<nvinfer1::IExecutionContext> &context, samplesCommon::BufferManager &buffers, const cv::Mat& image, std::vector<tensor_rt::Result>& bboxes);
-
     std::vector<tensor_rt::Result> get_bboxes(int batch_size, int keep_topk, float* output, cv::Size frameSize);
 };
-
