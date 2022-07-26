@@ -359,62 +359,106 @@ std::vector<tensor_rt::Result> YoloONNX::get_bboxes(int /*batch_size*/, int /*ke
 {
     std::vector<tensor_rt::Result> bboxes;
 
-    std::vector<int> classIds;
-    std::vector<float> confidences;
-    std::vector<cv::Rect> rectBoxes;
-
     const float fw = static_cast<float>(frameSize.width) / static_cast<float>(m_inputDims.d[3]);
     const float fh = static_cast<float>(frameSize.height) / static_cast<float>(m_inputDims.d[2]);
 
-    int nc = m_outpuDims[0].d[2] - 5;
-    size_t len =  static_cast<size_t>(m_outpuDims[0].d[1]);
+	size_t ncInd = 2;
+	size_t lenInd = 1;
+	if (m_outpuDims[0].nbDims == 2)
+	{
+		ncInd = 1;
+		lenInd = 0;
+	}
+    int nc = m_outpuDims[0].d[ncInd] - 5;
+    size_t len =  static_cast<size_t>(m_outpuDims[0].d[lenInd]);
 
     //std::cout << "len = " << len << ", nc = " << nc << ", m_params.confThreshold = " << m_params.confThreshold << std::endl;
 
-    for (size_t i = 0; i < len; ++i)
-    {
-        // Box
-        size_t k = i * (nc + 5);
-        float object_conf = output[k + 4];
+	if (m_outpuDims[0].nbDims == 2) // With nms
+	{
+		for (size_t i = 0; i < len; ++i)
+		{
+			// Box
+			size_t k = i * (nc + 5);
+			float class_conf = output[k + 6];
+			int classId = cvRound(output[k + 5]);
+			if (class_conf >= m_params.confThreshold)
+			{
+				float x = fw * output[k + 1];
+				float y = fh * output[k + 2];
+				float width = fw * (output[k + 3] - output[k + 1]);
+				float height = fh * (output[k + 4] - output[k + 2]);
 
-        if (object_conf >= m_params.confThreshold)
-        {
-            // (center x, center y, width, height) to (x, y, w, h)
-            float x = fw * (output[k] - output[k + 2] / 2);
-            float y = fh * (output[k + 1] - output[k + 3] / 2);
-            float width = fw * output[k + 2];
-            float height = fh * output[k + 3];
+				//if (i == 0)
+				//	std::cout << i << ": class_conf = " << class_conf << ", classId = " << classId << ", rect = " << cv::Rect(cvRound(x), cvRound(y), cvRound(width), cvRound(height)) << std::endl;
 
-            // Classes
-            float class_conf = output[k + 5];
-            int classId = 0;
+				bboxes.emplace_back(classId, class_conf, cv::Rect(cvRound(x), cvRound(y), cvRound(width), cvRound(height)));
+			}
+		}
+	}
+	else // Without nms
+	{
+		std::vector<int> classIds;
+		std::vector<float> confidences;
+		std::vector<cv::Rect> rectBoxes;
 
-            for (int j = 1; j < nc; j++)
-            {
-                if (class_conf < output[k + 5 + j])
-                {
-                    classId = j;
-                    class_conf = output[k + 5 + j];
-                }
-            }
+		for (size_t i = 0; i < len; ++i)
+		{
+			// Box
+			size_t k = i * (nc + 5);
+			float object_conf = output[k + 4];
 
-            class_conf *= object_conf;
+			//if (i == 0)
+			//{
+			//	std::cout << "mem" << i << ": ";
+			//	for (size_t ii = 0; ii < nc + 5; ++ii)
+			//	{
+			//		std::cout << output[k + ii] << " ";
+			//	}
+			//	std::cout << std::endl;
+			//}
 
-            classIds.push_back(classId);
-            confidences.push_back(class_conf);
-            rectBoxes.emplace_back(cvRound(x), cvRound(y), cvRound(width), cvRound(height));
-        }
-    }
+			if (object_conf >= m_params.confThreshold)
+			{
+				// (center x, center y, width, height) to (x, y, w, h)
+				float x = fw * (output[k] - output[k + 2] / 2);
+				float y = fh * (output[k + 1] - output[k + 3] / 2);
+				float width = fw * output[k + 2];
+				float height = fh * output[k + 3];
 
-    // Non-maximum suppression to eliminate redudant overlapping boxes
-    std::vector<int> indices;
-    cv::dnn::NMSBoxes(rectBoxes, confidences, m_params.confThreshold, m_params.nmsThreshold, indices);
-    bboxes.reserve(indices.size());
+				// Classes
+				float class_conf = output[k + 5];
+				int classId = 0;
 
-    for (size_t bi = 0; bi < indices.size(); ++bi)
-    {
-        bboxes.emplace_back(classIds[indices[bi]], confidences[indices[bi]], rectBoxes[indices[bi]]);
-    }
+				for (int j = 1; j < nc; j++)
+				{
+					if (class_conf < output[k + 5 + j])
+					{
+						classId = j;
+						class_conf = output[k + 5 + j];
+					}
+				}
 
+				class_conf *= object_conf;
+
+				//if (i == 0)
+				//	std::cout << i << ": object_conf = " << object_conf << ", class_conf = " << class_conf << ", classId = " << classId << ", rect = " << cv::Rect(cvRound(x), cvRound(y), cvRound(width), cvRound(height)) << std::endl;
+
+				classIds.push_back(classId);
+				confidences.push_back(class_conf);
+				rectBoxes.emplace_back(cvRound(x), cvRound(y), cvRound(width), cvRound(height));
+			}
+		}
+
+		// Non-maximum suppression to eliminate redudant overlapping boxes
+		std::vector<int> indices;
+		cv::dnn::NMSBoxes(rectBoxes, confidences, m_params.confThreshold, m_params.nmsThreshold, indices);
+		bboxes.reserve(indices.size());
+
+		for (size_t bi = 0; bi < indices.size(); ++bi)
+		{
+			bboxes.emplace_back(classIds[indices[bi]], confidences[indices[bi]], rectBoxes[indices[bi]]);
+		}
+	}
     return bboxes;
 }
