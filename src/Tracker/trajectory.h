@@ -69,6 +69,12 @@ public:
     Trace(const Trace&) = default;
     ///
     Trace(Trace&&) = default;
+	///
+	Trace& operator=(const Trace& trace)
+	{
+		m_trace = trace.m_trace;
+		return *this;
+	}
 
     ///
     /// \brief operator []
@@ -202,7 +208,22 @@ struct TrackingObject
 	TrackingObject(const TrackingObject&) = default;
 	///
 	TrackingObject(TrackingObject&&) = default;
+	///
+	TrackingObject & operator=(const TrackingObject& track)
+	{
+		m_trace = track.m_trace;
+		m_ID = track.m_ID;
+		m_rrect = track.m_rrect;
+		m_velocity = track.m_velocity;
+		m_type = track.m_type;
+		m_confidence = track.m_confidence;
+		m_isStatic = track.m_isStatic;
+		m_isStaticTime = track.m_isStaticTime;
+		m_outOfTheFrame = track.m_outOfTheFrame;
+		m_lastRobust = track.m_lastRobust;
 
+		return *this;
+	}
     ///
 	~TrackingObject() = default;
 
