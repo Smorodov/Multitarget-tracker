@@ -58,7 +58,8 @@ if (MSVC)
     endif()
 
     include_directories(${PROJECT_SOURCE_DIR}/3rdparty/include)
-    link_directories(${PROJECT_SOURCE_DIR}/3rdparty/lib/${BIT_SYSTEM})
+    set(LINK_DIRECTORY ${PROJECT_SOURCE_DIR}/3rdparty/lib/${BIT_SYSTEM}) 
+    link_directories(${LINK_DIRECTORY})
 
     add_definitions(-DHAVE_STRUCT_TIMESPEC)
     add_definitions(-DWIN32)
@@ -108,6 +109,12 @@ target_link_libraries(${libname} ${YOLO_LIBS})
 
 install(TARGETS ${libname}
         EXPORT MTTrackingExports
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
         LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
         RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
         PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_PREFIX}/include/${PROJECT_NAME})
+
+if (MSVC)
+    install(FILES "${LINK_DIRECTORY}/${LIB_PTHREAD}.lib"           
+            DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+endif()

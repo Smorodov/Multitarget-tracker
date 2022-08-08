@@ -246,7 +246,7 @@ bool YoloONNX::constructNetwork(YoloONNXUniquePtr<nvinfer1::IBuilder>& builder,
 bool YoloONNX::Detect(cv::Mat frame, std::vector<tensor_rt::Result>& bboxes)
 {
     // Read the input data into the managed buffers
-    assert(mParams.inputTensorNames.size() == 1);
+    assert(m_params.inputTensorNames.size() == 1);
 
     if (!processInput_aspectRatio(frame))
         return false;

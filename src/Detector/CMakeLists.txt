@@ -105,7 +105,8 @@ endif(BUILD_YOLO_TENSORRT)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBS})
 
-set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${detector_headers};../common/defines.h;../common/object_types.h")
+#set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${detector_headers};../common/defines.h;../common/object_types.h")
+set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${detector_headers}")
 install(TARGETS ${PROJECT_NAME}
         EXPORT MTTrackingExports
         LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
