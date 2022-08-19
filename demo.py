@@ -19,7 +19,7 @@ def draw_tracks(img, tracks, fps):
         brect = track.GetBoundingRect()
         if track.isStatic:
             cv.rectangle(img, (brect.x, brect.y, brect.width, brect.height), (255, 0, 255), 2)
-        elif track.IsRobust(int(fps / 4), 0.7, (0.1, 10.)):
+        elif track.IsRobust(int(fps / 4), 0.7, (0.1, 10.), 3):
             cv.rectangle(img, (brect.x, brect.y, brect.width, brect.height), (0, 255, 0), 2)
             trajectory = track.GetTrajectory()
             for i in range(0, len(trajectory) - 1):

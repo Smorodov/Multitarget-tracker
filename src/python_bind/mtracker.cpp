@@ -44,14 +44,14 @@ public:
         int nh = 1;
         int nw = 1;
         int nc = 1;
-        int ndims = info.ndim;
+        int ndims = static_cast<int>(info.ndim);
         if(ndims == 2){
-            nh = info.shape[0];
-            nw = info.shape[1];
+            nh = static_cast<int>(info.shape[0]);
+            nw = static_cast<int>(info.shape[1]);
         } else if(ndims == 3){
-            nh = info.shape[0];
-            nw = info.shape[1];
-            nc = info.shape[2];
+            nh = static_cast<int>(info.shape[0]);
+            nw = static_cast<int>(info.shape[1]);
+            nc = static_cast<int>(info.shape[2]);
         }else{
             char msg[64];
             std::sprintf(msg, "Unsupported dim %d, only support 2d, or 3-d", ndims);
@@ -133,7 +133,7 @@ struct type_caster<cv::Size_<T>>{
             return false;
         }
 
-        value = cv::Size(pt[0].cast<T>(), pt[1].cast<T>());
+        value = cv::Size(static_cast<int>(pt[0].cast<T>()), static_cast<int>(pt[1].cast<T>()));
         return true;
     }
 
@@ -409,7 +409,7 @@ PYBIND11_MODULE(pymtracking, m)
     base_detector.def("SetMinObjectSize", &BaseDetector::SetMinObjectSize);
     base_detector.def("GetDetects", &BaseDetector::GetDetects);
     base_detector.def("CalcMotionMap", &BaseDetector::CalcMotionMap);
-#if 1
+
     py::class_<MotionDetector, PyMotionDetector> mdetector(m, "MotionDetector");
     mdetector.def(py::init<BackgroundSubtract::BGFG_ALGS, cv::Mat&>());
     mdetector.def("Init", &MotionDetector::Init);
@@ -429,7 +429,6 @@ PYBIND11_MODULE(pymtracking, m)
             .value("LOBSTER", BackgroundSubtract::BGFG_ALGS::ALG_LOBSTER)
             .value("MOG2", BackgroundSubtract::BGFG_ALGS::ALG_MOG2)
             .export_values();
-#endif
 
     py::enum_<tracking::Detectors>(base_detector, "Detectors")
         .value("VIBE", tracking::Detectors::Motion_VIBE)

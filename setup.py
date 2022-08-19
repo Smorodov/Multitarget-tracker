@@ -50,7 +50,11 @@ class InstallCMakeLibs(install_lib, object):
         if hasattr(self.distribution, 'bin_dir'):
             bin_dir = self.distribution.bin_dir
         else:
-            bin_dir = os.path.join(self.build_dir)
+            bin_dir = os.path.join(self.build_dir, "Release")
+            if not os.path.exists(bin_dir):
+                bin_dir = "build/Release"
+                self.build_dir = "build/Release"
+        print("bin_dir:", bin_dir, "build_dir:", self.build_dir)
         # Depending on the files that are generated from your cmake
         # build chain, you may need to change the below code, such that
         # your files are moved to the appropriate location when the installation
