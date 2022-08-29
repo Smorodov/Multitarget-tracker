@@ -622,12 +622,12 @@ protected:
             config.emplace("classNames", pathToModel + "coco.names");
             config.emplace("maxCropRatio", "-1");
 
-			config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_person));
-			config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_car));
-			config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_bicycle));
-			config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_motorbike));
-			config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_bus));
-			config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_truck));
+            config.emplace("white_list", "person");
+            config.emplace("white_list", "car");
+            config.emplace("white_list", "bicycle");
+            config.emplace("white_list", "motorbike");
+            config.emplace("white_list", "bus");
+            config.emplace("white_list", "truck");
         }
         else
         {
@@ -673,14 +673,14 @@ protected:
 				m_trackerSettings.m_embeddings.emplace_back(pathToModel + "open_model_zoo/person-reidentification-retail-0286/FP16-INT8/person-reidentification-retail-0286.xml",
                                                             pathToModel + "open_model_zoo/person-reidentification-retail-0286/FP16-INT8/person-reidentification-retail-0286.bin",
                                                             cv::Size(128, 256),
-					                                        std::vector<ObjectTypes>{ ObjectTypes::obj_person });
+                                                            std::vector<objtype_t>{ TypeConverter::Str2Type("person") });
 #endif
 
 #if 0
 				m_trackerSettings.m_embeddings.emplace_back(pathToModel + "open_model_zoo/vehicle-reid-0001/osnet_ain_x1_0_vehicle_reid.xml",
                                                             pathToModel + "open_model_zoo/vehicle-reid-0001/osnet_ain_x1_0_vehicle_reid.bin",
                                                             cv::Size(208, 208),
-                                                            std::vector<ObjectTypes>{ ObjectTypes::obj_car, ObjectTypes::obj_bus, ObjectTypes::obj_truck, ObjectTypes::obj_vehicle });
+                                                            std::vector<objtype_t>{ TypeConverter::Str2Type("car"), TypeConverter::Str2Type("bus"), TypeConverter::Str2Type("truck"), TypeConverter::Str2Type("vehicle") });
 #endif
 
 				std::array<track_t, tracking::DistsCount> distType{
@@ -715,11 +715,11 @@ protected:
 			m_trackerSettings.m_maximumAllowedSkippedFrames = cvRound(2 * m_fps); // Maximum allowed skipped frames
 			m_trackerSettings.m_maxTraceLength = cvRound(2 * m_fps);      // Maximum trace length
 		}
-		m_trackerSettings.AddNearTypes(ObjectTypes::obj_car, ObjectTypes::obj_bus, true);
-		m_trackerSettings.AddNearTypes(ObjectTypes::obj_car, ObjectTypes::obj_truck, true);
-		m_trackerSettings.AddNearTypes(ObjectTypes::obj_bus, ObjectTypes::obj_truck, true);
-		m_trackerSettings.AddNearTypes(ObjectTypes::obj_person, ObjectTypes::obj_bicycle, true);
-		m_trackerSettings.AddNearTypes(ObjectTypes::obj_person, ObjectTypes::obj_motorbike, true);
+        m_trackerSettings.AddNearTypes(TypeConverter::Str2Type("car"), TypeConverter::Str2Type("bus"), true);
+        m_trackerSettings.AddNearTypes(TypeConverter::Str2Type("car"), TypeConverter::Str2Type("truck"), true);
+        m_trackerSettings.AddNearTypes(TypeConverter::Str2Type("bus"), TypeConverter::Str2Type("truck"), true);
+        m_trackerSettings.AddNearTypes(TypeConverter::Str2Type("person"), TypeConverter::Str2Type("bicycle"), true);
+        m_trackerSettings.AddNearTypes(TypeConverter::Str2Type("person"), TypeConverter::Str2Type("motorbike"), true);
 
 		m_tracker = BaseTracker::CreateTracker(m_trackerSettings);
 
@@ -920,12 +920,12 @@ protected:
             config.emplace("inference_precision", m_trackerSettings.m_inferencePrecision);
         }
 
-        //config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_person));
-        //config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_car));
-        //config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_bicycle));
-        //config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_motorbike));
-        //config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_bus));
-        //config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_truck));
+        //config.emplace("white_list", "person");
+        //config.emplace("white_list", "car");
+        //config.emplace("white_list", "bicycle");
+        //config.emplace("white_list", "motorbike");
+        //config.emplace("white_list", "bus");
+        //config.emplace("white_list", "truck");
 
 		m_detector = BaseDetector::CreateDetector(tracking::Detectors::Yolo_TensorRT, config, frame);
 		if (m_detector.get())
@@ -957,10 +957,10 @@ protected:
 			m_trackerSettings.m_maximumAllowedSkippedFrames = cvRound(2 * m_fps); // Maximum allowed skipped frames
 			m_trackerSettings.m_maxTraceLength = cvRound(5 * m_fps);      // Maximum trace length
 		}
-		m_trackerSettings.AddNearTypes(ObjectTypes::obj_car, ObjectTypes::obj_bus, false);
-		m_trackerSettings.AddNearTypes(ObjectTypes::obj_car, ObjectTypes::obj_truck, false);
-		m_trackerSettings.AddNearTypes(ObjectTypes::obj_person, ObjectTypes::obj_bicycle, true);
-		m_trackerSettings.AddNearTypes(ObjectTypes::obj_person, ObjectTypes::obj_motorbike, true);
+        m_trackerSettings.AddNearTypes(TypeConverter::Str2Type("car"), TypeConverter::Str2Type("bus"), false);
+        m_trackerSettings.AddNearTypes(TypeConverter::Str2Type("car"), TypeConverter::Str2Type("truck"), false);
+        m_trackerSettings.AddNearTypes(TypeConverter::Str2Type("person"), TypeConverter::Str2Type("bicycle"), true);
+        m_trackerSettings.AddNearTypes(TypeConverter::Str2Type("person"), TypeConverter::Str2Type("motorbike"), true);
 
 		m_tracker = BaseTracker::CreateTracker(m_trackerSettings);
 

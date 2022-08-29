@@ -301,14 +301,12 @@ void AsyncDetector::CaptureThread(std::string fileName, int startFrame, float* f
     detectorConfig.emplace("maxCropRatio", "3.0");
 	
 #if 1
-	detectorConfig.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_person));
-	detectorConfig.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_car));
-	detectorConfig.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_bicycle));
-	detectorConfig.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_motorbike));
-	detectorConfig.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_bus));
-	detectorConfig.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_truck));
-    //detectorConfig.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_traffic light));
-    //detectorConfig.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_stop sign));
+    detectorConfig.emplace("white_list", "person");
+    detectorConfig.emplace("white_list", "car");
+    detectorConfig.emplace("white_list", "bicycle");
+    detectorConfig.emplace("white_list", "motorbike");
+    detectorConfig.emplace("white_list", "bus");
+    detectorConfig.emplace("white_list", "truck");
 #endif
 
     // Tracker

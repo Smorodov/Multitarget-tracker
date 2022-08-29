@@ -125,7 +125,7 @@ bool YoloTensorRTDetector::Init(const config_t& config)
 	auto whiteRange = config.equal_range("white_list");
 	for (auto it = whiteRange.first; it != whiteRange.second; ++it)
 	{
-		m_classesWhiteList.insert(std::stoi(it->second));
+        m_classesWhiteList.insert(TypeConverter::Str2Type(it->second));
 	}
 
 	auto maxCropRatio = config.find("maxCropRatio");

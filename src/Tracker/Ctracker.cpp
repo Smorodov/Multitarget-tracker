@@ -78,7 +78,7 @@ CTracker::CTracker(const TrackerSettings& settings)
         {
             for (auto objType : embParam.m_objectTypes)
             {
-                m_embCalculators.try_emplace((objtype_t)objType, embCalc);
+                m_embCalculators.try_emplace(objType, embCalc);
             }
         }
     }

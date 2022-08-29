@@ -3,6 +3,8 @@
 
 # Last changes
 
+* Breaking change: removed static enum with types
+
 * Support ONNX with NMS
 
 * YOLOv7 worked with TensorRT! Export pretrained Pytorch models [here (WongKinYiu/yolov7)](https://github.com/WongKinYiu/yolov7) to onnx format and run Multitarget-tracker with -e=6 example
