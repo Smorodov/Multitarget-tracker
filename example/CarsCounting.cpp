@@ -187,13 +187,13 @@ bool CarsCounting::InitDetector(cv::UMat frame)
     if (m_batchSize > 1)
         config.emplace("maxBatch", std::to_string(m_batchSize));
 
-    config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_person));
-    config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_car));
-    config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_bicycle));
-    config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_motorbike));
-    config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_bus));
-    config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_truck));
-    config.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_vehicle));
+    config.emplace("white_list", "person");
+    config.emplace("white_list", "car");
+    config.emplace("white_list", "bicycle");
+    config.emplace("white_list", "motorbike");
+    config.emplace("white_list", "bus");
+    config.emplace("white_list", "truck");
+    config.emplace("white_list", "vehicle");
 
     m_detector = BaseDetector::CreateDetector(m_detectorType, config, frame);
 
@@ -246,10 +246,10 @@ bool CarsCounting::InitTracker(cv::UMat frame)
     settings.m_minAreaRadiusPix = frame.rows / 20.f;
     settings.m_maximumAllowedSkippedFrames = cvRound(2 * m_fps); // Maximum allowed skipped frames
 
-    settings.AddNearTypes(ObjectTypes::obj_car, ObjectTypes::obj_bus, false);
-    settings.AddNearTypes(ObjectTypes::obj_car, ObjectTypes::obj_truck, false);
-    settings.AddNearTypes(ObjectTypes::obj_person, ObjectTypes::obj_bicycle, true);
-    settings.AddNearTypes(ObjectTypes::obj_person, ObjectTypes::obj_motorbike, true);
+    settings.AddNearTypes(TypeConverter::Str2Type("car"), TypeConverter::Str2Type("bus"), false);
+    settings.AddNearTypes(TypeConverter::Str2Type("car"), TypeConverter::Str2Type("truck"), false);
+    settings.AddNearTypes(TypeConverter::Str2Type("person"), TypeConverter::Str2Type("bicycle"), true);
+    settings.AddNearTypes(TypeConverter::Str2Type("person"), TypeConverter::Str2Type("motorbike"), true);
 
     settings.m_useAbandonedDetection = false;
     if (settings.m_useAbandonedDetection)

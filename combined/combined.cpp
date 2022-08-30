@@ -344,13 +344,13 @@ bool CombinedDetector::InitDetector(cv::UMat frame)
 	configDNN.emplace("classNames", pathToModel + "coco.names");
 	configDNN.emplace("maxCropRatio", "-1");
 
-	configDNN.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_person));
-	configDNN.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_car));
-	configDNN.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_bicycle));
-	configDNN.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_motorbike));
-	configDNN.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_bus));
-	configDNN.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_truck));
-    configDNN.emplace("white_list", std::to_string((objtype_t)ObjectTypes::obj_vehicle));
+    configDNN.emplace("white_list", "person");
+    configDNN.emplace("white_list", "car");
+    configDNN.emplace("white_list", "bicycle");
+    configDNN.emplace("white_list", "motorbike");
+    configDNN.emplace("white_list", "bus");
+    configDNN.emplace("white_list", "truck");
+    configDNN.emplace("white_list", "vehicle");
 
 	m_detectorDNN = BaseDetector::CreateDetector(tracking::Detectors::Yolo_Darknet, configDNN, frame);
 	if (m_detectorDNN.get())

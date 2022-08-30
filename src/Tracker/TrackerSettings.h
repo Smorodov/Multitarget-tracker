@@ -182,10 +182,10 @@ struct TrackerSettings
 		cv::Size m_inputLayer{128, 256};
 
 		///
-		std::vector<ObjectTypes> m_objectTypes;
+        std::vector<objtype_t> m_objectTypes;
 
 		EmbeddingParams(const std::string& embeddingCfgName, const std::string& embeddingWeightsName,
-			const cv::Size& inputLayer, const std::vector<ObjectTypes>& objectTypes)
+            const cv::Size& inputLayer, const std::vector<objtype_t>& objectTypes)
 			: m_embeddingCfgName(embeddingCfgName),
 			m_embeddingWeightsName(embeddingWeightsName),
 			m_inputLayer(inputLayer),
@@ -242,7 +242,7 @@ struct TrackerSettings
 	}
 
 	///
-	void AddNearTypes(ObjectTypes type1, ObjectTypes type2, bool sym)
+    void AddNearTypes(objtype_t type1, objtype_t type2, bool sym)
 	{
 		auto AddOne = [&](objtype_t type1, objtype_t type2)
 		{
@@ -252,9 +252,9 @@ struct TrackerSettings
 			else
 				it->second.insert(type2);
 		};
-		AddOne((objtype_t)type1, (objtype_t)type2);
+        AddOne(type1, type2);
 		if (sym)
-			AddOne((objtype_t)type2, (objtype_t)type1);
+            AddOne(type2, type1);
 	}
 
 	///
