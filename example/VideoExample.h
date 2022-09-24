@@ -11,6 +11,7 @@
 #include "BaseDetector.h"
 #include "Ctracker.h"
 #include "FileLogger.h"
+#include "cvatAnnotationsGenerator.h"
 
 ///
 /// \brief The Frame struct
@@ -194,6 +195,8 @@ protected:
 
     bool m_showLogs = true;
     float m_fps = 25;
+	cv::Size m_frameSize;
+	int m_framesCount = 0;
 
 	size_t m_batchSize = 1;
 
@@ -201,6 +204,7 @@ protected:
     int m_trackingTimeOut = 60000;
 
     ResultsLog m_resultsLog;
+	CVATAnnotationsGenerator m_cvatAnnotationsGenerator;
 
     static void CaptureAndDetect(VideoExample* thisPtr, std::atomic<bool>& stopCapture);
 
@@ -211,7 +215,6 @@ protected:
     void Tracking(FrameInfo& frame);
 
     virtual void DrawData(cv::Mat frame, const std::vector<TrackingObject>& tracks, int framesCounter, int currTime) = 0;
-
     virtual void DrawTrack(cv::Mat frame, const TrackingObject& track, bool drawTrajectory, int framesCounter);
 
     TrackerSettings m_trackerSettings;
