@@ -863,8 +863,8 @@ nvinfer1::ILayer * layer_act(nvinfer1::ITensor* input_,
 	if (s_act_ == "leaky")
 	{
 		auto act = network_->addActivation(*input_, nvinfer1::ActivationType::kLEAKY_RELU);
-		act->setAlpha(0.1);
 		assert(act != nullptr);
+		act->setAlpha(0.1);
 		return act;
 	}
 	else if (s_act_ == "hardswish")
@@ -1297,12 +1297,12 @@ nvinfer1::ILayer* netAddConvBNLeaky(int layerIdx,
     /***** ACTIVATION LAYER *****/
     /****************************/
 	auto leaky = network->addActivation(*bn->getOutput(0),nvinfer1::ActivationType::kLEAKY_RELU);
+	assert(leaky != nullptr);
 	leaky->setAlpha(0.1f);
 	/*nvinfer1::IPlugin* leakyRELU = nvinfer1::plugin::createPReLUPlugin(0.1);
 	assert(leakyRELU != nullptr);
 	nvinfer1::ITensor* bnOutput = bn->getOutput(0);
 	nvinfer1::IPluginLayer* leaky = network->addPlugin(&bnOutput, 1, *leakyRELU);*/
-	assert(leaky != nullptr);
 	std::string leakyLayerName = "leaky_" + std::to_string(layerIdx);
 	leaky->setName(leakyLayerName.c_str());
 

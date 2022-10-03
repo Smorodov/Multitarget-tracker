@@ -987,7 +987,6 @@ protected:
 			{
 				DrawTrack(frame, track, true, framesCounter);
 
-
 				std::stringstream label;
 				label << TypeConverter::Type2Str(track.m_type) << " " << std::setprecision(2) << track.m_velocity << ": " << track.m_confidence;
 				int baseLine = 0;

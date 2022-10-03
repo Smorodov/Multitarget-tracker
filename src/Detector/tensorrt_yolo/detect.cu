@@ -178,7 +178,7 @@ namespace nvinfer1
 	 
 
 	//
-    PluginFieldCollection DetectPluginCreator::_fc{};
+	PluginFieldCollection DetectPluginCreator::_fc{};
 	std::vector<PluginField> DetectPluginCreator::_vec_plugin_attributes;
 
 	DetectPluginCreator::DetectPluginCreator()

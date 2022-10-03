@@ -6,7 +6,7 @@
 /// \param network_info_
 /// \param infer_params_
 ///
-YoloV4::YoloV4(	const NetworkInfo &network_info_, const InferParams &infer_params_)
+YoloV4::YoloV4(const NetworkInfo &network_info_, const InferParams &infer_params_)
     : Yolo(network_info_, infer_params_)
 {
 }

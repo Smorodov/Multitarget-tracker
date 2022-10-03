@@ -60,7 +60,7 @@ struct BBoxInfo
     BBox box;
     int label = 0;
     int classId = 0; // For coco benchmarking
-    float prob = 0;
+    float prob = 0.f;
 };
 
 class Logger : public nvinfer1::ILogger

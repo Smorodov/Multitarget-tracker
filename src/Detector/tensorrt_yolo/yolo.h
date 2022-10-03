@@ -41,7 +41,6 @@ SOFTWARE.
 #include "class_timer.hpp"
 #include "opencv2/opencv.hpp"
 #include "detect.h"
-//#include "logging.h"
 
 /**
  * Holds all the file paths required to build a network.
@@ -139,8 +138,8 @@ protected:
 	uint32_t _n_classes = 0;
 	float _f_depth_multiple = 0;
 	float _f_width_multiple = 0;
-    const float m_ProbThresh;
-    const float m_NMSThresh;
+    const float m_ProbThresh = 0.5f;
+    const float m_NMSThresh = 0.5f;
     std::vector<std::string> m_ClassNames;
     // Class ids for coco benchmarking
     const std::vector<int> m_ClassIds{
@@ -148,8 +147,8 @@ protected:
         22, 23, 24, 25, 27, 28, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44,
         46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65,
         67, 70, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 84, 85, 86, 87, 88, 89, 90};
-    const bool m_PrintPerfInfo;
-    const bool m_PrintPredictions;
+    const bool m_PrintPerfInfo = false;
+    const bool m_PrintPredictions = false;
     // TRT specific members
 	//Logger glogger;
     uint32_t m_BatchSize = 1;
