@@ -153,9 +153,6 @@ namespace nvinfer1
 		void* workspace,
 		cudaStream_t stream) noexcept 
 	{
-        //assert(batchSize == 1);
-        //GPU
-        //CUDA_CHECK(cudaStreamSynchronize(stream));
         forwardGpu((const float *const *)inputs, (float*)outputs[0], stream, batchSize);
         return 0;
     }

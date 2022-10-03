@@ -23,7 +23,7 @@ protected:
     /// \param frame
     /// \return
     ///
-    bool InitDetector(cv::UMat frame)
+    bool InitDetector(cv::UMat frame) override
     {
         m_minObjWidth = 0;//frame.cols / 20;
 
@@ -81,7 +81,7 @@ protected:
     /// \param frame
     /// \return
     ///
-    bool InitTracker(cv::UMat frame)
+    bool InitTracker(cv::UMat frame) override
     {
 		if (!m_trackerSettingsLoaded)
 		{
@@ -127,10 +127,10 @@ protected:
     /// \param framesCounter
     /// \param currTime
     ///
-    void DrawData(cv::Mat frame, const std::vector<TrackingObject>& tracks, int framesCounter, int currTime)
+    void DrawData(cv::Mat frame, const std::vector<TrackingObject>& tracks, int framesCounter, int currTime) override
     {
         if (m_showLogs)
-            std::cout << "Frame " << framesCounter << ": tracks = " << tracks.size() << ", time = " << currTime << std::endl;
+			std::cout << "Frame " << framesCounter << " (" << m_framesCount << "): tracks = " << tracks.size() << ", time = " << currTime << std::endl;
 
         for (const auto& track : tracks)
         {
@@ -211,7 +211,7 @@ protected:
     /// \param frame
     /// \return
     ///
-    bool InitDetector(cv::UMat frame)
+    bool InitDetector(cv::UMat frame) override
     {
 #ifdef _WIN32
         std::string pathToModel = "../../data/";
@@ -234,7 +234,7 @@ protected:
     /// \param frame
     /// \return
     ///
-    bool InitTracker(cv::UMat frame)
+    bool InitTracker(cv::UMat frame) override
     {
 		if (!m_trackerSettingsLoaded)
 		{
@@ -262,10 +262,10 @@ protected:
 	/// \param framesCounter
 	/// \param currTime
 	///
-	void DrawData(cv::Mat frame, const std::vector<TrackingObject>& tracks, int framesCounter, int currTime)
+	void DrawData(cv::Mat frame, const std::vector<TrackingObject>& tracks, int framesCounter, int currTime) override
 	{
         if (m_showLogs)
-            std::cout << "Frame " << framesCounter << ": tracks = " << tracks.size() << ", time = " << currTime << std::endl;
+			std::cout << "Frame " << framesCounter << " (" << m_framesCount << "): tracks = " << tracks.size() << ", time = " << currTime << std::endl;
 
         for (const auto& track : tracks)
         {
@@ -297,7 +297,7 @@ protected:
     /// \param frame
     /// \return
     ///
-    bool InitDetector(cv::UMat frame)
+    bool InitDetector(cv::UMat frame) override
     {
         tracking::Detectors detectorType = tracking::Detectors::Pedestrian_C4; // tracking::Detectors::Pedestrian_HOG;
 
@@ -324,7 +324,7 @@ protected:
     /// \param frame
     /// \return
     ///
-    bool InitTracker(cv::UMat frame)
+    bool InitTracker(cv::UMat frame) override
     {
 		if (!m_trackerSettingsLoaded)
 		{
@@ -352,10 +352,10 @@ protected:
 	/// \param framesCounter
 	/// \param currTime
 	///
-	void DrawData(cv::Mat frame, const std::vector<TrackingObject>& tracks, int framesCounter, int currTime)
+	void DrawData(cv::Mat frame, const std::vector<TrackingObject>& tracks, int framesCounter, int currTime) override
 	{
         if (m_showLogs)
-            std::cout << "Frame " << framesCounter << ": tracks = " << tracks.size() << ", time = " << currTime << std::endl;
+			std::cout << "Frame " << framesCounter << " (" << m_framesCount << "): tracks = " << tracks.size() << ", time = " << currTime << std::endl;
 
         for (const auto& track : tracks)
         {
@@ -387,7 +387,7 @@ protected:
 	/// \param frame
 	/// \return
 	///
-	bool InitDetector(cv::UMat frame)
+	bool InitDetector(cv::UMat frame) override
 	{
 		config_t config;
 
@@ -458,7 +458,7 @@ protected:
 	/// \param frame
 	/// \return
 	///
-	bool InitTracker(cv::UMat frame)
+	bool InitTracker(cv::UMat frame) override
 	{
 		if (!m_trackerSettingsLoaded)
 		{
@@ -491,10 +491,10 @@ protected:
 	/// \param framesCounter
 	/// \param currTime
 	///
-	void DrawData(cv::Mat frame, const std::vector<TrackingObject>& tracks, int framesCounter, int currTime)
+	void DrawData(cv::Mat frame, const std::vector<TrackingObject>& tracks, int framesCounter, int currTime) override
 	{
 		if (m_showLogs)
-			std::cout << "Frame " << framesCounter << ": tracks = " << tracks.size() << ", time = " << currTime << std::endl;
+			std::cout << "Frame " << framesCounter << " (" << m_framesCount << "): tracks = " << tracks.size() << ", time = " << currTime << std::endl;
 
 		for (const auto& track : tracks)
 		{
@@ -561,7 +561,7 @@ protected:
     /// \param frame
     /// \return
     ///
-	bool InitDetector(cv::UMat frame)
+	bool InitDetector(cv::UMat frame) override
 	{
 		config_t config;
 
@@ -656,7 +656,7 @@ protected:
     /// \param frame
     /// \return
     ///
-	bool InitTracker(cv::UMat frame)
+	bool InitTracker(cv::UMat frame) override
 	{
 		if (!m_trackerSettingsLoaded)
 		{
@@ -733,10 +733,10 @@ protected:
 	/// \param framesCounter
 	/// \param currTime
 	///
-	void DrawData(cv::Mat frame, const std::vector<TrackingObject>& tracks, int framesCounter, int currTime)
+	void DrawData(cv::Mat frame, const std::vector<TrackingObject>& tracks, int framesCounter, int currTime) override
 	{
 		if (m_showLogs)
-			std::cout << "Frame " << framesCounter << ": tracks = " << tracks.size() << ", time = " << currTime << std::endl;
+			std::cout << "Frame " << framesCounter << " (" << m_framesCount << "): tracks = " << tracks.size() << ", time = " << currTime << std::endl;
 
 		for (const auto& track : tracks)
 		{
@@ -808,7 +808,7 @@ protected:
 	/// \param frame
 	/// \return
 	///
-	bool InitDetector(cv::UMat frame)
+	bool InitDetector(cv::UMat frame) override
 	{
 		config_t config;
         if (!m_trackerSettingsLoaded)
@@ -941,7 +941,7 @@ protected:
 	/// \param frame
 	/// \return
 	///
-	bool InitTracker(cv::UMat frame)
+	bool InitTracker(cv::UMat frame) override
 	{
 		if (!m_trackerSettingsLoaded)
 		{
@@ -974,10 +974,10 @@ protected:
 	/// \param framesCounter
 	/// \param currTime
 	///
-	void DrawData(cv::Mat frame, const std::vector<TrackingObject>& tracks, int framesCounter, int currTime)
+	void DrawData(cv::Mat frame, const std::vector<TrackingObject>& tracks, int framesCounter, int currTime) override
 	{
 		if (m_showLogs)
-			std::cout << "Frame " << framesCounter << ": tracks = " << tracks.size() << ", time = " << currTime << std::endl;
+			std::cout << "Frame " << framesCounter << " (" << m_framesCount << "): tracks = " << tracks.size() << ", time = " << currTime << std::endl;
 
 		for (const auto& track : tracks)
 		{
@@ -986,7 +986,6 @@ protected:
 				cv::Size2f(0.1f, 8.0f)))      // Min and max ratio: width / height
 			{
 				DrawTrack(frame, track, true, framesCounter);
-
 
 				std::stringstream label;
 				label << TypeConverter::Type2Str(track.m_type) << " " << std::setprecision(2) << track.m_velocity << ": " << track.m_confidence;

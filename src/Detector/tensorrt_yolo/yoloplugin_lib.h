@@ -39,17 +39,17 @@ SOFTWARE.
 typedef struct YoloPluginCtx YoloPluginCtx;
 typedef struct YoloPluginOutput YoloPluginOutput;
 // Init parameters structure as input, required for instantiating yoloplugin_lib
-typedef struct
+struct YoloPluginInitParams
 {
     // Width at which frame/object will be scaled
-    int processingWidth;
+    int processingWidth = 0;
     // height at which frame/object will be scaled
-    int processingHeight;
+    int processingHeight = 0;
     // Flag to indicate whether operating on crops of full frame
-    int fullFrame;
+    int fullFrame = 0;
     // Plugin config file
     std::string configFilePath;
-} YoloPluginInitParams;
+};
 
 struct YoloPluginCtx
 {

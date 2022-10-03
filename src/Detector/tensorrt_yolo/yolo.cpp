@@ -82,8 +82,10 @@ Yolo::Yolo(const NetworkInfo& networkInfo, const InferParams& inferParams)
 
 Yolo::~Yolo()
 {
-    for (auto& tensor : m_OutputTensors) NV_CUDA_CHECK(cudaFreeHost(tensor.hostBuffer));
-    for (auto& deviceBuffer : m_DeviceBuffers) NV_CUDA_CHECK(cudaFree(deviceBuffer));
+    for (auto& tensor : m_OutputTensors)
+		NV_CUDA_CHECK(cudaFreeHost(tensor.hostBuffer));
+    for (auto& deviceBuffer : m_DeviceBuffers)
+		NV_CUDA_CHECK(cudaFree(deviceBuffer));
     NV_CUDA_CHECK(cudaStreamDestroy(m_CudaStream));
     if (m_Context)
     {
@@ -124,7 +126,9 @@ std::vector<int> split_layer_index(const std::string &s_,const std::string &deli
 
 void Yolo::createYOLOEngine(const nvinfer1::DataType dataType, Int8EntropyCalibrator* calibrator)
 {
-	if (fileExists(m_EnginePath))return;
+    if (fileExists(m_EnginePath))
+        return;
+
 	std::vector<float> weights = loadWeights(m_WtsFilePath, m_NetworkType);
     std::vector<nvinfer1::Weights> trtWeights;
     int weightPtr = 0;
@@ -385,8 +389,7 @@ void Yolo::createYOLOEngine(const nvinfer1::DataType dataType, Int8EntropyCalibr
     // Create and cache the engine if not already present
     if (fileExists(m_EnginePath))
     {
-        std::cout << "Using previously generated plan file located at " << m_EnginePath
-                  << std::endl;
+        std::cout << "Using previously generated plan file located at " << m_EnginePath << std::endl;
         destroyNetworkUtils(trtWeights);
         return;
     }
@@ -592,10 +595,10 @@ float round_f(const float in_, const int precision_)
 	return out;
 }
 
-void Yolo::create_engine_yolov5(const nvinfer1::DataType dataType,
-	Int8EntropyCalibrator* calibrator )
+void Yolo::create_engine_yolov5(const nvinfer1::DataType dataType, Int8EntropyCalibrator* calibrator)
 {
-	if (fileExists(m_EnginePath))return;
+	if (fileExists(m_EnginePath))
+		return;
 	std::map<std::string, std::vector<float>> model_wts;
 	load_weights_v5(m_WtsFilePath, model_wts);
 	std::vector<nvinfer1::Weights> trtWeights;
@@ -785,10 +788,9 @@ void Yolo::create_engine_yolov5(const nvinfer1::DataType dataType,
 			{
 				concat_tensor[j] = tensorOutputs[vec_from[j]];
 			}
-			nvinfer1::IConcatenationLayer* concat
-				=m_Network->addConcatenation(concat_tensor, static_cast<int>(vec_from.size()));
-			concat->setAxis(n_dimension-1);
+			nvinfer1::IConcatenationLayer* concat = m_Network->addConcatenation(concat_tensor, static_cast<int>(vec_from.size()));
 			assert(concat != nullptr);
+			concat->setAxis(n_dimension-1);
 			previous = concat->getOutput(0);
 			assert(previous != nullptr);
 			channels = getNumChannels(previous);
@@ -983,8 +985,10 @@ std::vector<std::map<std::string, std::string>> Yolo::parseConfigFile(const std:
 
     while (getline(file, line))
     {
-        if (line.empty() || line == "\r") continue;
-        if (line.front() == '#') continue;
+        if (line.empty() || line == "\r")
+            continue;
+        if (line.front() == '#')
+            continue;
         line = trim(line);
         if (line.front() == '[')
         {
@@ -1113,7 +1117,7 @@ void Yolo::parseConfigBlocks()
 			outputTensor.stride = m_InputH / outputTensor.gridSize;
 			outputTensor.stride_h = m_InputH / outputTensor.grid_h;
 			outputTensor.stride_w = m_InputW / outputTensor.grid_w;
-            outputTensor.volume = outputTensor.grid_h* outputTensor.grid_w * (outputTensor.numBBoxes * (5 + outputTensor.numClasses));
+            outputTensor.volume = outputTensor.grid_h * outputTensor.grid_w * (outputTensor.numBBoxes * (5 + outputTensor.numClasses));
             m_OutputTensors.push_back(outputTensor);
 			_n_yolo_ind++;
         }

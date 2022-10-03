@@ -12,8 +12,8 @@ namespace tensor_rt
     ///
 	struct Result
 	{
-		int		 id = -1;
-		float	 prob = 0.f;
+		int id = -1;
+		float prob = 0.f;
 		cv::Rect rect;
 
 		Result(int id_, float prob_, cv::Rect r)
@@ -50,24 +50,17 @@ namespace tensor_rt
     ///
     /// \brief The Config struct
     ///
-	struct Config
-	{
-		std::string file_model_cfg = "yolov4.cfg";
-
-		std::string file_model_weights = "yolov4.weights";
-
-		float detect_thresh = 0.5f;
-
+    struct Config
+    {
+        std::string file_model_cfg = "yolov4.cfg";
+        std::string file_model_weights = "yolov4.weights";
+        float detect_thresh = 0.5f;
         ModelType net_type = YOLOV4;
-
         Precision inference_precision = FP32;
-
-		int	gpu_id = 0;
-
-		uint32_t batch_size = 1;
-
-		std::string calibration_image_list_file_txt = "configs/calibration_images.txt";
-	};
+        int	gpu_id = 0;
+        uint32_t batch_size = 1;
+        std::string calibration_image_list_file_txt = "configs/calibration_images.txt";
+    };
 
     ///
     /// \brief The Detector class

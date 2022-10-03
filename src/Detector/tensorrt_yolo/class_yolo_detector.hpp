@@ -55,7 +55,7 @@ public:
 		{
 			auto curImage = vec_ds_images.at(i);
 			auto binfo = _p_net->decodeDetections(static_cast<int>(i), curImage.getImageHeight(), curImage.getImageWidth());
-            auto remaining = (_p_net->getNMSThresh() > 0) ? nmsAllClasses(_p_net->getNMSThresh(), binfo, _p_net->getNumClasses(), _vec_net_type[_config.net_type]) : binfo;
+            auto remaining = (_p_net->getNMSThresh() > 0) ? nmsAllClasses(_p_net->getNMSThresh(), binfo, _p_net->getNumClasses(), _vec_net_type[(size_t)_config.net_type]) : binfo;
 
 			std::vector<tensor_rt::Result> vec_result;
 			if (!remaining.empty())
@@ -93,10 +93,10 @@ private:
 
 	void parse_config()
 	{
-		_yolo_info.networkType = _vec_net_type[_config.net_type];
+		_yolo_info.networkType = _vec_net_type[((size_t)_config.net_type)];
 		_yolo_info.configFilePath = _config.file_model_cfg;
 		_yolo_info.wtsFilePath = _config.file_model_weights;
-		_yolo_info.precision = _vec_precision[_config.inference_precision];
+        _yolo_info.precision = _vec_precision[(size_t)_config.inference_precision];
 		_yolo_info.deviceType = "kGPU";
 		auto npos = _yolo_info.wtsFilePath.find(".weights");
 		assert(npos != std::string::npos

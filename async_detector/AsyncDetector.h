@@ -70,7 +70,6 @@ private:
 	FramesQueue m_framesQue;
 
 	void DrawData(frame_ptr frameInfo, int framesCounter, int currTime);
-
     void DrawTrack(cv::Mat frame, const TrackingObject& track, bool drawTrajectory = true);
 
     static void CaptureThread(std::string fileName, int startFrame, float* fps, FramesQueue* framesQue, bool* stopFlag);

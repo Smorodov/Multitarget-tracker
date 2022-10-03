@@ -37,7 +37,8 @@ void DrawFilledRect(cv::Mat& frame, const cv::Rect& rect, cv::Scalar cl, int alp
 /// \param parser
 ///
 VideoExample::VideoExample(const cv::CommandLineParser& parser)
-    : m_resultsLog(parser.get<std::string>("res"), parser.get<int>("write_n_frame"))
+    : m_resultsLog(parser.get<std::string>("log_res"), parser.get<int>("write_n_frame")),
+	m_cvatAnnotationsGenerator(parser.get<std::string>("cvat_res"))
 {
     m_inFile = parser.get<std::string>(0);
     m_outFile = parser.get<std::string>("out");
@@ -213,6 +214,8 @@ void VideoExample::SyncProcess()
             m_resultsLog.Flush();
     }
 
+	m_cvatAnnotationsGenerator.Save(m_inFile, m_framesCount, m_frameSize);
+
     int64 stopLoopTime = cv::getTickCount();
 
     std::cout << "algorithms time = " << (allTime / freq) << ", work time = " << ((stopLoopTime - startLoopTime) / freq) << std::endl;
@@ -328,6 +331,8 @@ void VideoExample::AsyncProcess()
 
     if (thCapDet.joinable())
         thCapDet.join();
+
+	m_cvatAnnotationsGenerator.Save(m_inFile, m_framesCount, m_frameSize);
 
     int64 stopLoopTime = cv::getTickCount();
 
@@ -484,6 +489,8 @@ void VideoExample::Tracking(FrameInfo& frame)
 		else
 			m_tracker->Update(frame.m_regions[i], frame.m_frames[i].GetUMatGray(), m_fps);
 		m_tracker->GetTracks(frame.m_tracks[i]);
+
+		m_cvatAnnotationsGenerator.NewDetects(frame.m_frameInds[i], frame.m_tracks[i], 0);
 	}
 	if (m_trackerSettings.m_useAbandonedDetection)
 		m_tracker->GetTracks(m_tracks);
@@ -659,7 +666,11 @@ bool VideoExample::OpenCapture(cv::VideoCapture& capture)
 
         m_fps = std::max(1.f, (float)capture.get(cv::CAP_PROP_FPS));
 
-		std::cout << "Video " << m_inFile << " was started from " << m_startFrame << " frame with " << m_fps << " fps" << std::endl;
+		m_frameSize.width = cvRound(capture.get(cv::CAP_PROP_FRAME_WIDTH));
+		m_frameSize.height = cvRound(capture.get(cv::CAP_PROP_FRAME_HEIGHT));
+		m_framesCount = cvRound(capture.get(cv::CAP_PROP_FRAME_COUNT));
+
+		std::cout << "Video " << m_inFile << " was started from " << m_startFrame << " frame with " << m_fps << " fps, frame size " << m_frameSize << " and length " << m_framesCount << std::endl;
 
         return true;
     }
