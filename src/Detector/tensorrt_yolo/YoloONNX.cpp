@@ -155,7 +155,7 @@ bool YoloONNX::constructNetwork(YoloONNXUniquePtr<nvinfer1::IBuilder>& builder,
                                 YoloONNXUniquePtr<nvonnxparser::IParser>& parser)
 {
     // Parse ONNX model file to populate TensorRT INetwork
-    int verbosity = (int) nvinfer1::ILogger::Severity::kERROR;
+    int verbosity = (int)nvinfer1::ILogger::Severity::kERROR;
 
     sample::gLogInfo << "Parsing ONNX file: " << m_params.onnxFileName << std::endl;
 
@@ -170,6 +170,12 @@ bool YoloONNX::constructNetwork(YoloONNXUniquePtr<nvinfer1::IBuilder>& builder,
 #if (NV_TENSORRT_MAJOR < 8)
     config->setMaxWorkspaceSize(4096_MiB);
 #else
+	size_t workspaceSize = config->getMemoryPoolLimit(MemoryPoolType::kWORKSPACE);
+	size_t dlaManagedSRAMSize = config->getMemoryPoolLimit(MemoryPoolType::kDLA_MANAGED_SRAM);
+	size_t dlaLocalDRAMSize = config->getMemoryPoolLimit(MemoryPoolType::kDLA_LOCAL_DRAM);
+	size_t dlaGlobalDRAMSize = config->getMemoryPoolLimit(MemoryPoolType::kDLA_GLOBAL_DRAM);
+	std::cout << "workspaceSize = " << workspaceSize << ", dlaManagedSRAMSize = " << dlaManagedSRAMSize << ", dlaLocalDRAMSize = " << dlaLocalDRAMSize << ", dlaGlobalDRAMSize = " << dlaGlobalDRAMSize << std::endl;
+
     config->setMemoryPoolLimit(MemoryPoolType::kWORKSPACE, 4096_MiB);
 #endif
 
@@ -379,7 +385,7 @@ std::vector<tensor_rt::Result> YoloONNX::get_bboxes(int /*batch_size*/, int /*ke
 		for (size_t i = 0; i < len; ++i)
 		{
 			// Box
-			size_t k = i * (nc + 5);
+			size_t k = i * 7; // 7 params: x, y, w, h, class index, class confidence
 			float class_conf = output[k + 6];
 			int classId = cvRound(output[k + 5]);
 			if (class_conf >= m_params.confThreshold)
