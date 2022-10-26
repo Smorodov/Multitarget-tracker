@@ -63,7 +63,7 @@ namespace nvinfer1
 		cudaStream_t stream_)
 	{
 		int n_data_size = n_batch_size_ * n_output_size_;
-		kernel_hardswish << <(n_data_size + threads_ -1)/threads_, threads_ >> >(
+		kernel_hardswish << <(n_data_size + threads_ -1)/threads_, threads_, 0, stream_ >> >(
 				reinterpret_cast<const float*>(input_),
 				reinterpret_cast<float*>(output_),
 				n_data_size);
@@ -77,7 +77,7 @@ namespace nvinfer1
 		cudaStream_t stream) noexcept
 	{
 		//printf("batch_size:%d,output_size:%d,threads:%d\n", batchSize, _n_output_size, _n_max_thread_pre_block);
-		NV_CUDA_CHECK(cuda_hardswish_layer(inputs[0], outputs[0], batchSize, _n_output_size , _n_max_thread_pre_block,stream));
+		NV_CUDA_CHECK(cuda_hardswish_layer(inputs[0], outputs[0], batchSize, _n_output_size , _n_max_thread_pre_block, stream));
 		return 0;
 	}
 

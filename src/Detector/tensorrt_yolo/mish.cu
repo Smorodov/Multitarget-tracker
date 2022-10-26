@@ -19,12 +19,12 @@ namespace nvinfer1
     }
 
     size_t MishPlugin::getSerializationSize() const noexcept
-    {  
+    {
         return sizeof(input_size_);
     }
 
     int MishPlugin::initialize() noexcept
-    { 
+    {
         return 0;
     }
 
@@ -144,7 +144,7 @@ namespace nvinfer1
 	{
         int block_size = thread_count_;
         int grid_size = (input_size_ * batchSize + block_size - 1) / block_size;
-        mish_kernel<<<grid_size, block_size>>>(inputs[0], output, input_size_ * batchSize);
+        mish_kernel<<<grid_size, block_size, 0, stream>>>(inputs[0], output, input_size_ * batchSize);
     }
 
 	int MishPlugin::enqueue(int batchSize,

@@ -262,7 +262,7 @@ void Yolo::createYOLOEngine(const nvinfer1::DataType dataType, Int8EntropyCalibr
                                                                       m_OutputTensors.at(outputTensorCount).grid_w);
             assert(yoloPlugin != nullptr);
             nvinfer1::IPluginV2Layer* yolo = m_Network->addPluginV2(&previous, 1, *yoloPlugin);
-			
+
             assert(yolo != nullptr);
             yolo->setName(layerName.c_str());
             std::string inputVol = dimsToString(previous->getDimensions());
@@ -949,7 +949,7 @@ void Yolo::doInference(const unsigned char* input, const uint32_t batchSize)
     NV_CUDA_CHECK(cudaMemcpyAsync(m_DeviceBuffers.at(m_InputBindingIndex), input,
                                   batchSize * m_InputSize * sizeof(float), cudaMemcpyHostToDevice,
                                   m_CudaStream));
-	
+
     m_Context->enqueue(batchSize, m_DeviceBuffers.data(), m_CudaStream, nullptr);
     for (auto& tensor : m_OutputTensors)
     {
@@ -985,11 +985,11 @@ std::vector<std::map<std::string, std::string>> Yolo::parseConfigFile(const std:
 
     while (getline(file, line))
     {
+        line = trim(line);
         if (line.empty() || line == "\r")
             continue;
         if (line.front() == '#')
             continue;
-        line = trim(line);
         if (line.front() == '[')
         {
             if (!block.empty())
