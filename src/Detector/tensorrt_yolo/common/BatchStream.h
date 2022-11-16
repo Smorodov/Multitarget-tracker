@@ -90,7 +90,7 @@ public:
 
     nvinfer1::Dims getDims() const override
     {
-        return Dims{4, {mBatchSize, mDims.d[0], mDims.d[1], mDims.d[2]}};
+        return nvinfer1::Dims{4, {mBatchSize, mDims.d[0], mDims.d[1], mDims.d[2]}};
     }
 
 private:
@@ -144,7 +144,7 @@ private:
     int mBatchSize{0};
     int mBatchCount{0}; //!< The batch that will be read on the next invocation of next()
     int mMaxBatches{0};
-    Dims mDims{};
+    nvinfer1::Dims mDims{};
     std::vector<float> mData{};
     std::vector<float> mLabels{};
 };

@@ -69,9 +69,13 @@ bool YoloTensorRTDetector::Init(const config_t& config)
 	if (maxBatch != config.end())
         m_batchSize = std::max(1, std::stoi(maxBatch->second));
 	m_localConfig.batch_size = static_cast<uint32_t>(m_batchSize);
-	
-	m_localConfig.file_model_cfg = modelConfiguration->second;
-	m_localConfig.file_model_weights = modelBinary->second;
+
+    auto videoMemory = config.find("video_memory");
+    if (videoMemory != config.end())
+        m_localConfig.video_memory = std::max<size_t>(0, std::stoul(videoMemory->second));
+
+    m_localConfig.file_model_cfg = modelConfiguration->second;
+    m_localConfig.file_model_weights = modelBinary->second;
 
     auto inference_precision = config.find("inference_precision");
     if (inference_precision != config.end())

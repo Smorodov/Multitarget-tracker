@@ -48,7 +48,7 @@ struct Parser
 
 struct BuildEnvironment
 {
-    TrtUniquePtr<INetworkDefinition> network;
+    TrtUniquePtr<nvinfer1::INetworkDefinition> network;
     //! Parser that creates the network. Must be declared *after* network, so that when
     //! ~BuildEnvironment() executes, the parser is destroyed before the network is destroyed.
     Parser parser;
@@ -75,8 +75,8 @@ Parser modelToNetwork(const ModelOptions& model, nvinfer1::INetworkDefinition& n
 //!
 //! \return boolean Return true if network and config were successfully set
 //!
-bool setupNetworkAndConfig(const BuildOptions& build, const SystemOptions& sys, IBuilder& builder,
-    INetworkDefinition& network, IBuilderConfig& config, std::ostream& err,
+bool setupNetworkAndConfig(const BuildOptions& build, const SystemOptions& sys, nvinfer1::IBuilder& builder,
+    nvinfer1::INetworkDefinition& network, nvinfer1::IBuilderConfig& config, std::ostream& err,
     std::vector<std::vector<char>>& sparseWeights);
 
 //!
@@ -128,16 +128,15 @@ inline TrtUniquePtr<nvinfer1::ICudaEngine> getEngine(
 //!
 //! \return Pointer to a host memory for a serialized network
 //!
-IHostMemory* networkToSerialized(const BuildOptions& build, const SystemOptions& sys, IBuilder& builder,
-    INetworkDefinition& network, std::ostream& err);
+nvinfer1::IHostMemory* networkToSerialized(const BuildOptions& build, const SystemOptions& sys, nvinfer1::IBuilder& builder,
+    nvinfer1::INetworkDefinition& network, std::ostream& err);
 
 //!
 //! \brief Tranfer model to a serialized network
 //!
 //! \return Pointer to a host memory for a serialized network
 //!
-IHostMemory* modelToSerialized(
-    const ModelOptions& model, const BuildOptions& build, const SystemOptions& sys, std::ostream& err);
+nvinfer1::IHostMemory* modelToSerialized(const ModelOptions& model, const BuildOptions& build, const SystemOptions& sys, std::ostream& err);
 
 //!
 //! \brief Serialize network and save it into a file
@@ -146,7 +145,7 @@ IHostMemory* modelToSerialized(
 //!
 bool serializeAndSave(const ModelOptions& model, const BuildOptions& build, const SystemOptions& sys, std::ostream& err);
 
-bool timeRefit(const INetworkDefinition& network, nvinfer1::ICudaEngine& engine, bool multiThreading);
+bool timeRefit(const nvinfer1::INetworkDefinition& network, nvinfer1::ICudaEngine& engine, bool multiThreading);
 
 //!
 //! \brief Set tensor scales from a calibration table
@@ -173,7 +172,7 @@ bool hasConsistencyChecker();
 //! \brief Create a consistency checker object if the dynamic library is loaded.
 //!
 nvinfer1::consistency::IConsistencyChecker* createConsistencyChecker(
-    nvinfer1::ILogger& logger, IHostMemory const* engine) noexcept;
+    nvinfer1::ILogger& logger, nvinfer1::IHostMemory const* engine) noexcept;
 
 //!
 //! \brief Run consistency check on serialized engine.

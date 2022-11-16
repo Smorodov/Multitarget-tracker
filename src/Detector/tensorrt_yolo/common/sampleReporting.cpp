@@ -26,8 +26,6 @@
 #include "sampleOptions.h"
 #include "sampleReporting.h"
 
-using namespace nvinfer1;
-
 namespace sample
 {
 

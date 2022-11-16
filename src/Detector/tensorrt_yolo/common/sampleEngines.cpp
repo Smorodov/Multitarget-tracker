@@ -40,8 +40,6 @@
 #include <dlfcn.h>
 #endif
 
-using namespace nvinfer1;
-
 namespace sample
 {
 
@@ -82,7 +80,7 @@ void setTensorScalesFromCalibration(nvinfer1::INetworkDefinition& network, const
     for (int32_t i = 0, n = network.getNbInputs(); i < n; ++i)
     {
         int32_t formatIdx = broadcastInputFormats ? 0 : i;
-        if (!inputFormats.empty() && inputFormats[formatIdx].first == DataType::kINT8)
+        if (!inputFormats.empty() && inputFormats[formatIdx].first == nvinfer1::DataType::kINT8)
         {
             auto* input = network.getInput(i);
             const auto calibScale = tensorScales.at(input->getName());
@@ -93,7 +91,7 @@ void setTensorScalesFromCalibration(nvinfer1::INetworkDefinition& network, const
     for (int32_t i = 0, n = network.getNbOutputs(); i < n; ++i)
     {
         int32_t formatIdx = broadcastOutputFormats ? 0 : i;
-        if (!outputFormats.empty() && outputFormats[formatIdx].first == DataType::kINT8)
+        if (!outputFormats.empty() && outputFormats[formatIdx].first == nvinfer1::DataType::kINT8)
         {
             auto* output = network.getOutput(i);
             const auto calibScale = tensorScales.at(output->getName());
@@ -178,7 +176,7 @@ private:
 };
 
 RndInt8Calibrator::RndInt8Calibrator(int batches, std::vector<int64_t>& elemCount, const std::string& cacheFile,
-    const INetworkDefinition& network, std::ostream& err)
+    const nvinfer1::INetworkDefinition& network, std::ostream& err)
     : mBatches(batches)
     , mCurrentBatch(0)
     , mCacheFile(cacheFile)
@@ -240,7 +238,7 @@ const void* RndInt8Calibrator::readCalibrationCache(size_t& length) noexcept
     return !mCalibrationCache.empty() ? mCalibrationCache.data() : nullptr;
 }
 
-bool setTensorDynamicRange(const INetworkDefinition& network, float inRange = 2.0F, float outRange = 4.0F)
+bool setTensorDynamicRange(const nvinfer1::INetworkDefinition& network, float inRange = 2.0F, float outRange = 4.0F)
 {
     // Ensure that all layer inputs have a dynamic range.
     for (int l = 0; l < network.getNbLayers(); l++)
@@ -248,13 +246,13 @@ bool setTensorDynamicRange(const INetworkDefinition& network, float inRange = 2.
         auto* layer = network.getLayer(l);
         for (int i = 0; i < layer->getNbInputs(); i++)
         {
-            ITensor* input{layer->getInput(i)};
+            nvinfer1::ITensor* input{layer->getInput(i)};
             // Optional inputs are nullptr here and are from RNN layers.
             if (input && !input->dynamicRangeIsSet())
             {
                 // Concat should propagate dynamic range from outputs to inputs to avoid
                 // Re-quantization during the concatenation
-                auto dynRange = (layer->getType() == LayerType::kCONCATENATION) ? outRange : inRange;
+                auto dynRange = (layer->getType() == nvinfer1::LayerType::kCONCATENATION) ? outRange : inRange;
                 if (!input->setDynamicRange(-dynRange, dynRange))
                 {
                     return false;
@@ -263,12 +261,12 @@ bool setTensorDynamicRange(const INetworkDefinition& network, float inRange = 2.
         }
         for (int o = 0; o < layer->getNbOutputs(); o++)
         {
-            ITensor* output{layer->getOutput(o)};
+            nvinfer1::ITensor* output{layer->getOutput(o)};
             // Optional outputs are nullptr here and are from RNN layers.
             if (output && !output->dynamicRangeIsSet())
             {
                 // Pooling must have the same input and output dynamic range.
-                if (layer->getType() == LayerType::kPOOLING)
+                if (layer->getType() == nvinfer1::LayerType::kPOOLING)
                 {
                     if (!output->setDynamicRange(-inRange, inRange))
                     {
@@ -330,19 +328,19 @@ void sparsify(const T* values, int64_t count, int32_t k, int32_t rs, std::vector
     }
 }
 
-void sparsify(const Weights& weights, int32_t k, int32_t rs, std::vector<char>& sparseWeights)
+void sparsify(const nvinfer1::Weights& weights, int32_t k, int32_t rs, std::vector<char>& sparseWeights)
 {
     switch (weights.type)
     {
-    case DataType::kFLOAT:
+    case nvinfer1::DataType::kFLOAT:
         sparsify(static_cast<const float*>(weights.values), weights.count, k, rs, sparseWeights);
         break;
-    case DataType::kHALF:
+    case nvinfer1::DataType::kHALF:
         sparsify(static_cast<const half_float::half*>(weights.values), weights.count, k, rs, sparseWeights);
         break;
-    case DataType::kINT8:
-    case DataType::kINT32:
-    case DataType::kBOOL: break;
+    case nvinfer1::DataType::kINT8:
+    case nvinfer1::DataType::kINT32:
+    case nvinfer1::DataType::kBOOL: break;
     }
 }
 
@@ -374,10 +372,10 @@ void transpose2DWeights(void* dst, void const* src, int32_t const m, int32_t con
 
 // Sparsify the weights of Constant layers that are fed to MatMul via Shuffle layers.
 // Forward analysis on the API graph to determine which weights to sparsify.
-void sparsifyMatMulKernelWeights(INetworkDefinition& network, std::vector<std::vector<char>>& sparseWeights)
+void sparsifyMatMulKernelWeights(nvinfer1::INetworkDefinition& network, std::vector<std::vector<char>>& sparseWeights)
 {
-    using TensorToLayer = std::unordered_map<ITensor*, ILayer*>;
-    using LayerToTensor = std::unordered_map<ILayer*, ITensor*>;
+    using TensorToLayer = std::unordered_map<nvinfer1::ITensor*, nvinfer1::ILayer*>;
+    using LayerToTensor = std::unordered_map<nvinfer1::ILayer*, nvinfer1::ITensor*>;
 
     // 1. Collect layers and tensors information from the network.
     TensorToLayer matmulI2L;
@@ -385,26 +383,26 @@ void sparsifyMatMulKernelWeights(INetworkDefinition& network, std::vector<std::v
     TensorToLayer shuffleI2L;
     LayerToTensor shuffleL2O;
     auto collectMappingInfo = [&](int32_t const idx) {
-        ILayer* l = network.getLayer(idx);
+        nvinfer1::ILayer* l = network.getLayer(idx);
         switch (l->getType())
         {
-        case LayerType::kMATRIX_MULTIPLY:
+        case nvinfer1::LayerType::kMATRIX_MULTIPLY:
         {
             // assume weights on the second input.
             matmulI2L.insert({l->getInput(1), l});
             break;
         }
-        case LayerType::kCONSTANT:
+        case nvinfer1::LayerType::kCONSTANT:
         {
-            DataType const dtype = static_cast<IConstantLayer*>(l)->getWeights().type;
-            if (dtype == DataType::kFLOAT || dtype == DataType::kHALF)
+            nvinfer1::DataType const dtype = static_cast<nvinfer1::IConstantLayer*>(l)->getWeights().type;
+            if (dtype == nvinfer1::DataType::kFLOAT || dtype == nvinfer1::DataType::kHALF)
             {
                 // Sparsify float only.
                 constO2L.insert({l->getOutput(0), l});
             }
             break;
         }
-        case LayerType::kSHUFFLE:
+        case nvinfer1::LayerType::kSHUFFLE:
         {
             shuffleI2L.insert({l->getInput(0), l});
             shuffleL2O.insert({l, l->getOutput(0)});
@@ -425,9 +423,9 @@ void sparsifyMatMulKernelWeights(INetworkDefinition& network, std::vector<std::v
     }
 
     // Helper for analysis
-    auto isTranspose = [](Permutation const& perm) -> bool { return (perm.order[0] == 1 && perm.order[1] == 0); };
-    auto is2D = [](Dims const& dims) -> bool { return dims.nbDims == 2; };
-    auto isIdenticalReshape = [](Dims const& dims) -> bool {
+    auto isTranspose = [](nvinfer1::Permutation const& perm) -> bool { return (perm.order[0] == 1 && perm.order[1] == 0); };
+    auto is2D = [](nvinfer1::Dims const& dims) -> bool { return dims.nbDims == 2; };
+    auto isIdenticalReshape = [](nvinfer1::Dims const& dims) -> bool {
         for (int32_t i = 0; i < dims.nbDims; ++i)
         {
             if (dims.d[i] != i || dims.d[i] != -1)
@@ -437,10 +435,11 @@ void sparsifyMatMulKernelWeights(INetworkDefinition& network, std::vector<std::v
         }
         return true;
     };
-    auto tensorReachedViaTranspose = [&](ITensor* t, bool& needTranspose) -> ITensor* {
+    auto tensorReachedViaTranspose = [&](nvinfer1::ITensor* t, bool& needTranspose)
+    {
         while (shuffleI2L.find(t) != shuffleI2L.end())
         {
-            IShuffleLayer* s = static_cast<IShuffleLayer*>(shuffleI2L.at(t));
+            nvinfer1::IShuffleLayer* s = static_cast<nvinfer1::IShuffleLayer*>(shuffleI2L.at(t));
             if (!is2D(s->getInput(0)->getDimensions()) || !is2D(s->getReshapeDimensions())
                 || !isIdenticalReshape(s->getReshapeDimensions()))
             {
@@ -448,13 +447,9 @@ void sparsifyMatMulKernelWeights(INetworkDefinition& network, std::vector<std::v
             }
 
             if (isTranspose(s->getFirstTranspose()))
-            {
                 needTranspose = !needTranspose;
-            }
             if (isTranspose(s->getSecondTranspose()))
-            {
                 needTranspose = !needTranspose;
-            }
 
             t = shuffleL2O.at(s);
         }
@@ -462,55 +457,55 @@ void sparsifyMatMulKernelWeights(INetworkDefinition& network, std::vector<std::v
     };
 
     // 2. Forward analysis to collect the Constant layers connected to MatMul via Transpose
-    std::unordered_map<IConstantLayer*, bool> constantLayerToSparse;
+    std::unordered_map<nvinfer1::IConstantLayer*, bool> constantLayerToSparse;
     for (auto& o2l : constO2L)
     {
         // If need to transpose the weights of the Constant layer.
         // Need to transpose by default due to semantic difference.
         bool needTranspose{true};
-        ITensor* t = tensorReachedViaTranspose(o2l.first, needTranspose);
+        nvinfer1::ITensor* t = tensorReachedViaTranspose(o2l.first, needTranspose);
         if (matmulI2L.find(t) == matmulI2L.end())
         {
             continue;
         }
 
         // check MatMul params...
-        IMatrixMultiplyLayer* mm = static_cast<IMatrixMultiplyLayer*>(matmulI2L.at(t));
+        nvinfer1::IMatrixMultiplyLayer* mm = static_cast<nvinfer1::IMatrixMultiplyLayer*>(matmulI2L.at(t));
         bool const twoInputs = mm->getNbInputs() == 2;
         bool const all2D = is2D(mm->getInput(0)->getDimensions()) && is2D(mm->getInput(1)->getDimensions());
         bool const isSimple
-            = mm->getOperation(0) == MatrixOperation::kNONE && mm->getOperation(1) != MatrixOperation::kVECTOR;
+            = mm->getOperation(0) == nvinfer1::MatrixOperation::kNONE && mm->getOperation(1) != nvinfer1::MatrixOperation::kVECTOR;
         if (!(twoInputs && all2D && isSimple))
             continue;
 
-        if (mm->getOperation(1) == MatrixOperation::kTRANSPOSE)
+        if (mm->getOperation(1) == nvinfer1::MatrixOperation::kTRANSPOSE)
             needTranspose = !needTranspose;
 
-        constantLayerToSparse.insert({static_cast<IConstantLayer*>(o2l.second), needTranspose});
+        constantLayerToSparse.insert({static_cast<nvinfer1::IConstantLayer*>(o2l.second), needTranspose});
     }
 
     // 3. Finally, sparsify the weights
-    auto sparsifyConstantWeights = [&sparseWeights](IConstantLayer* layer, bool const needTranspose)
+    auto sparsifyConstantWeights = [&sparseWeights](nvinfer1::IConstantLayer* layer, bool const needTranspose)
     {
-        Dims dims = layer->getOutput(0)->getDimensions();
+        nvinfer1::Dims dims = layer->getOutput(0)->getDimensions();
         ASSERT(dims.nbDims == 2);
         int32_t const idxN = needTranspose ? 1 : 0;
         int32_t const n = dims.d[idxN];
         int32_t const k = dims.d[1 - idxN];
         sparseWeights.emplace_back();
         std::vector<char>& spw = sparseWeights.back();
-        Weights w = layer->getWeights();
-        DataType const dtype = w.type;
-        ASSERT(dtype == DataType::kFLOAT || dtype == DataType::kHALF); // non-float weights should have been ignored.
+        nvinfer1::Weights w = layer->getWeights();
+        nvinfer1::DataType const dtype = w.type;
+        ASSERT(dtype == nvinfer1::DataType::kFLOAT || dtype == nvinfer1::DataType::kHALF); // non-float weights should have been ignored.
 
         if (needTranspose)
         {
-            if (dtype == DataType::kFLOAT)
+            if (dtype == nvinfer1::DataType::kFLOAT)
             {
                 spw.resize(w.count * sizeof(float));
                 transpose2DWeights<float>(spw.data(), w.values, k, n);
             }
-            else if (dtype == DataType::kHALF)
+            else if (dtype == nvinfer1::DataType::kHALF)
             {
                 spw.resize(w.count * sizeof(half_float::half));
                 transpose2DWeights<half_float::half>(spw.data(), w.values, k, n);
@@ -520,9 +515,9 @@ void sparsifyMatMulKernelWeights(INetworkDefinition& network, std::vector<std::v
             std::vector<char> tmpW;
             sparsify(w, n, 1, tmpW);
 
-            if (dtype == DataType::kFLOAT)
+            if (dtype == nvinfer1::DataType::kFLOAT)
                 transpose2DWeights<float>(spw.data(), tmpW.data(), n, k);
-            else if (dtype == DataType::kHALF)
+            else if (dtype == nvinfer1::DataType::kHALF)
                 transpose2DWeights<half_float::half>(spw.data(), tmpW.data(), n, k);
         }
         else
@@ -539,15 +534,15 @@ void sparsifyMatMulKernelWeights(INetworkDefinition& network, std::vector<std::v
     }
 }
 
-void sparsify(INetworkDefinition& network, std::vector<std::vector<char>>& sparseWeights)
+void sparsify(nvinfer1::INetworkDefinition& network, std::vector<std::vector<char>>& sparseWeights)
 {
     for (int32_t l = 0; l < network.getNbLayers(); ++l)
     {
         auto* layer = network.getLayer(l);
         const auto t = layer->getType();
-        if (t == LayerType::kCONVOLUTION)
+        if (t == nvinfer1::LayerType::kCONVOLUTION)
         {
-            auto& conv = *static_cast<IConvolutionLayer*>(layer);
+            auto& conv = *static_cast<nvinfer1::IConvolutionLayer*>(layer);
             const auto& dims = conv.getKernelSizeNd();
             if (dims.nbDims > 2)
             {
@@ -558,9 +553,9 @@ void sparsify(INetworkDefinition& network, std::vector<std::vector<char>>& spars
             sparseWeights.emplace_back();
             setSparseWeights(conv, k, rs, sparseWeights.back());
         }
-        else if (t == LayerType::kFULLY_CONNECTED)
+        else if (t == nvinfer1::LayerType::kFULLY_CONNECTED)
         {
-            auto& fc = *static_cast<IFullyConnectedLayer*>(layer);
+            auto& fc = *static_cast<nvinfer1::IFullyConnectedLayer*>(layer);
             const auto k = fc.getNbOutputChannels();
             sparseWeights.emplace_back();
             setSparseWeights(fc, k, 1, sparseWeights.back());
@@ -570,7 +565,7 @@ void sparsify(INetworkDefinition& network, std::vector<std::vector<char>>& spars
     sparsifyMatMulKernelWeights(network, sparseWeights);
 }
 
-void setLayerPrecisions(INetworkDefinition& network, LayerPrecisions const& layerPrecisions)
+void setLayerPrecisions(nvinfer1::INetworkDefinition& network, LayerPrecisions const& layerPrecisions)
 {
     bool const hasGlobalPrecision{layerPrecisions.find("*") != layerPrecisions.end()};
     auto const globalPrecision = hasGlobalPrecision ? layerPrecisions.at("*") : nvinfer1::DataType::kFLOAT;
@@ -596,7 +591,7 @@ void setLayerPrecisions(INetworkDefinition& network, LayerPrecisions const& laye
             }
             // We should not set the constant layer precision if its weights are in INT32.
             if (layer->getType() == nvinfer1::LayerType::kCONSTANT
-                && static_cast<IConstantLayer*>(layer)->getWeights().type == nvinfer1::DataType::kINT32)
+                && static_cast<nvinfer1::IConstantLayer*>(layer)->getWeights().type == nvinfer1::DataType::kINT32)
             {
                 hasLayerPrecisionSkipped = true;
                 sample::gLogVerbose << "Skipped setting precision for layer " << layerName << " because this "
@@ -633,7 +628,7 @@ void setLayerPrecisions(INetworkDefinition& network, LayerPrecisions const& laye
     }
 }
 
-void setLayerOutputTypes(INetworkDefinition& network, LayerOutputTypes const& layerOutputTypes)
+void setLayerOutputTypes(nvinfer1::INetworkDefinition& network, LayerOutputTypes const& layerOutputTypes)
 {
     bool const hasGlobalOutputType{layerOutputTypes.find("*") != layerOutputTypes.end()};
     auto const globalOutputType = hasGlobalOutputType ? layerOutputTypes.at("*").at(0) : nvinfer1::DataType::kFLOAT;
@@ -672,7 +667,7 @@ void setLayerOutputTypes(INetworkDefinition& network, LayerOutputTypes const& la
             }
             // We should not set the constant layer output types if its weights are in INT32.
             if (layer->getType() == nvinfer1::LayerType::kCONSTANT
-                && static_cast<IConstantLayer*>(layer)->getWeights().type == nvinfer1::DataType::kINT32)
+                && static_cast<nvinfer1::IConstantLayer*>(layer)->getWeights().type == nvinfer1::DataType::kINT32)
             {
                 hasLayerOutputTypeSkipped = true;
                 sample::gLogVerbose << "Skipped setting output types for layer " << layerName << " because this "
@@ -701,42 +696,38 @@ void setLayerOutputTypes(INetworkDefinition& network, LayerOutputTypes const& la
     }
 }
 
-void setMemoryPoolLimits(IBuilderConfig& config, BuildOptions const& build)
+void setMemoryPoolLimits(nvinfer1::IBuilderConfig& config, BuildOptions const& build)
 {
     auto const roundToBytes = [](double const sizeInMB) { return static_cast<size_t>(sizeInMB * (1 << 20)); };
     if (build.workspace >= 0)
     {
-        config.setMemoryPoolLimit(MemoryPoolType::kWORKSPACE, roundToBytes(build.workspace));
+        config.setMemoryPoolLimit(nvinfer1::MemoryPoolType::kWORKSPACE, roundToBytes(build.workspace));
     }
     if (build.dlaSRAM >= 0)
     {
-        config.setMemoryPoolLimit(MemoryPoolType::kDLA_MANAGED_SRAM, roundToBytes(build.dlaSRAM));
+        config.setMemoryPoolLimit(nvinfer1::MemoryPoolType::kDLA_MANAGED_SRAM, roundToBytes(build.dlaSRAM));
     }
     if (build.dlaLocalDRAM >= 0)
     {
-        config.setMemoryPoolLimit(MemoryPoolType::kDLA_LOCAL_DRAM, roundToBytes(build.dlaLocalDRAM));
+        config.setMemoryPoolLimit(nvinfer1::MemoryPoolType::kDLA_LOCAL_DRAM, roundToBytes(build.dlaLocalDRAM));
     }
     if (build.dlaGlobalDRAM >= 0)
     {
-        config.setMemoryPoolLimit(MemoryPoolType::kDLA_GLOBAL_DRAM, roundToBytes(build.dlaGlobalDRAM));
+        config.setMemoryPoolLimit(nvinfer1::MemoryPoolType::kDLA_GLOBAL_DRAM, roundToBytes(build.dlaGlobalDRAM));
     }
 }
 
 } // namespace
 
-bool setupNetworkAndConfig(const BuildOptions& build, const SystemOptions& sys, IBuilder& builder,
-    INetworkDefinition& network, IBuilderConfig& config, std::ostream& err,
+bool setupNetworkAndConfig(const BuildOptions& build, const SystemOptions& sys, nvinfer1::IBuilder& builder,
+    nvinfer1::INetworkDefinition& network, nvinfer1::IBuilderConfig& config, std::ostream& err,
     std::vector<std::vector<char>>& sparseWeights)
 {
-    IOptimizationProfile* profile{nullptr};
+    nvinfer1::IOptimizationProfile* profile{nullptr};
     if (build.maxBatch)
-    {
         builder.setMaxBatchSize(build.maxBatch);
-    }
     else
-    {
         profile = builder.createOptimizationProfile();
-    }
 
     bool hasDynamicShapes{false};
 
@@ -780,18 +771,18 @@ bool setupNetworkAndConfig(const BuildOptions& build, const SystemOptions& sys, 
         {
             switch (input->getType())
             {
-            case DataType::kINT32:
-            case DataType::kBOOL:
-            case DataType::kHALF:
+            case nvinfer1::DataType::kINT32:
+            case nvinfer1::DataType::kBOOL:
+            case nvinfer1::DataType::kHALF:
                 // Leave these as is.
                 break;
-            case DataType::kFLOAT:
-            case DataType::kINT8:
+            case nvinfer1::DataType::kFLOAT:
+            case nvinfer1::DataType::kINT8:
                 // User did not specify a floating-point format.  Default to kFLOAT.
-                input->setType(DataType::kFLOAT);
+                input->setType(nvinfer1::DataType::kFLOAT);
                 break;
             }
-            input->setAllowedFormats(1U << static_cast<int>(TensorFormat::kLINEAR));
+            input->setAllowedFormats(1U << static_cast<int>(nvinfer1::TensorFormat::kLINEAR));
         }
 
         if (profile)
@@ -842,32 +833,32 @@ bool setupNetworkAndConfig(const BuildOptions& build, const SystemOptions& sys, 
                 std::vector<int> profileDims{};
                 if (input->isShapeTensor())
                 {
-                    profileDims = shapes[static_cast<size_t>(OptProfileSelector::kMIN)];
-                    SMP_RETVAL_IF_FALSE(profile->setShapeValues(input->getName(), OptProfileSelector::kMIN,
+                    profileDims = shapes[static_cast<size_t>(nvinfer1::OptProfileSelector::kMIN)];
+                    SMP_RETVAL_IF_FALSE(profile->setShapeValues(input->getName(), nvinfer1::OptProfileSelector::kMIN,
                                             profileDims.data(), static_cast<int>(profileDims.size())),
                         "Error in set shape values MIN", false, err);
-                    profileDims = shapes[static_cast<size_t>(OptProfileSelector::kOPT)];
-                    SMP_RETVAL_IF_FALSE(profile->setShapeValues(input->getName(), OptProfileSelector::kOPT,
+                    profileDims = shapes[static_cast<size_t>(nvinfer1::OptProfileSelector::kOPT)];
+                    SMP_RETVAL_IF_FALSE(profile->setShapeValues(input->getName(), nvinfer1::OptProfileSelector::kOPT,
                                             profileDims.data(), static_cast<int>(profileDims.size())),
                         "Error in set shape values OPT", false, err);
-                    profileDims = shapes[static_cast<size_t>(OptProfileSelector::kMAX)];
-                    SMP_RETVAL_IF_FALSE(profile->setShapeValues(input->getName(), OptProfileSelector::kMAX,
+                    profileDims = shapes[static_cast<size_t>(nvinfer1::OptProfileSelector::kMAX)];
+                    SMP_RETVAL_IF_FALSE(profile->setShapeValues(input->getName(), nvinfer1::OptProfileSelector::kMAX,
                                             profileDims.data(), static_cast<int>(profileDims.size())),
                         "Error in set shape values MAX", false, err);
                 }
                 else
                 {
-                    profileDims = shapes[static_cast<size_t>(OptProfileSelector::kMIN)];
+                    profileDims = shapes[static_cast<size_t>(nvinfer1::OptProfileSelector::kMIN)];
                     SMP_RETVAL_IF_FALSE(
-                        profile->setDimensions(input->getName(), OptProfileSelector::kMIN, toDims(profileDims)),
+                        profile->setDimensions(input->getName(), nvinfer1::OptProfileSelector::kMIN, toDims(profileDims)),
                         "Error in set dimensions to profile MIN", false, err);
-                    profileDims = shapes[static_cast<size_t>(OptProfileSelector::kOPT)];
+                    profileDims = shapes[static_cast<size_t>(nvinfer1::OptProfileSelector::kOPT)];
                     SMP_RETVAL_IF_FALSE(
-                        profile->setDimensions(input->getName(), OptProfileSelector::kOPT, toDims(profileDims)),
+                        profile->setDimensions(input->getName(), nvinfer1::OptProfileSelector::kOPT, toDims(profileDims)),
                         "Error in set dimensions to profile OPT", false, err);
-                    profileDims = shapes[static_cast<size_t>(OptProfileSelector::kMAX)];
+                    profileDims = shapes[static_cast<size_t>(nvinfer1::OptProfileSelector::kMAX)];
                     SMP_RETVAL_IF_FALSE(
-                        profile->setDimensions(input->getName(), OptProfileSelector::kMAX, toDims(profileDims)),
+                        profile->setDimensions(input->getName(), nvinfer1::OptProfileSelector::kMAX, toDims(profileDims)),
                         "Error in set dimensions to profile MAX", false, err);
                 }
             }
@@ -885,8 +876,7 @@ bool setupNetworkAndConfig(const BuildOptions& build, const SystemOptions& sys, 
     if (profile && hasDynamicShapes)
     {
         SMP_RETVAL_IF_FALSE(profile->isValid(), "Required optimization profile is invalid", false, err);
-        SMP_RETVAL_IF_FALSE(
-            config.addOptimizationProfile(profile) != -1, "Error in add optimization profile", false, err);
+        SMP_RETVAL_IF_FALSE(config.addOptimizationProfile(profile) != -1, "Error in add optimization profile", false, err);
     }
 
     bool broadcastOutputFormats = broadcastIOFormats(build.outputFormats, network.getNbOutputs(), false);
@@ -903,34 +893,26 @@ bool setupNetworkAndConfig(const BuildOptions& build, const SystemOptions& sys, 
         }
         else
         {
-            output->setAllowedFormats(1U << static_cast<int>(TensorFormat::kLINEAR));
+            output->setAllowedFormats(1U << static_cast<int>(nvinfer1::TensorFormat::kLINEAR));
         }
     }
 
     setMemoryPoolLimits(config, build);
 
     if (build.timingCacheMode == TimingCacheMode::kDISABLE)
-    {
-        config.setFlag(BuilderFlag::kDISABLE_TIMING_CACHE);
-    }
+        config.setFlag(nvinfer1::BuilderFlag::kDISABLE_TIMING_CACHE);
 
     if (!build.tf32)
-    {
-        config.clearFlag(BuilderFlag::kTF32);
-    }
+        config.clearFlag(nvinfer1::BuilderFlag::kTF32);
 
     if (build.refittable)
-    {
-        config.setFlag(BuilderFlag::kREFIT);
-    }
+        config.setFlag(nvinfer1::BuilderFlag::kREFIT);
 
     if (build.sparsity != SparsityFlag::kDISABLE)
     {
-        config.setFlag(BuilderFlag::kSPARSE_WEIGHTS);
+        config.setFlag(nvinfer1::BuilderFlag::kSPARSE_WEIGHTS);
         if (build.sparsity == SparsityFlag::kFORCE)
-        {
             sparsify(network, sparseWeights);
-        }
     }
 
     config.setProfilingVerbosity(build.profilingVerbosity);
@@ -939,12 +921,12 @@ bool setupNetworkAndConfig(const BuildOptions& build, const SystemOptions& sys, 
 
     if (build.fp16)
     {
-        config.setFlag(BuilderFlag::kFP16);
+        config.setFlag(nvinfer1::BuilderFlag::kFP16);
     }
 
     if (build.int8)
     {
-        config.setFlag(BuilderFlag::kINT8);
+        config.setFlag(nvinfer1::BuilderFlag::kINT8);
     }
 
     if (build.int8 && !build.fp16)
@@ -955,17 +937,17 @@ bool setupNetworkAndConfig(const BuildOptions& build, const SystemOptions& sys, 
             << std::endl;
     }
 
-    auto isInt8 = [](const IOFormat& format) { return format.first == DataType::kINT8; };
+    auto isInt8 = [](const IOFormat& format) { return format.first == nvinfer1::DataType::kINT8; };
     auto int8IO = std::count_if(build.inputFormats.begin(), build.inputFormats.end(), isInt8)
         + std::count_if(build.outputFormats.begin(), build.outputFormats.end(), isInt8);
 
-    auto hasQDQLayers = [](INetworkDefinition& network) {
+    auto hasQDQLayers = [](nvinfer1::INetworkDefinition& network) {
         // Determine if our network has QDQ layers.
         const auto nbLayers = network.getNbLayers();
         for (int32_t i = 0; i < nbLayers; i++)
         {
             const auto& layer = network.getLayer(i);
-            if (layer->getType() == LayerType::kQUANTIZE || layer->getType() == LayerType::kDEQUANTIZE)
+            if (layer->getType() == nvinfer1::LayerType::kQUANTIZE || layer->getType() == nvinfer1::LayerType::kDEQUANTIZE)
             {
                 return true;
             }
@@ -997,29 +979,28 @@ bool setupNetworkAndConfig(const BuildOptions& build, const SystemOptions& sys, 
                 return false;
             }
         }
-        IOptimizationProfile* profileCalib{nullptr};
+        nvinfer1::IOptimizationProfile* profileCalib{nullptr};
         if (!build.shapesCalib.empty())
         {
             profileCalib = builder.createOptimizationProfile();
             for (uint32_t i = 0, n = network.getNbInputs(); i < n; i++)
             {
                 auto* input = network.getInput(i);
-                Dims profileDims{};
+                nvinfer1::Dims profileDims{};
                 auto shape = build.shapesCalib.find(input->getName());
                 ShapeRange shapesCalib{};
                 shapesCalib = shape->second;
 
-                profileDims = toDims(shapesCalib[static_cast<size_t>(OptProfileSelector::kOPT)]);
+                profileDims = toDims(shapesCalib[static_cast<size_t>(nvinfer1::OptProfileSelector::kOPT)]);
                 // Here we check only kMIN as all profileDims are the same.
                 SMP_RETVAL_IF_FALSE(
-                    profileCalib->setDimensions(input->getName(), OptProfileSelector::kMIN, profileDims),
+                    profileCalib->setDimensions(input->getName(), nvinfer1::OptProfileSelector::kMIN, profileDims),
                     "Error in set dimensions to calibration profile OPT", false, err);
-                profileCalib->setDimensions(input->getName(), OptProfileSelector::kOPT, profileDims);
-                profileCalib->setDimensions(input->getName(), OptProfileSelector::kMAX, profileDims);
+                profileCalib->setDimensions(input->getName(), nvinfer1::OptProfileSelector::kOPT, profileDims);
+                profileCalib->setDimensions(input->getName(), nvinfer1::OptProfileSelector::kMAX, profileDims);
             }
             SMP_RETVAL_IF_FALSE(profileCalib->isValid(), "Calibration profile is invalid", false, err);
-            SMP_RETVAL_IF_FALSE(
-                config.setCalibrationProfile(profileCalib), "Error in set calibration profile", false, err);
+            SMP_RETVAL_IF_FALSE(config.setCalibrationProfile(profileCalib), "Error in set calibration profile", false, err);
         }
 
         std::vector<int64_t> elemCount{};
@@ -1027,16 +1008,15 @@ bool setupNetworkAndConfig(const BuildOptions& build, const SystemOptions& sys, 
         {
             auto* input = network.getInput(i);
             auto const dims = input->getDimensions();
-            auto const isDynamicInput
-                = std::any_of(dims.d, dims.d + dims.nbDims, [](int32_t dim) { return dim == -1; });
+            auto const isDynamicInput = std::any_of(dims.d, dims.d + dims.nbDims, [](int32_t dim) { return dim == -1; });
 
             if (profileCalib)
             {
-                elemCount.push_back(volume(profileCalib->getDimensions(input->getName(), OptProfileSelector::kOPT)));
+                elemCount.push_back(volume(profileCalib->getDimensions(input->getName(), nvinfer1::OptProfileSelector::kOPT)));
             }
             else if (profile && isDynamicInput)
             {
-                elemCount.push_back(volume(profile->getDimensions(input->getName(), OptProfileSelector::kOPT)));
+                elemCount.push_back(volume(profile->getDimensions(input->getName(), nvinfer1::OptProfileSelector::kOPT)));
             }
             else
             {
@@ -1049,7 +1029,7 @@ bool setupNetworkAndConfig(const BuildOptions& build, const SystemOptions& sys, 
 
     if (build.directIO)
     {
-        config.setFlag(BuilderFlag::kDIRECT_IO);
+        config.setFlag(nvinfer1::BuilderFlag::kDIRECT_IO);
     }
 
     switch (build.precisionConstraints)
@@ -1058,9 +1038,9 @@ bool setupNetworkAndConfig(const BuildOptions& build, const SystemOptions& sys, 
         // It's the default for TensorRT.
         break;
     case PrecisionConstraints::kOBEY:
-        config.setFlag(BuilderFlag::kOBEY_PRECISION_CONSTRAINTS);
+        config.setFlag(nvinfer1::BuilderFlag::kOBEY_PRECISION_CONSTRAINTS);
         break;
-    case PrecisionConstraints::kPREFER: config.setFlag(BuilderFlag::kPREFER_PRECISION_CONSTRAINTS); break;
+    case PrecisionConstraints::kPREFER: config.setFlag(nvinfer1::BuilderFlag::kPREFER_PRECISION_CONSTRAINTS); break;
     }
 
     if (!build.layerPrecisions.empty() && build.precisionConstraints != PrecisionConstraints::kNONE)
@@ -1075,34 +1055,34 @@ bool setupNetworkAndConfig(const BuildOptions& build, const SystemOptions& sys, 
 
     if (build.safe)
     {
-        config.setEngineCapability(sys.DLACore != -1 ? EngineCapability::kDLA_STANDALONE : EngineCapability::kSAFETY);
+        config.setEngineCapability(sys.DLACore != -1 ? nvinfer1::EngineCapability::kDLA_STANDALONE : nvinfer1::EngineCapability::kSAFETY);
     }
 
     if (build.restricted)
     {
-        config.setFlag(BuilderFlag::kSAFETY_SCOPE);
+        config.setFlag(nvinfer1::BuilderFlag::kSAFETY_SCOPE);
     }
 
     if (sys.DLACore != -1)
     {
         if (sys.DLACore < builder.getNbDLACores())
         {
-            config.setDefaultDeviceType(DeviceType::kDLA);
+            config.setDefaultDeviceType(nvinfer1::DeviceType::kDLA);
             config.setDLACore(sys.DLACore);
-            config.setFlag(BuilderFlag::kPREFER_PRECISION_CONSTRAINTS);
+            config.setFlag(nvinfer1::BuilderFlag::kPREFER_PRECISION_CONSTRAINTS);
 
             if (sys.fallback)
             {
-                config.setFlag(BuilderFlag::kGPU_FALLBACK);
+                config.setFlag(nvinfer1::BuilderFlag::kGPU_FALLBACK);
             }
             else
             {
                 // Reformatting runs on GPU, so avoid I/O reformatting.
-                config.setFlag(BuilderFlag::kDIRECT_IO);
+                config.setFlag(nvinfer1::BuilderFlag::kDIRECT_IO);
             }
             if (!build.int8)
             {
-                config.setFlag(BuilderFlag::kFP16);
+                config.setFlag(nvinfer1::BuilderFlag::kFP16);
             }
         }
         else
@@ -1114,7 +1094,7 @@ bool setupNetworkAndConfig(const BuildOptions& build, const SystemOptions& sys, 
 
     if (build.enabledTactics || build.disabledTactics)
     {
-        TacticSources tacticSources = config.getTacticSources();
+        nvinfer1::TacticSources tacticSources = config.getTacticSources();
         tacticSources |= build.enabledTactics;
         tacticSources &= ~build.disabledTactics;
         config.setTacticSources(tacticSources);
@@ -1128,16 +1108,16 @@ bool setupNetworkAndConfig(const BuildOptions& build, const SystemOptions& sys, 
 //!
 //! \return Pointer to the engine created or nullptr if the creation failed
 //!
-bool networkToEngine(const BuildOptions& build, const SystemOptions& sys, IBuilder& builder,
+bool networkToEngine(const BuildOptions& build, const SystemOptions& sys, nvinfer1::IBuilder& builder,
     BuildEnvironment& env, std::ostream& err)
 {
-    TrtUniquePtr<IBuilderConfig> config{builder.createBuilderConfig()};
+    TrtUniquePtr<nvinfer1::IBuilderConfig> config{builder.createBuilderConfig()};
     std::vector<std::vector<char>> sparseWeights;
     SMP_RETVAL_IF_FALSE(config != nullptr, "Config creation failed", false, err);
     SMP_RETVAL_IF_FALSE(setupNetworkAndConfig(build, sys, builder, *env.network, *config, err, sparseWeights),
         "Network And Config setup failed", false, err);
 
-    std::unique_ptr<ITimingCache> timingCache{nullptr};
+    std::unique_ptr<nvinfer1::ITimingCache> timingCache{nullptr};
     // Try to load cache from file. Create a fresh cache if the file doesn't exist
     if (build.timingCacheMode == TimingCacheMode::kGLOBAL)
     {
@@ -1152,7 +1132,7 @@ bool networkToEngine(const BuildOptions& build, const SystemOptions& sys, IBuild
     SMP_RETVAL_IF_FALSE(profileStream != nullptr, "Cuda stream creation failed", false, err);
     config->setProfileStream(*profileStream);
 
-    TrtUniquePtr<IHostMemory> serializedEngine{builder.buildSerializedNetwork(*env.network, *config)};
+    TrtUniquePtr<nvinfer1::IHostMemory> serializedEngine{builder.buildSerializedNetwork(*env.network, *config)};
     SMP_RETVAL_IF_FALSE(serializedEngine != nullptr, "Engine could not be created from network", false, err);
 
     env.engineBlob.resize(serializedEngine->size());
@@ -1161,19 +1141,18 @@ bool networkToEngine(const BuildOptions& build, const SystemOptions& sys, IBuild
     if (build.safe)
     {
         ASSERT(sample::hasSafeRuntime());
-        std::unique_ptr<safe::IRuntime> safeRuntime{sample::createSafeInferRuntime(sample::gLogger.getTRTLogger())};
+        std::unique_ptr<nvinfer1::safe::IRuntime> safeRuntime{sample::createSafeInferRuntime(sample::gLogger.getTRTLogger())};
         SMP_RETVAL_IF_FALSE(safeRuntime != nullptr, "SafeRuntime creation failed", false, err);
         safeRuntime->setErrorRecorder(&gRecorder);
         env.safeEngine.reset(safeRuntime->deserializeCudaEngine(serializedEngine->data(), serializedEngine->size()));
         if (build.consistency)
-        {
             checkSafeEngine(serializedEngine->data(), serializedEngine->size());
-        }
+
         SMP_RETVAL_IF_FALSE(env.safeEngine != nullptr, "SafeEngine deserialization failed", false, err);
     }
     else
     {
-        TrtUniquePtr<IRuntime> runtime{createInferRuntime(sample::gLogger.getTRTLogger())};
+        TrtUniquePtr<nvinfer1::IRuntime> runtime{nvinfer1::createInferRuntime(sample::gLogger.getTRTLogger())};
         SMP_RETVAL_IF_FALSE(runtime != nullptr, "Runtime creation failed", false, err);
         runtime->setErrorRecorder(&gRecorder);
         env.engine.reset(runtime->deserializeCudaEngine(serializedEngine->data(), serializedEngine->size()));
@@ -1181,14 +1160,12 @@ bool networkToEngine(const BuildOptions& build, const SystemOptions& sys, IBuild
         if (build.timingCacheMode == TimingCacheMode::kGLOBAL)
         {
             auto const& timingCache = config->getTimingCache();
-            std::unique_ptr<IHostMemory> timingCacheHostData{timingCache->serialize()};
+            std::unique_ptr<nvinfer1::IHostMemory> timingCacheHostData{timingCache->serialize()};
             SMP_RETVAL_IF_FALSE(timingCacheHostData != nullptr, "Timing Cache serialization failed", false, err);
             saveTimingCacheFile(build.timingCacheFile, timingCacheHostData.get());
         }
         if (config->getInt8Calibrator())
-        {
             delete config->getInt8Calibrator();
-        }
     }
     return true;
 }
@@ -1199,11 +1176,10 @@ bool networkToEngine(const BuildOptions& build, const SystemOptions& sys, IBuild
 bool modelToBuildEnv(
     const ModelOptions& model, const BuildOptions& build, const SystemOptions& sys, BuildEnvironment& env, std::ostream& err)
 {
-    TrtUniquePtr<IBuilder> builder{createInferBuilder(sample::gLogger.getTRTLogger())};
+    TrtUniquePtr<nvinfer1::IBuilder> builder{nvinfer1::createInferBuilder(sample::gLogger.getTRTLogger())};
     SMP_RETVAL_IF_FALSE(builder != nullptr, "Builder creation failed", false, err);
     builder->setErrorRecorder(&gRecorder);
-    auto networkFlags
-        = (build.maxBatch) ? 0U : 1U << static_cast<uint32_t>(nvinfer1::NetworkDefinitionCreationFlag::kEXPLICIT_BATCH);
+    auto networkFlags = (build.maxBatch) ? 0U : 1U << static_cast<uint32_t>(nvinfer1::NetworkDefinitionCreationFlag::kEXPLICIT_BATCH);
 
     env.network.reset(builder->createNetworkV2(networkFlags));
     SMP_RETVAL_IF_FALSE(env.network != nullptr, "Network creation failed", false, err);
@@ -1215,7 +1191,7 @@ bool modelToBuildEnv(
 
 namespace
 {
-std::pair<std::vector<std::string>, std::vector<WeightsRole>> getLayerWeightsRolePair(IRefitter& refitter)
+std::pair<std::vector<std::string>, std::vector<nvinfer1::WeightsRole>> getLayerWeightsRolePair(nvinfer1::IRefitter& refitter)
 {
     // Get number of refittable items.
     auto const nbAll = refitter.getAll(0, nullptr, nullptr);
@@ -1226,15 +1202,14 @@ std::pair<std::vector<std::string>, std::vector<WeightsRole>> getLayerWeightsRol
     std::vector<std::string> layerNameStrs(nbAll);
     std::transform(layerNames.begin(), layerNames.end(), layerNameStrs.begin(), [](char const* name) {
         if (name == nullptr)
-        {
             return std::string{};
-        }
+
         return std::string{name};
     });
     return {layerNameStrs, weightsRoles};
 }
 
-std::pair<std::vector<std::string>, std::vector<WeightsRole>> getMissingLayerWeightsRolePair(IRefitter& refitter)
+std::pair<std::vector<std::string>, std::vector<nvinfer1::WeightsRole>> getMissingLayerWeightsRolePair(nvinfer1::IRefitter& refitter)
 {
     // Get number of refittable items.
     auto const nbMissing = refitter.getMissing(0, nullptr, nullptr);
@@ -1268,7 +1243,7 @@ bool loadEngineToEnv(const std::string& engine, int DLACore, bool safe, bool ena
     if (safe)
     {
         ASSERT(sample::hasSafeRuntime());
-        std::unique_ptr<safe::IRuntime> safeRuntime{sample::createSafeInferRuntime(sample::gLogger.getTRTLogger())};
+        std::unique_ptr<nvinfer1::safe::IRuntime> safeRuntime{sample::createSafeInferRuntime(sample::gLogger.getTRTLogger())};
         safeRuntime->setErrorRecorder(&gRecorder);
         env.safeEngine.reset(safeRuntime->deserializeCudaEngine(env.engineBlob.data(), fsize));
         bool result = env.safeEngine != nullptr;
@@ -1279,11 +1254,10 @@ bool loadEngineToEnv(const std::string& engine, int DLACore, bool safe, bool ena
         return result;
     }
 
-    TrtUniquePtr<IRuntime> runtime{createInferRuntime(sample::gLogger.getTRTLogger())};
+    TrtUniquePtr<nvinfer1::IRuntime> runtime{nvinfer1::createInferRuntime(sample::gLogger.getTRTLogger())};
     if (DLACore != -1)
-    {
         runtime->setDLACore(DLACore);
-    }
+
     runtime->setErrorRecorder(&gRecorder);
     env.engine.reset(runtime->deserializeCudaEngine(env.engineBlob.data(), fsize));
     return env.engine != nullptr;
@@ -1292,7 +1266,7 @@ bool loadEngineToEnv(const std::string& engine, int DLACore, bool safe, bool ena
 
 void dumpRefittable(nvinfer1::ICudaEngine& engine)
 {
-    TrtUniquePtr<IRefitter> refitter{createInferRefitter(engine, sample::gLogger.getTRTLogger())};
+    TrtUniquePtr<nvinfer1::IRefitter> refitter{nvinfer1::createInferRefitter(engine, sample::gLogger.getTRTLogger())};
     if (refitter == nullptr)
     {
         sample::gLogError << "Failed to create a refitter." << std::endl;
@@ -1309,13 +1283,13 @@ void dumpRefittable(nvinfer1::ICudaEngine& engine)
     }
 }
 
-ICudaEngine* loadEngine(const std::string& engine, int DLACore, std::ostream& err)
+nvinfer1::ICudaEngine* loadEngine(const std::string& engine, int DLACore, std::ostream& err)
 {
     BuildEnvironment env;
     return loadEngineToEnv(engine, DLACore, false, false, env, err) ? env.engine.release() : nullptr;
 }
 
-bool saveEngine(const ICudaEngine& engine, const std::string& fileName, std::ostream& err)
+bool saveEngine(const nvinfer1::ICudaEngine& engine, const std::string& fileName, std::ostream& err)
 {
     std::ofstream engineFile(fileName, std::ios::binary);
     if (!engineFile)
@@ -1324,7 +1298,7 @@ bool saveEngine(const ICudaEngine& engine, const std::string& fileName, std::ost
         return false;
     }
 
-    TrtUniquePtr<IHostMemory> serializedEngine{engine.serialize()};
+    TrtUniquePtr<nvinfer1::IHostMemory> serializedEngine{engine.serialize()};
     if (serializedEngine == nullptr)
     {
         err << "Engine serialization failed" << std::endl;
@@ -1339,7 +1313,7 @@ bool getEngineBuildEnv(const ModelOptions& model, const BuildOptions& build, con
     BuildEnvironment& env, std::ostream& err)
 {
     TrtUniquePtr<nvinfer1::ICudaEngine> engine;
-    TrtUniquePtr<INetworkDefinition> network;
+    TrtUniquePtr<nvinfer1::INetworkDefinition> network;
     Parser parser;
 
     bool createEngineSuccess {false};
@@ -1364,10 +1338,10 @@ bool getEngineBuildEnv(const ModelOptions& model, const BuildOptions& build, con
     return true;
 }
 
-IHostMemory* networkToSerialized(const BuildOptions& build, const SystemOptions& sys, IBuilder& builder,
-    INetworkDefinition& network, std::ostream& err)
+nvinfer1::IHostMemory* networkToSerialized(const BuildOptions& build, const SystemOptions& sys, nvinfer1::IBuilder& builder,
+    nvinfer1::INetworkDefinition& network, std::ostream& err)
 {
-    TrtUniquePtr<IBuilderConfig> config{builder.createBuilderConfig()};
+    TrtUniquePtr<nvinfer1::IBuilderConfig> config{builder.createBuilderConfig()};
     std::vector<std::vector<char>> sparseWeights;
     SMP_RETVAL_IF_FALSE(config != nullptr, "Config creation failed", nullptr, err);
     SMP_RETVAL_IF_FALSE(setupNetworkAndConfig(build, sys, builder, network, *config, err, sparseWeights),
@@ -1375,17 +1349,17 @@ IHostMemory* networkToSerialized(const BuildOptions& build, const SystemOptions&
     return builder.buildSerializedNetwork(network, *config);
 }
 
-IHostMemory* modelToSerialized(
+nvinfer1::IHostMemory* modelToSerialized(
     const ModelOptions& model, const BuildOptions& build, const SystemOptions& sys, std::ostream& err)
 {
-    TrtUniquePtr<IBuilder> builder{createInferBuilder(sample::gLogger.getTRTLogger())};
+    TrtUniquePtr<nvinfer1::IBuilder> builder{nvinfer1::createInferBuilder(sample::gLogger.getTRTLogger())};
     SMP_RETVAL_IF_FALSE(builder != nullptr, "Builder creation failed", nullptr, err);
     builder->setErrorRecorder(&gRecorder);
 
     auto networkFlags
         = (build.maxBatch) ? 0U : 1U << static_cast<uint32_t>(nvinfer1::NetworkDefinitionCreationFlag::kEXPLICIT_BATCH);
 
-    TrtUniquePtr<INetworkDefinition> network{builder->createNetworkV2(networkFlags)};
+    TrtUniquePtr<nvinfer1::INetworkDefinition> network{builder->createNetworkV2(networkFlags)};
     SMP_RETVAL_IF_FALSE(network != nullptr, "Network creation failed", nullptr, err);
 
     Parser parser = modelToNetwork(model, *network, err);
@@ -1396,7 +1370,7 @@ IHostMemory* modelToSerialized(
 
 bool serializeAndSave(const ModelOptions& model, const BuildOptions& build, const SystemOptions& sys, std::ostream& err)
 {
-    TrtUniquePtr<IHostMemory> serialized{modelToSerialized(model, build, sys, err)};
+    TrtUniquePtr<nvinfer1::IHostMemory> serialized{modelToSerialized(model, build, sys, err)};
     SMP_RETVAL_IF_FALSE(serialized != nullptr, "Network serialization failed", false, err);
 
     std::ofstream engineFile(build.engine, std::ios::binary);
@@ -1406,86 +1380,86 @@ bool serializeAndSave(const ModelOptions& model, const BuildOptions& build, cons
 }
 
 // There is not a getWeightsName API, so we need to use WeightsRole.
-std::vector<std::pair<WeightsRole, Weights>> getAllRefitWeightsForLayer(const ILayer& l)
+std::vector<std::pair<nvinfer1::WeightsRole, nvinfer1::Weights>> getAllRefitWeightsForLayer(const nvinfer1::ILayer& l)
 {
     switch (l.getType())
     {
-    case LayerType::kCONSTANT:
+    case nvinfer1::LayerType::kCONSTANT:
     {
         const auto& layer = static_cast<const nvinfer1::IConstantLayer&>(l);
-        return {std::make_pair(WeightsRole::kCONSTANT, layer.getWeights())};
+        return {std::make_pair(nvinfer1::WeightsRole::kCONSTANT, layer.getWeights())};
     }
-    case LayerType::kCONVOLUTION:
+    case nvinfer1::LayerType::kCONVOLUTION:
     {
         const auto& layer = static_cast<const nvinfer1::IConvolutionLayer&>(l);
-        return {std::make_pair(WeightsRole::kKERNEL, layer.getKernelWeights()),
-            std::make_pair(WeightsRole::kBIAS, layer.getBiasWeights())};
+        return {std::make_pair(nvinfer1::WeightsRole::kKERNEL, layer.getKernelWeights()),
+            std::make_pair(nvinfer1::WeightsRole::kBIAS, layer.getBiasWeights())};
     }
-    case LayerType::kDECONVOLUTION:
+    case nvinfer1::LayerType::kDECONVOLUTION:
     {
         const auto& layer = static_cast<const nvinfer1::IDeconvolutionLayer&>(l);
-        return {std::make_pair(WeightsRole::kKERNEL, layer.getKernelWeights()),
-            std::make_pair(WeightsRole::kBIAS, layer.getBiasWeights())};
+        return {std::make_pair(nvinfer1::WeightsRole::kKERNEL, layer.getKernelWeights()),
+            std::make_pair(nvinfer1::WeightsRole::kBIAS, layer.getBiasWeights())};
     }
-    case LayerType::kFULLY_CONNECTED:
+    case nvinfer1::LayerType::kFULLY_CONNECTED:
     {
         const auto& layer = static_cast<const nvinfer1::IFullyConnectedLayer&>(l);
-        return {std::make_pair(WeightsRole::kKERNEL, layer.getKernelWeights()),
-            std::make_pair(WeightsRole::kBIAS, layer.getBiasWeights())};
+        return {std::make_pair(nvinfer1::WeightsRole::kKERNEL, layer.getKernelWeights()),
+            std::make_pair(nvinfer1::WeightsRole::kBIAS, layer.getBiasWeights())};
     }
-    case LayerType::kSCALE:
+    case nvinfer1::LayerType::kSCALE:
     {
         const auto& layer = static_cast<const nvinfer1::IScaleLayer&>(l);
-        return {std::make_pair(WeightsRole::kSCALE, layer.getScale()),
-            std::make_pair(WeightsRole::kSHIFT, layer.getShift())};
+        return {std::make_pair(nvinfer1::WeightsRole::kSCALE, layer.getScale()),
+            std::make_pair(nvinfer1::WeightsRole::kSHIFT, layer.getShift())};
     }
-    case LayerType::kRNN_V2:
-    case LayerType::kACTIVATION:
-    case LayerType::kPOOLING:
-    case LayerType::kLRN:
-    case LayerType::kSOFTMAX:
-    case LayerType::kSHUFFLE:
-    case LayerType::kCONCATENATION:
-    case LayerType::kELEMENTWISE:
-    case LayerType::kPLUGIN:
-    case LayerType::kUNARY:
-    case LayerType::kPADDING:
-    case LayerType::kREDUCE:
-    case LayerType::kTOPK:
-    case LayerType::kGATHER:
-    case LayerType::kMATRIX_MULTIPLY:
-    case LayerType::kRAGGED_SOFTMAX:
-    case LayerType::kIDENTITY:
-    case LayerType::kPLUGIN_V2:
-    case LayerType::kSLICE:
-    case LayerType::kFILL:
-    case LayerType::kSHAPE:
-    case LayerType::kPARAMETRIC_RELU:
-    case LayerType::kRESIZE:
-    case LayerType::kTRIP_LIMIT:
-    case LayerType::kRECURRENCE:
-    case LayerType::kITERATOR:
-    case LayerType::kLOOP_OUTPUT:
-    case LayerType::kSELECT:
-    case LayerType::kQUANTIZE:
-    case LayerType::kDEQUANTIZE:
-    case LayerType::kCONDITION:
-    case LayerType::kCONDITIONAL_INPUT:
-    case LayerType::kCONDITIONAL_OUTPUT:
-    case LayerType::kSCATTER:
-    case LayerType::kEINSUM:
-    case LayerType::kASSERTION: return {};
+    case nvinfer1::LayerType::kRNN_V2:
+    case nvinfer1::LayerType::kACTIVATION:
+    case nvinfer1::LayerType::kPOOLING:
+    case nvinfer1::LayerType::kLRN:
+    case nvinfer1::LayerType::kSOFTMAX:
+    case nvinfer1::LayerType::kSHUFFLE:
+    case nvinfer1::LayerType::kCONCATENATION:
+    case nvinfer1::LayerType::kELEMENTWISE:
+    case nvinfer1::LayerType::kPLUGIN:
+    case nvinfer1::LayerType::kUNARY:
+    case nvinfer1::LayerType::kPADDING:
+    case nvinfer1::LayerType::kREDUCE:
+    case nvinfer1::LayerType::kTOPK:
+    case nvinfer1::LayerType::kGATHER:
+    case nvinfer1::LayerType::kMATRIX_MULTIPLY:
+    case nvinfer1::LayerType::kRAGGED_SOFTMAX:
+    case nvinfer1::LayerType::kIDENTITY:
+    case nvinfer1::LayerType::kPLUGIN_V2:
+    case nvinfer1::LayerType::kSLICE:
+    case nvinfer1::LayerType::kFILL:
+    case nvinfer1::LayerType::kSHAPE:
+    case nvinfer1::LayerType::kPARAMETRIC_RELU:
+    case nvinfer1::LayerType::kRESIZE:
+    case nvinfer1::LayerType::kTRIP_LIMIT:
+    case nvinfer1::LayerType::kRECURRENCE:
+    case nvinfer1::LayerType::kITERATOR:
+    case nvinfer1::LayerType::kLOOP_OUTPUT:
+    case nvinfer1::LayerType::kSELECT:
+    case nvinfer1::LayerType::kQUANTIZE:
+    case nvinfer1::LayerType::kDEQUANTIZE:
+    case nvinfer1::LayerType::kCONDITION:
+    case nvinfer1::LayerType::kCONDITIONAL_INPUT:
+    case nvinfer1::LayerType::kCONDITIONAL_OUTPUT:
+    case nvinfer1::LayerType::kSCATTER:
+    case nvinfer1::LayerType::kEINSUM:
+    case nvinfer1::LayerType::kASSERTION: return {};
     }
     return {};
 }
 
-bool timeRefit(INetworkDefinition const& network, nvinfer1::ICudaEngine& engine, bool multiThreading)
+bool timeRefit(nvinfer1::INetworkDefinition const& network, nvinfer1::ICudaEngine& engine, bool multiThreading)
 {
     using time_point = std::chrono::time_point<std::chrono::steady_clock>;
     using durationMs = std::chrono::duration<float, std::milli>;
 
     auto const nbLayers = network.getNbLayers();
-    TrtUniquePtr<IRefitter> refitter{createInferRefitter(engine, sample::gLogger.getTRTLogger())};
+    TrtUniquePtr<nvinfer1::IRefitter> refitter{nvinfer1::createInferRefitter(engine, sample::gLogger.getTRTLogger())};
     // Set max threads that can be used by refitter.
     if (multiThreading && !refitter->setMaxThreads(10))
     {
@@ -1494,16 +1468,16 @@ bool timeRefit(INetworkDefinition const& network, nvinfer1::ICudaEngine& engine,
     }
     auto const& layerWeightsRolePair = getLayerWeightsRolePair(*refitter);
     // We use std::string instead of const char* since we can have copies of layer names.
-    std::set<std::pair<std::string, WeightsRole>> layerRoleSet;
+    std::set<std::pair<std::string, nvinfer1::WeightsRole>> layerRoleSet;
 
     auto const& layerNames = layerWeightsRolePair.first;
     auto const& weightsRoles = layerWeightsRolePair.second;
 
     std::transform(layerNames.begin(), layerNames.end(), weightsRoles.begin(),
         std::inserter(layerRoleSet, layerRoleSet.begin()),
-        [](std::string const& layerName, WeightsRole const role) { return std::make_pair(layerName, role); });
+        [](std::string const& layerName, nvinfer1::WeightsRole const role) { return std::make_pair(layerName, role); });
 
-    auto const isRefittable = [&layerRoleSet](char const* layerName, WeightsRole const role) {
+    auto const isRefittable = [&layerRoleSet](char const* layerName, nvinfer1::WeightsRole const role) {
         return layerRoleSet.find(std::make_pair(layerName, role)) != layerRoleSet.end();
     };
 

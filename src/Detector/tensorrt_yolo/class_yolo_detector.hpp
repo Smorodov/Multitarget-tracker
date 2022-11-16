@@ -112,6 +112,7 @@ private:
 		_infer_param.probThresh = _config.detect_thresh;
 		_infer_param.nmsThresh = 0.5;
 		_infer_param.batchSize = _config.batch_size;
+        _infer_param.videoMemory = _config.video_memory;
 	}
 
 	void build_net()
@@ -122,11 +123,11 @@ private:
 		}
 		else if (_config.net_type == tensor_rt::YOLOV4 || _config.net_type == tensor_rt::YOLOV4_TINY)
 		{
-			_p_net = std::unique_ptr<Yolo>{ new YoloV4(_yolo_info,_infer_param) };
+            _p_net = std::unique_ptr<Yolo>{ new YoloV4(_yolo_info, _infer_param) };
 		}
 		else if (_config.net_type == tensor_rt::YOLOV5)
 		{
-			_p_net = std::unique_ptr<Yolo>{ new YoloV5(_yolo_info,_infer_param) };
+            _p_net = std::unique_ptr<Yolo>{ new YoloV5(_yolo_info, _infer_param) };
 		}
 		else
 		{

@@ -65,7 +65,7 @@ bool YoloONNX::Init(const SampleYoloParams& params)
             file.close();
         }
 
-        IRuntime* infer = nvinfer1::createInferRuntime(sample::gLogger);
+        nvinfer1::IRuntime* infer = nvinfer1::createInferRuntime(sample::gLogger);
         if (m_params.dlaCore >= 0)
             infer->setDLACore(m_params.dlaCore);
 
@@ -104,7 +104,7 @@ bool YoloONNX::Init(const SampleYoloParams& params)
         if (!builder)
             return false;
 
-        const auto explicitBatch = 1U << static_cast<uint32_t>(NetworkDefinitionCreationFlag::kEXPLICIT_BATCH);
+        const auto explicitBatch = 1U << static_cast<uint32_t>(nvinfer1::NetworkDefinitionCreationFlag::kEXPLICIT_BATCH);
         auto network = YoloONNXUniquePtr<nvinfer1::INetworkDefinition>(builder->createNetworkV2(explicitBatch));
         if (!network)
             return false;
@@ -165,36 +165,35 @@ bool YoloONNX::constructNetwork(YoloONNXUniquePtr<nvinfer1::IBuilder>& builder,
         return false;
     }
 
-    builder->setMaxBatchSize(m_params.batchSize);
-
 #if (NV_TENSORRT_MAJOR < 8)
-    config->setMaxWorkspaceSize(4096_MiB);
+    builder->setMaxBatchSize(m_params.batchSize);
+    config->setMaxWorkspaceSize(m_params.videoMemory ? m_params.videoMemory : 4096_MiB);
 #else
-	size_t workspaceSize = config->getMemoryPoolLimit(MemoryPoolType::kWORKSPACE);
-	size_t dlaManagedSRAMSize = config->getMemoryPoolLimit(MemoryPoolType::kDLA_MANAGED_SRAM);
-	size_t dlaLocalDRAMSize = config->getMemoryPoolLimit(MemoryPoolType::kDLA_LOCAL_DRAM);
-	size_t dlaGlobalDRAMSize = config->getMemoryPoolLimit(MemoryPoolType::kDLA_GLOBAL_DRAM);
+    size_t workspaceSize = config->getMemoryPoolLimit(nvinfer1::MemoryPoolType::kWORKSPACE);
+    size_t dlaManagedSRAMSize = config->getMemoryPoolLimit(nvinfer1::MemoryPoolType::kDLA_MANAGED_SRAM);
+    size_t dlaLocalDRAMSize = config->getMemoryPoolLimit(nvinfer1::MemoryPoolType::kDLA_LOCAL_DRAM);
+    size_t dlaGlobalDRAMSize = config->getMemoryPoolLimit(nvinfer1::MemoryPoolType::kDLA_GLOBAL_DRAM);
 	std::cout << "workspaceSize = " << workspaceSize << ", dlaManagedSRAMSize = " << dlaManagedSRAMSize << ", dlaLocalDRAMSize = " << dlaLocalDRAMSize << ", dlaGlobalDRAMSize = " << dlaGlobalDRAMSize << std::endl;
 
-    config->setMemoryPoolLimit(MemoryPoolType::kWORKSPACE, 4096_MiB);
+    config->setMemoryPoolLimit(nvinfer1::MemoryPoolType::kWORKSPACE, m_params.videoMemory ? m_params.videoMemory : 4096_MiB);
 #endif
 
-    config->setFlag(BuilderFlag::kGPU_FALLBACK);
+    config->setFlag(nvinfer1::BuilderFlag::kGPU_FALLBACK);
 
     switch (m_params.m_precision)
     {
     case tensor_rt::Precision::FP16:
-        config->setFlag(BuilderFlag::kFP16);
+        config->setFlag(nvinfer1::BuilderFlag::kFP16);
         break;
 
     case tensor_rt::Precision::INT8:
     {
         // Calibrator life time needs to last until after the engine is built.
-        std::unique_ptr<IInt8Calibrator> calibrator;
+        std::unique_ptr<nvinfer1::IInt8Calibrator> calibrator;
 
         BatchStream calibrationStream(m_params.explicitBatchSize, m_params.nbCalBatches, m_params.calibrationBatches, m_params.dataDirs);
         calibrator.reset(new Int8EntropyCalibrator2<BatchStream>(calibrationStream, 0, "Yolo", m_params.inputTensorNames[0].c_str()));
-        config->setFlag(BuilderFlag::kINT8);
+        config->setFlag(nvinfer1::BuilderFlag::kINT8);
         config->setInt8Calibrator(calibrator.get());
     }
         break;
@@ -211,7 +210,7 @@ bool YoloONNX::constructNetwork(YoloONNXUniquePtr<nvinfer1::IBuilder>& builder,
 #if (NV_TENSORRT_MAJOR < 8)
     m_engine = std::shared_ptr<nvinfer1::ICudaEngine>(builder->buildEngineWithConfig(*network, *config), samplesCommon::InferDeleter());
 #else
-    IRuntime* infer = nvinfer1::createInferRuntime(sample::gLogger);
+    nvinfer1::IRuntime* infer = nvinfer1::createInferRuntime(sample::gLogger);
     if (m_params.dlaCore >= 0)
         infer->setDLACore(m_params.dlaCore);
     nvinfer1::IHostMemory* mem = builder->buildSerializedNetwork(*network, *config);

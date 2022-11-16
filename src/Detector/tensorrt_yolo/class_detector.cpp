@@ -66,6 +66,8 @@ namespace tensor_rt
             m_params.confThreshold = config.detect_thresh;
             m_params.nmsThreshold = 0.5;
 
+            m_params.videoMemory = config.video_memory;
+
             // Batch size, you can modify to other batch size values if needed
             m_params.explicitBatchSize = config.batch_size;
 
