@@ -36,11 +36,15 @@ namespace fs = std::experimental::filesystem;
 
 #include <fstream>
 #include <iomanip>
+
+namespace
+{
 using namespace nvinfer1;
 REGISTER_TENSORRT_PLUGIN(MishPluginCreator);
 REGISTER_TENSORRT_PLUGIN(ChunkPluginCreator);
 REGISTER_TENSORRT_PLUGIN(HardswishPluginCreator);
 REGISTER_TENSORRT_PLUGIN(YoloLayerPluginCreator);
+}
 
 void blobFromDsImages(const std::vector<DsImage>& inputImages, cv::Mat& blob, const int& inputH, const int& inputW)
 {

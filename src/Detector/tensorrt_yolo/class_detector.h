@@ -58,6 +58,7 @@ namespace tensor_rt
         ModelType net_type = YOLOV4;
         Precision inference_precision = FP32;
         int	gpu_id = 0;
+        size_t video_memory = 0;
         uint32_t batch_size = 1;
         std::string calibration_image_list_file_txt = "configs/calibration_images.txt";
     };

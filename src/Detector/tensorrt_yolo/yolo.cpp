@@ -5,12 +5,17 @@
 #include <iostream>
 #include <sstream>
 #include <iomanip>
+#include <NvInfer.h>
 
 namespace nvinfer1
 {
 REGISTER_TENSORRT_PLUGIN(DetectPluginCreator);
 }
-
+///
+/// \brief Yolo::Yolo
+/// \param networkInfo
+/// \param inferParams
+///
 Yolo::Yolo(const NetworkInfo& networkInfo, const InferParams& inferParams)
     : m_NetworkType(networkInfo.networkType),
       m_ConfigFilePath(networkInfo.configFilePath),
@@ -26,7 +31,8 @@ Yolo::Yolo(const NetworkInfo& networkInfo, const InferParams& inferParams)
       m_NMSThresh(inferParams.nmsThresh),
       m_PrintPerfInfo(inferParams.printPerfInfo),
       m_PrintPredictions(inferParams.printPredictionInfo),
-      m_BatchSize(inferParams.batchSize)
+      m_BatchSize(inferParams.batchSize),
+      m_videoMemory(inferParams.videoMemory)
 {
 	// m_ClassNames = loadListFromTextFile(m_LabelsFilePath);
 
@@ -80,6 +86,9 @@ Yolo::Yolo(const NetworkInfo& networkInfo, const InferParams& inferParams)
 	assert(verifyYoloEngine());
 }
 
+///
+/// \brief Yolo::~Yolo
+///
 Yolo::~Yolo()
 {
     for (auto& tensor : m_OutputTensors)
@@ -108,6 +117,12 @@ Yolo::~Yolo()
     }
 }
 
+///
+/// \brief split_layer_index
+/// \param s_
+/// \param delimiter_
+/// \return
+///
 std::vector<int> split_layer_index(const std::string &s_,const std::string &delimiter_)
 {
 	std::vector<int> index;
@@ -124,6 +139,11 @@ std::vector<int> split_layer_index(const std::string &s_,const std::string &deli
 	return index;
 }
 
+///
+/// \brief Yolo::createYOLOEngine
+/// \param dataType
+/// \param calibrator
+///
 void Yolo::createYOLOEngine(const nvinfer1::DataType dataType, Int8EntropyCalibrator* calibrator)
 {
     if (fileExists(m_EnginePath))
@@ -397,10 +417,19 @@ void Yolo::createYOLOEngine(const nvinfer1::DataType dataType, Int8EntropyCalibr
 	/*std::cout << "Unable to find cached TensorRT engine for network : " << m_NetworkType
 			  << " precision : " << m_Precision << " and batch size :" << m_BatchSize << std::endl;*/
 
+#if (NV_TENSORRT_MAJOR < 8)
     m_Builder->setMaxBatchSize(m_BatchSize);
-    //m_Builder->setMaxWorkspaceSize(1 << 20);
+    config->setMaxWorkspaceSize(m_videoMemory ? m_videoMemory : (1 << 20));
+#else
+    size_t workspaceSize = config->getMemoryPoolLimit(nvinfer1::MemoryPoolType::kWORKSPACE);
+    size_t dlaManagedSRAMSize = config->getMemoryPoolLimit(nvinfer1::MemoryPoolType::kDLA_MANAGED_SRAM);
+    size_t dlaLocalDRAMSize = config->getMemoryPoolLimit(nvinfer1::MemoryPoolType::kDLA_LOCAL_DRAM);
+    size_t dlaGlobalDRAMSize = config->getMemoryPoolLimit(nvinfer1::MemoryPoolType::kDLA_GLOBAL_DRAM);
+    std::cout << "workspaceSize = " << workspaceSize << ", dlaManagedSRAMSize = " << dlaManagedSRAMSize << ", dlaLocalDRAMSize = " << dlaLocalDRAMSize << ", dlaGlobalDRAMSize = " << dlaGlobalDRAMSize << std::endl;
 
-	config->setMaxWorkspaceSize(1 << 20);
+    config->setMemoryPoolLimit(nvinfer1::MemoryPoolType::kWORKSPACE, m_videoMemory ? m_videoMemory : (1 << 20));
+#endif
+
     if (dataType == nvinfer1::DataType::kINT8)
     {
         assert((calibrator != nullptr) && "Invalid calibrator for INT8 precision");
@@ -868,9 +897,19 @@ void Yolo::create_engine_yolov5(const nvinfer1::DataType dataType, Int8EntropyCa
 	/*std::cout << "Unable to find cached TensorRT engine for network : " << m_NetworkType
 	<< " precision : " << m_Precision << " and batch size :" << m_BatchSize << std::endl;*/
 
-	m_Builder->setMaxBatchSize(m_BatchSize);
 	nvinfer1::IBuilderConfig* config = m_Builder->createBuilderConfig();
-	config->setMaxWorkspaceSize(1<<20);
+#if (NV_TENSORRT_MAJOR < 8)
+    m_Builder->setMaxBatchSize(m_BatchSize);
+    config->setMaxWorkspaceSize(m_videoMemory ? m_videoMemory : (1 << 20));
+#else
+    size_t workspaceSize = config->getMemoryPoolLimit(nvinfer1::MemoryPoolType::kWORKSPACE);
+    size_t dlaManagedSRAMSize = config->getMemoryPoolLimit(nvinfer1::MemoryPoolType::kDLA_MANAGED_SRAM);
+    size_t dlaLocalDRAMSize = config->getMemoryPoolLimit(nvinfer1::MemoryPoolType::kDLA_LOCAL_DRAM);
+    size_t dlaGlobalDRAMSize = config->getMemoryPoolLimit(nvinfer1::MemoryPoolType::kDLA_GLOBAL_DRAM);
+    std::cout << "workspaceSize = " << workspaceSize << ", dlaManagedSRAMSize = " << dlaManagedSRAMSize << ", dlaLocalDRAMSize = " << dlaLocalDRAMSize << ", dlaGlobalDRAMSize = " << dlaGlobalDRAMSize << std::endl;
+
+    config->setMemoryPoolLimit(nvinfer1::MemoryPoolType::kWORKSPACE, m_videoMemory ? m_videoMemory : (1 << 20));
+#endif
 	if (dataType == nvinfer1::DataType::kINT8)
 	{
 		assert((calibrator != nullptr) && "Invalid calibrator for INT8 precision");

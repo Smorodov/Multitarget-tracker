@@ -54,9 +54,6 @@
 
 #include "safeCommon.h"
 
-using namespace nvinfer1;
-using namespace plugin;
-
 #ifdef _MSC_VER
 #define FN_NAME __FUNCTION__
 #else
@@ -315,14 +312,14 @@ public:
     {
         return mSize;
     }
-    virtual DataType type() const noexcept
+    virtual nvinfer1::DataType type() const noexcept
     {
         return mType;
     }
     virtual ~HostMemory() {}
 
 protected:
-    HostMemory(std::size_t size, DataType type)
+    HostMemory(std::size_t size, nvinfer1::DataType type)
         : mData{nullptr}
         , mSize(size)
         , mType(type)
@@ -330,10 +327,10 @@ protected:
     }
     void* mData;
     std::size_t mSize;
-    DataType mType;
+    nvinfer1::DataType mType;
 };
 
-template <typename ElemType, DataType dataType>
+template <typename ElemType, nvinfer1::DataType dataType>
 class TypedHostMemory : public HostMemory
 {
 public:
@@ -352,9 +349,9 @@ public:
     }
 };
 
-using FloatMemory = TypedHostMemory<float, DataType::kFLOAT>;
-using HalfMemory = TypedHostMemory<uint16_t, DataType::kHALF>;
-using ByteMemory = TypedHostMemory<uint8_t, DataType::kINT8>;
+using FloatMemory = TypedHostMemory<float, nvinfer1::DataType::kFLOAT>;
+using HalfMemory = TypedHostMemory<uint16_t, nvinfer1::DataType::kHALF>;
+using ByteMemory = TypedHostMemory<uint8_t, nvinfer1::DataType::kINT8>;
 
 inline void* safeCudaMalloc(size_t memSize)
 {
@@ -534,7 +531,7 @@ inline float getMaxValue(const float* buffer, int64_t size)
 //
 // The default parameter values choosen arbitrarily. Range values should be choosen such that
 // we avoid underflow or overflow. Also range value should be non zero to avoid uniform zero scale tensor.
-inline void setAllDynamicRanges(INetworkDefinition* network, float inRange = 2.0f, float outRange = 4.0f)
+inline void setAllDynamicRanges(nvinfer1::INetworkDefinition* network, float inRange = 2.0f, float outRange = 4.0f)
 {
     // Ensure that all layer inputs have a scale.
     for (int i = 0; i < network->getNbLayers(); i++)
@@ -542,7 +539,7 @@ inline void setAllDynamicRanges(INetworkDefinition* network, float inRange = 2.0
         auto layer = network->getLayer(i);
         for (int j = 0; j < layer->getNbInputs(); j++)
         {
-            ITensor* input{layer->getInput(j)};
+            nvinfer1::ITensor* input{layer->getInput(j)};
             // Optional inputs are nullptr here and are from RNN layers.
             if (input != nullptr && !input->dynamicRangeIsSet())
             {
@@ -559,12 +556,12 @@ inline void setAllDynamicRanges(INetworkDefinition* network, float inRange = 2.0
         auto layer = network->getLayer(i);
         for (int j = 0; j < layer->getNbOutputs(); j++)
         {
-            ITensor* output{layer->getOutput(j)};
+            nvinfer1::ITensor* output{layer->getOutput(j)};
             // Optional outputs are nullptr here and are from RNN layers.
             if (output != nullptr && !output->dynamicRangeIsSet())
             {
                 // Pooling must have the same input and output scales.
-                if (layer->getType() == LayerType::kPOOLING)
+                if (layer->getType() == nvinfer1::LayerType::kPOOLING)
                 {
                     ASSERT(output->setDynamicRange(-inRange, inRange));
                 }
@@ -577,10 +574,10 @@ inline void setAllDynamicRanges(INetworkDefinition* network, float inRange = 2.0
     }
 }
 
-inline void setDummyInt8DynamicRanges(const IBuilderConfig* c, INetworkDefinition* n)
+inline void setDummyInt8DynamicRanges(const nvinfer1::IBuilderConfig* c, nvinfer1::INetworkDefinition* n)
 {
     // Set dummy per-tensor dynamic range if Int8 mode is requested.
-    if (c->getFlag(BuilderFlag::kINT8))
+    if (c->getFlag(nvinfer1::BuilderFlag::kINT8))
     {
         sample::gLogWarning
             << "Int8 calibrator not provided. Generating dummy per-tensor dynamic range. Int8 accuracy is not guaranteed."
@@ -589,7 +586,7 @@ inline void setDummyInt8DynamicRanges(const IBuilderConfig* c, INetworkDefinitio
     }
 }
 
-inline void enableDLA(IBuilder* builder, IBuilderConfig* config, int useDLACore, bool allowGPUFallback = true)
+inline void enableDLA(nvinfer1::IBuilder* builder, nvinfer1::IBuilderConfig* config, int useDLACore, bool allowGPUFallback = true)
 {
     if (useDLACore >= 0)
     {
@@ -601,15 +598,15 @@ inline void enableDLA(IBuilder* builder, IBuilderConfig* config, int useDLACore,
         }
         if (allowGPUFallback)
         {
-            config->setFlag(BuilderFlag::kGPU_FALLBACK);
+            config->setFlag(nvinfer1::BuilderFlag::kGPU_FALLBACK);
         }
-        if (!config->getFlag(BuilderFlag::kINT8))
+        if (!config->getFlag(nvinfer1::BuilderFlag::kINT8))
         {
             // User has not requested INT8 Mode.
             // By default run in FP16 mode. FP32 mode is not permitted.
-            config->setFlag(BuilderFlag::kFP16);
+            config->setFlag(nvinfer1::BuilderFlag::kFP16);
         }
-        config->setDefaultDeviceType(DeviceType::kDLA);
+        config->setDefaultDeviceType(nvinfer1::DeviceType::kDLA);
         config->setDLACore(useDLACore);
     }
 }
@@ -874,17 +871,17 @@ inline int roundUp(int m, int n)
     return ((m + n - 1) / n) * n;
 }
 
-inline int getC(const Dims& d)
+inline int getC(const nvinfer1::Dims& d)
 {
     return d.nbDims >= 3 ? d.d[d.nbDims - 3] : 1;
 }
 
-inline int getH(const Dims& d)
+inline int getH(const nvinfer1::Dims& d)
 {
     return d.nbDims >= 2 ? d.d[d.nbDims - 2] : 1;
 }
 
-inline int getW(const Dims& d)
+inline int getW(const nvinfer1::Dims& d)
 {
     return d.nbDims >= 1 ? d.d[d.nbDims - 1] : 1;
 }
@@ -934,7 +931,7 @@ inline bool isSMSafe()
            smVersion == 0x0800 || smVersion == 0x0806 || smVersion == 0x0807;
 }
 
-inline bool isDataTypeSupported(DataType dataType)
+inline bool isDataTypeSupported(nvinfer1::DataType dataType)
 {
     auto builder = SampleUniquePtr<nvinfer1::IBuilder>(nvinfer1::createInferBuilder(sample::gLogger.getTRTLogger()));
     if (!builder)
@@ -942,8 +939,8 @@ inline bool isDataTypeSupported(DataType dataType)
         return false;
     }
 
-    if ((dataType == DataType::kINT8 && !builder->platformHasFastInt8())
-        || (dataType == DataType::kHALF && !builder->platformHasFastFp16()))
+    if ((dataType == nvinfer1::DataType::kINT8 && !builder->platformHasFastInt8())
+        || (dataType == nvinfer1::DataType::kHALF && !builder->platformHasFastFp16()))
     {
         return false;
     }

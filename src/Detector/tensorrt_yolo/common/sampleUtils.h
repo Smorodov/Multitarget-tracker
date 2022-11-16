@@ -142,8 +142,8 @@ inline void fillBuffer<__half>(void* buffer, int64_t volume, __half min, __half 
 }
 
 template <typename T>
-inline void dumpBuffer(const void* buffer, const std::string& separator, std::ostream& os, const Dims& dims,
-    const Dims& strides, int32_t vectorDim, int32_t spv)
+inline void dumpBuffer(const void* buffer, const std::string& separator, std::ostream& os, const nvinfer1::Dims& dims,
+    const nvinfer1::Dims& strides, int32_t vectorDim, int32_t spv)
 {
     const int64_t volume = std::accumulate(dims.d, dims.d + dims.nbDims, 1, std::multiplies<int64_t>());
     const T* typedBuffer = static_cast<const T*>(buffer);
@@ -234,7 +234,7 @@ struct Binding
         }
     }
 
-    void dump(std::ostream& os, Dims dims, Dims strides, int32_t vectorDim, int32_t spv,
+    void dump(std::ostream& os, nvinfer1::Dims dims, nvinfer1::Dims strides, int32_t vectorDim, int32_t spv,
         const std::string separator = " ") const
     {
         switch (dataType)
@@ -371,16 +371,16 @@ public:
     void dumpBindingValues(const nvinfer1::IExecutionContext& context, int binding, std::ostream& os,
         const std::string& separator = " ", int32_t batch = 1) const
     {
-        Dims dims = context.getBindingDimensions(binding);
-        Dims strides = context.getStrides(binding);
+        nvinfer1::Dims dims = context.getBindingDimensions(binding);
+        nvinfer1::Dims strides = context.getStrides(binding);
         int32_t vectorDim = context.getEngine().getBindingVectorizedDim(binding);
         const int32_t spv = context.getEngine().getBindingComponentsPerElement(binding);
 
         if (context.getEngine().hasImplicitBatchDimension())
         {
-            auto insertN = [](Dims& d, int32_t bs) {
+            auto insertN = [](nvinfer1::Dims& d, int32_t bs) {
                 const int32_t nbDims = d.nbDims;
-                ASSERT(nbDims < Dims::MAX_DIMS);
+                ASSERT(nbDims < nvinfer1::Dims::MAX_DIMS);
                 std::copy_backward(&d.d[0], &d.d[nbDims], &d.d[nbDims + 1]);
                 d.d[0] = bs;
                 d.nbDims = nbDims + 1;
@@ -528,7 +528,7 @@ inline std::vector<char> loadTimingCacheFile(const std::string inFileName)
     return content;
 }
 
-inline void saveTimingCacheFile(const std::string outFileName, const IHostMemory* blob)
+inline void saveTimingCacheFile(const std::string outFileName, const nvinfer1::IHostMemory* blob)
 {
     std::ofstream oFile(outFileName, std::ios::out | std::ios::binary);
     if (!oFile)

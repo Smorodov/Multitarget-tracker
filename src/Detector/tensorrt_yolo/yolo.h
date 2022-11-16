@@ -71,6 +71,7 @@ struct InferParams
     float probThresh = 0.5f;
     float nmsThresh = 0.5f;
     uint32_t batchSize = 1;
+    size_t videoMemory = 0;
 };
 
 /**
@@ -152,6 +153,7 @@ protected:
     // TRT specific members
 	//Logger glogger;
     uint32_t m_BatchSize = 1;
+    size_t m_videoMemory = 0;
     nvinfer1::INetworkDefinition* m_Network = nullptr;
     nvinfer1::IBuilder* m_Builder = nullptr;
     nvinfer1::IHostMemory* m_ModelStream = nullptr;

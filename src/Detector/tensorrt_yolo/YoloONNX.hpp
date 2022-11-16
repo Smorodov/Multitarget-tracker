@@ -31,6 +31,8 @@ struct SampleYoloParams
     float confThreshold = 0.3;
     float nmsThreshold = 0.5;
 
+    size_t videoMemory = 0;         //!< If zero then will use default value
+
     int explicitBatchSize = 1;
     std::string calibrationBatches; //!< The path to calibration batches
     std::string engingFileName;

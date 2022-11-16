@@ -131,7 +131,7 @@ private:
         return true;
     }
 
-    Dims getDims(int32_t bindingIndex);
+    nvinfer1::Dims getDims(int32_t bindingIndex);
 
 public:
     FillBindingClosure(EngineType const* _engine, ContextType const* _context, InputsMap const& _inputs, BindingsVector& _bindings, int32_t _batch, int32_t _endBindingIndex)
@@ -151,13 +151,13 @@ public:
 };
 
 template <>
-Dims FillBindingClosure<nvinfer1::ICudaEngine, nvinfer1::IExecutionContext>::getDims(int32_t bindingIndex)
+nvinfer1::Dims FillBindingClosure<nvinfer1::ICudaEngine, nvinfer1::IExecutionContext>::getDims(int32_t bindingIndex)
 {
     return context->getBindingDimensions(bindingIndex);
 }
 
 template <>
-Dims FillBindingClosure<nvinfer1::safe::ICudaEngine, nvinfer1::safe::IExecutionContext>::getDims(int32_t bindingIndex)
+nvinfer1::Dims FillBindingClosure<nvinfer1::safe::ICudaEngine, nvinfer1::safe::IExecutionContext>::getDims(int32_t bindingIndex)
 {
     return engine->getBindingDimensions(bindingIndex);
 }
@@ -892,11 +892,11 @@ size_t reportGpuMemory()
 bool timeDeserialize(InferenceEnvironment& iEnv)
 {
     constexpr int32_t kNB_ITERS{20};
-    std::unique_ptr<IRuntime> rt{createInferRuntime(sample::gLogger.getTRTLogger())};
-    std::unique_ptr<ICudaEngine> engine;
+    std::unique_ptr<nvinfer1::IRuntime> rt{nvinfer1::createInferRuntime(sample::gLogger.getTRTLogger())};
+    std::unique_ptr<nvinfer1::ICudaEngine> engine;
 
-    std::unique_ptr<safe::IRuntime> safeRT{sample::createSafeInferRuntime(sample::gLogger.getTRTLogger())};
-    std::unique_ptr<safe::ICudaEngine> safeEngine;
+    std::unique_ptr<nvinfer1::safe::IRuntime> safeRT{sample::createSafeInferRuntime(sample::gLogger.getTRTLogger())};
+    std::unique_ptr<nvinfer1::safe::ICudaEngine> safeEngine;
 
     if (iEnv.safe)
     {
@@ -977,8 +977,8 @@ bool timeDeserialize(InferenceEnvironment& iEnv)
 
 std::string getLayerInformation(const InferenceEnvironment& iEnv, nvinfer1::LayerInformationFormat format)
 {
-    auto runtime = std::unique_ptr<IRuntime>(createInferRuntime(sample::gLogger.getTRTLogger()));
-    auto inspector = std::unique_ptr<IEngineInspector>(iEnv.engine->createEngineInspector());
+    auto runtime = std::unique_ptr<nvinfer1::IRuntime>(nvinfer1::createInferRuntime(sample::gLogger.getTRTLogger()));
+    auto inspector = std::unique_ptr<nvinfer1::IEngineInspector>(iEnv.engine->createEngineInspector());
     if (!iEnv.context.empty())
     {
         inspector->setExecutionContext(iEnv.context.front().get());
