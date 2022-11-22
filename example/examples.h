@@ -640,6 +640,12 @@ protected:
             config.emplace("gpuId", std::to_string(m_trackerSettings.m_gpuId));
             config.emplace("net_type", m_trackerSettings.m_netType);
             config.emplace("inference_precision", m_trackerSettings.m_inferencePrecision);
+			config.emplace("video_memory", std::to_string(m_trackerSettings.m_maxVideoMemory));
+
+			for (auto wname : m_trackerSettings.m_whiteList)
+			{
+				config.emplace("white_list", wname);
+			}
         }
 
         m_detector = BaseDetector::CreateDetector(tracking::Detectors::Yolo_Darknet, config, frame);
@@ -906,6 +912,13 @@ protected:
                 maxBatch = m_batchSize;
             config.emplace("maxBatch", std::to_string(maxBatch));
             config.emplace("classNames", pathToModel + "coco.names");
+
+			//config.emplace("white_list", "person");
+			//config.emplace("white_list", "car");
+			//config.emplace("white_list", "bicycle");
+			//config.emplace("white_list", "motorbike");
+			//config.emplace("white_list", "bus");
+			//config.emplace("white_list", "truck");
         }
         else
         {
@@ -918,14 +931,13 @@ protected:
             config.emplace("gpuId", std::to_string(m_trackerSettings.m_gpuId));
             config.emplace("net_type", m_trackerSettings.m_netType);
             config.emplace("inference_precision", m_trackerSettings.m_inferencePrecision);
-        }
+			config.emplace("video_memory", std::to_string(m_trackerSettings.m_maxVideoMemory));
 
-        //config.emplace("white_list", "person");
-        //config.emplace("white_list", "car");
-        //config.emplace("white_list", "bicycle");
-        //config.emplace("white_list", "motorbike");
-        //config.emplace("white_list", "bus");
-        //config.emplace("white_list", "truck");
+			for (auto wname : m_trackerSettings.m_whiteList)
+			{
+				config.emplace("white_list", wname);
+			}
+        }
 
 		m_detector = BaseDetector::CreateDetector(tracking::Detectors::Yolo_TensorRT, config, frame);
 		if (m_detector.get())

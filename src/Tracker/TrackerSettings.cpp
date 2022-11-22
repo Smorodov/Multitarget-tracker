@@ -1,3 +1,4 @@
+#include <sstream>
 #include "TrackerSettings.h"
 #include <inih/INIReader.h>
 
@@ -66,6 +67,15 @@ bool ParseTrackerSettings(const std::string& settingsFile, TrackerSettings& trac
         trackerSettings.m_detectorBackend = reader.GetInteger("detection", "detector_backend", (int)tracking::Detectors::DNN_OCV);
         trackerSettings.m_dnnTarget = reader.GetString("detection", "ocv_dnn_target", "DNN_TARGET_CPU");
         trackerSettings.m_dnnBackend = reader.GetString("detection", "ocv_dnn_backend", "DNN_BACKEND_OPENCV");
+		trackerSettings.m_maxVideoMemory = reader.GetInteger("detection", "video_memory", 0);
+
+		std::stringstream whiteList{ reader.GetString("detection", "white_list", "") };
+		trackerSettings.m_whiteList.clear();
+		std::string wname;
+		while (std::getline(whiteList, wname, ';'))
+		{
+			trackerSettings.m_whiteList.push_back(wname);
+		}
 
         res = true;
     }
