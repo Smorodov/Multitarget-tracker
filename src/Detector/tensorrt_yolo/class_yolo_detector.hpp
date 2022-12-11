@@ -47,7 +47,7 @@ public:
 			vec_batch_result.reserve(vec_image.size());
         for (const auto& img : vec_image)
 		{
-			vec_ds_images.emplace_back(img, _vec_net_type[_config.net_type], _p_net->getInputH(), _p_net->getInputW());
+			vec_ds_images.emplace_back(img, _config.net_type, _p_net->getInputH(), _p_net->getInputW());
 		}
         blobFromDsImages(vec_ds_images, m_blob, _p_net->getInputH(),_p_net->getInputW());
         _p_net->doInference(m_blob.data, static_cast<uint32_t>(vec_ds_images.size()));
@@ -61,7 +61,7 @@ public:
 			if (!remaining.empty())
 			{
 				vec_result.reserve(remaining.size());
-				for (const auto &b : remaining)
+				for (const auto& b : remaining)
 				{
 					const int x = cvRound(b.box.x1);
 					const int y = cvRound(b.box.y1);
@@ -139,7 +139,7 @@ private:
 	tensor_rt::Config _config;
 	NetworkInfo _yolo_info;
 	InferParams _infer_param;
-	std::vector<std::string> _vec_net_type{ "yolov3", "yolov4", "yolov4-tiny", "yolov5" };
+	std::vector<std::string> _vec_net_type{ "yolov3", "yolov4", "yolov4-tiny", "yolov5", "yolov6", "yolov7" };
 	std::vector<std::string> _vec_precision{ "kINT8","kHALF","kFLOAT" };
 	std::unique_ptr<Yolo> _p_net = nullptr;
 	Timer _m_timer;

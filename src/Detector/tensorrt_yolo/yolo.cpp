@@ -17,7 +17,7 @@ REGISTER_TENSORRT_PLUGIN(DetectPluginCreator);
 /// \param inferParams
 ///
 Yolo::Yolo(const NetworkInfo& networkInfo, const InferParams& inferParams)
-    : m_NetworkType(networkInfo.networkType),
+    : m_NetworkType(networkInfo.m_networkType),
       m_ConfigFilePath(networkInfo.configFilePath),
       m_WtsFilePath(networkInfo.wtsFilePath),
       m_LabelsFilePath(networkInfo.labelsFilePath),
@@ -37,7 +37,7 @@ Yolo::Yolo(const NetworkInfo& networkInfo, const InferParams& inferParams)
 	// m_ClassNames = loadListFromTextFile(m_LabelsFilePath);
 
 	m_configBlocks = parseConfigFile(m_ConfigFilePath);
-	if (m_NetworkType == "yolov5")
+    if (m_NetworkType == tensor_rt::ModelType::YOLOV5)
 		parse_cfg_blocks_v5(m_configBlocks);
 	else
 		parseConfigBlocks();
@@ -45,7 +45,7 @@ Yolo::Yolo(const NetworkInfo& networkInfo, const InferParams& inferParams)
 	m_EnginePath = networkInfo.data_path + "-" + m_Precision + "-batch" + std::to_string(m_BatchSize) + ".engine";
 	if (m_Precision == "kFLOAT")
 	{
-		if ("yolov5" == m_NetworkType)
+		if (tensor_rt::ModelType::YOLOV5 == m_NetworkType)
 			create_engine_yolov5();
 		else
 			createYOLOEngine();
@@ -55,14 +55,14 @@ Yolo::Yolo(const NetworkInfo& networkInfo, const InferParams& inferParams)
 		Int8EntropyCalibrator calibrator(m_BatchSize, m_CalibImages, m_CalibImagesFilePath,
 			m_CalibTableFilePath, m_InputSize, m_InputH, m_InputW,
 			m_InputBlobName, m_NetworkType);
-		if ("yolov5" == m_NetworkType)
+		if (tensor_rt::ModelType::YOLOV5 == m_NetworkType)
 			create_engine_yolov5(nvinfer1::DataType::kINT8, &calibrator);
 		else
 			createYOLOEngine(nvinfer1::DataType::kINT8, &calibrator);
 	}
 	else if (m_Precision == "kHALF")
 	{
-		if ("yolov5" == m_NetworkType)
+		if (tensor_rt::ModelType::YOLOV5 == m_NetworkType)
 			create_engine_yolov5(nvinfer1::DataType::kHALF, nullptr);
 		else
 			createYOLOEngine(nvinfer1::DataType::kHALF, nullptr);
@@ -149,7 +149,7 @@ void Yolo::createYOLOEngine(const nvinfer1::DataType dataType, Int8EntropyCalibr
     if (fileExists(m_EnginePath))
         return;
 
-	std::vector<float> weights = loadWeights(m_WtsFilePath, m_NetworkType);
+    std::vector<float> weights = LoadWeights(m_WtsFilePath);
     std::vector<nvinfer1::Weights> trtWeights;
     int weightPtr = 0;
     int channels = m_InputC;
@@ -414,8 +414,7 @@ void Yolo::createYOLOEngine(const nvinfer1::DataType dataType, Int8EntropyCalibr
         return;
     }
 
-	/*std::cout << "Unable to find cached TensorRT engine for network : " << m_NetworkType
-			  << " precision : " << m_Precision << " and batch size :" << m_BatchSize << std::endl;*/
+    //std::cout << "Unable to find cached TensorRT engine for network : " << m_NetworkType << " precision : " << m_Precision << " and batch size :" << m_BatchSize << std::endl;
 
 #if (NV_TENSORRT_MAJOR < 8)
     m_Builder->setMaxBatchSize(m_BatchSize);
@@ -894,8 +893,7 @@ void Yolo::create_engine_yolov5(const nvinfer1::DataType dataType, Int8EntropyCa
 		return;
 	}
 
-	/*std::cout << "Unable to find cached TensorRT engine for network : " << m_NetworkType
-	<< " precision : " << m_Precision << " and batch size :" << m_BatchSize << std::endl;*/
+    //std::cout << "Unable to find cached TensorRT engine for network : " << m_NetworkType << " precision : " << m_Precision << " and batch size :" << m_BatchSize << std::endl;
 
 	nvinfer1::IBuilderConfig* config = m_Builder->createBuilderConfig();
 #if (NV_TENSORRT_MAJOR < 8)
@@ -1104,10 +1102,9 @@ void Yolo::parseConfigBlocks()
                 }
             }
 
-            if ((m_NetworkType == "yolov3") ||
-				(m_NetworkType == "yolov3-tiny") ||
-				(m_NetworkType == "yolov4") ||
-				(m_NetworkType == "yolov4-tiny"))
+            if ((m_NetworkType == tensor_rt::ModelType::YOLOV3) ||
+                (m_NetworkType == tensor_rt::ModelType::YOLOV4) ||
+                (m_NetworkType == tensor_rt::ModelType::YOLOV4_TINY))
             {
                 assert((block.find("mask") != block.end())
                        && std::string("Missing 'mask' param in " + block.at("type") + " layer")
@@ -1147,7 +1144,7 @@ void Yolo::parseConfigBlocks()
 			outputTensor.gridSize = (m_InputH / 32) * pow(2, _n_yolo_ind);
 			outputTensor.grid_h = (m_InputH / 32) * pow(2, _n_yolo_ind);
 			outputTensor.grid_w = (m_InputW / 32) * pow(2, _n_yolo_ind);
-			if (m_NetworkType == "yolov4")//pan
+            if (m_NetworkType == tensor_rt::ModelType::YOLOV4)//pan
 			{
 				outputTensor.gridSize = (m_InputH / 32) * pow(2, 2-_n_yolo_ind);
 				outputTensor.grid_h = (m_InputH / 32) * pow(2, 2-_n_yolo_ind);

@@ -152,7 +152,7 @@ std::vector<BBoxInfo> nmsAllClasses(const float nmsThresh, std::vector<BBoxInfo>
 std::vector<BBoxInfo> nonMaximumSuppression(const float nmsThresh, std::vector<BBoxInfo> binfo);
 nvinfer1::ICudaEngine* loadTRTEngine(const std::string planFilePath,/* PluginFactory* pluginFactory,*/
                                      Logger& logger);
-std::vector<float> loadWeights(const std::string weightsFilePath, const std::string& networkType);
+std::vector<float> LoadWeights(const std::string weightsFilePath);
 std::string dimsToString(const nvinfer1::Dims d);
 void displayDimType(const nvinfer1::Dims d);
 int getNumChannels(nvinfer1::ITensor* t);

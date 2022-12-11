@@ -112,6 +112,9 @@ struct TrackerSettings
     ///
     std::string m_classNames = "data/traffic.names";
 
+	///
+	std::deque<std::string> m_whiteList;
+
     ///
     float m_confidenceThreshold = 0.5f;
 
@@ -163,6 +166,8 @@ struct TrackerSettings
     // DNN_BACKEND_INFERENCE_ENGINE_NN_BUILDER_2019
     std::string m_dnnBackend = "DNN_BACKEND_OPENCV";
 
+	// For TensorRT optimization, bytes
+	size_t m_maxVideoMemory = 0;
 
     ///
     struct EmbeddingParams

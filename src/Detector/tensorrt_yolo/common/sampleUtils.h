@@ -289,38 +289,27 @@ public:
         if (mBindings[b].buffer == nullptr)
         {
             if (mUseManaged)
-            {
                 mBindings[b].buffer.reset(new UnifiedMirroredBuffer);
-            }
             else
-            {
                 mBindings[b].buffer.reset(new DiscreteMirroredBuffer);
-            }
         }
         mBindings[b].isInput = isInput;
         // Some memory allocators return nullptr when allocating zero bytes, but TensorRT requires a non-null ptr
         // even for empty tensors, so allocate a dummy byte.
         if (volume == 0)
-        {
             mBindings[b].buffer->allocate(1);
-        }
         else
-        {
             mBindings[b].buffer->allocate(static_cast<size_t>(volume) * static_cast<size_t>(dataTypeSize(dataType)));
-        }
+
         mBindings[b].volume = volume;
         mBindings[b].dataType = dataType;
         mDevicePointers[b] = mBindings[b].buffer->getDeviceBuffer();
         if (isInput)
         {
             if (fileName.empty())
-            {
                 fill(b);
-            }
             else
-            {
                 fill(b, fileName);
-            }
         }
     }
 

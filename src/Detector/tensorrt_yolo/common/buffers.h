@@ -241,12 +241,14 @@ public:
     //!
     //! \brief Create a BufferManager for handling buffer interactions with engine.
     //!
-    BufferManager(std::shared_ptr<nvinfer1::ICudaEngine> engine, const int batchSize = 0,
+    BufferManager(std::shared_ptr<nvinfer1::ICudaEngine> engine, const int batchSize,
         const nvinfer1::IExecutionContext* context = nullptr)
         : mEngine(engine)
         , mBatchSize(batchSize)
     {
         // Full Dims implies no batch size.
+        auto impbs = engine->hasImplicitBatchDimension();
+        std::cout << "hasImplicitBatchDimension: " << impbs << ", mBatchSize = " << mBatchSize << std::endl;
         assert(engine->hasImplicitBatchDimension() || mBatchSize == 0);
         // Create host and device buffers
         for (int i = 0; i < mEngine->getNbBindings(); i++)
@@ -402,7 +404,7 @@ public:
     //!
     void copyInputToDevice()
     {
-        memcpyBuffers(true, false, false);
+        memcpyBuffers(true, false, false, 0);
     }
 
     //!
@@ -410,13 +412,13 @@ public:
     //!
     void copyOutputToHost()
     {
-        memcpyBuffers(false, true, false);
+        memcpyBuffers(false, true, false, 0);
     }
 
     //!
     //! \brief Copy the contents of input host buffers to input device buffers asynchronously.
     //!
-    void copyInputToDeviceAsync(const cudaStream_t& stream = 0)
+    void copyInputToDeviceAsync(const cudaStream_t& stream)
     {
         memcpyBuffers(true, false, true, stream);
     }
@@ -424,7 +426,7 @@ public:
     //!
     //! \brief Copy the contents of output device buffers to output host buffers asynchronously.
     //!
-    void copyOutputToHostAsync(const cudaStream_t& stream = 0)
+    void copyOutputToHostAsync(const cudaStream_t& stream)
     {
         memcpyBuffers(false, true, true, stream);
     }
@@ -447,14 +449,12 @@ private:
         return (isHost ? mManagedBuffers[bindingIndex]->hostBuffer.data() : mManagedBuffers[bindingIndex]->deviceBuffer.data());
     }
 
-    void memcpyBuffers(const bool copyInput, const bool deviceToHost, const bool async, const cudaStream_t& stream = 0)
+    void memcpyBuffers(const bool copyInput, const bool deviceToHost, const bool async, const cudaStream_t& stream)
     {
         for (int i = 0; i < mEngine->getNbBindings(); i++)
         {
-            void* dstPtr
-                = deviceToHost ? mManagedBuffers[i]->hostBuffer.data() : mManagedBuffers[i]->deviceBuffer.data();
-            const void* srcPtr
-                = deviceToHost ? mManagedBuffers[i]->deviceBuffer.data() : mManagedBuffers[i]->hostBuffer.data();
+            void* dstPtr = deviceToHost ? mManagedBuffers[i]->hostBuffer.data() : mManagedBuffers[i]->deviceBuffer.data();
+            const void* srcPtr = deviceToHost ? mManagedBuffers[i]->deviceBuffer.data() : mManagedBuffers[i]->hostBuffer.data();
             const size_t byteSize = mManagedBuffers[i]->hostBuffer.nbBytes();
             const cudaMemcpyKind memcpyType = deviceToHost ? cudaMemcpyDeviceToHost : cudaMemcpyHostToDevice;
             if ((copyInput && mEngine->bindingIsInput(i)) || (!copyInput && !mEngine->bindingIsInput(i)))
@@ -468,7 +468,7 @@ private:
     }
 
     std::shared_ptr<nvinfer1::ICudaEngine> mEngine;              //!< The pointer to the engine
-    int mBatchSize;                                              //!< The batch size for legacy networks, 0 otherwise.
+    int mBatchSize = 0;                                          //!< The batch size for legacy networks, 0 otherwise.
     std::vector<std::unique_ptr<ManagedBuffer>> mManagedBuffers; //!< The vector of pointers to managed buffers
     std::vector<void*> mDeviceBindings;                          //!< The vector of device buffers needed for engine execution
 };

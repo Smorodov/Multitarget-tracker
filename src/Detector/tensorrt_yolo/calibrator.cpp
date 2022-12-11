@@ -35,14 +35,14 @@ Int8EntropyCalibrator::Int8EntropyCalibrator(const uint32_t& batchSize, const st
                                              const std::string& calibImagesPath,
                                              const std::string& calibTableFilePath,
                                              const uint64_t& inputSize, const uint32_t& inputH,
-                                             const uint32_t& inputW, const std::string& inputBlobName, const std::string &s_net_type_) :
+                                             const uint32_t& inputW, const std::string& inputBlobName, tensor_rt::ModelType netType) :
     m_BatchSize(batchSize),
     m_InputH(inputH),
     m_InputW(inputW),
     m_InputSize(inputSize),
     m_InputCount(batchSize * inputSize),
+    m_netType(netType),
     m_InputBlobName(inputBlobName),
-    _s_net_type(s_net_type_),
     m_CalibTableFilePath(calibTableFilePath)
 {
     if (!fileExists(m_CalibTableFilePath, false))
@@ -71,7 +71,7 @@ bool Int8EntropyCalibrator::getBatch(void* bindings[], const char* names[], int 
     std::vector<DsImage> dsImages(m_BatchSize);
     for (uint32_t j = m_ImageIndex; j < m_ImageIndex + m_BatchSize; ++j)
     {
-        dsImages.at(j - m_ImageIndex) = DsImage(m_ImageList.at(j), _s_net_type, m_InputH, m_InputW);
+        dsImages.at(j - m_ImageIndex) = DsImage(m_ImageList.at(j), m_netType, m_InputH, m_InputW);
     }
     m_ImageIndex += m_BatchSize;
 
@@ -101,7 +101,6 @@ const void* Int8EntropyCalibrator::readCalibrationCache(size_t& length) noexcept
         std::cout << "Using cached calibration table to build the engine" << std::endl;
         output = &m_CalibrationCache[0];
     }
-
     else
     {
         std::cout << "New calibration table will be created to build the engine" << std::endl;
