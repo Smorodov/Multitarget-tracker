@@ -256,16 +256,11 @@ std::vector<BBoxInfo> nmsAllClasses(const float nmsThresh,
     for (auto& boxes : splitBoxes)
     {
 		if ("yolov5"== model_type)
-		{
 			boxes =	diou_nms(nmsThresh, boxes);
-		}
 		else
-		{
 			boxes = nonMaximumSuppression(nmsThresh, boxes);
-		}
         result.insert(result.end(), boxes.begin(), boxes.end());
     }
-
     return result;
 }
 
@@ -428,7 +423,7 @@ nvinfer1::ICudaEngine* loadTRTEngine(const std::string planFilePath, /*PluginFac
 //		file.ignore(15);
 //	}
 //}
-std::vector<float> loadWeights(const std::string weightsFilePath, const std::string& /*networkType*/)
+std::vector<float> LoadWeights(const std::string weightsFilePath)
 {
     assert(fileExists(weightsFilePath));
     std::cout << "Loading pre-trained weights..." << std::endl;

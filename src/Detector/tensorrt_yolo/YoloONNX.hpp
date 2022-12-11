@@ -26,22 +26,23 @@ struct SampleYoloParams
 {
     int outputClsSize = 80;              //!< The number of output classes
     int topK = 2000;
-    int keepTopK = 1000;                   //!< The maximum number of detection post-NMS
-    int nbCalBatches = 100;               //!< The number of batches for calibration
+    int keepTopK = 1000;                 //!< The maximum number of detection post-NMS
+    int nbCalBatches = 100;              //!< The number of batches for calibration
     float confThreshold = 0.3;
     float nmsThreshold = 0.5;
 
     size_t videoMemory = 0;         //!< If zero then will use default value
 
     int explicitBatchSize = 1;
-    std::string calibrationBatches; //!< The path to calibration batches
-    std::string engingFileName;
+    std::string calibrationBatches;      //!< The path to calibration batches
+    std::string engineFileName;
 
-    std::string onnxFileName; //!< Filename of ONNX file of a network
-    int32_t batchSize{1};              //!< Number of inputs in a batch
-    int32_t dlaCore{-1};               //!< Specify the DLA core to run network on.
+    std::string onnxFileName;            //!< Filename of ONNX file of a network
+    int32_t batchSize{1};                //!< Number of inputs in a batch
+    int32_t dlaCore{-1};                 //!< Specify the DLA core to run network on.
+    tensor_rt::ModelType m_netType { tensor_rt::ModelType::YOLOV7 };
     tensor_rt::Precision m_precision { tensor_rt::Precision::FP32 }; //!< Allow runnning the network in Int8 mode.
-    std::vector<std::string> dataDirs; //!< Directory paths where sample data files are stored
+    std::vector<std::string> dataDirs;   //!< Directory paths where sample data files are stored
     std::vector<std::string> inputTensorNames;
     std::vector<std::string> outputTensorNames;
 };
@@ -68,6 +69,11 @@ public:
     bool Detect(cv::Mat frame, std::vector<tensor_rt::Result>& bboxes);
 
     //!
+    //! \brief Runs the TensorRT inference engine for this sample
+    //!
+    bool Detect(const std::vector<cv::Mat>& frames, std::vector<tensor_rt::BatchResult>& bboxes);
+
+    //!
     //! \brief Cleans up any state created in the sample class
     //!
     bool teardown();
@@ -77,6 +83,11 @@ public:
     //!
     cv::Size GetInputSize() const;
 
+    //!
+    //! \brief Return classes count
+    //!
+    size_t GetNumClasses() const;
+
 private:
     SampleYoloParams m_params; //!< The parameters for the sample.
 
@@ -85,10 +96,8 @@ private:
 
     std::shared_ptr<nvinfer1::ICudaEngine> m_engine; //!< The TensorRT engine used to run the network
 
-    size_t mImageIdx = 0;
-    void* mCudaImg = nullptr;
-
     cv::Mat m_resized;
+    std::vector<cv::Mat> m_resizedBatch;
     std::vector<std::vector<cv::Mat>> m_inputChannels;
 
     std::unique_ptr<samplesCommon::BufferManager> m_buffers;
@@ -105,15 +114,14 @@ private:
     //! \brief Reads the input and mean data, preprocesses, and stores the result in a managed buffer
     //!
     bool processInput_aspectRatio(const cv::Mat &mSampleImage);
+    bool processInput_aspectRatio(const std::vector<cv::Mat>& mSampleImage);
 
     bool processInput(const samplesCommon::BufferManager& buffers);
 
     //!
     //! \brief Filters output detections and verify results
     //!
-    bool verifyOutput_aspectRatio(std::vector<tensor_rt::Result>& nms_bboxes, cv::Size frameSize);
+    bool verifyOutput_aspectRatio(size_t imgIdx, std::vector<tensor_rt::Result>& nms_bboxes, cv::Size frameSize);
 
-    bool verifyOutput(const samplesCommon::BufferManager& buffers);
-
-    std::vector<tensor_rt::Result> get_bboxes(int batch_size, int keep_topk, float* output, cv::Size frameSize);
+    std::vector<tensor_rt::Result> get_bboxes(size_t imgIdx, int keep_topk, const std::vector<float*>& outputs, cv::Size frameSize);
 };

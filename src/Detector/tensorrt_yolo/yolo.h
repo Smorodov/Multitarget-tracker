@@ -57,6 +57,7 @@ struct NetworkInfo
     std::string enginePath;
     std::string inputBlobName;
 	std::string data_path;
+    tensor_rt::ModelType m_networkType;
 };
 
 /**
@@ -101,7 +102,6 @@ struct TensorInfo
 class Yolo
 {
 public:
-    std::string getNetworkType() const { return m_NetworkType; }
     float getNMSThresh() const { return m_NMSThresh; }
     std::string getClassName(const int& label) const { return m_ClassNames.at(label); }
     int getClassId(const int& label) const { return m_ClassIds.at(label); }
@@ -111,20 +111,18 @@ public:
     bool isPrintPredictions() const { return m_PrintPredictions; }
     bool isPrintPerfInfo() const { return m_PrintPerfInfo; }
     void doInference(const unsigned char* input, const uint32_t batchSize);
-    std::vector<BBoxInfo> decodeDetections(const int& imageIdx,
-											const int& imageH,
-                                           const int& imageW);
+    std::vector<BBoxInfo> decodeDetections(const int& imageIdx, const int& imageH, const int& imageW);
 
     virtual ~Yolo();
 
 protected:
-    Yolo( const NetworkInfo& networkInfo, const InferParams& inferParams);
+    Yolo(const NetworkInfo& networkInfo, const InferParams& inferParams);
     std::string m_EnginePath;
-    const std::string m_NetworkType;
+    tensor_rt::ModelType m_NetworkType;
     const std::string m_ConfigFilePath;
     const std::string m_WtsFilePath;
     const std::string m_LabelsFilePath;
-    const std::string m_Precision;
+    std::string m_Precision;
     const std::string m_DeviceType;
     const std::string m_CalibImages;
     const std::string m_CalibImagesFilePath;
@@ -151,7 +149,6 @@ protected:
     const bool m_PrintPerfInfo = false;
     const bool m_PrintPredictions = false;
     // TRT specific members
-	//Logger glogger;
     uint32_t m_BatchSize = 1;
     size_t m_videoMemory = 0;
     nvinfer1::INetworkDefinition* m_Network = nullptr;
@@ -201,7 +198,6 @@ protected:
         xOffset = (m_InputW - resizeW) / 2;
         yOffset = (m_InputH - resizeH) / 2;
 	}
-
 	BBox convert_bbox_res(const float& bx, const float& by, const float& bw, const float& bh,
 		const uint32_t& stride_h_, const uint32_t& stride_w_, const uint32_t& netW, const uint32_t& netH)
 	{
@@ -252,7 +248,7 @@ protected:
 		if ((bbi.box.x1 > bbi.box.x2) || (bbi.box.y1 > bbi.box.y2))
 			return;
 
-		if ("yolov5" == m_NetworkType)
+        if (tensor_rt::ModelType::YOLOV5 == m_NetworkType)
 		{
 			cvt_box(scaleH, scaleW, xoffset_, yoffset, bbi.box);
 		}

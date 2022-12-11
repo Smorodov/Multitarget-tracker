@@ -26,6 +26,7 @@ SOFTWARE.
 #define __IMAGE_H__
 
 #include "trt_utils.h"
+#include "class_detector.h"
 
 struct BBoxInfo;
 
@@ -33,8 +34,8 @@ class DsImage
 {
 public:
     DsImage() = default;
-    DsImage(const std::string& path, const std::string &s_net_type_, const int& inputH, const int& inputW);
-    DsImage(const cv::Mat& mat_image_, const std::string &s_net_type_, const int& inputH, const int& inputW);
+    DsImage(const std::string& path, tensor_rt::ModelType net_type, const int& inputH, const int& inputW);
+    DsImage(const cv::Mat& mat_image_, tensor_rt::ModelType net_type, const int& inputH, const int& inputW);
     int getImageHeight() const { return m_Height; }
     int getImageWidth() const { return m_Width; }
     const cv::Mat& getLetterBoxedImage() const { return m_LetterboxImage; }

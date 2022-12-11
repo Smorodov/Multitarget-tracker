@@ -72,12 +72,27 @@ namespace tensor_rt
             m_params.explicitBatchSize = config.batch_size;
 
             m_params.m_precision = config.inference_precision;
+            m_params.m_netType = config.net_type;
 
             // Output tensors when BatchedNMSPlugin is available
             if (config.net_type == ModelType::YOLOV6)
+            {
                 m_params.outputTensorNames.push_back("outputs");
+            }
             else if (config.net_type == ModelType::YOLOV7)
-                m_params.outputTensorNames.push_back("output");
+            {
+                //if (config.batch_size == 1)
+                //{
+                    m_params.outputTensorNames.push_back("output");
+                //}
+                //else
+                //{
+                    m_params.outputTensorNames.push_back("num_dets");     // batch x 1
+                    m_params.outputTensorNames.push_back("det_boxes");    // batch x 100 x 4
+                    m_params.outputTensorNames.push_back("det_scores");   // batch x 100
+                    m_params.outputTensorNames.push_back("det_classes");  // batch x 100
+                //}
+            }
 
             std::string precisionStr;
             std::map<tensor_rt::Precision, std::string> dictprecision;
@@ -87,7 +102,7 @@ namespace tensor_rt
             auto precision = dictprecision.find(m_params.m_precision);
             if (precision != dictprecision.end())
                 precisionStr = precision->second;
-            m_params.engingFileName = config.file_model_cfg + "-" + precisionStr + "-batch" + std::to_string(config.batch_size) + ".engine";
+            m_params.engineFileName = config.file_model_cfg + "-" + precisionStr + "-batch" + std::to_string(config.batch_size) + ".engine";
 
             return m_detector.Init(m_params);
         }
@@ -98,12 +113,16 @@ namespace tensor_rt
             if (vec_batch_result.capacity() < mat_image.size())
                 vec_batch_result.reserve(mat_image.size());
 
+#if 1
+            m_detector.Detect(mat_image, vec_batch_result);
+#else
             for (const cv::Mat& frame : mat_image)
             {
                 std::vector<tensor_rt::Result> bboxes;
                 m_detector.Detect(frame, bboxes);
                 vec_batch_result.emplace_back(bboxes);
             }
+#endif
         }
 
         cv::Size GetInputSize() const override

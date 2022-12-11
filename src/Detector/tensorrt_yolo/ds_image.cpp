@@ -32,7 +32,7 @@ namespace fs = std::filesystem;
 namespace fs = std::experimental::filesystem;
 #endif
 
-DsImage::DsImage(const cv::Mat& mat_image_, const std::string &s_net_type_, const int& inputH, const int& inputW)
+DsImage::DsImage(const cv::Mat& mat_image_, tensor_rt::ModelType net_type, const int& inputH, const int& inputW)
 {
 	m_OrigImage = mat_image_;
 	m_Height = m_OrigImage.rows;
@@ -47,7 +47,7 @@ DsImage::DsImage(const cv::Mat& mat_image_, const std::string &s_net_type_, cons
 		std::cout << "Non RGB images are not supported "<< std::endl;
 		assert(0);
 	}
-	if ("yolov5" == s_net_type_)
+    if (tensor_rt::ModelType::YOLOV5 == net_type || tensor_rt::ModelType::YOLOV6 == net_type || tensor_rt::ModelType::YOLOV7 == net_type)
 	{
 		// resize the DsImage with scale
 		float r = std::min(static_cast<float>(inputH) / static_cast<float>(m_Height), static_cast<float>(inputW) / static_cast<float>(m_Width));
@@ -67,17 +67,17 @@ DsImage::DsImage(const cv::Mat& mat_image_, const std::string &s_net_type_, cons
 		assert(2 * m_YOffset + resizeH == inputH);
 
 		// resizing
-		cv::resize(m_OrigImage, m_LetterboxImage, cv::Size(resizeW, resizeH), 0, 0, cv::INTER_CUBIC);
+        cv::resize(m_OrigImage, m_LetterboxImage, cv::Size(resizeW, resizeH), 0, 0, cv::INTER_LINEAR);
 		// letterboxing
         cv::copyMakeBorder(m_LetterboxImage, m_LetterboxImage, m_YOffset, m_YOffset, m_XOffset, m_XOffset, cv::BORDER_CONSTANT, cv::Scalar(128, 128, 128));
 	}
 	else
 	{
-		cv::resize(m_OrigImage, m_LetterboxImage, cv::Size(inputW, inputH), 0, 0, cv::INTER_CUBIC);
+        cv::resize(m_OrigImage, m_LetterboxImage, cv::Size(inputW, inputH), 0, 0, cv::INTER_LINEAR);
 	}
 }
 
-DsImage::DsImage(const std::string& path, const std::string &s_net_type_, const int& inputH, const int& inputW)
+DsImage::DsImage(const std::string& path, tensor_rt::ModelType net_type, const int& inputH, const int& inputW)
 {
     m_ImageName = fs::path(path).stem().string();
 	m_OrigImage = cv::imread(path, cv::IMREAD_UNCHANGED);
@@ -95,7 +95,7 @@ DsImage::DsImage(const std::string& path, const std::string &s_net_type_, const 
 		assert(0);
 	}
 
-	if ("yolov5" == s_net_type_)
+    if (tensor_rt::ModelType::YOLOV5 == net_type || tensor_rt::ModelType::YOLOV6 == net_type || tensor_rt::ModelType::YOLOV7 == net_type)
 	{
 		// resize the DsImage with scale
 		float dim = std::max(m_Height, m_Width);
@@ -118,13 +118,13 @@ DsImage::DsImage(const std::string& path, const std::string &s_net_type_, const 
 		assert(2 * m_YOffset + resizeH == inputH);
 
 		// resizing
-		cv::resize(m_OrigImage, m_LetterboxImage, cv::Size(resizeW, resizeH), 0, 0, cv::INTER_CUBIC);
+        cv::resize(m_OrigImage, m_LetterboxImage, cv::Size(resizeW, resizeH), 0, 0, cv::INTER_LINEAR);
 		// letterboxing
         cv::copyMakeBorder(m_LetterboxImage, m_LetterboxImage, m_YOffset, m_YOffset, m_XOffset, m_XOffset, cv::BORDER_CONSTANT, cv::Scalar(128, 128, 128));
 	}
 	else
 	{
-		cv::resize(m_OrigImage, m_LetterboxImage, cv::Size(inputW, inputH), 0, 0, cv::INTER_CUBIC);
+        cv::resize(m_OrigImage, m_LetterboxImage, cv::Size(inputW, inputH), 0, 0, cv::INTER_LINEAR);
 	}
 }
 
@@ -166,7 +166,7 @@ void DsImage::addBBox(BBoxInfo box, const std::string& labelName)
     const int y = cvRound(box.box.y1);
     const int w = cvRound(box.box.x2 - box.box.x1);
     const int h = cvRound(box.box.y2 - box.box.y1);
-    const cv::Scalar color = cv::Scalar(m_RNG.uniform(0, 255), m_RNG.uniform(0, 255), m_RNG.uniform(0, 255));
+    const cv::Scalar color(m_RNG.uniform(0, 255), m_RNG.uniform(0, 255), m_RNG.uniform(0, 255));
 
     cv::rectangle(m_MarkedImage, cv::Rect(x, y, w, h), color, 1);
     const cv::Size tsize = cv::getTextSize(labelName, cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, 1, nullptr);

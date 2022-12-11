@@ -2,10 +2,10 @@
 #include "yolov5.h"
 
 
-YoloV5::YoloV5(
-	const NetworkInfo &network_info_,
-	const InferParams &infer_params_) :
-	Yolo( network_info_, infer_params_) {}
+YoloV5::YoloV5(const NetworkInfo &network_info_, const InferParams &infer_params_)
+	: Yolo( network_info_, infer_params_)
+{
+}
 
 std::vector<BBoxInfo> YoloV5::decodeTensor(const int imageIdx, const int imageH, const int imageW, const TensorInfo& tensor)
 {
@@ -27,9 +27,9 @@ std::vector<BBoxInfo> YoloV5::decodeTensor(const int imageIdx, const int imageH,
 				const float ph = tensor.anchors[tensor.masks[b] * 2 + 1];
 
 				const int numGridCells = tensor.grid_h * tensor.grid_w;
-				const int bbindex = y * tensor.grid_w+ x;
-                const float bx = x + detections[bbindex + numGridCells * (b * (5 + tensor.numClasses) + 0)];
+				const int bbindex = y * tensor.grid_w + x;
 
+                const float bx = x + detections[bbindex + numGridCells * (b * (5 + tensor.numClasses) + 0)];
                 const float by = y + detections[bbindex + numGridCells * (b * (5 + tensor.numClasses) + 1)];
                 const float bw = pw * detections[bbindex + numGridCells * (b * (5 + tensor.numClasses) + 2)];
                 const float bh = ph * detections[bbindex + numGridCells * (b * (5 + tensor.numClasses) + 3)];
