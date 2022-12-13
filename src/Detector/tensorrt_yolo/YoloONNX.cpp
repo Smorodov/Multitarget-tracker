@@ -470,7 +470,7 @@ bool YoloONNX::processInput_aspectRatio(const std::vector<cv::Mat>& mSampleImage
 bool YoloONNX::verifyOutput_aspectRatio(size_t imgIdx, std::vector<tensor_rt::Result>& nms_bboxes, cv::Size frameSize)
 {
     std::vector<float*> outputs;
-    for (size_t i = 0; i < m_params.outputTensorNames.size(); ++i)
+    for (size_t i = 0; i < m_params.outputTensorNames.size();)
     {
         float* output = static_cast<float*>(m_buffers->getHostBuffer(m_params.outputTensorNames[i]));
 #if 0
@@ -485,6 +485,7 @@ bool YoloONNX::verifyOutput_aspectRatio(size_t imgIdx, std::vector<tensor_rt::Re
         else
         {
             outputs.push_back(output);
+			++i;
         }
 #endif
     }
@@ -512,6 +513,9 @@ std::vector<tensor_rt::Result> YoloONNX::get_bboxes(size_t imgIdx, int /*keep_to
 
         int objectsCount = m_outpuDims[1].d[1];
 
+		const float fw = static_cast<float>(frameSize.width) / static_cast<float>(m_inputDims.d[3]);
+		const float fh = static_cast<float>(frameSize.height) / static_cast<float>(m_inputDims.d[2]);
+
         //std::cout << "Dets[" << imgIdx << "] = " << dets[imgIdx] << ", objectsCount = " << objectsCount << std::endl;
 
         const size_t step1 = imgIdx * objectsCount;
@@ -524,10 +528,10 @@ std::vector<tensor_rt::Result> YoloONNX::get_bboxes(size_t imgIdx, int /*keep_to
             int classId = classes[i + step1];
             if (class_conf >= m_params.confThreshold)
             {
-                float x = boxes[k + 0 + step2];
-                float y = boxes[k + 1 + step2];
-                float width = boxes[k + 2 + step2] - x;
-                float height = boxes[k + 3 + step2] - y;
+                float x = fw * boxes[k + 0 + step2];
+                float y = fh * boxes[k + 1 + step2];
+                float width = fw * boxes[k + 2 + step2] - x;
+                float height = fh * boxes[k + 3 + step2] - y;
 
                 //if (i == 0)
                 //{
@@ -553,17 +557,24 @@ std::vector<tensor_rt::Result> YoloONNX::get_bboxes(size_t imgIdx, int /*keep_to
             lenInd = 0;
         }
         int nc = m_outpuDims[0].d[ncInd] - 5;
-        size_t len = static_cast<size_t>(m_outpuDims[0].d[lenInd]);
+        size_t len = static_cast<size_t>(m_outpuDims[0].d[lenInd]) / m_params.explicitBatchSize;
         auto Volume = [](const nvinfer1::Dims& d)
         {
             return std::accumulate(d.d, d.d + d.nbDims, 1, std::multiplies<int>());
         };
-        auto volume = Volume(m_outpuDims[0]);
-        //output += volume * imgIdx;
+		auto volume = len * m_outpuDims[0].d[ncInd]; // Volume(m_outpuDims[0]);
+        output += volume * imgIdx;
         std::cout << "len = " << len << ", nc = " << nc << ", m_params.confThreshold = " << m_params.confThreshold << ", volume = " << volume << std::endl;
 
         if (m_outpuDims[0].nbDims == 2) // With nms
         {
+			std::vector<int> classIds;
+			std::vector<float> confidences;
+			std::vector<cv::Rect> rectBoxes;
+			classIds.reserve(len);
+			confidences.reserve(len);
+			rectBoxes.reserve(len);
+
             for (size_t i = 0; i < len; ++i)
             {
                 // Box
@@ -580,15 +591,32 @@ std::vector<tensor_rt::Result> YoloONNX::get_bboxes(size_t imgIdx, int /*keep_to
                     //if (i == 0)
                     //	std::cout << i << ": class_conf = " << class_conf << ", classId = " << classId << ", rect = " << cv::Rect(cvRound(x), cvRound(y), cvRound(width), cvRound(height)) << std::endl;
 
-                    bboxes.emplace_back(classId, class_conf, cv::Rect(cvRound(x), cvRound(y), cvRound(width), cvRound(height)));
+					classIds.push_back(classId);
+					confidences.push_back(class_conf);
+					rectBoxes.emplace_back(cvRound(x), cvRound(y), cvRound(width), cvRound(height));
+
+                    //bboxes.emplace_back(classId, class_conf, cv::Rect(cvRound(x), cvRound(y), cvRound(width), cvRound(height)));
                 }
             }
+
+			// Non-maximum suppression to eliminate redudant overlapping boxes
+			std::vector<int> indices;
+			cv::dnn::NMSBoxes(rectBoxes, confidences, m_params.confThreshold, m_params.nmsThreshold, indices);
+			bboxes.reserve(indices.size());
+
+			for (size_t bi = 0; bi < indices.size(); ++bi)
+			{
+				bboxes.emplace_back(classIds[indices[bi]], confidences[indices[bi]], rectBoxes[indices[bi]]);
+			}
         }
         else // Without nms
         {
             std::vector<int> classIds;
             std::vector<float> confidences;
             std::vector<cv::Rect> rectBoxes;
+			classIds.reserve(len);
+			confidences.reserve(len);
+			rectBoxes.reserve(len);
 
             for (size_t i = 0; i < len; ++i)
             {
