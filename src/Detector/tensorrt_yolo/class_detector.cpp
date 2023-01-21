@@ -59,9 +59,6 @@ namespace tensor_rt
             else if (config.net_type == ModelType::YOLOV7)
                 m_params.inputTensorNames.push_back("images");
 
-            // Old batch configuration, it is zero if explicitBatch flag is true for the tensorrt engine
-            // May be deprecated in the future
-            m_params.batchSize = config.batch_size;
             // Threshold values
             m_params.confThreshold = config.detect_thresh;
             m_params.nmsThreshold = 0.5;

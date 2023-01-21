@@ -318,7 +318,7 @@ bool YoloONNX::Detect(const std::vector<cv::Mat>& frames, std::vector<tensor_rt:
     bboxes.resize(frames.size());
     for (size_t i = 0; i < bboxes.size(); ++i)
     {
-        verifyOutput_aspectRatio(i, bboxes[i], frames[0].size());
+        verifyOutput_aspectRatio(i, bboxes[i], frames[i].size());
     }
 
     return true;
