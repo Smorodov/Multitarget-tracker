@@ -56,12 +56,9 @@ namespace tensor_rt
             // Input tensor name of ONNX file & engine file
             if (config.net_type == ModelType::YOLOV6)
                 m_params.inputTensorNames.push_back("image_arrays");
-            else if (config.net_type == ModelType::YOLOV7)
+            else if (config.net_type == ModelType::YOLOV7 || config.net_type == ModelType::YOLOV7Mask)
                 m_params.inputTensorNames.push_back("images");
 
-            // Old batch configuration, it is zero if explicitBatch flag is true for the tensorrt engine
-            // May be deprecated in the future
-            m_params.batchSize = config.batch_size;
             // Threshold values
             m_params.confThreshold = config.detect_thresh;
             m_params.nmsThreshold = 0.5;
@@ -79,11 +76,12 @@ namespace tensor_rt
             {
                 m_params.outputTensorNames.push_back("outputs");
             }
-            else if (config.net_type == ModelType::YOLOV7)
+            else if (config.net_type == ModelType::YOLOV7 || config.net_type == ModelType::YOLOV7Mask)
             {
                 //if (config.batch_size == 1)
                 //{
                     m_params.outputTensorNames.push_back("output");
+                    m_params.outputTensorNames.push_back("516");
                 //}
                 //else
                 //{
@@ -160,7 +158,7 @@ namespace tensor_rt
         if (m_impl)
             delete m_impl;
 
-        if (config.net_type == ModelType::YOLOV6 || config.net_type == ModelType::YOLOV7)
+        if (config.net_type == ModelType::YOLOV6 || config.net_type == ModelType::YOLOV7 || config.net_type == ModelType::YOLOV7Mask)
             m_impl = new YoloONNXImpl();
         else
             m_impl = new YoloDectectorImpl();

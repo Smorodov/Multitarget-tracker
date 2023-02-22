@@ -47,7 +47,7 @@ DsImage::DsImage(const cv::Mat& mat_image_, tensor_rt::ModelType net_type, const
 		std::cout << "Non RGB images are not supported "<< std::endl;
 		assert(0);
 	}
-    if (tensor_rt::ModelType::YOLOV5 == net_type || tensor_rt::ModelType::YOLOV6 == net_type || tensor_rt::ModelType::YOLOV7 == net_type)
+    if (tensor_rt::ModelType::YOLOV5 == net_type || tensor_rt::ModelType::YOLOV6 == net_type || tensor_rt::ModelType::YOLOV7 == net_type || tensor_rt::ModelType::YOLOV7Mask == net_type)
 	{
 		// resize the DsImage with scale
 		float r = std::min(static_cast<float>(inputH) / static_cast<float>(m_Height), static_cast<float>(inputW) / static_cast<float>(m_Width));
@@ -95,7 +95,7 @@ DsImage::DsImage(const std::string& path, tensor_rt::ModelType net_type, const i
 		assert(0);
 	}
 
-    if (tensor_rt::ModelType::YOLOV5 == net_type || tensor_rt::ModelType::YOLOV6 == net_type || tensor_rt::ModelType::YOLOV7 == net_type)
+    if (tensor_rt::ModelType::YOLOV5 == net_type || tensor_rt::ModelType::YOLOV6 == net_type || tensor_rt::ModelType::YOLOV7 == net_type || tensor_rt::ModelType::YOLOV7Mask == net_type)
 	{
 		// resize the DsImage with scale
 		float dim = std::max(m_Height, m_Width);

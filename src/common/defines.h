@@ -3,6 +3,15 @@
 #include <vector>
 #include <string>
 #include <map>
+
+#ifdef HAVE_FILESYSTEM
+#include <filesystem>
+namespace fs = std::filesystem;
+#else
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
+#endif
+
 #include <opencv2/opencv.hpp>
 #include "object_types.h"
 
@@ -90,6 +99,16 @@ public:
 
     CRegion(const cv::RotatedRect& rrect) noexcept
         : m_rrect(rrect)
+    {
+        if (m_rrect.size.width < 1)
+            m_rrect.size.width = 1;
+        if (m_rrect.size.height < 1)
+            m_rrect.size.height = 1;
+        R2BRect();
+    }
+
+    CRegion(const cv::RotatedRect& rrect, objtype_t type, float confidence) noexcept
+        : m_type(type), m_rrect(rrect), m_confidence(confidence)
     {
         if (m_rrect.size.width < 1)
             m_rrect.size.width = 1;
@@ -231,6 +250,64 @@ inline cv::Rect Clamp(cv::Rect rect, const cv::Size& size)
 		rect.height = std::min(rect.height, size.height - 1);
 	}
 	return rect;
+}
+
+///
+/// \brief SaveMat
+/// \param m
+/// \param name
+/// \param path
+///
+inline bool SaveMat(const cv::Mat& m, std::string prefix, const std::string& ext, const std::string& savePath, bool compressToImage)
+{
+    bool res = true;
+
+    std::map<int, std::string> depthDict;
+    depthDict.emplace(CV_8U, "uint8");
+    depthDict.emplace(CV_8S, "int8");
+    depthDict.emplace(CV_16U, "uint16");
+    depthDict.emplace(CV_16S, "int16");
+    depthDict.emplace(CV_32S, "int32");
+    depthDict.emplace(CV_32F, "float32");
+    depthDict.emplace(CV_64F, "float64");
+    depthDict.emplace(CV_16F, "float16");
+
+    auto depth = depthDict.find(m.depth());
+    if (depth == std::end(depthDict))
+    {
+        std::cout << "File " << prefix << " has a unknown depth: " << m.depth() << std::endl;
+        res = false;
+        return res;
+    }
+    assert(depth != std::end(depthDict));
+
+    fs::path fullPath(savePath);
+    fullPath.append(prefix + "_" + std::to_string(m.cols) + "x" + std::to_string(m.rows) + "_" + depth->second + "_C" + std::to_string(m.channels()) + ext);
+    prefix = fullPath.generic_string();
+
+    if (compressToImage)
+    {
+        res = cv::imwrite(prefix, m);
+    }
+    else
+    {
+        FILE* f = fopen(prefix.c_str(), "wb");
+        res = f != 0;
+        if (res)
+        {
+            for (int y = 0; y < m.rows; ++y)
+            {
+                fwrite(m.ptr(y), 1, m.cols * m.elemSize(), f);
+            }
+            fclose(f);
+            std::cout << "File " << prefix << " was writed" << std::endl;
+        }
+    }
+    if (res)
+        std::cout << "File " << prefix << " was writed" << std::endl;
+    else
+        std::cout << "File " << prefix << " can not be opened!" << std::endl;
+    return res;
 }
 
 ///
