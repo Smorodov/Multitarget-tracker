@@ -510,6 +510,7 @@ void VideoExample::DrawTrack(cv::Mat frame,
     cv::Scalar color = track.m_isStatic ? cv::Scalar(255, 0, 255) : cv::Scalar(0, 255, 0);
     cv::Point2f rectPoints[4];
     track.m_rrect.points(rectPoints);
+    //std::cout << "track.m_rrect: " << track.m_rrect.center << ", " << track.m_rrect.angle << ", " << track.m_rrect.size << std::endl;
     for (int i = 0; i < 4; ++i)
     {
         cv::line(frame, rectPoints[i], rectPoints[(i+1) % 4], color);

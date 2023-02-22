@@ -2,6 +2,7 @@
 
 #include "YoloONNX.hpp"
 #include "trt_utils.h"
+#include "../../common/defines.h"
 
 //!
 //! \brief Creates the network, configures the builder and creates the network engine
@@ -117,7 +118,7 @@ bool YoloONNX::Init(const SampleYoloParams& params)
         if (!parser)
             return false;
 
-        auto constructed = constructNetwork(builder, network, config, parser);
+        auto constructed = ConstructNetwork(builder, network, config, parser);
         if (!constructed)
             return false;
 
@@ -150,7 +151,7 @@ bool YoloONNX::Init(const SampleYoloParams& params)
 //!
 //! \param builder Pointer to the engine builder
 //!
-bool YoloONNX::constructNetwork(YoloONNXUniquePtr<nvinfer1::IBuilder>& builder,
+bool YoloONNX::ConstructNetwork(YoloONNXUniquePtr<nvinfer1::IBuilder>& builder,
                                 YoloONNXUniquePtr<nvinfer1::INetworkDefinition>& network, YoloONNXUniquePtr<nvinfer1::IBuilderConfig>& config,
                                 YoloONNXUniquePtr<nvonnxparser::IParser>& parser)
 {
@@ -254,7 +255,7 @@ bool YoloONNX::Detect(cv::Mat frame, std::vector<tensor_rt::Result>& bboxes)
     // Read the input data into the managed buffers
     assert(m_params.inputTensorNames.size() == 1);
 
-    if (!processInput_aspectRatio(frame))
+    if (!ProcessInputAspectRatio(frame))
         return false;
 
     // Memcpy from host input buffers to device input buffers
@@ -268,7 +269,7 @@ bool YoloONNX::Detect(cv::Mat frame, std::vector<tensor_rt::Result>& bboxes)
     m_buffers->copyOutputToHost();
 
     // Post-process detections and verify results
-    if (!verifyOutput_aspectRatio(0, bboxes, frame.size()))
+    if (!VerifyOutputAspectRatio(0, bboxes, frame.size()))
         return false;
 
     return true;
@@ -286,7 +287,7 @@ bool YoloONNX::Detect(const std::vector<cv::Mat>& frames, std::vector<tensor_rt:
     assert(m_params.inputTensorNames.size() == 1);
 
 #if 1
-    if (!processInput_aspectRatio(frames))
+    if (!ProcessInputAspectRatio(frames))
         return false;
 #else
     std::vector<DsImage> vec_ds_images;
@@ -318,7 +319,7 @@ bool YoloONNX::Detect(const std::vector<cv::Mat>& frames, std::vector<tensor_rt:
     bboxes.resize(frames.size());
     for (size_t i = 0; i < bboxes.size(); ++i)
     {
-        verifyOutput_aspectRatio(i, bboxes[i], frames[i].size());
+        VerifyOutputAspectRatio(i, bboxes[i], frames[i].size());
     }
 
     return true;
@@ -354,7 +355,7 @@ size_t YoloONNX::GetNumClasses() const
 //!
 //! \brief Reads the input and mean data, preprocesses, and stores the result in a managed buffer
 //!
-bool YoloONNX::processInput_aspectRatio(const cv::Mat& mSampleImage)
+bool YoloONNX::ProcessInputAspectRatio(const cv::Mat& mSampleImage)
 {
     const int inputB = m_inputDims.d[0];
     const int inputC = m_inputDims.d[1];
@@ -408,7 +409,7 @@ bool YoloONNX::processInput_aspectRatio(const cv::Mat& mSampleImage)
 //!
 //! \brief Reads the input and mean data, preprocesses, and stores the result in a managed buffer
 //!
-bool YoloONNX::processInput_aspectRatio(const std::vector<cv::Mat>& mSampleImage)
+bool YoloONNX::ProcessInputAspectRatio(const std::vector<cv::Mat>& mSampleImage)
 {
     const int inputB = m_inputDims.d[0];
     const int inputC = m_inputDims.d[1];
@@ -467,7 +468,7 @@ bool YoloONNX::processInput_aspectRatio(const std::vector<cv::Mat>& mSampleImage
 //!
 //! \return whether the detection output matches expectations
 //!
-bool YoloONNX::verifyOutput_aspectRatio(size_t imgIdx, std::vector<tensor_rt::Result>& nms_bboxes, cv::Size frameSize)
+bool YoloONNX::VerifyOutputAspectRatio(size_t imgIdx, std::vector<tensor_rt::Result>& nms_bboxes, cv::Size frameSize)
 {
     std::vector<float*> outputs;
     for (size_t i = 0; i < m_params.outputTensorNames.size();)
@@ -490,20 +491,245 @@ bool YoloONNX::verifyOutput_aspectRatio(size_t imgIdx, std::vector<tensor_rt::Re
 #endif
     }
     if (!outputs.empty())
-        nms_bboxes = get_bboxes(imgIdx, m_params.keepTopK, outputs, frameSize);
+        nms_bboxes = GetResult(imgIdx, m_params.keepTopK, outputs, frameSize);
 
     return !outputs.empty();
 }
 
 ///
-/// \brief YoloONNX::get_bboxes
+/// \brief YoloONNX::GetResult
 /// \param output
 /// \return
 ///
-std::vector<tensor_rt::Result> YoloONNX::get_bboxes(size_t imgIdx, int /*keep_topk*/, const std::vector<float*>& outputs, cv::Size frameSize)
+std::vector<tensor_rt::Result> YoloONNX::GetResult(size_t imgIdx, int /*keep_topk*/, const std::vector<float*>& outputs, cv::Size frameSize)
 {
-    std::vector<tensor_rt::Result> bboxes;
+    std::vector<tensor_rt::Result> resBoxes;
+    if (m_params.m_netType == tensor_rt::ModelType::YOLOV7Mask)
+        ProcessMaskOutput(imgIdx, outputs, frameSize, resBoxes);
+    else
+        ProcessBBoxesOutput(imgIdx, outputs, frameSize, resBoxes);
+    return resBoxes;
+}
 
+///
+/// \brief YoloONNX::ProcessMaskOutput
+/// \param output
+/// \return
+///
+void YoloONNX::ProcessMaskOutput(size_t imgIdx, const std::vector<float*>& outputs, cv::Size frameSize, std::vector<tensor_rt::Result>& resBoxes)
+{
+    const float fw = static_cast<float>(frameSize.width) / static_cast<float>(m_inputDims.d[3]);
+    const float fh = static_cast<float>(frameSize.height) / static_cast<float>(m_inputDims.d[2]);
+
+    size_t outInd = (outputs.size() == 0) ? 0 : 1;
+    size_t segInd = (outputs.size() == 0) ? 1 : 0;
+
+    auto output = outputs[0];
+
+    //0: name: images, size : 1x3x640x640
+    //1 : name : 516, size : 1x32x160x160
+    //2 : name : onnx::Slice_542, size : 1x3x80x80x117
+    //3 : name : onnx::Slice_710, size : 1x3x40x40x117
+    //4 : name : onnx::Slice_878, size : 1x3x20x20x117
+    //5 : name : output, size : 1x25200x117
+    // 25200 = 3x80x80 + 3x40x40 + 3x20x20
+    // 117 = x, y, w, h, c, 80 classes, 32 seg ancors
+    // 80 * 8 = 640, 40 * 16 = 640, 20 * 32 = 640
+
+    size_t ncInd = 2;
+    size_t lenInd = 1;
+    if (m_outpuDims[outInd].nbDims == 2)
+    {
+        ncInd = 1;
+        lenInd = 0;
+    }
+    int nc = m_outpuDims[outInd].d[ncInd] - 5 - 32;
+    size_t len = static_cast<size_t>(m_outpuDims[outInd].d[lenInd]) / m_params.explicitBatchSize;
+    auto Volume = [](const nvinfer1::Dims& d)
+    {
+        return std::accumulate(d.d, d.d + d.nbDims, 1, std::multiplies<int>());
+    };
+    auto volume = len * m_outpuDims[outInd].d[ncInd]; // Volume(m_outpuDims[0]);
+    output += volume * imgIdx;
+    //std::cout << "len = " << len << ", nc = " << nc << ", m_params.confThreshold = " << m_params.confThreshold << ", volume = " << volume << std::endl;
+
+#if 1
+    int segWidth = 160;
+    int segHeight = 160;
+    int segChannels = 32;
+
+    if (outputs.size() > 1)
+    {
+        //std::cout << "516 nbDims: " << m_outpuDims[segInd].nbDims << ", ";
+        //for (size_t i = 0; i < m_outpuDims[segInd].nbDims; ++i)
+        //{
+        //    std::cout << m_outpuDims[segInd].d[i];
+        //    if (i + 1 != m_outpuDims[segInd].nbDims)
+        //        std::cout << "x";
+        //}
+        //std::cout << std::endl;
+
+        segChannels = m_outpuDims[segInd].d[1];
+        segWidth = m_outpuDims[segInd].d[2];
+        segHeight = m_outpuDims[segInd].d[3];
+    }
+    cv::Mat maskProposals;
+    std::vector<std::vector<float>> picked_proposals;
+    int net_width = nc + 5 + segChannels;
+#endif
+
+	std::vector<int> classIds;
+	std::vector<float> confidences;
+	std::vector<cv::Rect> rectBoxes;
+	classIds.reserve(len);
+	confidences.reserve(len);
+	rectBoxes.reserve(len);
+
+	for (size_t i = 0; i < len; ++i)
+	{
+		// Box
+		size_t k = i * (nc + 5 + 32);
+		float object_conf = output[k + 4];
+
+		//if (i == 0)
+		//{
+		//	std::cout << "without nms: mem" << i << ": ";
+		//	for (size_t ii = 0; ii < nc + 5; ++ii)
+		//	{
+		//		std::cout << output[k + ii] << " ";
+		//	}
+		//	std::cout << std::endl;
+        //    for (size_t ii = nc + 5; ii < nc + 5 + 32; ++ii)
+        //    {
+        //        std::cout << output[k + ii] << " ";
+        //    }
+        //    std::cout << std::endl;
+		//}
+
+		if (object_conf >= m_params.confThreshold)
+		{
+			// (center x, center y, width, height) to (x, y, w, h)
+			float x = fw * (output[k] - output[k + 2] / 2);
+			float y = fh * (output[k + 1] - output[k + 3] / 2);
+			float width = fw * output[k + 2];
+			float height = fh * output[k + 3];
+
+			// Classes
+			float class_conf = output[k + 5];
+			int classId = 0;
+
+			for (int j = 1; j < nc; j++)
+			{
+				if (class_conf < output[k + 5 + j])
+				{
+					classId = j;
+					class_conf = output[k + 5 + j];
+				}
+			}
+
+			class_conf *= object_conf;
+
+			//if (i == 0)
+			//	std::cout << i << ": object_conf = " << object_conf << ", class_conf = " << class_conf << ", classId = " << classId << ", rect = " << cv::Rect(cvRound(x), cvRound(y), cvRound(width), cvRound(height)) << std::endl;
+
+			classIds.push_back(classId);
+			confidences.push_back(class_conf);
+			rectBoxes.emplace_back(cvRound(x), cvRound(y), cvRound(width), cvRound(height));
+
+            std::vector<float> temp_proto(output + k + 5 + nc, output + k + net_width);
+            picked_proposals.push_back(temp_proto);
+		}
+	}
+
+    // Non-maximum suppression to eliminate redudant overlapping boxes
+    std::vector<int> indices;
+    cv::dnn::NMSBoxes(rectBoxes, confidences, m_params.confThreshold, m_params.nmsThreshold, indices);
+    resBoxes.reserve(indices.size());
+
+    for (size_t bi = 0; bi < indices.size(); ++bi)
+    {
+        resBoxes.emplace_back(classIds[indices[bi]], confidences[indices[bi]], Clamp(rectBoxes[indices[bi]], frameSize));
+        maskProposals.push_back(cv::Mat(picked_proposals[indices[bi]]).t());
+    }
+
+    if (!maskProposals.empty())
+    {
+        // Mask processing
+        const float* pdata = outputs[1];
+        std::vector<float> mask(pdata, pdata + segChannels * segWidth * segHeight);
+
+        int INPUT_W = m_inputDims.d[3];
+        int INPUT_H = m_inputDims.d[2];
+        static constexpr float MASK_THRESHOLD = 0.5;
+
+        cv::Mat mask_protos = cv::Mat(mask);
+        cv::Mat protos = mask_protos.reshape(0, { segChannels, segWidth * segHeight });
+
+        cv::Mat matmulRes = (maskProposals * protos).t();//n*32 32*25600
+        cv::Mat masks = matmulRes.reshape(resBoxes.size(), { segWidth, segHeight });
+        std::vector<cv::Mat> maskChannels;
+        split(masks, maskChannels);
+        for (int i = 0; i < resBoxes.size(); ++i)
+        {
+            cv::Mat dest, mask;
+            //sigmoid
+            cv::exp(-maskChannels[i], dest);
+            dest = 1.0 / (1.0 + dest);//160*160
+
+            int padw = 0;
+            int padh = 0;
+            cv::Rect roi(int((float)padw / INPUT_W * segWidth), int((float)padh / INPUT_H * segHeight), int(segWidth - padw / 2), int(segHeight - padh / 2));
+            dest = dest(roi);
+
+            cv::resize(dest, mask, frameSize, cv::INTER_NEAREST);
+
+            resBoxes[i].m_boxMask = mask(resBoxes[i].m_brect) > MASK_THRESHOLD;
+
+#if 0
+            static int globalObjInd = 0;
+            SaveMat(resBoxes[i].m_boxMask, std::to_string(globalObjInd++), ".png", "tmp", true);
+#endif
+
+            std::vector<std::vector<cv::Point>> contours;
+            std::vector<cv::Vec4i> hierarchy;
+#if (CV_VERSION_MAJOR < 4)
+            cv::findContours(resBoxes[i].m_boxMask, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, cv::Point());
+#else
+            cv::findContours(resBoxes[i].m_boxMask, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE, cv::Point());
+#endif
+            for (size_t i = 0; i < contours.size(); ++i)
+            {
+                cv::Rect br = cv::boundingRect(contours[i]);
+
+                if (br.width >= 4 &&
+                    br.height >= 4)
+				{
+					cv::RotatedRect rr = cv::minAreaRect(contours[i]);
+
+                    br.x += resBoxes[i].m_brect.x;
+                    br.y += resBoxes[i].m_brect.y;
+                    rr.center.x += resBoxes[i].m_brect.x;
+                    rr.center.y += resBoxes[i].m_brect.y;
+
+                    resBoxes[i].m_brect = br;
+                    resBoxes[i].m_rrect = rr;
+
+                    //std::cout << "rr: " << rr.center << ", " << rr.angle << ", " << rr.size << std::endl;
+
+					break;
+				}
+            }
+        }
+    }
+}
+
+///
+/// \brief YoloONNX::ProcessBBoxesOutput
+/// \param output
+/// \return
+///
+void YoloONNX::ProcessBBoxesOutput(size_t imgIdx, const std::vector<float*>& outputs, cv::Size frameSize, std::vector<tensor_rt::Result>& resBoxes)
+{
     if (outputs.size() == 4)
     {
         auto dets = reinterpret_cast<int*>(outputs[0]);
@@ -538,7 +764,7 @@ std::vector<tensor_rt::Result> YoloONNX::get_bboxes(size_t imgIdx, int /*keep_to
                 //    std::cout << i << ": class_conf = " << class_conf << ", classId = " << classId << " (" << classes[i + step1] << "), rect = " << cv::Rect(cvRound(x), cvRound(y), cvRound(width), cvRound(height)) << std::endl;
                 //    std::cout << "boxes = " << boxes[k + 0 + step2] << ", " << boxes[k + 1 + step2] << ", " << boxes[k + 2 + step2] << ", " << boxes[k + 3 + step2] << std::endl;
                 //}
-                bboxes.emplace_back(classId, class_conf, cv::Rect(cvRound(x), cvRound(y), cvRound(width), cvRound(height)));
+                resBoxes.emplace_back(classId, class_conf, cv::Rect(cvRound(x), cvRound(y), cvRound(width), cvRound(height)));
             }
         }
     }
@@ -564,7 +790,7 @@ std::vector<tensor_rt::Result> YoloONNX::get_bboxes(size_t imgIdx, int /*keep_to
         };
 		auto volume = len * m_outpuDims[0].d[ncInd]; // Volume(m_outpuDims[0]);
         output += volume * imgIdx;
-        std::cout << "len = " << len << ", nc = " << nc << ", m_params.confThreshold = " << m_params.confThreshold << ", volume = " << volume << std::endl;
+        //std::cout << "len = " << len << ", nc = " << nc << ", m_params.confThreshold = " << m_params.confThreshold << ", volume = " << volume << std::endl;
 
         if (m_outpuDims[0].nbDims == 2) // With nms
         {
@@ -602,11 +828,11 @@ std::vector<tensor_rt::Result> YoloONNX::get_bboxes(size_t imgIdx, int /*keep_to
 			// Non-maximum suppression to eliminate redudant overlapping boxes
 			std::vector<int> indices;
 			cv::dnn::NMSBoxes(rectBoxes, confidences, m_params.confThreshold, m_params.nmsThreshold, indices);
-			bboxes.reserve(indices.size());
+            resBoxes.reserve(indices.size());
 
 			for (size_t bi = 0; bi < indices.size(); ++bi)
 			{
-				bboxes.emplace_back(classIds[indices[bi]], confidences[indices[bi]], rectBoxes[indices[bi]]);
+				resBoxes.emplace_back(classIds[indices[bi]], confidences[indices[bi]], rectBoxes[indices[bi]]);
 			}
         }
         else // Without nms
@@ -669,13 +895,12 @@ std::vector<tensor_rt::Result> YoloONNX::get_bboxes(size_t imgIdx, int /*keep_to
             // Non-maximum suppression to eliminate redudant overlapping boxes
             std::vector<int> indices;
             cv::dnn::NMSBoxes(rectBoxes, confidences, m_params.confThreshold, m_params.nmsThreshold, indices);
-            bboxes.reserve(indices.size());
+            resBoxes.reserve(indices.size());
 
             for (size_t bi = 0; bi < indices.size(); ++bi)
             {
-                bboxes.emplace_back(classIds[indices[bi]], confidences[indices[bi]], rectBoxes[indices[bi]]);
+                resBoxes.emplace_back(classIds[indices[bi]], confidences[indices[bi]], rectBoxes[indices[bi]]);
             }
         }
     }
-    return bboxes;
 }

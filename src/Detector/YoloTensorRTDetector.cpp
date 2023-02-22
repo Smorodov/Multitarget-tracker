@@ -99,6 +99,7 @@ bool YoloTensorRTDetector::Init(const config_t& config)
         dictNetType["YOLOV5"] = tensor_rt::YOLOV5;
         dictNetType["YOLOV6"] = tensor_rt::YOLOV6;
         dictNetType["YOLOV7"] = tensor_rt::YOLOV7;
+		dictNetType["YOLOV7Mask"] = tensor_rt::YOLOV7Mask;
 
 		auto netType = dictNetType.find(net_type->second);
 		if (netType != dictNetType.end())
@@ -152,6 +153,21 @@ void YoloTensorRTDetector::Detect(const cv::UMat& colorFrame)
     m_regions.clear();
 	cv::Mat colorMat = colorFrame.getMat(cv::ACCESS_READ);
 
+#define DRAW_MASK 0
+#if DRAW_MASK
+	cv::Mat img = colorMat.clone();
+	std::vector<cv::Scalar> color;
+	srand(time(0));
+	for (int i = 0; i < m_classNames.size(); i++)
+	{
+		int b = rand() % 256;
+		int g = rand() % 256;
+		int r = rand() % 256;
+		color.emplace_back(b, g, r);
+	}
+	cv::Mat mask = img.clone();
+#endif
+
     if (m_maxCropRatio <= 0)
     {
         std::vector<cv::Mat> batch = { colorMat };
@@ -161,10 +177,21 @@ void YoloTensorRTDetector::Detect(const cv::UMat& colorFrame)
         {
             for (const tensor_rt::Result& bbox : dets)
             {
-				if (m_classesWhiteList.empty() || m_classesWhiteList.find(T2T(bbox.id)) != std::end(m_classesWhiteList))
-					m_regions.emplace_back(bbox.rect, T2T(bbox.id), bbox.prob);
+				if (m_classesWhiteList.empty() || m_classesWhiteList.find(T2T(bbox.m_id)) != std::end(m_classesWhiteList))
+				{
+					m_regions.emplace_back(bbox.m_rrect, T2T(bbox.m_id), bbox.m_prob);
+#if DRAW_MASK
+					rectangle(img, bbox.m_brect, color[bbox.m_id], 2, 8);
+					mask(bbox.m_brect).setTo(color[bbox.m_id], bbox.m_boxMask);
+#endif
+				}
             }
         }
+#if DRAW_MASK
+		cv::addWeighted(img, 0.5, mask, 0.5, 0, img);
+		cv::imshow("mask", mask);
+		cv::waitKey(1);
+#endif
     }
     else
     {
@@ -191,8 +218,8 @@ void YoloTensorRTDetector::Detect(const cv::UMat& colorFrame)
 
 				for (const tensor_rt::Result& bbox : detects[j])
 				{
-					if (m_classesWhiteList.empty() || m_classesWhiteList.find(T2T(bbox.id)) != std::end(m_classesWhiteList))
-						tmpRegions.emplace_back(cv::Rect(bbox.rect.x + crop.x, bbox.rect.y + crop.y, bbox.rect.width, bbox.rect.height), T2T(bbox.id), bbox.prob);
+					if (m_classesWhiteList.empty() || m_classesWhiteList.find(T2T(bbox.m_id)) != std::end(m_classesWhiteList))
+						tmpRegions.emplace_back(cv::Rect(bbox.m_brect.x + crop.x, bbox.m_brect.y + crop.y, bbox.m_brect.width, bbox.m_brect.height), T2T(bbox.m_id), bbox.m_prob);
 				}
 			}
         }
@@ -236,8 +263,8 @@ void YoloTensorRTDetector::Detect(const std::vector<cv::UMat>& frames, std::vect
             const tensor_rt::BatchResult& dets = detects[i];
             for (const tensor_rt::Result& bbox : dets)
             {
-                if (m_classesWhiteList.empty() || m_classesWhiteList.find(T2T(bbox.id)) != std::end(m_classesWhiteList))
-                    regions[i].emplace_back(bbox.rect, T2T(bbox.id), bbox.prob);
+                if (m_classesWhiteList.empty() || m_classesWhiteList.find(T2T(bbox.m_id)) != std::end(m_classesWhiteList))
+                    regions[i].emplace_back(bbox.m_brect, T2T(bbox.m_id), bbox.m_prob);
             }
         }
         m_regions.assign(std::begin(regions.back()), std::end(regions.back()));

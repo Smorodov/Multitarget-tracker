@@ -833,9 +833,10 @@ protected:
                 TinyYOLOv4,
                 YOLOv5,
                 YOLOv6,
-                YOLOv7
+                YOLOv7,
+				YOLOv7Mask
             };
-            YOLOModels usedModel = YOLOModels::YOLOv7;
+            YOLOModels usedModel = YOLOModels::YOLOv7Mask;
             switch (usedModel)
             {
             case YOLOModels::TinyYOLOv3:
@@ -907,6 +908,16 @@ protected:
                 maxBatch = 1;
                 config.emplace("maxCropRatio", "-1");
                 break;
+
+			case YOLOModels::YOLOv7Mask:
+				config.emplace("modelConfiguration", pathToModel + "yolov7-mask.onnx");
+				config.emplace("modelBinary", pathToModel + "yolov7-mask.onnx");
+				config.emplace("confidenceThreshold", "0.2");
+				config.emplace("inference_precision", "FP32");
+				config.emplace("net_type", "YOLOV7Mask");
+				maxBatch = 1;
+				config.emplace("maxCropRatio", "-1");
+				break;
             }
             if (maxBatch < m_batchSize)
                 maxBatch = m_batchSize;
