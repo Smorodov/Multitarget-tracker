@@ -12,14 +12,27 @@ namespace tensor_rt
     ///
 	struct Result
 	{
-		int id = -1;
-		float prob = 0.f;
-		cv::Rect rect;
+        cv::RotatedRect m_rrect;
+		cv::Rect m_brect;
+        int m_id = -1;
+        float m_prob = 0.f;
+        cv::Mat m_boxMask;
 
-		Result(int id_, float prob_, cv::Rect r)
-			: id(id_), prob(prob_), rect(r)
+		Result(int id, float prob, const cv::Rect& brect)
+			: m_brect(brect), m_id(id), m_prob(prob)
 		{
+            m_rrect = cv::RotatedRect(m_brect.tl(), cv::Point2f(static_cast<float>(m_brect.x + m_brect.width), static_cast<float>(m_brect.y)), m_brect.br());
+            if (m_rrect.size.width < 1)
+                m_rrect.size.width = 1;
+            if (m_rrect.size.height < 1)
+                m_rrect.size.height = 1;
 		}
+
+        Result(int id, float prob, const cv::RotatedRect& rrect)
+            : m_rrect(rrect), m_id(id), m_prob(prob)
+        {
+            m_brect = m_rrect.boundingRect();
+        }
 	};
 	
 	using BatchResult = std::vector<Result>;
@@ -34,7 +47,8 @@ namespace tensor_rt
         YOLOV4_TINY,
         YOLOV5,
         YOLOV6,
-        YOLOV7
+        YOLOV7,
+        YOLOV7Mask
 	};
 
     ///
