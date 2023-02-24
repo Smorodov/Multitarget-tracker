@@ -37,7 +37,7 @@ public:
            track_t accelNoiseMag,
            bool useAcceleration,
            track_id_t trackID,
-           bool filterObjectSize,
+           tracking::FilterGoal filterGoal,
            tracking::LostTrackType externalTrackerForLost);
 
     CTrack(const CRegion& region,
@@ -47,7 +47,7 @@ public:
            track_t accelNoiseMag,
            bool useAcceleration,
            track_id_t trackID,
-           bool filterObjectSize,
+           tracking::FilterGoal filterGoal,
            tracking::LostTrackType externalTrackerForLost);
 
     ///
@@ -124,7 +124,7 @@ public:
     TrackingObject ConstructObject() const;
     track_id_t GetID() const;
 
-    bool GetFilterObjectSize() const;
+	tracking::FilterGoal GetFilterGoal() const;
     void KalmanPredictRect();
     void KalmanPredictPoint();
 
@@ -167,7 +167,7 @@ private:
     int m_staticFrames = 0;
     bool m_isStatic = false;
 
-    bool m_filterObjectSize = false;
+	tracking::FilterGoal m_filterGoal = tracking::FilterGoal::FilterCenter;
     bool m_outOfTheFrame = false;
 };
 

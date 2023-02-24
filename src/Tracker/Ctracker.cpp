@@ -368,7 +368,7 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
                                                             m_settings.m_accelNoiseMag,
                                                             m_settings.m_useAcceleration,
                                                             m_nextTrackID,
-                                                            m_settings.m_filterGoal == tracking::FilterRect,
+                                                            m_settings.m_filterGoal,
                                                             m_settings.m_lostTrackType));
             else
                 m_tracks.push_back(std::make_unique<CTrack>(regions[i],
@@ -378,7 +378,7 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
                                                             m_settings.m_accelNoiseMag,
                                                             m_settings.m_useAcceleration,
                                                             m_nextTrackID,
-                                                            m_settings.m_filterGoal == tracking::FilterRect,
+                                                            m_settings.m_filterGoal,
                                                             m_settings.m_lostTrackType));
             m_nextTrackID = m_nextTrackID.NextID();
         }
@@ -447,7 +447,8 @@ void CTracker::CreateDistaceMatrix(const regions_t& regions,
         const auto& track = m_tracks[i];
 
         // call kalman prediction fist
-		if (track->GetFilterObjectSize())
+		if (track->GetFilterGoal() == tracking::FilterGoal::FilterRect ||
+			track->GetFilterGoal() == tracking::FilterGoal::FilterRRect)
 			track->KalmanPredictRect();
 		else
 			track->KalmanPredictPoint();

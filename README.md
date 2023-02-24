@@ -3,6 +3,8 @@
 
 # Last changes
 
+* Some experiments with YOLOv7_mask and results with rotated rectangles
+
 * Breaking change: removed static enum with types
 
 * Support ONNX with NMS

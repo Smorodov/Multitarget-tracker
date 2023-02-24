@@ -22,7 +22,7 @@ CTrack::CTrack(const CRegion& region,
                track_t accelNoiseMag,
                bool useAcceleration,
                track_id_t trackID,
-               bool filterObjectSize,
+               tracking::FilterGoal filterGoal,
                tracking::LostTrackType externalTrackerForLost)
     :
       m_kalman(kalmanType, useAcceleration, deltaTime, accelNoiseMag),
@@ -33,14 +33,22 @@ CTrack::CTrack(const CRegion& region,
       m_currType(region.m_type),
       m_lastType(region.m_type),
       m_externalTrackerForLost(externalTrackerForLost),
-      m_filterObjectSize(filterObjectSize)
+      m_filterGoal(filterGoal)
 {
 	//std::cout << "CTrack::CTrack1: m_predictionRect: " << m_predictionRect.center << ", " << m_predictionRect.angle << ", " << m_predictionRect.size << std::endl;
 
-    if (filterObjectSize)
-        m_kalman.Update(region.m_brect, true);
-    else
-        m_kalman.Update(m_predictionPoint, true);
+	switch (filterGoal)
+	{
+	case tracking::FilterGoal::FilterCenter:
+		m_kalman.Update(m_predictionPoint, true);
+		break;
+	case tracking::FilterGoal::FilterRect:
+		m_kalman.Update(region.m_brect, true);
+		break;
+	case tracking::FilterGoal::FilterRRect:
+		m_kalman.Update(region.m_rrect, true);
+		break;
+	};
 
     Point_t pt(m_predictionPoint.x, m_predictionPoint.y + region.m_brect.height / 2);
     m_trace.push_back(pt, pt);
@@ -65,7 +73,7 @@ CTrack::CTrack(const CRegion& region,
                track_t accelNoiseMag,
                bool useAcceleration,
                track_id_t trackID,
-               bool filterObjectSize,
+               tracking::FilterGoal filterGoal,
                tracking::LostTrackType externalTrackerForLost)
     :
       m_kalman(kalmanType, useAcceleration, deltaTime, accelNoiseMag),
@@ -77,15 +85,22 @@ CTrack::CTrack(const CRegion& region,
       m_lastType(region.m_type),
       m_externalTrackerForLost(externalTrackerForLost),
       m_regionEmbedding(regionEmbedding),
-      m_filterObjectSize(filterObjectSize)
+      m_filterGoal(filterGoal)
 {
 	//std::cout << "CTrack::CTrack2: m_predictionRect: " << m_predictionRect.center << ", " << m_predictionRect.angle << ", " << m_predictionRect.size << std::endl;
 
-    if (filterObjectSize)
-        m_kalman.Update(region.m_brect, true);
-    else
-        m_kalman.Update(m_predictionPoint, true);
-
+	switch (filterGoal)
+	{
+	case tracking::FilterGoal::FilterCenter:
+		m_kalman.Update(m_predictionPoint, true);
+		break;
+	case tracking::FilterGoal::FilterRect:
+		m_kalman.Update(region.m_brect, true);
+		break;
+	case tracking::FilterGoal::FilterRRect:
+		m_kalman.Update(region.m_rrect, true);
+		break;
+	};
     m_trace.push_back(m_predictionPoint, m_predictionPoint);
 }
 
@@ -263,10 +278,18 @@ void CTrack::Update(const CRegion& region,
         }
     }
 
-    if (m_filterObjectSize) // Kalman filter for object coordinates and size
-        RectUpdate(region, dataCorrect, prevFrame, currFrame);
-    else // Kalman filter only for object center
-        PointUpdate(region.m_rrect.center, region.m_rrect.size, dataCorrect, currFrame.size());
+	switch (m_filterGoal)
+	{
+	case tracking::FilterGoal::FilterCenter:
+		PointUpdate(region.m_rrect.center, region.m_rrect.size, dataCorrect, currFrame.size());
+		break;
+	case tracking::FilterGoal::FilterRect:
+		RectUpdate(region, dataCorrect, prevFrame, currFrame);
+		break;
+	case tracking::FilterGoal::FilterRRect:
+		RectUpdate(region, dataCorrect, prevFrame, currFrame);
+		break;
+	};    
 
     if (dataCorrect)
     {
@@ -306,10 +329,18 @@ void CTrack::Update(const CRegion& region,
 {
     m_regionEmbedding = regionEmbedding;
 
-    if (m_filterObjectSize) // Kalman filter for object coordinates and size
-        RectUpdate(region, dataCorrect, prevFrame, currFrame);
-    else // Kalman filter only for object center
-        PointUpdate(region.m_rrect.center, region.m_rrect.size, dataCorrect, currFrame.size());
+	switch (m_filterGoal)
+	{
+	case tracking::FilterGoal::FilterCenter:
+		PointUpdate(region.m_rrect.center, region.m_rrect.size, dataCorrect, currFrame.size());
+		break;
+	case tracking::FilterGoal::FilterRect:
+		RectUpdate(region, dataCorrect, prevFrame, currFrame);
+		break;
+	case tracking::FilterGoal::FilterRRect:
+		RectUpdate(region, dataCorrect, prevFrame, currFrame);
+		break;
+	};
 
     if (dataCorrect)
     {
@@ -495,7 +526,7 @@ bool CTrack::CheckStatic(int trajLen, cv::UMat currFrame, const CRegion& region,
 ///
 cv::RotatedRect CTrack::GetLastRect() const
 {
-    if (m_filterObjectSize)
+    if (m_filterGoal == tracking::FilterGoal::FilterCenter)
         return m_predictionRect;
     else
         return cv::RotatedRect(cv::Point2f(m_predictionPoint.x, m_predictionPoint.y), m_predictionRect.size, m_predictionRect.angle);
@@ -539,12 +570,12 @@ track_id_t CTrack::GetID() const
 }
 
 ///
-/// \brief CTrack::GetFilterObjectSize
+/// \brief CTrack::GetFilterGoal
 /// \return
 ///
-bool CTrack::GetFilterObjectSize() const
+tracking::FilterGoal CTrack::GetFilterGoal() const
 {
-    return m_filterObjectSize;
+    return m_filterGoal;
 }
 
 ///
@@ -856,13 +887,18 @@ void CTrack::RectUpdate(const CRegion& region,
             }
 #endif
 #endif
-
-            UpdateRRect(brect, m_kalman.Update(region.m_brect, dataCorrect));
+			if (m_filterGoal == tracking::FilterGoal::FilterRect)
+				UpdateRRect(brect, m_kalman.Update(region.m_brect, dataCorrect));
+			else
+				m_predictionRect = m_kalman.Update(region.m_rrect, dataCorrect);
 #endif
         }
         else
         {
-            UpdateRRect(brect, m_kalman.Update(region.m_brect, dataCorrect));
+			if (m_filterGoal == tracking::FilterGoal::FilterRect)
+				UpdateRRect(brect, m_kalman.Update(region.m_brect, dataCorrect));
+			else
+				m_predictionRect = m_kalman.Update(region.m_rrect, dataCorrect);
         }
     }
     else
@@ -876,12 +912,18 @@ void CTrack::RectUpdate(const CRegion& region,
             }
             else
             {
-                UpdateRRect(brect, m_kalman.Update(trackedRRect.boundingRect(), true));
+				if (m_filterGoal == tracking::FilterGoal::FilterRect)
+					UpdateRRect(brect, m_kalman.Update(trackedRRect.boundingRect(), true));
+				else
+					m_predictionRect = m_kalman.Update(trackedRRect, true);
             }
         }
         else
         {
-            UpdateRRect(brect, m_kalman.Update(region.m_brect, dataCorrect));
+			if (m_filterGoal == tracking::FilterGoal::FilterRect)
+				UpdateRRect(brect, m_kalman.Update(region.m_brect, dataCorrect));
+			else
+				m_predictionRect = m_kalman.Update(region.m_rrect, dataCorrect);
         }
     }
 
