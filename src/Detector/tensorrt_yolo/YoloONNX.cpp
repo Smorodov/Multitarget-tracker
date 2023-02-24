@@ -564,7 +564,7 @@ std::vector<tensor_rt::Result> YoloONNX::get_bboxes(size_t imgIdx, int /*keep_to
         };
 		auto volume = len * m_outpuDims[0].d[ncInd]; // Volume(m_outpuDims[0]);
         output += volume * imgIdx;
-        std::cout << "len = " << len << ", nc = " << nc << ", m_params.confThreshold = " << m_params.confThreshold << ", volume = " << volume << std::endl;
+        //std::cout << "len = " << len << ", nc = " << nc << ", m_params.confThreshold = " << m_params.confThreshold << ", volume = " << volume << std::endl;
 
         if (m_outpuDims[0].nbDims == 2) // With nms
         {

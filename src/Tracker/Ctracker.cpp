@@ -155,7 +155,7 @@ void CTracker::Update(const regions_t& regions, cv::UMat currFrame, float fps)
     currFrame.copyTo(m_prevFrame);
 }
 
-#define DRAW_DBG_ASSIGNMENT 0
+#define DRAW_DBG_ASSIGNMENT 1
 
 ///
 /// \brief CTracker::UpdateTrackingState
@@ -177,6 +177,16 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
 
 #if DRAW_DBG_ASSIGNMENT
     std::cout << "CTracker::UpdateTrackingState: m_tracks = " << N << ", regions = " << M << std::endl;
+
+	auto DrawRRect = [](cv::Mat& img, const cv::RotatedRect& rr, const cv::Scalar& cl, int thikness)
+	{
+		cv::Point2f rectPoints[4];
+		rr.points(rectPoints);
+		for (int i = 0; i < 4; ++i)
+		{
+			cv::line(img, rectPoints[i], rectPoints[(i + 1) % 4], cl, thikness, cv::LINE_4);
+		}
+	};
 
     cv::Mat dbgAssignment = currFrame.getMat(cv::ACCESS_READ).clone();
     {
@@ -211,7 +221,7 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
 #endif
         for (const auto& reg : regions)
         {
-            cv::rectangle(dbgAssignment, reg.m_brect, cv::Scalar(0, 255, 255), 2, cv::LINE_4);
+			DrawRRect(dbgAssignment, reg.m_rrect, cv::Scalar(0, 255, 255), 2);
         }
     }
 #endif
@@ -258,13 +268,13 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
                 {
                     ss << ">" << m_settings.m_distThres;
                     cv::line(dbgAssignment, m_tracks[i]->GetLastRect().center, regions[assignment[i]].m_rrect.center, cv::Scalar(0, 0, 255), 1);
-                    cv::rectangle(dbgAssignment, m_tracks[i]->LastRegion().m_brect, cv::Scalar(0, 0, 255), 1);
+					DrawRRect(dbgAssignment, m_tracks[i]->LastRegion().m_rrect, cv::Scalar(0, 0, 255), 1);
                 }
                 else
                 {
                     ss << "<" << m_settings.m_distThres;
                     cv::line(dbgAssignment, m_tracks[i]->GetLastRect().center, regions[assignment[i]].m_rrect.center, cv::Scalar(0, 255, 0), 1);
-                    cv::rectangle(dbgAssignment, m_tracks[i]->LastRegion().m_brect, cv::Scalar(0, 255, 0), 1);
+					DrawRRect(dbgAssignment, m_tracks[i]->LastRegion().m_rrect, cv::Scalar(0, 255, 0), 1);
                 }
 
                 for (size_t ri = 0; ri < regions.size(); ++ri)
@@ -283,7 +293,7 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
             else
             {
                 // If track have no assigned detect, then increment skipped frames counter.
-                cv::rectangle(dbgAssignment, m_tracks[i]->LastRegion().m_brect, cv::Scalar(255, 0, 255), 1);
+				DrawRRect(dbgAssignment, m_tracks[i]->LastRegion().m_rrect, cv::Scalar(255, 0, 255), 1);
                 for (size_t ri = 0; ri < regions.size(); ++ri)
                 {
                     if (costMatrix[i + ri * N] < 1)
