@@ -155,7 +155,7 @@ void CTracker::Update(const regions_t& regions, cv::UMat currFrame, float fps)
     currFrame.copyTo(m_prevFrame);
 }
 
-#define DRAW_DBG_ASSIGNMENT 1
+#define DRAW_DBG_ASSIGNMENT 0
 
 ///
 /// \brief CTracker::UpdateTrackingState
@@ -357,6 +357,8 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
 #endif
     for (size_t i = 0; i < regions.size(); ++i)
     {
+		//std::cout << "CTracker::update: regions[" << i << "].m_rrect: " << regions[i].m_rrect.center << ", " << regions[i].m_rrect.angle << ", " << regions[i].m_rrect.size << std::endl;
+
         if (find(assignment.begin(), assignment.end(), i) == assignment.end())
         {
             if (regionEmbeddings.empty())

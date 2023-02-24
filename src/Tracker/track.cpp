@@ -35,6 +35,8 @@ CTrack::CTrack(const CRegion& region,
       m_externalTrackerForLost(externalTrackerForLost),
       m_filterObjectSize(filterObjectSize)
 {
+	//std::cout << "CTrack::CTrack1: m_predictionRect: " << m_predictionRect.center << ", " << m_predictionRect.angle << ", " << m_predictionRect.size << std::endl;
+
     if (filterObjectSize)
         m_kalman.Update(region.m_brect, true);
     else
@@ -77,6 +79,8 @@ CTrack::CTrack(const CRegion& region,
       m_regionEmbedding(regionEmbedding),
       m_filterObjectSize(filterObjectSize)
 {
+	//std::cout << "CTrack::CTrack2: m_predictionRect: " << m_predictionRect.center << ", " << m_predictionRect.angle << ", " << m_predictionRect.size << std::endl;
+
     if (filterObjectSize)
         m_kalman.Update(region.m_brect, true);
     else
@@ -231,6 +235,8 @@ void CTrack::Update(const CRegion& region,
                     cv::UMat currFrame,
                     int trajLen, int maxSpeedForStatic)
 {
+	//std::cout << "CTrack::Update: dataCorrect = " << dataCorrect << ", m_predictionRect: " << m_predictionRect.center << ", " << m_predictionRect.angle << ", " << m_predictionRect.size << std::endl;
+
     if (dataCorrect)
     {
         if (region.m_type == m_currType)
@@ -1130,5 +1136,6 @@ void CTrack::PointUpdate(const Point_t& pt,
 	auto p = m_predictionPoint;
     m_outOfTheFrame = Clamp(p.x, frameSize.width) || Clamp(p.y, frameSize.height) || (m_predictionRect.size.width < 1) || (m_predictionRect.size.height < 1);
 
+	//std::cout << "CTrack::PointUpdate: m_predictionRect: " << m_predictionRect.center << ", " << m_predictionRect.angle << ", " << m_predictionRect.size << std::endl;
     //std::cout << GetID().ID2Str() << ": predictionRect = " << m_predictionRect.boundingRect() << ", outOfTheFrame = " << m_outOfTheFrame << ", predictionPoint = " << m_predictionPoint << std::endl;
 }
