@@ -526,7 +526,7 @@ bool CTrack::CheckStatic(int trajLen, cv::UMat currFrame, const CRegion& region,
 ///
 cv::RotatedRect CTrack::GetLastRect() const
 {
-    if (m_filterGoal == tracking::FilterGoal::FilterCenter)
+    if (m_filterGoal != tracking::FilterGoal::FilterCenter)
         return m_predictionRect;
     else
         return cv::RotatedRect(cv::Point2f(m_predictionPoint.x, m_predictionPoint.y), m_predictionRect.size, m_predictionRect.angle);

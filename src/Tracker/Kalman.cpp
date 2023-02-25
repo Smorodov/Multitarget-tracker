@@ -106,7 +106,7 @@ void TKalmanFilter::CreateLinear(cv::Rect_<track_t> rect0, Point_t rectv0)
                                         1, 0, 0, 0, m_deltaTime, 0,           0,           0,
                                         0, 1, 0, 0, 0,           m_deltaTime, 0,           0,
                                         0, 0, 1, 0, 0,           0,           m_deltaTime, 0,
-                                        0, 0, 0, 1, 0,           0,           0,           m_deltaTime,
+                                        0, 0, 0, 1, 0,           0,           0,           m_deltaTime / 10.f,
                                         0, 0, 0, 0, 1,           0,           0,           0,
                                         0, 0, 0, 0, 0,           1,           0,           0,
                                         0, 0, 0, 0, 0,           0,           1,           0,
