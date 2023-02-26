@@ -180,6 +180,9 @@ void YoloTensorRTDetector::Detect(const cv::UMat& colorFrame)
 				if (m_classesWhiteList.empty() || m_classesWhiteList.find(T2T(bbox.m_id)) != std::end(m_classesWhiteList))
 				{
 					m_regions.emplace_back(bbox.m_rrect, T2T(bbox.m_id), bbox.m_prob);
+
+					//std::cout << "YoloTensorRTDetector::Detect: bbox.m_rrect " << bbox.m_rrect.center << ", " << bbox.m_rrect.angle << ", " << bbox.m_rrect.size << std::endl;
+					//std::cout << "YoloTensorRTDetector::Detect: m_regions.back().m_rrect " << m_regions.back().m_rrect.center << ", " << m_regions.back().m_rrect.angle << ", " << m_regions.back().m_rrect.size << std::endl;
 #if DRAW_MASK
 					rectangle(img, bbox.m_brect, color[bbox.m_id], 2, 8);
 					mask(bbox.m_brect).setTo(color[bbox.m_id], bbox.m_boxMask);

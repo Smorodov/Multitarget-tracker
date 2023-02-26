@@ -26,6 +26,9 @@ public:
     cv::Rect GetRectPrediction();
     cv::Rect Update(cv::Rect rect, bool dataCorrect);
 
+	cv::RotatedRect GetRRectPrediction();
+	cv::RotatedRect Update(cv::RotatedRect rrect, bool dataCorrect);
+
     cv::Vec<track_t, 2> GetVelocity() const;
 
     void GetPtStateAndResCov(cv::Mat& covar, cv::Mat& state) const;
@@ -40,10 +43,12 @@ private:
 #endif
 #endif
 
-    static constexpr size_t MIN_INIT_VALS = 4;
+    static constexpr size_t MIN_INIT_VALS = 2;
     std::vector<Point_t> m_initialPoints;
     std::vector<cv::Rect> m_initialRects;
+	std::vector<cv::RotatedRect> m_initialRRects;
 
+	cv::RotatedRect m_lastRRectResult;
     cv::Rect_<track_t> m_lastRectResult;
     cv::Rect_<track_t> m_lastRect;
     Point_t m_lastPointResult;
@@ -61,11 +66,13 @@ private:
 	// Constant velocity model
     void CreateLinear(Point_t xy0, Point_t xyv0);
     void CreateLinear(cv::Rect_<track_t> rect0, Point_t rectv0);
+	void CreateLinear(cv::RotatedRect rrect0, Point_t rrectv0);
 	
 	// Constant acceleration model
 	// https://www.mathworks.com/help/driving/ug/linear-kalman-filters.html
 	void CreateLinearAcceleration(Point_t xy0, Point_t xyv0);
 	void CreateLinearAcceleration(cv::Rect_<track_t> rect0, Point_t rectv0);
+	void CreateLinearAcceleration(cv::RotatedRect rrect0, Point_t rrectv0);
 
 #ifdef USE_OCV_UKF
     void CreateUnscented(Point_t xy0, Point_t xyv0);

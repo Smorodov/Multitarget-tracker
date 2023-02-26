@@ -200,6 +200,7 @@ struct TrackingObject
         m_isStatic(isStatic), m_isStaticTime(isStaticTime),
         m_outOfTheFrame(outOfTheFrame)
 	{
+		//std::cout << "TrackingObject.m_rrect: " << m_rrect.center << ", " << m_rrect.angle << ", " << m_rrect.size << std::endl;
 	}
 
     ///

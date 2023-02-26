@@ -697,24 +697,24 @@ void YoloONNX::ProcessMaskOutput(size_t imgIdx, const std::vector<float*>& outpu
 #else
             cv::findContours(resBoxes[i].m_boxMask, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE, cv::Point());
 #endif
-            for (size_t i = 0; i < contours.size(); ++i)
+            for (const auto& contour : contours)
             {
-                cv::Rect br = cv::boundingRect(contours[i]);
+                cv::Rect br = cv::boundingRect(contour);
 
                 if (br.width >= 4 &&
                     br.height >= 4)
 				{
-					cv::RotatedRect rr = cv::minAreaRect(contours[i]);
+					cv::RotatedRect rr = cv::minAreaRect(contour);
 
                     br.x += resBoxes[i].m_brect.x;
                     br.y += resBoxes[i].m_brect.y;
                     rr.center.x += resBoxes[i].m_brect.x;
                     rr.center.y += resBoxes[i].m_brect.y;
 
+					//std::cout << "rr: " << rr.center << ", " << rr.angle << ", " << rr.size << std::endl;
+
                     resBoxes[i].m_brect = br;
                     resBoxes[i].m_rrect = rr;
-
-                    //std::cout << "rr: " << rr.center << ", " << rr.angle << ", " << rr.size << std::endl;
 
 					break;
 				}
