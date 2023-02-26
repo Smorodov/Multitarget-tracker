@@ -104,10 +104,6 @@ public:
             m_rrect.size.width = 1;
         if (m_rrect.size.height < 1)
             m_rrect.size.height = 1;
-		if (m_rrect.angle < 0.1f)
-			m_rrect.angle = 0;
-		else if (m_rrect.angle > 89.9f)
-			m_rrect.angle = 90.f;
         R2BRect();
     }
 
@@ -118,10 +114,6 @@ public:
             m_rrect.size.width = 1;
         if (m_rrect.size.height < 1)
             m_rrect.size.height = 1;
-		if (m_rrect.angle < 0.1f)
-			m_rrect.angle = 0;
-		else if (m_rrect.angle > 89.9f)
-			m_rrect.angle = 90.f;
         R2BRect();
     }
 
@@ -157,10 +149,6 @@ private:
             m_rrect.size.width = 1;
         if (m_rrect.size.height < 1)
             m_rrect.size.height = 1;
-		if (m_rrect.angle < 0.1f)
-			m_rrect.angle = 0;
-		else if (m_rrect.angle > 89.9f)
-			m_rrect.angle = 90.f;
         return m_rrect;
     }
 };
