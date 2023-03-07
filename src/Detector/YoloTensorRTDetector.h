@@ -23,6 +23,8 @@ public:
 		return false;
 	}
 
+	void CalcMotionMap(cv::Mat& frame);
+
 private:
 	std::unique_ptr<tensor_rt::Detector> m_detector;
 

@@ -515,6 +515,7 @@ void VideoExample::DrawTrack(cv::Mat frame,
     {
         cv::line(frame, rectPoints[i], rectPoints[(i+1) % 4], color);
     }
+
 #if 0
 #if 0
 	track_t minAreaRadiusPix = frame.rows / 20.f;
