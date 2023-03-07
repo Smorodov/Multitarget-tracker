@@ -43,6 +43,7 @@ namespace tensor_rt
     enum ModelType
 	{
         YOLOV3,
+        YOLOV3_TINY,
         YOLOV4,
         YOLOV4_TINY,
         YOLOV5,
