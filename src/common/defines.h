@@ -89,14 +89,17 @@ typedef std::multimap<std::string, std::string> config_t;
 class CRegion
 {
 public:
+    ///
     CRegion() = default;
 
+    ///
     CRegion(const cv::Rect& rect) noexcept
         : m_brect(rect)
     {
         B2RRect();
     }
 
+    ///
     CRegion(const cv::RotatedRect& rrect) noexcept
         : m_rrect(rrect)
     {
@@ -107,6 +110,7 @@ public:
         R2BRect();
     }
 
+    ///
     CRegion(const cv::RotatedRect& rrect, objtype_t type, float confidence) noexcept
         : m_type(type), m_rrect(rrect), m_confidence(confidence)
     {
@@ -117,8 +121,27 @@ public:
         R2BRect();
     }
 
-    CRegion(const cv::Rect& rect, objtype_t type, float confidence) noexcept
-        : m_type(type), m_brect(rect), m_confidence(confidence)
+    ///
+    CRegion(const cv::RotatedRect& rrect, const cv::Rect& brect, objtype_t type, float confidence, const cv::Mat& boxMask) noexcept
+        : m_type(type), m_rrect(rrect), m_brect(brect), m_confidence(confidence)
+    {
+        m_boxMask = boxMask;
+
+        if (m_rrect.size.width < 1)
+            m_rrect.size.width = 1;
+        if (m_rrect.size.height < 1)
+            m_rrect.size.height = 1;
+
+        if (!m_boxMask.empty() && m_boxMask.size() != m_brect.size())
+        {
+            m_brect.width = m_boxMask.cols;
+            m_brect.height = m_boxMask.rows;
+        }
+    }
+
+    ///
+    CRegion(const cv::Rect& brect, objtype_t type, float confidence) noexcept
+        : m_type(type), m_brect(brect), m_confidence(confidence)
     {
         B2RRect();
     }
@@ -127,6 +150,7 @@ public:
     cv::RotatedRect m_rrect;
     cv::Rect m_brect;
     float m_confidence = -1;
+    cv::Mat m_boxMask;
 
 private:
     ///

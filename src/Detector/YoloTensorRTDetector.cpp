@@ -179,7 +179,7 @@ void YoloTensorRTDetector::Detect(const cv::UMat& colorFrame)
             {
 				if (m_classesWhiteList.empty() || m_classesWhiteList.find(T2T(bbox.m_id)) != std::end(m_classesWhiteList))
 				{
-					m_regions.emplace_back(bbox.m_rrect, T2T(bbox.m_id), bbox.m_prob);
+					m_regions.emplace_back(bbox.m_rrect, bbox.m_brect, T2T(bbox.m_id), bbox.m_prob, bbox.m_boxMask);
 
 					//std::cout << "YoloTensorRTDetector::Detect: bbox.m_rrect " << bbox.m_rrect.center << ", " << bbox.m_rrect.angle << ", " << bbox.m_rrect.size << std::endl;
 					//std::cout << "YoloTensorRTDetector::Detect: m_regions.back().m_rrect " << m_regions.back().m_rrect.center << ", " << m_regions.back().m_rrect.angle << ", " << m_regions.back().m_rrect.size << std::endl;
@@ -272,4 +272,40 @@ void YoloTensorRTDetector::Detect(const std::vector<cv::UMat>& frames, std::vect
         }
         m_regions.assign(std::begin(regions.back()), std::end(regions.back()));
     }
+}
+
+///
+/// \brief CalcMotionMap
+/// \param frame
+///
+void YoloTensorRTDetector::CalcMotionMap(cv::Mat& frame)
+{
+	if (m_localConfig.net_type == tensor_rt::YOLOV7Mask)
+	{
+		static std::vector<cv::Scalar> color;
+		if (color.empty())
+		{
+			srand(time(0));
+			for (int i = 0; i < m_classNames.size(); i++)
+			{
+				int b = rand() % 256;
+				int g = rand() % 256;
+				int r = rand() % 256;
+				color.emplace_back(b, g, r);
+			}
+		}
+		cv::Mat mask = frame.clone();
+
+		for (const auto& region : m_regions)
+		{
+			//cv::rectangle(frame, region.m_brect, color[region.m_type], 2, 8);
+			if (!region.m_boxMask.empty())
+				mask(region.m_brect).setTo(color[region.m_type], region.m_boxMask);
+		}
+		cv::addWeighted(frame, 0.5, mask, 0.5, 0, frame);
+	}
+	else
+	{
+		BaseDetector::CalcMotionMap(frame);
+	}
 }

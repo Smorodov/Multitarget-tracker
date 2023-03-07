@@ -55,7 +55,7 @@ public:
 		{
 			auto curImage = vec_ds_images.at(i);
 			auto binfo = _p_net->decodeDetections(static_cast<int>(i), curImage.getImageHeight(), curImage.getImageWidth());
-            auto remaining = (_p_net->getNMSThresh() > 0) ? nmsAllClasses(_p_net->getNMSThresh(), binfo, _p_net->getNumClasses(), _vec_net_type[(size_t)_config.net_type]) : binfo;
+            auto remaining = (_p_net->getNMSThresh() > 0) ? nmsAllClasses(_p_net->getNMSThresh(), binfo, _p_net->getNumClasses(), _config.net_type) : binfo;
 
 			std::vector<tensor_rt::Result> vec_result;
 			if (!remaining.empty())
@@ -93,7 +93,7 @@ private:
 
 	void parse_config()
 	{
-		_yolo_info.networkType = _vec_net_type[((size_t)_config.net_type)];
+		_yolo_info.m_networkType = _config.net_type;
 		_yolo_info.configFilePath = _config.file_model_cfg;
 		_yolo_info.wtsFilePath = _config.file_model_weights;
         _yolo_info.precision = _vec_precision[(size_t)_config.inference_precision];
@@ -139,7 +139,6 @@ private:
 	tensor_rt::Config _config;
 	NetworkInfo _yolo_info;
 	InferParams _infer_param;
-	std::vector<std::string> _vec_net_type{ "yolov3", "yolov4", "yolov4-tiny", "yolov5", "yolov6", "yolov7", "yolov7-mask" };
 	std::vector<std::string> _vec_precision{ "kINT8","kHALF","kFLOAT" };
 	std::unique_ptr<Yolo> _p_net = nullptr;
 	Timer _m_timer;

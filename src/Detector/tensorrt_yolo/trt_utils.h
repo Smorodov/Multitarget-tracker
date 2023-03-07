@@ -27,8 +27,10 @@ SOFTWARE.
 #ifndef __TRT_UTILS_H__
 #define __TRT_UTILS_H__
 
-/* OpenCV headers */
-//#include <opencv/cv.h>
+#include <set>
+#include <math.h>
+#include <algorithm>
+
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/core.hpp>
 #include <opencv2/dnn/dnn.hpp>
@@ -38,10 +40,8 @@ SOFTWARE.
 #include "mish.h"
 #include "chunk.h"
 #include "hardswish.h"
-#include <set>
-#include <math.h>
-#include <algorithm>
 #include "NvInfer.h"
+#include "class_detector.h"
 
 #include "ds_image.h"
 #include "plugin_factory.h"
@@ -148,7 +148,7 @@ std::vector<std::string> loadListFromTextFile(const std::string filename);
 std::vector<std::string> loadImageList(const std::string filename, const std::string prefix);
 std::vector<BBoxInfo> diou_nms(const float numThresh, std::vector<BBoxInfo> binfo);
 std::vector<BBoxInfo> nmsAllClasses(const float nmsThresh, std::vector<BBoxInfo>& binfo,
-                                    const uint32_t numClasses, const std::string &model_type);
+                                    const uint32_t numClasses, tensor_rt::ModelType model_type);
 std::vector<BBoxInfo> nonMaximumSuppression(const float nmsThresh, std::vector<BBoxInfo> binfo);
 nvinfer1::ICudaEngine* loadTRTEngine(const std::string planFilePath,/* PluginFactory* pluginFactory,*/
                                      Logger& logger);

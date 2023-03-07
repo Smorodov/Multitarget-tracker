@@ -47,7 +47,6 @@ SOFTWARE.
  */
 struct NetworkInfo
 {
-    std::string networkType;
     std::string configFilePath;
     std::string wtsFilePath;
     std::string labelsFilePath;

@@ -713,6 +713,16 @@ void YoloONNX::ProcessMaskOutput(size_t imgIdx, const std::vector<float*>& outpu
 
 					//std::cout << "rr: " << rr.center << ", " << rr.angle << ", " << rr.size << std::endl;
 
+                    if (resBoxes[i].m_boxMask.size() != br.size())
+                    {
+                        br.width = resBoxes[i].m_boxMask.cols;
+                        br.height = resBoxes[i].m_boxMask.rows;
+                        if (br.x + br.width >= frameSize.width)
+                            br.x = frameSize.width - br.width;
+                        if (br.y + br.height >= frameSize.height)
+                            br.y = frameSize.height - br.height;
+                    }
+
                     resBoxes[i].m_brect = br;
                     resBoxes[i].m_rrect = rr;
 

@@ -244,7 +244,7 @@ std::vector<std::string> loadImageList(const std::string filename, const std::st
 std::vector<BBoxInfo> nmsAllClasses(const float nmsThresh,
 	std::vector<BBoxInfo>& binfo,
 	const uint32_t numClasses,
-	const std::string &model_type)
+	tensor_rt::ModelType model_type)
 {
     std::vector<BBoxInfo> result;
     std::vector<std::vector<BBoxInfo>> splitBoxes(numClasses);
@@ -255,7 +255,7 @@ std::vector<BBoxInfo> nmsAllClasses(const float nmsThresh,
 
     for (auto& boxes : splitBoxes)
     {
-		if ("yolov5"== model_type)
+		if (tensor_rt::YOLOV5 == model_type)
 			boxes =	diou_nms(nmsThresh, boxes);
 		else
 			boxes = nonMaximumSuppression(nmsThresh, boxes);

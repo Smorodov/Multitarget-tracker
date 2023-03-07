@@ -15,6 +15,11 @@
 
 # New videos!
 
+* YOLOv7 instance segmentation
+
+[![YOLOv7 instance segmentation:](https://img.youtube.com/vi/gZxuYyFz1dU/0.jpg)](https://youtu.be/gZxuYyFz1dU)
+
+
 * Very fast and small objects tracking [Thnx Scianand](https://github.com/Smorodov/Multitarget-tracker/issues/367)
 
 [![Fast and small motion:](https://img.youtube.com/vi/PalIIAfgX88/0.jpg)](https://youtu.be/PalIIAfgX88)
