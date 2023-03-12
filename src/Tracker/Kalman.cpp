@@ -152,7 +152,7 @@ void TKalmanFilter::CreateLinear(cv::Rect_<track_t> rect0, Point_t rectv0)
 
     cv::setIdentity(m_linearKalman.errorCovPost, cv::Scalar::all(.1));
 
-	m_initialRects.reserve(MIN_INIT_VALS);
+    m_initialRects.reserve(MIN_INIT_VALS);
 
     m_initialized = true;
 }

@@ -81,3 +81,4 @@ private:
     void CreateAugmentedUnscented(cv::Rect_<track_t> rect0, Point_t rectv0);
 #endif
 };
+
