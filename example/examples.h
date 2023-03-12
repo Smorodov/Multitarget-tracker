@@ -836,7 +836,7 @@ protected:
                 YOLOv7,
 				YOLOv7Mask
             };
-            YOLOModels usedModel = YOLOModels::YOLOv7Mask;
+            YOLOModels usedModel = YOLOModels::YOLOv5;
             switch (usedModel)
             {
             case YOLOModels::TinyYOLOv3:
@@ -880,8 +880,8 @@ protected:
                 break;
 
             case YOLOModels::YOLOv5:
-                config.emplace("modelConfiguration", pathToModel + "yolov5x.cfg");
-                config.emplace("modelBinary", pathToModel + "yolov5x.weights");
+                config.emplace("modelConfiguration", pathToModel + "yolov5s.cfg");
+                config.emplace("modelBinary", pathToModel + "yolov5s.weights");
                 config.emplace("confidenceThreshold", "0.5");
                 config.emplace("inference_precision", "FP32");
                 config.emplace("net_type", "YOLOV5");
@@ -1041,7 +1041,7 @@ protected:
 			}
 		}
 
-		//m_detector->CalcMotionMap(frame);
+		m_detector->CalcMotionMap(frame);
 	}
 };
 

@@ -38,8 +38,6 @@ static void decodeBatchDetections(const YoloPluginCtx* ctx, std::vector<YoloPlug
         std::vector<BBoxInfo> binfo = ctx->inferenceNetwork->decodeDetections(
             p, ctx->initParams.processingHeight, ctx->initParams.processingWidth);
 		std::vector<BBoxInfo> remaining;
-		/*std::vector<BBoxInfo> remaining = nmsAllClasses(
-			ctx->inferenceNetwork->getNMSThresh(), binfo, ctx->inferenceNetwork->getNumClasses(),);*/
         out->numObjects = remaining.size();
         assert(out->numObjects <= MAX_OBJECTS_PER_FRAME);
         for (uint32_t j = 0; j < remaining.size(); ++j)
@@ -115,23 +113,14 @@ YoloPluginCtx* YoloPluginCtxInit(YoloPluginInitParams* initParams, size_t batchS
             + std::to_string(ctx->batchSize) + ".engine";
     }
 
-    if ((ctx->networkInfo.networkType == "yolov2")
-        || (ctx->networkInfo.networkType == "yolov2-tiny"))
-    {
-        ctx->inferenceNetwork = new YoloV2(ctx->networkInfo, ctx->inferParams);
-    }
-    else if ((ctx->networkInfo.networkType == "yolov3")
-             || (ctx->networkInfo.networkType == "yolov3-tiny"))
+    if ((ctx->networkInfo.m_networkType == tensor_rt::YOLOV3)
+             || (ctx->networkInfo.m_networkType == tensor_rt::YOLOV3_TINY))
     {
         ctx->inferenceNetwork = new YoloV3( ctx->networkInfo, ctx->inferParams);
     }
     else
     {
-        std::cerr << "ERROR: Unrecognized network type " << ctx->networkInfo.networkType
-                  << std::endl;
-        std::cerr << "Network Type has to be one among the following : yolov2, yolov2-tiny, yolov3 "
-                     "and yolov3-tiny"
-                  << std::endl;
+        std::cerr << "ERROR: Unrecognized network type " << (int)ctx->networkInfo.m_networkType << std::endl;
         delete ctx;
         ctx = nullptr;
     }
