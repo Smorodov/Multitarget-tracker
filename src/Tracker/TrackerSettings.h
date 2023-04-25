@@ -128,6 +128,11 @@ struct TrackerSettings
     int m_gpuId = 0;
 
     ///
+    /// \brief Neural network input size
+    cv::Size m_inputSize{ 0, 0 };
+
+    ///
+    /// YOLOV2
     /// YOLOV3
     /// YOLOV4
     /// YOLOV4_TINY

@@ -100,6 +100,7 @@ bool YoloTensorRTDetector::Init(const config_t& config)
         dictNetType["YOLOV6"] = tensor_rt::YOLOV6;
         dictNetType["YOLOV7"] = tensor_rt::YOLOV7;
 		dictNetType["YOLOV7Mask"] = tensor_rt::YOLOV7Mask;
+		dictNetType["YOLOV8"] = tensor_rt::YOLOV8;
 
 		auto netType = dictNetType.find(net_type->second);
 		if (netType != dictNetType.end())

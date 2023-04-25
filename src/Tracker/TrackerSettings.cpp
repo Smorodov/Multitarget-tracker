@@ -68,6 +68,8 @@ bool ParseTrackerSettings(const std::string& settingsFile, TrackerSettings& trac
         trackerSettings.m_dnnTarget = reader.GetString("detection", "ocv_dnn_target", "DNN_TARGET_CPU");
         trackerSettings.m_dnnBackend = reader.GetString("detection", "ocv_dnn_backend", "DNN_BACKEND_OPENCV");
 		trackerSettings.m_maxVideoMemory = reader.GetInteger("detection", "video_memory", 0);
+        trackerSettings.m_inputSize.width = reader.GetInteger("detection", "input_width", 0);
+        trackerSettings.m_inputSize.height = reader.GetInteger("detection", "input_height", 0);
 
 		std::stringstream whiteList{ reader.GetString("detection", "white_list", "") };
 		trackerSettings.m_whiteList.clear();

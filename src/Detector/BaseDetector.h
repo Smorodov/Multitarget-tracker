@@ -211,7 +211,7 @@ public:
 protected:
     regions_t m_regions;
 
-    cv::Size m_minObjectSize;
+    cv::Size m_minObjectSize{2, 2};
 
     cv::Mat m_ignoreMask;
 

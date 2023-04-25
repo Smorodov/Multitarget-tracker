@@ -222,12 +222,7 @@ protected:
         config_t config;
         config.emplace("cascadeFileName", pathToModel + "haarcascade_frontalface_alt2.xml");
         m_detector = BaseDetector::CreateDetector(tracking::Detectors::Face_HAAR, config, frame);
-        if (m_detector.get())
-        {
-            m_detector->SetMinObjectSize(cv::Size(frame.cols / 20, frame.rows / 20));
-            return true;
-        }
-        return false;
+		return (m_detector.get() != nullptr);
     }
     ///
     /// \brief InitTracker
@@ -312,12 +307,7 @@ protected:
         config.emplace("cascadeFileName1", pathToModel + "combined.txt.model");
         config.emplace("cascadeFileName2", pathToModel + "combined.txt.model_");
         m_detector = BaseDetector::CreateDetector(detectorType, config, frame);
-        if (m_detector.get())
-        {
-            m_detector->SetMinObjectSize(cv::Size(frame.cols / 20, frame.rows / 20));
-            return true;
-        }
-        return false;
+		return (m_detector.get() != nullptr);
     }
     ///
     /// \brief InitTracker
@@ -390,66 +380,87 @@ protected:
 	bool InitDetector(cv::UMat frame) override
 	{
 		config_t config;
-
+		if (!m_trackerSettingsLoaded)
+		{
 #ifdef _WIN32
-		std::string pathToModel = "../../data/";
+			std::string pathToModel = "../../data/";
 #else
-		std::string pathToModel = "../data/";
+			std::string pathToModel = "../data/";
 #endif
-		enum class NNModels
-		{
-			TinyYOLOv3 = 0,
-			YOLOv3,
-			YOLOv4,
-			TinyYOLOv4,
-			MobileNetSSD
-		};
-		NNModels usedModel = NNModels::MobileNetSSD;
-		switch (usedModel)
-		{
-		case NNModels::TinyYOLOv3:
-			config.emplace("modelConfiguration", pathToModel + "yolov3-tiny.cfg");
-			config.emplace("modelBinary", pathToModel + "yolov3-tiny.weights");
-			config.emplace("classNames", pathToModel + "coco.names");
-			config.emplace("confidenceThreshold", "0.5");
-			break;
+			enum class NNModels
+			{
+				TinyYOLOv3 = 0,
+				YOLOv3,
+				YOLOv4,
+				TinyYOLOv4,
+				MobileNetSSD
+			};
+			NNModels usedModel = NNModels::MobileNetSSD;
+			switch (usedModel)
+			{
+			case NNModels::TinyYOLOv3:
+				config.emplace("modelConfiguration", pathToModel + "yolov3-tiny.cfg");
+				config.emplace("modelBinary", pathToModel + "yolov3-tiny.weights");
+				config.emplace("classNames", pathToModel + "coco.names");
+				config.emplace("confidenceThreshold", "0.5");
+				break;
 
-		case NNModels::YOLOv3:
-			config.emplace("modelConfiguration", pathToModel + "yolov3.cfg");
-			config.emplace("modelBinary", pathToModel + "yolov3.weights");
-			config.emplace("classNames", pathToModel + "coco.names");
-			config.emplace("confidenceThreshold", "0.7");
-			break;
+			case NNModels::YOLOv3:
+				config.emplace("modelConfiguration", pathToModel + "yolov3.cfg");
+				config.emplace("modelBinary", pathToModel + "yolov3.weights");
+				config.emplace("classNames", pathToModel + "coco.names");
+				config.emplace("confidenceThreshold", "0.7");
+				break;
 
-		case NNModels::YOLOv4:
-			config.emplace("modelConfiguration", pathToModel + "yolov4.cfg");
-			config.emplace("modelBinary", pathToModel + "yolov4.weights");
-			config.emplace("classNames", pathToModel + "coco.names");
-			config.emplace("confidenceThreshold", "0.5");
-			break;
+			case NNModels::YOLOv4:
+				config.emplace("modelConfiguration", pathToModel + "yolov4.cfg");
+				config.emplace("modelBinary", pathToModel + "yolov4.weights");
+				config.emplace("classNames", pathToModel + "coco.names");
+				config.emplace("confidenceThreshold", "0.5");
+				break;
 
-		case NNModels::TinyYOLOv4:
-			config.emplace("modelConfiguration", pathToModel + "yolov4-tiny.cfg");
-			config.emplace("modelBinary", pathToModel + "yolov4-tiny.weights");
-			config.emplace("classNames", pathToModel + "coco.names");
-			config.emplace("confidenceThreshold", "0.5");
-			break;
+			case NNModels::TinyYOLOv4:
+				config.emplace("modelConfiguration", pathToModel + "yolov4-tiny.cfg");
+				config.emplace("modelBinary", pathToModel + "yolov4-tiny.weights");
+				config.emplace("classNames", pathToModel + "coco.names");
+				config.emplace("confidenceThreshold", "0.5");
+				break;
 
-		case NNModels::MobileNetSSD:
-			config.emplace("modelConfiguration", pathToModel + "MobileNetSSD_deploy.prototxt");
-			config.emplace("modelBinary", pathToModel + "MobileNetSSD_deploy.caffemodel");
-			config.emplace("classNames", pathToModel + "voc.names");
-			config.emplace("confidenceThreshold", "0.5");
-			break;
+			case NNModels::MobileNetSSD:
+				config.emplace("modelConfiguration", pathToModel + "MobileNetSSD_deploy.prototxt");
+				config.emplace("modelBinary", pathToModel + "MobileNetSSD_deploy.caffemodel");
+				config.emplace("classNames", pathToModel + "voc.names");
+				config.emplace("confidenceThreshold", "0.5");
+				break;
+			}
+			config.emplace("maxCropRatio", "-1");
+
+			config.emplace("dnnTarget", "DNN_TARGET_CPU");
+			config.emplace("dnnBackend", "DNN_BACKEND_DEFAULT");
 		}
-		config.emplace("maxCropRatio", "-1");
+		else
+		{
+			config.emplace("modelConfiguration", m_trackerSettings.m_nnConfig);
+			config.emplace("modelBinary", m_trackerSettings.m_nnWeights);
+			config.emplace("confidenceThreshold", std::to_string(m_trackerSettings.m_confidenceThreshold));
+			config.emplace("classNames", m_trackerSettings.m_classNames);
+			config.emplace("maxCropRatio", std::to_string(m_trackerSettings.m_maxCropRatio));
+			config.emplace("maxBatch", std::to_string(m_trackerSettings.m_maxBatch));
+			config.emplace("gpuId", std::to_string(m_trackerSettings.m_gpuId));
+			config.emplace("net_type", m_trackerSettings.m_netType);
+			config.emplace("inference_precision", m_trackerSettings.m_inferencePrecision);
+			config.emplace("video_memory", std::to_string(m_trackerSettings.m_maxVideoMemory));
+			config.emplace("dnnTarget", m_trackerSettings.m_dnnTarget);
+			config.emplace("dnnBackend", m_trackerSettings.m_dnnBackend);
+			config.emplace("inWidth", std::to_string(m_trackerSettings.m_inputSize.width));
+			config.emplace("inHeight", std::to_string(m_trackerSettings.m_inputSize.height));
 
-		config.emplace("dnnTarget", "DNN_TARGET_CPU");
-		config.emplace("dnnBackend", "DNN_BACKEND_DEFAULT");
-
+			for (auto wname : m_trackerSettings.m_whiteList)
+			{
+				config.emplace("white_list", wname);
+			}
+		}
 		m_detector = BaseDetector::CreateDetector(tracking::Detectors::DNN_OCV, config, frame);
-		if (m_detector.get())
-			m_detector->SetMinObjectSize(cv::Size(frame.cols / 40, frame.rows / 40));
 		return (m_detector.get() != nullptr);
 	}
 
@@ -462,23 +473,23 @@ protected:
 	{
 		if (!m_trackerSettingsLoaded)
 		{
-		m_trackerSettings.SetDistance(tracking::DistCenters);
-		m_trackerSettings.m_kalmanType = tracking::KalmanLinear;
-		m_trackerSettings.m_filterGoal = tracking::FilterRect;
-		m_trackerSettings.m_lostTrackType = tracking::TrackCSRT;      // Use visual objects tracker for collisions resolving. Used if m_filterGoal == tracking::FilterRect
-		m_trackerSettings.m_matchType = tracking::MatchHungrian;
-		m_trackerSettings.m_useAcceleration = false;                   // Use constant acceleration motion model
-		m_trackerSettings.m_dt = m_trackerSettings.m_useAcceleration ? 0.05f : 0.4f; // Delta time for Kalman filter
-		m_trackerSettings.m_accelNoiseMag = 0.2f;                     // Accel noise magnitude for Kalman filter
-		m_trackerSettings.m_distThres = 0.8f;                         // Distance threshold between region and object on two frames
+			m_trackerSettings.SetDistance(tracking::DistCenters);
+			m_trackerSettings.m_kalmanType = tracking::KalmanLinear;
+			m_trackerSettings.m_filterGoal = tracking::FilterRect;
+			m_trackerSettings.m_lostTrackType = tracking::TrackCSRT;      // Use visual objects tracker for collisions resolving. Used if m_filterGoal == tracking::FilterRect
+			m_trackerSettings.m_matchType = tracking::MatchHungrian;
+			m_trackerSettings.m_useAcceleration = false;                   // Use constant acceleration motion model
+			m_trackerSettings.m_dt = m_trackerSettings.m_useAcceleration ? 0.05f : 0.4f; // Delta time for Kalman filter
+			m_trackerSettings.m_accelNoiseMag = 0.2f;                     // Accel noise magnitude for Kalman filter
+			m_trackerSettings.m_distThres = 0.8f;                         // Distance threshold between region and object on two frames
 #if 0
-		m_trackerSettings.m_minAreaRadiusPix = frame.rows / 20.f;
+			m_trackerSettings.m_minAreaRadiusPix = frame.rows / 20.f;
 #else
-		m_trackerSettings.m_minAreaRadiusPix = -1.f;
+			m_trackerSettings.m_minAreaRadiusPix = -1.f;
 #endif
-		m_trackerSettings.m_minAreaRadiusK = 0.8f;
-		m_trackerSettings.m_maximumAllowedSkippedFrames = cvRound(2 * m_fps); // Maximum allowed skipped frames
-		m_trackerSettings.m_maxTraceLength = cvRound(2 * m_fps);      // Maximum trace length
+			m_trackerSettings.m_minAreaRadiusK = 0.8f;
+			m_trackerSettings.m_maximumAllowedSkippedFrames = cvRound(2 * m_fps); // Maximum allowed skipped frames
+			m_trackerSettings.m_maxTraceLength = cvRound(2 * m_fps);      // Maximum trace length
 		}
 		m_tracker = BaseTracker::CreateTracker(m_trackerSettings);
 		return true;
@@ -649,12 +660,7 @@ protected:
         }
 
         m_detector = BaseDetector::CreateDetector(tracking::Detectors::Yolo_Darknet, config, frame);
-        if (m_detector.get())
-        {
-            m_detector->SetMinObjectSize(cv::Size(frame.cols / 40, frame.rows / 40));
-            return true;
-        }
-        return false;
+		return (m_detector.get() != nullptr);
     }
 
     ///
@@ -834,7 +840,8 @@ protected:
                 YOLOv5,
                 YOLOv6,
                 YOLOv7,
-				YOLOv7Mask
+				YOLOv7Mask,
+				YOLOv8
             };
             YOLOModels usedModel = YOLOModels::YOLOv5;
             switch (usedModel)
@@ -918,6 +925,16 @@ protected:
 				maxBatch = 1;
 				config.emplace("maxCropRatio", "-1");
 				break;
+
+			case YOLOModels::YOLOv8:
+				config.emplace("modelConfiguration", pathToModel + "yolov8s.onnx");
+				config.emplace("modelBinary", pathToModel + "yolov8s.onnx");
+				config.emplace("confidenceThreshold", "0.2");
+				config.emplace("inference_precision", "FP32");
+				config.emplace("net_type", "YOLOV8");
+				maxBatch = 1;
+				config.emplace("maxCropRatio", "-1");
+				break;
             }
             if (maxBatch < m_batchSize)
                 maxBatch = m_batchSize;
@@ -951,12 +968,7 @@ protected:
         }
 
 		m_detector = BaseDetector::CreateDetector(tracking::Detectors::Yolo_TensorRT, config, frame);
-		if (m_detector.get())
-		{
-			m_detector->SetMinObjectSize(cv::Size(frame.cols / 40, frame.rows / 40));
-			return true;
-		}
-		return false;
+		return (m_detector.get() != nullptr);
 	}
 
 	///
