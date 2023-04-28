@@ -392,7 +392,6 @@ void AsyncDetector::DetectThread(const config_t& config, cv::Mat firstFrame, Fra
 {
 	cv::UMat ufirst = firstFrame.getUMat(cv::ACCESS_READ);
     std::unique_ptr<BaseDetector> detector = BaseDetector::CreateDetector(tracking::Detectors::Yolo_Darknet, config, ufirst);
-    detector->SetMinObjectSize(cv::Size(firstFrame.cols / 50, firstFrame.cols / 50));
 
     for (; !(*stopFlag);)
     {

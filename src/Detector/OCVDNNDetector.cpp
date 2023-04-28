@@ -190,10 +190,17 @@ bool OCVDNNDetector::Init(const config_t& config)
         if (outputs.size() && outputs[0].size() > 3)
         {
             std::cout << "outputs = [" << outputs[0][0] << ", " << outputs[0][1] << ", " << outputs[0][2]  << ", " << outputs[0][3] << "], internals = [" << internals[0][0] << ", " << internals[0][1] << ", " << internals[0][2]  << ", " << internals[0][3] << "]" << std::endl;
-
-            m_inWidth = outputs[0][2];
-            m_inHeight = outputs[0][3];
+            if (!m_inWidth || !m_inHeight)
+            {
+                m_inWidth = outputs[0][2];
+                m_inHeight = outputs[0][3];
+            }
         }
+    }
+    if (!m_inWidth || !m_inHeight)
+    {
+        m_inWidth = 608;
+        m_inHeight = 608;
     }
     m_WHRatio = static_cast<float>(m_inWidth) / static_cast<float>(m_inHeight);
 
