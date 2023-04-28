@@ -6,6 +6,9 @@
 #include "ldes/ldes_tracker.h"
 #endif
 
+#include "Circular_Code/CircVal.h"
+#include "Circular_Code/CircStat.h"
+
 ///
 /// \brief CTrack
 /// \param pt
@@ -281,7 +284,7 @@ void CTrack::Update(const CRegion& region,
 	switch (m_filterGoal)
 	{
 	case tracking::FilterGoal::FilterCenter:
-		PointUpdate(region.m_rrect.center, region.m_rrect.size, dataCorrect, currFrame.size());
+		PointUpdate(region.m_rrect.center, region.m_rrect.size, region.m_rrect.angle, dataCorrect, currFrame.size());
 		break;
 	case tracking::FilterGoal::FilterRect:
 		RectUpdate(region, dataCorrect, prevFrame, currFrame);
@@ -332,7 +335,7 @@ void CTrack::Update(const CRegion& region,
 	switch (m_filterGoal)
 	{
 	case tracking::FilterGoal::FilterCenter:
-		PointUpdate(region.m_rrect.center, region.m_rrect.size, dataCorrect, currFrame.size());
+		PointUpdate(region.m_rrect.center, region.m_rrect.size, region.m_rrect.angle, dataCorrect, currFrame.size());
 		break;
 	case tracking::FilterGoal::FilterRect:
 		RectUpdate(region, dataCorrect, prevFrame, currFrame);
@@ -810,7 +813,7 @@ void CTrack::RectUpdate(const CRegion& region,
                 cv::Rect prect(newRect.x + roiRect.x, newRect.y + roiRect.y, newRect.width, newRect.height);
 #endif
                 //trackedRRect = cv::RotatedRect(prect.tl(), cv::Point2f(static_cast<float>(prect.x + prect.width), static_cast<float>(prect.y)), prect.br());
-                trackedRRect = cv::RotatedRect(cv::Point2f(prect.x + prect.width / 2.f, prect.y + prect.height / 2.f), cv::Size2f(prect.width, prect.height), 0);
+                trackedRRect = cv::RotatedRect(cv::Point2f(prect.x + prect.width / 2.f, prect.y + prect.height / 2.f), cv::Size2f(static_cast<float>(prect.width), static_cast<float>(prect.height)), 0);
                 wasTracked = true;
             }
         }
@@ -1148,6 +1151,7 @@ void CTrack::CreateExternalTracker(int channels)
 ///
 void CTrack::PointUpdate(const Point_t& pt,
                          const cv::Size& newObjSize,
+                         float newAngle,
                          bool dataCorrect,
                          const cv::Size& frameSize)
 {
@@ -1159,6 +1163,19 @@ void CTrack::PointUpdate(const Point_t& pt,
         const int a2 = 9;
         m_predictionRect.size.width = (a1 * newObjSize.width + a2 * m_predictionRect.size.width) / (a1 + a2);
         m_predictionRect.size.height = (a1 * newObjSize.height + a2 * m_predictionRect.size.height) / (a1 + a2);
+
+        std::vector<std::pair<CircVal<UnsignedDegRange>, double>> angles;
+
+        angles.push_back(std::make_pair(static_cast<double>(m_predictionRect.angle), 0.1));
+        angles.push_back(std::make_pair(static_cast<double>(newAngle), 0.9));
+        auto vals = WeightedCircAverage(angles);
+        //std::cout << "[" << m_predictionRect.angle << ", " << newAngle << "] -> ";
+        //for (auto v : vals)
+        //{
+        //    std::cout << v.operator double() << " ";
+        //}
+        //std::cout << std::endl;
+        m_predictionRect.angle = static_cast<float>(vals.begin()->operator double());
     }
 
     auto Clamp = [](track_t& v, int hi) -> bool
@@ -1179,5 +1196,5 @@ void CTrack::PointUpdate(const Point_t& pt,
     m_outOfTheFrame = Clamp(p.x, frameSize.width) || Clamp(p.y, frameSize.height) || (m_predictionRect.size.width < 1) || (m_predictionRect.size.height < 1);
 
 	//std::cout << "CTrack::PointUpdate: m_predictionRect: " << m_predictionRect.center << ", " << m_predictionRect.angle << ", " << m_predictionRect.size << std::endl;
-    //std::cout << GetID().ID2Str() << ": predictionRect = " << m_predictionRect.boundingRect() << ", outOfTheFrame = " << m_outOfTheFrame << ", predictionPoint = " << m_predictionPoint << std::endl;
+    //std::cout << GetID().ID2Str() << ": predictionRect = " << m_predictionRect.boundingRect() << ", outOfTheFrame = " << m_outOfTheFrame << ", predictionPoint = " << m_predictionPoint << ", newAngle = " << newAngle << std::endl;
 }

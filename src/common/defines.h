@@ -315,7 +315,12 @@ inline bool SaveMat(const cv::Mat& m, std::string prefix, const std::string& ext
     }
     else
     {
-        FILE* f = fopen(prefix.c_str(), "wb");
+        FILE* f = 0;
+#ifdef _WIN32
+        fopen_s(&f, prefix.c_str(), "wb");
+#else
+        f = fopen(prefix.c_str(), "wb");
+#endif // _WIN32
         res = f != 0;
         if (res)
         {

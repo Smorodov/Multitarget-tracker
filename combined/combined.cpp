@@ -190,7 +190,7 @@ void CombinedDetector::DetectAndTrack(cv::Mat frame)
 	{
 		if (track.m_isStatic)
         {
-			//m_detectorBGFG->UpdateIgnoreMask(uGray, track.m_rrect.boundingRect());
+			m_detectorBGFG->UpdateIgnoreMask(uGray, track.m_rrect.boundingRect());
         }
 	}
 
@@ -199,6 +199,7 @@ void CombinedDetector::DetectAndTrack(cv::Mat frame)
     const regions_t& regsBGFG = m_detectorBGFG->GetDetects();
 
 	m_trackerBGFG->Update(regsBGFG, uGray, m_fps);
+	m_trackerBGFG->Update(regions_t(), uGray, m_fps);
 
 	m_trackerBGFG->GetTracks(m_tracksBGFG);
 	for (const auto& bbox : m_oldBoxes)
@@ -314,45 +315,122 @@ bool CombinedDetector::InitDetector(cv::UMat frame)
 #else
 	std::string pathToModel = "../data/";
 #endif
+	size_t maxBatch = 1;
 	enum class YOLOModels
 	{
 		TinyYOLOv3 = 0,
 		YOLOv3,
-		YOLOv4
+		YOLOv4,
+		TinyYOLOv4,
+		YOLOv5,
+		YOLOv6,
+		YOLOv7,
+		YOLOv7Mask,
+		YOLOv8
 	};
-	YOLOModels usedModel = YOLOModels::YOLOv4;
+	YOLOModels usedModel = YOLOModels::YOLOv7Mask;
 	switch (usedModel)
 	{
 	case YOLOModels::TinyYOLOv3:
 		configDNN.emplace("modelConfiguration", pathToModel + "yolov3-tiny.cfg");
 		configDNN.emplace("modelBinary", pathToModel + "yolov3-tiny.weights");
 		configDNN.emplace("confidenceThreshold", "0.5");
+		configDNN.emplace("inference_precision", "FP32");
+		configDNN.emplace("net_type", "YOLOV3");
+		maxBatch = 4;
+		configDNN.emplace("maxCropRatio", "2");
 		break;
 
 	case YOLOModels::YOLOv3:
 		configDNN.emplace("modelConfiguration", pathToModel + "yolov3.cfg");
 		configDNN.emplace("modelBinary", pathToModel + "yolov3.weights");
 		configDNN.emplace("confidenceThreshold", "0.7");
+		configDNN.emplace("inference_precision", "FP32");
+		configDNN.emplace("net_type", "YOLOV3");
+		maxBatch = 2;
+		configDNN.emplace("maxCropRatio", "-1");
 		break;
 
 	case YOLOModels::YOLOv4:
 		configDNN.emplace("modelConfiguration", pathToModel + "yolov4.cfg");
 		configDNN.emplace("modelBinary", pathToModel + "yolov4.weights");
+		configDNN.emplace("confidenceThreshold", "0.4");
+		configDNN.emplace("inference_precision", "FP32");
+		configDNN.emplace("net_type", "YOLOV4");
+		maxBatch = 1;
+		configDNN.emplace("maxCropRatio", "-1");
+		break;
+
+	case YOLOModels::TinyYOLOv4:
+		configDNN.emplace("modelConfiguration", pathToModel + "yolov4-tiny.cfg");
+		configDNN.emplace("modelBinary", pathToModel + "yolov4-tiny.weights");
 		configDNN.emplace("confidenceThreshold", "0.5");
+		configDNN.emplace("inference_precision", "FP32");
+		configDNN.emplace("net_type", "YOLOV4_TINY");
+		maxBatch = 1;
+		configDNN.emplace("maxCropRatio", "-1");
+		break;
+
+	case YOLOModels::YOLOv5:
+		configDNN.emplace("modelConfiguration", pathToModel + "yolov5s.cfg");
+		configDNN.emplace("modelBinary", pathToModel + "yolov5s.weights");
+		configDNN.emplace("confidenceThreshold", "0.5");
+		configDNN.emplace("inference_precision", "FP32");
+		configDNN.emplace("net_type", "YOLOV5");
+		maxBatch = 1;
+		configDNN.emplace("maxCropRatio", "-1");
+		break;
+
+	case YOLOModels::YOLOv6:
+		configDNN.emplace("modelConfiguration", pathToModel + "yolov6s.onnx");
+		configDNN.emplace("modelBinary", pathToModel + "yolov6s.onnx");
+		configDNN.emplace("confidenceThreshold", "0.5");
+		configDNN.emplace("inference_precision", "FP32");
+		configDNN.emplace("net_type", "YOLOV6");
+		maxBatch = 1;
+		configDNN.emplace("maxCropRatio", "-1");
+		break;
+
+	case YOLOModels::YOLOv7:
+		configDNN.emplace("modelConfiguration", pathToModel + "yolov7.onnx");
+		configDNN.emplace("modelBinary", pathToModel + "yolov7.onnx");
+		configDNN.emplace("confidenceThreshold", "0.2");
+		configDNN.emplace("inference_precision", "FP32");
+		configDNN.emplace("net_type", "YOLOV7");
+		maxBatch = 1;
+		configDNN.emplace("maxCropRatio", "-1");
+		break;
+
+	case YOLOModels::YOLOv7Mask:
+		configDNN.emplace("modelConfiguration", pathToModel + "yolov7-seg_orig.onnx");
+		configDNN.emplace("modelBinary", pathToModel + "yolov7-seg_orig.onnx");
+		configDNN.emplace("confidenceThreshold", "0.2");
+		configDNN.emplace("inference_precision", "FP16");
+		configDNN.emplace("net_type", "YOLOV7Mask");
+		maxBatch = 1;
+		configDNN.emplace("maxCropRatio", "-1");
+		break;
+
+	case YOLOModels::YOLOv8:
+		configDNN.emplace("modelConfiguration", pathToModel + "yolov8s.onnx");
+		configDNN.emplace("modelBinary", pathToModel + "yolov8s.onnx");
+		configDNN.emplace("confidenceThreshold", "0.2");
+		configDNN.emplace("inference_precision", "FP32");
+		configDNN.emplace("net_type", "YOLOV8");
+		maxBatch = 1;
+		configDNN.emplace("maxCropRatio", "-1");
 		break;
 	}
+	configDNN.emplace("maxBatch", std::to_string(maxBatch));
 	configDNN.emplace("classNames", pathToModel + "coco.names");
 	configDNN.emplace("maxCropRatio", "-1");
 
     configDNN.emplace("white_list", "person");
-    configDNN.emplace("white_list", "car");
-    configDNN.emplace("white_list", "bicycle");
-    configDNN.emplace("white_list", "motorbike");
-    configDNN.emplace("white_list", "bus");
-    configDNN.emplace("white_list", "truck");
-    configDNN.emplace("white_list", "vehicle");
+    configDNN.emplace("white_list", "backpack");
+    configDNN.emplace("white_list", "handbag");
+    configDNN.emplace("white_list", "suitcase");
 
-	m_detectorDNN = BaseDetector::CreateDetector(tracking::Detectors::Yolo_Darknet, configDNN, frame);
+	m_detectorDNN = BaseDetector::CreateDetector(tracking::Detectors::Yolo_TensorRT, configDNN, frame);
 	if (m_detectorDNN.get())
 		m_detectorDNN->SetMinObjectSize(cv::Size(frame.cols / 40, frame.rows / 40));
 
@@ -416,10 +494,24 @@ bool CombinedDetector::InitTracker(cv::UMat frame)
 	settingsDNN.m_minAreaRadiusPix = -1.f;
 #endif
 	settingsDNN.m_minAreaRadiusK = 0.8f;
-	settingsDNN.m_maximumAllowedSkippedFrames = cvRound(2 * m_fps); // Maximum allowed skipped frames
-	settingsDNN.m_maxTraceLength = cvRound(5 * m_fps);      // Maximum trace length
 
-	//settingsDNN.AddNearTypes("person", "motorbike", true);
+	settingsDNN.m_useAbandonedDetection = true;
+	if (settingsDNN.m_useAbandonedDetection)
+	{
+		settingsDNN.m_minStaticTime = m_minStaticTime;
+		settingsDNN.m_maxStaticTime = 30;
+		settingsDNN.m_maximumAllowedSkippedFrames = cvRound(settingsDNN.m_minStaticTime * m_fps); // Maximum allowed skipped frames
+		settingsDNN.m_maxTraceLength = 2 * settingsDNN.m_maximumAllowedSkippedFrames;        // Maximum trace length
+	}
+	else
+	{
+		settingsDNN.m_maximumAllowedSkippedFrames = cvRound(2 * m_fps); // Maximum allowed skipped frames
+		settingsDNN.m_maxTraceLength = cvRound(4 * m_fps);              // Maximum trace length
+	}
+
+	settingsDNN.AddNearTypes(TypeConverter::Str2Type("backpack"), TypeConverter::Str2Type("handbag"), true);
+	settingsDNN.AddNearTypes(TypeConverter::Str2Type("backpack"), TypeConverter::Str2Type("suitcase"), true);
+	settingsDNN.AddNearTypes(TypeConverter::Str2Type("suitcase"), TypeConverter::Str2Type("handbag"), true);
 
 	m_trackerDNN = BaseTracker::CreateTracker(settingsDNN);
 
@@ -484,7 +576,8 @@ void CombinedDetector::DrawData(cv::Mat frame, int framesCounter, int currTime)
 		}
 	}
 
-	m_detectorBGFG->CalcMotionMap(frame);
+	//m_detectorBGFG->CalcMotionMap(frame);
+	m_detectorDNN->CalcMotionMap(frame);
 
 	for (const auto& track : m_tracksDNN)
 	{
@@ -495,6 +588,8 @@ void CombinedDetector::DrawData(cv::Mat frame, int framesCounter, int currTime)
 			DrawTrack(frame, 1, track);
 
 			std::stringstream label;
+			if (track.m_isStatic)
+				label << "abandoned ";
 			label << TypeConverter::Type2Str(track.m_type) << " " << track.m_ID.ID2Str();// << "): " << std::fixed << std::setw(2) << std::setprecision(2) << track.m_confidence;
 			int baseLine = 0;
 			cv::Size labelSize = cv::getTextSize(label.str(), cv::FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
@@ -520,7 +615,7 @@ void CombinedDetector::DrawData(cv::Mat frame, int framesCounter, int currTime)
 				brect.y = std::max(0, frame.rows - brect.height - 1);
 				brect.height = std::min(brect.height, frame.rows - 1);
 			}
-			DrawFilledRect(frame, cv::Rect(cv::Point(brect.x, brect.y - labelSize.height), cv::Size(labelSize.width, labelSize.height + baseLine)), cv::Scalar(200, 200, 200), 150);
+			DrawFilledRect(frame, cv::Rect(cv::Point(brect.x, brect.y - labelSize.height), cv::Size(labelSize.width, labelSize.height + baseLine)), track.m_isStatic ? cv::Scalar(200, 0, 200) : cv::Scalar(200, 200, 200), 150);
 			cv::putText(frame, label.str(), brect.tl(), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 0, 0));
 		}
 	}

@@ -156,7 +156,7 @@ private:
     void CreateExternalTracker(int channels);
 
     ///
-    void PointUpdate(const Point_t& pt, const cv::Size& newObjSize, bool dataCorrect, const cv::Size& frameSize);
+    void PointUpdate(const Point_t& pt, const cv::Size& newObjSize, float newAngle, bool dataCorrect, const cv::Size& frameSize);
 
     RegionEmbedding m_regionEmbedding;
 

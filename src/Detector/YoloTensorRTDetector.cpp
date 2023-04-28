@@ -286,7 +286,7 @@ void YoloTensorRTDetector::CalcMotionMap(cv::Mat& frame)
 		static std::vector<cv::Scalar> color;
 		if (color.empty())
 		{
-			srand(time(0));
+			srand((unsigned int)time(0));
 			for (int i = 0; i < m_classNames.size(); i++)
 			{
 				int b = rand() % 256;

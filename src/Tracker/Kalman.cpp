@@ -17,12 +17,10 @@ namespace kalman = cv::detail::tracking;
 /// \param deltaTime
 /// \param accelNoiseMag
 ///
-TKalmanFilter::TKalmanFilter(
-        tracking::KalmanType type,
-	    bool useAcceleration,
-        track_t deltaTime, // time increment (lower values makes target more "massive")
-        track_t accelNoiseMag
-        )
+TKalmanFilter::TKalmanFilter(tracking::KalmanType type,
+                             bool useAcceleration,
+                             track_t deltaTime, // time increment (lower values makes target more "massive")
+                             track_t accelNoiseMag)
     :
       m_accelNoiseMag(accelNoiseMag),
       m_deltaTime(deltaTime),

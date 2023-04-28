@@ -704,7 +704,7 @@ void YoloONNX::ProcessMaskOutput(size_t imgIdx, const std::vector<float*>& outpu
                 if (br.width >= 4 &&
                     br.height >= 4)
 				{
-					cv::RotatedRect rr = cv::minAreaRect(contour);
+					cv::RotatedRect rr = (contour.size() < 5) ? cv::minAreaRect(contour) : cv::fitEllipse(contour);
 
                     br.x += resBoxes[i].m_brect.x;
                     br.y += resBoxes[i].m_brect.y;
