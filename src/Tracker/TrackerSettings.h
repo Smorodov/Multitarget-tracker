@@ -128,14 +128,16 @@ struct TrackerSettings
     int m_gpuId = 0;
 
     ///
+    /// \brief Neural network input size
+    cv::Size m_inputSize{ 0, 0 };
+
+    ///
     /// YOLOV2
     /// YOLOV3
-    /// YOLOV2_TINY
-    /// YOLOV3_TINY
     /// YOLOV4
     /// YOLOV4_TINY
     /// YOLOV5
-    std::string m_netType = "YOLOV4_TINY";
+    std::string m_netType = "YOLOV4";
 
     ///
     /// INT8
@@ -166,8 +168,8 @@ struct TrackerSettings
     // DNN_BACKEND_INFERENCE_ENGINE_NN_BUILDER_2019
     std::string m_dnnBackend = "DNN_BACKEND_OPENCV";
 
-	// For TensorRT optimization, bytes
-	size_t m_maxVideoMemory = 0;
+    // For TensorRT optimization, bytes
+    size_t m_maxVideoMemory = 0;
 
     ///
     struct EmbeddingParams

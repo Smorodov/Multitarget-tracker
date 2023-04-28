@@ -586,7 +586,9 @@ void VideoExample::DrawTrack(cv::Mat frame,
     cv::Rect brect = track.m_rrect.boundingRect();
     std::string label = track.m_ID.ID2Str();
     if (track.m_type != bad_type)
-        label += " (" + TypeConverter::Type2Str(track.m_type) + ")";
+        label += ": " + TypeConverter::Type2Str(track.m_type);
+    if (track.m_confidence > 0)
+        label += ", " + std::to_string(track.m_confidence);
 #if 0
     track_t mean = 0;
     track_t stddev = 0;

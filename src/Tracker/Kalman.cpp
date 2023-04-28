@@ -17,12 +17,10 @@ namespace kalman = cv::detail::tracking;
 /// \param deltaTime
 /// \param accelNoiseMag
 ///
-TKalmanFilter::TKalmanFilter(
-        tracking::KalmanType type,
-	    bool useAcceleration,
-        track_t deltaTime, // time increment (lower values makes target more "massive")
-        track_t accelNoiseMag
-        )
+TKalmanFilter::TKalmanFilter(tracking::KalmanType type,
+                             bool useAcceleration,
+                             track_t deltaTime, // time increment (lower values makes target more "massive")
+                             track_t accelNoiseMag)
     :
       m_accelNoiseMag(accelNoiseMag),
       m_deltaTime(deltaTime),
@@ -152,7 +150,7 @@ void TKalmanFilter::CreateLinear(cv::Rect_<track_t> rect0, Point_t rectv0)
 
     cv::setIdentity(m_linearKalman.errorCovPost, cv::Scalar::all(.1));
 
-	m_initialRects.reserve(MIN_INIT_VALS);
+    m_initialRects.reserve(MIN_INIT_VALS);
 
     m_initialized = true;
 }
@@ -374,7 +372,7 @@ void TKalmanFilter::CreateLinearAcceleration(cv::Rect_<track_t> rect0, Point_t r
 
     m_initialRects.reserve(MIN_INIT_VALS);
 
-	m_initialized = true;
+    m_initialized = true;
 }
 
 ///

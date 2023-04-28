@@ -56,7 +56,7 @@ namespace tensor_rt
             // Input tensor name of ONNX file & engine file
             if (config.net_type == ModelType::YOLOV6)
                 m_params.inputTensorNames.push_back("image_arrays");
-            else if (config.net_type == ModelType::YOLOV7 || config.net_type == ModelType::YOLOV7Mask)
+            else if (config.net_type == ModelType::YOLOV7 || config.net_type == ModelType::YOLOV7Mask || config.net_type == ModelType::YOLOV8)
                 m_params.inputTensorNames.push_back("images");
 
             // Threshold values
@@ -76,12 +76,14 @@ namespace tensor_rt
             {
                 m_params.outputTensorNames.push_back("outputs");
             }
-            else if (config.net_type == ModelType::YOLOV7 || config.net_type == ModelType::YOLOV7Mask)
+            else if (config.net_type == ModelType::YOLOV7 || config.net_type == ModelType::YOLOV7Mask || config.net_type == ModelType::YOLOV8)
             {
                 //if (config.batch_size == 1)
                 //{
-                    m_params.outputTensorNames.push_back("output");
-                    m_params.outputTensorNames.push_back("516");
+                    m_params.outputTensorNames.push_back("output");   //
+                    m_params.outputTensorNames.push_back("516");      // For YOLOv7 instance segmentation
+
+                    m_params.outputTensorNames.push_back("output0");  // For YOLOv8
                 //}
                 //else
                 //{
@@ -158,7 +160,7 @@ namespace tensor_rt
         if (m_impl)
             delete m_impl;
 
-        if (config.net_type == ModelType::YOLOV6 || config.net_type == ModelType::YOLOV7 || config.net_type == ModelType::YOLOV7Mask)
+        if (config.net_type == ModelType::YOLOV6 || config.net_type == ModelType::YOLOV7 || config.net_type == ModelType::YOLOV7Mask || config.net_type == ModelType::YOLOV8)
             m_impl = new YoloONNXImpl();
         else
             m_impl = new YoloDectectorImpl();

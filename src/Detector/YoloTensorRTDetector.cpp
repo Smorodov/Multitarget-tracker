@@ -100,6 +100,7 @@ bool YoloTensorRTDetector::Init(const config_t& config)
         dictNetType["YOLOV6"] = tensor_rt::YOLOV6;
         dictNetType["YOLOV7"] = tensor_rt::YOLOV7;
 		dictNetType["YOLOV7Mask"] = tensor_rt::YOLOV7Mask;
+		dictNetType["YOLOV8"] = tensor_rt::YOLOV8;
 
 		auto netType = dictNetType.find(net_type->second);
 		if (netType != dictNetType.end())
@@ -201,8 +202,8 @@ void YoloTensorRTDetector::Detect(const cv::UMat& colorFrame)
         std::vector<cv::Rect> crops = GetCrops(m_maxCropRatio, m_detector->GetInputSize(), colorMat.size());
         //std::cout << "Image on " << crops.size() << " crops with size " << crops.front().size() << ", input size " << m_detector->GetInputSize() << ", batch " << m_batchSize << ", frame " << colorMat.size() << std::endl;
         regions_t tmpRegions;
-		std::vector<cv::Mat> batch;
-		batch.reserve(m_batchSize);
+        std::vector<cv::Mat> batch;
+        batch.reserve(m_batchSize);
         for (size_t i = 0; i < crops.size(); i += m_batchSize)
         {
             size_t batchSize = std::min(static_cast<size_t>(m_batchSize), crops.size() - i);
@@ -212,7 +213,7 @@ void YoloTensorRTDetector::Detect(const cv::UMat& colorFrame)
 				batch.emplace_back(colorMat, crops[i + j]);
 			}
 			std::vector<tensor_rt::BatchResult> detects;
-            m_detector->Detect(batch, detects);
+			m_detector->Detect(batch, detects);
 			
 			for (size_t j = 0; j < batchSize; ++j)
 			{
@@ -229,11 +230,11 @@ void YoloTensorRTDetector::Detect(const cv::UMat& colorFrame)
 
 		if (crops.size() > 1)
 		{
-			nms3<CRegion>(tmpRegions, m_regions, 0.4f,
+			nms3<CRegion>(tmpRegions, m_regions, static_cast<track_t>(0.4),
 				[](const CRegion& reg) { return reg.m_brect; },
 				[](const CRegion& reg) { return reg.m_confidence; },
 				[](const CRegion& reg) { return reg.m_type; },
-				0, 0.f);
+				0, static_cast<track_t>(0));
 			//std::cout << "nms for " << tmpRegions.size() << " objects - result " << m_regions.size() << std::endl;
 		}
     }
@@ -285,7 +286,7 @@ void YoloTensorRTDetector::CalcMotionMap(cv::Mat& frame)
 		static std::vector<cv::Scalar> color;
 		if (color.empty())
 		{
-			srand(time(0));
+			srand((unsigned int)time(0));
 			for (int i = 0; i < m_classNames.size(); i++)
 			{
 				int b = rand() % 256;
