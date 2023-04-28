@@ -162,11 +162,11 @@ void YoloDarknetDetector::Detect(const cv::UMat& colorFrame)
 
 		if (crops.size() > 1 || m_batchSize > 1)
 		{
-			nms3<CRegion>(tmpRegions, m_regions, 0.4f,
+			nms3<CRegion>(tmpRegions, m_regions, static_cast<track_t>(0.4),
 				[](const CRegion& reg) { return reg.m_brect; },
 				[](const CRegion& reg) { return reg.m_confidence; },
 				[](const CRegion& reg) { return reg.m_type; },
-				0, 0.f);
+				0, static_cast<track_t>(0));
 			//std::cout << "nms for " << tmpRegions.size() << " objects - result " << m_regions.size() << std::endl;
 		}
 	}
@@ -324,7 +324,6 @@ void YoloDarknetDetector::Detect(const std::vector<cv::UMat>& frames, std::vecto
 	{
 		Detect(frames[0]);
 		regions[0] = m_regions;
-
 	}
 	else
 	{
@@ -351,11 +350,11 @@ void YoloDarknetDetector::Detect(const std::vector<cv::UMat>& frames, std::vecto
 					tmpRegions.emplace_back(cv::Rect(cvRound(wk * bbox.x), cvRound(hk * bbox.y), cvRound(wk * bbox.w), cvRound(hk * bbox.h)), T2T(bbox.obj_id), bbox.prob);
 			}
 
-			nms3<CRegion>(tmpRegions, regions[i], 0.4f,
+			nms3<CRegion>(tmpRegions, regions[i], static_cast<track_t>(0.4),
 				[](const CRegion& reg) { return reg.m_brect; },
 				[](const CRegion& reg) { return reg.m_confidence; },
 				[](const CRegion& reg) { return reg.m_type; },
-				0, 0.f);
+				0, static_cast<track_t>(0));
 		}
 
 		m_regions.assign(std::begin(regions.back()), std::end(regions.back()));

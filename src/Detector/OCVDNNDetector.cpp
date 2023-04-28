@@ -227,7 +227,7 @@ void OCVDNNDetector::Detect(const cv::UMat& colorFrame)
         [](const CRegion& reg) { return reg.m_brect; },
         [](const CRegion& reg) { return reg.m_confidence; },
         [](const CRegion& reg) { return reg.m_type; },
-        0, 0.f);
+        0, static_cast<track_t>(0));
 }
 
 ///
