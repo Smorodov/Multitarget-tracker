@@ -14,6 +14,7 @@
 #include <assert.h>
 #include <set>
 #include <vector>
+#include <limits>
 #include <algorithm> // sort
 
 // ==========================================================================
@@ -92,7 +93,7 @@ std::set<CircVal<T>> CircAverage(std::vector<CircVal<T>> const& A)
     }
 
     sort(LowerAngles.begin(), LowerAngles.end()                   ); // ascending   [  0,180)
-    sort(UpperAngles.begin(), UpperAngles.end(), greater<double>()); // descending  (360,180)
+    sort(UpperAngles.begin(), UpperAngles.end(), std::greater<double>()); // descending  (360,180)
 
     // ----------------------------------------------
     // start with avrg= 180, sets c,d are empty
@@ -349,7 +350,7 @@ public:
 
             double fIntervalAvrg  = CircVal<T>::Wrap((double)m_fPrevVal + CircVal<T>::Sdist(m_fPrevVal, fVal)/2.);
             double fIntervalWeight= fTime-m_fPrevTime                                                            ;
-            m_Intervals.push_back(make_pair(fIntervalAvrg, fIntervalWeight));
+            m_Intervals.push_back(std::make_pair(fIntervalAvrg, fIntervalWeight));
         }
 
         m_fPrevVal = fVal ;
@@ -384,14 +385,14 @@ public:
 template<typename T>
 std::set<CircVal<T>> CircMedian(std::vector<CircVal<T>> const& A)
 {
-    set <CircVal<T>> X;           // results set
+    std::set<CircVal<T>> X;           // results set
 
     // ----------------------------------------------
-    set<CircVal<T>> B;
+    std::set<CircVal<T>> B;
     if (A.size() % 2 == 0)        // even number of values
     {
         auto S= A;
-        sort(S.begin(), S.end()); // A, sorted
+        std::sort(S.begin(), S.end()); // A, sorted
 
         for (size_t m= 0; m < S.size(); ++m)
         {
@@ -409,13 +410,13 @@ std::set<CircVal<T>> CircMedian(std::vector<CircVal<T>> const& A)
             B.insert(A[m]);       // convert vector to set - remove duplicates
 
     // ----------------------------------------------
-    double fMinSum= numeric_limits<double>::max();
+    double fMinSum= std::numeric_limits<double>::max();
 
     for (const auto& b : B)
     {
         double fSum= 0.;          // sum(|Sdist(a, b)|)
         for (const auto& a : A)
-            fSum+= abs(CircVal<T>::Sdist(b, a));
+            fSum+= std::abs(CircVal<T>::Sdist(b, a));
 
              if (fSum==fMinSum)              X.insert(b);
         else if (fSum< fMinSum) { X.clear(); X.insert(b); fMinSum= fSum; }

@@ -372,7 +372,7 @@ void TKalmanFilter::CreateLinearAcceleration(cv::Rect_<track_t> rect0, Point_t r
 
     m_initialRects.reserve(MIN_INIT_VALS);
 
-	m_initialized = true;
+    m_initialized = true;
 }
 
 ///

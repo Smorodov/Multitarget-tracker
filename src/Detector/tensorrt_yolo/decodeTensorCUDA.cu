@@ -47,7 +47,7 @@ __global__ void decodeTensorKernel(
 float* decodeTensorCUDA(const int imageIdx, const TensorInfo& tensor)
 {
     // host
-    int boxes_bytes = 6*sizeof(float)*tensor.grid_h*tensor.grid_w*tensor.numBBoxes; // x y w h maxProb maxIndex 6个元素
+    int boxes_bytes = 6*sizeof(float)*tensor.grid_h*tensor.grid_w*tensor.numBBoxes; // x y w h maxProb maxIndex 6
 	const float* detections = &tensor.hostBuffer[imageIdx * tensor.volume];
     float* boxes = (float*) malloc(boxes_bytes);
 

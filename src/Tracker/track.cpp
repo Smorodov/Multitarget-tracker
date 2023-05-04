@@ -481,7 +481,19 @@ bool CTrack::CheckStatic(int trajLen, cv::UMat currFrame, const CRegion& region,
     {
         auto velocity = m_kalman.GetVelocity();
         track_t speed = sqrt(sqr(velocity[0]) + sqr(velocity[1]));
-        if (speed < maxSpeedForStatic)
+        
+        bool inCenter = true;
+        cv::Rect centerROI(m_trace[m_trace.size() - trajLen].x - region.m_brect.width / 2, m_trace[m_trace.size() - trajLen].y - region.m_brect.height / 2, region.m_brect.width, region.m_brect.height);
+        for (size_t i = m_trace.size() - trajLen; i < m_trace.size() - 1; ++i)
+        {
+            if (!centerROI.contains(m_trace[i]))
+            {
+                inCenter = false;
+                break;
+            }
+        }
+        
+        if (inCenter/*speed < maxSpeedForStatic*/)
         {
             if (!m_isStatic)
             {

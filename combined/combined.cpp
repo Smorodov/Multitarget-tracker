@@ -198,7 +198,7 @@ void CombinedDetector::DetectAndTrack(cv::Mat frame)
 
     const regions_t& regsBGFG = m_detectorBGFG->GetDetects();
 
-	m_trackerBGFG->Update(regsBGFG, uGray, m_fps);
+	//m_trackerBGFG->Update(regsBGFG, uGray, m_fps);
 	m_trackerBGFG->Update(regions_t(), uGray, m_fps);
 
 	m_trackerBGFG->GetTracks(m_tracksBGFG);
@@ -328,7 +328,7 @@ bool CombinedDetector::InitDetector(cv::UMat frame)
 		YOLOv7Mask,
 		YOLOv8
 	};
-	YOLOModels usedModel = YOLOModels::YOLOv7Mask;
+	YOLOModels usedModel = YOLOModels::YOLOv7;
 	switch (usedModel)
 	{
 	case YOLOModels::TinyYOLOv3:
@@ -392,15 +392,19 @@ bool CombinedDetector::InitDetector(cv::UMat frame)
 		break;
 
 	case YOLOModels::YOLOv7:
-		configDNN.emplace("modelConfiguration", pathToModel + "yolov7.onnx");
-		configDNN.emplace("modelBinary", pathToModel + "yolov7.onnx");
+	{
+		//std::string modelName = "yolov7.onnx";
+		std::string modelName = "yolov7x.onnx";
+		//std::string modelName = "yolov7-w6.onnx";
+		configDNN.emplace("modelConfiguration", pathToModel + modelName);
+		configDNN.emplace("modelBinary", pathToModel + modelName);
 		configDNN.emplace("confidenceThreshold", "0.2");
-		configDNN.emplace("inference_precision", "FP32");
+		configDNN.emplace("inference_precision", "FP16");
 		configDNN.emplace("net_type", "YOLOV7");
 		maxBatch = 1;
 		configDNN.emplace("maxCropRatio", "-1");
 		break;
-
+	}
 	case YOLOModels::YOLOv7Mask:
 		configDNN.emplace("modelConfiguration", pathToModel + "yolov7-seg_orig.onnx");
 		configDNN.emplace("modelBinary", pathToModel + "yolov7-seg_orig.onnx");
@@ -527,7 +531,7 @@ bool CombinedDetector::InitTracker(cv::UMat frame)
 void CombinedDetector::DrawData(cv::Mat frame, int framesCounter, int currTime)
 {
 	if (m_showLogs)
-		std::cout << "Frame " << framesCounter << ": tracks = " << m_tracksBGFG.size() << ", time = " << currTime << std::endl;
+		std::cout << "Frame " << framesCounter << ": tracks = " << (m_tracksBGFG.size() + m_tracksDNN.size()) << ", time = " << currTime << std::endl;
 
 	for (const auto& track : m_tracksBGFG)
 	{
@@ -535,11 +539,12 @@ void CombinedDetector::DrawData(cv::Mat frame, int framesCounter, int currTime)
 			0.2f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
 			cv::Size2f(0.1f, 8.0f)))      // Min and max ratio: width / height
 		{
-			if (track.m_isStatic)
+			int staticSeconds = cvRound(track.m_staticTime / m_fps);
+			if (track.m_isStatic && m_minStaticTime < staticSeconds)
 			{
-				DrawTrack(frame, 1, track, false);
+				DrawTrack(frame, track, false);
 
-				std::string label = "abandoned " + std::to_string(cvRound(track.m_isStaticTime / m_fps)) + " s";
+				std::string label = "abandoned " + std::to_string(staticSeconds) + " s";
 				int baseLine = 0;
 				cv::Size labelSize = cv::getTextSize(label, cv::FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
 
@@ -577,20 +582,22 @@ void CombinedDetector::DrawData(cv::Mat frame, int framesCounter, int currTime)
 	}
 
 	//m_detectorBGFG->CalcMotionMap(frame);
-	m_detectorDNN->CalcMotionMap(frame);
+	//m_detectorDNN->CalcMotionMap(frame);
 
 	for (const auto& track : m_tracksDNN)
 	{
 		if (track.IsRobust(4,            // Minimal trajectory size
 			0.85f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
-			cv::Size2f(0.1f, 8.0f)))      // Min and max ratio: width / height
+			cv::Size2f(0.1f, 10.0f),      // Min and max ratio: width / height
+			4))
 		{
-			DrawTrack(frame, 1, track);
+			DrawTrack(frame, track);
 
 			std::stringstream label;
-			if (track.m_isStatic)
+			int staticSeconds = cvRound(track.m_staticTime / m_fps);
+			if (track.m_isStatic && m_minStaticTime < staticSeconds && track.m_type != TypeConverter::Str2Type("person"))
 				label << "abandoned ";
-			label << TypeConverter::Type2Str(track.m_type) << " " << track.m_ID.ID2Str();// << "): " << std::fixed << std::setw(2) << std::setprecision(2) << track.m_confidence;
+			label << TypeConverter::Type2Str(track.m_type) << " " << std::to_string(staticSeconds) + "s " << std::fixed << std::setw(2) << std::setprecision(2) << track.m_confidence;
 			int baseLine = 0;
 			cv::Size labelSize = cv::getTextSize(label.str(), cv::FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
 
@@ -663,19 +670,14 @@ void CombinedDetector::DrawData(cv::Mat frame, int framesCounter, int currTime)
 /// \param track
 /// \param drawTrajectory
 ///
-void CombinedDetector::DrawTrack(cv::Mat frame, int resizeCoeff, const TrackingObject& track, bool drawTrajectory)
+void CombinedDetector::DrawTrack(cv::Mat frame, const TrackingObject& track, bool drawTrajectory)
 {
-    auto ResizePoint = [resizeCoeff](const cv::Point& pt) -> cv::Point
-    {
-        return cv::Point(resizeCoeff * pt.x, resizeCoeff * pt.y);
-    };
-
     cv::Scalar color = track.m_isStatic ? cv::Scalar(255, 0, 255) : cv::Scalar(0, 255, 0);
     cv::Point2f rectPoints[4];
     track.m_rrect.points(rectPoints);
     for (int i = 0; i < 4; ++i)
     {
-        cv::line(frame, ResizePoint(rectPoints[i]), ResizePoint(rectPoints[(i+1) % 4]), color);
+        cv::line(frame, rectPoints[i], rectPoints[(i+1) % 4], color);
     }
 
     if (drawTrajectory)
@@ -686,9 +688,9 @@ void CombinedDetector::DrawTrack(cv::Mat frame, int resizeCoeff, const TrackingO
         {
             const TrajectoryPoint& pt1 = track.m_trace.at(j);
             const TrajectoryPoint& pt2 = track.m_trace.at(j + 1);
-            cv::line(frame, ResizePoint(pt1.m_prediction), ResizePoint(pt2.m_prediction), cl, 1, cv::LINE_AA);
+            cv::line(frame, pt1.m_prediction, pt2.m_prediction, cl, 1, cv::LINE_AA);
             if (!pt2.m_hasRaw)
-                cv::circle(frame, ResizePoint(pt2.m_prediction), 4, cl, 1, cv::LINE_AA);
+                cv::circle(frame, pt2.m_prediction, 4, cl, 1, cv::LINE_AA);
         }
     }
 }
@@ -717,7 +719,7 @@ bool CombinedDetector::OpenCapture(cv::VideoCapture& capture)
     {
         capture.set(cv::CAP_PROP_POS_FRAMES, m_startFrame);
 
-        m_fps = std::max(25.f, (float)capture.get(cv::CAP_PROP_FPS));
+        m_fps = std::max(30.f, (float)capture.get(cv::CAP_PROP_FPS));
 
 		std::cout << "Video " << m_inFile << " was started from " << m_startFrame << " frame with " << m_fps << " fps" << std::endl;
 

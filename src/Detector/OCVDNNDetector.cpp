@@ -126,6 +126,24 @@ bool OCVDNNDetector::Init(const config_t& config)
     }
 #endif
 
+    auto net_type = config.find("net_type");
+    if (net_type != config.end())
+    {
+        std::map<std::string, ModelType> dictNetType;
+        dictNetType["YOLOV3"] = ModelType::YOLOV3;
+        dictNetType["YOLOV4"] = ModelType::YOLOV4;
+        dictNetType["YOLOV4_TINY"] = ModelType::YOLOV4_TINY;
+        dictNetType["YOLOV5"] = ModelType::YOLOV5;
+        dictNetType["YOLOV6"] = ModelType::YOLOV6;
+        dictNetType["YOLOV7"] = ModelType::YOLOV7;
+        dictNetType["YOLOV7Mask"] = ModelType::YOLOV7Mask;
+        dictNetType["YOLOV8"] = ModelType::YOLOV8;
+
+        auto netType = dictNetType.find(net_type->second);
+        if (netType != dictNetType.end())
+            m_netType = netType->second;
+    }
+
     auto classNames = config.find("classNames");
     if (classNames != config.end())
     {
@@ -234,7 +252,7 @@ void OCVDNNDetector::Detect(const cv::UMat& colorFrame)
         [](const CRegion& reg) { return reg.m_brect; },
         [](const CRegion& reg) { return reg.m_confidence; },
         [](const CRegion& reg) { return reg.m_type; },
-        0, 0.f);
+        0, static_cast<track_t>(0));
 }
 
 ///
@@ -325,6 +343,92 @@ void OCVDNNDetector::DetectInCrop(const cv::UMat& colorFrame, const cv::Rect& cr
     }
 	else
 	{
-		CV_Error(cv::Error::StsNotImplemented, "Unknown output layer type: " + m_outLayerType);
+        if (m_netType == ModelType::YOLOV8 || m_netType == ModelType::YOLOV5)
+        {
+            int rows = detections[0].size[1];
+            int dimensions = detections[0].size[2];
+
+            // yolov5 has an output of shape (batchSize, 25200, 85) (Num classes + box[x,y,w,h] + confidence[c])
+            // yolov8 has an output of shape (batchSize, 84,  8400) (Num classes + box[x,y,w,h])
+            if (dimensions > rows) // Check if the shape[2] is more than shape[1] (yolov8)
+            {
+                rows = detections[0].size[2];
+                dimensions = detections[0].size[1];
+
+                detections[0] = detections[0].reshape(1, dimensions);
+                cv::transpose(detections[0], detections[0]);
+            }
+            float* data = (float*)detections[0].data;
+
+            float x_factor = crop.width / static_cast<float>(m_inWidth);
+            float y_factor = crop.height / static_cast<float>(m_inHeight);
+
+            for (int i = 0; i < rows; ++i)
+            {
+                if (m_netType == ModelType::YOLOV8)
+                {
+                    float* classes_scores = data + 4;
+
+                    cv::Mat scores(1, static_cast<int>(m_classNames.size()), CV_32FC1, classes_scores);
+                    cv::Point class_id;
+                    double maxClassScore = 0;
+                    minMaxLoc(scores, 0, &maxClassScore, 0, &class_id);
+
+                    if (maxClassScore > m_confidenceThreshold)
+                    {
+                        float x = data[0];
+                        float y = data[1];
+                        float w = data[2];
+                        float h = data[3];
+
+                        int left = int((x - 0.5f * w) * x_factor);
+                        int top = int((y - 0.5f * h) * y_factor);
+
+                        int width = int(w * x_factor);
+                        int height = int(h * y_factor);
+
+                        if (m_classesWhiteList.empty() || m_classesWhiteList.find(T2T(class_id.x)) != std::end(m_classesWhiteList))
+                            tmpRegions.emplace_back(cv::Rect(left + crop.x, top + crop.y, width, height), T2T(class_id.x), static_cast<float>(maxClassScore));
+                    }
+                }
+                else // yolov5
+                {
+                    float confidence = data[4];
+
+                    if (confidence >= m_confidenceThreshold)
+                    {
+                        float* classes_scores = data + 5;
+
+                        cv::Mat scores(1, static_cast<int>(m_classNames.size()), CV_32FC1, classes_scores);
+                        cv::Point class_id;
+                        double maxClassScore = 0;
+                        minMaxLoc(scores, 0, &maxClassScore, 0, &class_id);
+
+                        if (maxClassScore > m_confidenceThreshold)
+                        {
+                            float x = data[0];
+                            float y = data[1];
+                            float w = data[2];
+                            float h = data[3];
+
+                            int left = int((x - 0.5f * w) * x_factor);
+                            int top = int((y - 0.5f * h) * y_factor);
+
+                            int width = int(w * x_factor);
+                            int height = int(h * y_factor);
+
+                            if (m_classesWhiteList.empty() || m_classesWhiteList.find(T2T(class_id.x)) != std::end(m_classesWhiteList))
+                                tmpRegions.emplace_back(cv::Rect(left + crop.x, top + crop.y, width, height), T2T(class_id.x), static_cast<float>(maxClassScore));
+                        }
+                    }
+                }
+
+                data += dimensions;
+            }
+        }
+        else
+        {
+            CV_Error(cv::Error::StsNotImplemented, "Unknown output layer type: " + m_outLayerType);
+        }
 	}
 }

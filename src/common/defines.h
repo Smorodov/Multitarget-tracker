@@ -386,7 +386,7 @@ enum FilterGoal
 {
     FilterCenter,
     FilterRect,
-	FilterRRect,
+    FilterRRect,
     FiltersCount
 };
 
