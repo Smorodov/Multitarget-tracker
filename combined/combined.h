@@ -65,7 +65,7 @@ protected:
 
     void DrawData(cv::Mat frame, int framesCounter, int currTime);
 
-    void DrawTrack(cv::Mat frame, int resizeCoeff, const TrackingObject& track, bool drawTrajectory = true);
+    void DrawTrack(cv::Mat frame, const TrackingObject& track, bool drawTrajectory = true);
 
 private:
     bool m_isTrackerInitialized = false;

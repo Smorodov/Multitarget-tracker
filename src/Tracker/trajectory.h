@@ -188,16 +188,16 @@ struct TrackingObject
 	objtype_t m_type = bad_type;       // Objects type name or empty value
 	float m_confidence = -1;           // From Detector with score (YOLO or SSD)
 	bool m_isStatic = false;           // Object is abandoned
-	int m_isStaticTime = 0;            // Object is abandoned, frames
+	int m_staticTime = 0;              // Object is abandoned, frames
 	bool m_outOfTheFrame = false;      // Is object out of the frame
 	mutable bool m_lastRobust = false; // saved latest robust value
 
 	///
     TrackingObject(const cv::RotatedRect& rrect, track_id_t ID, const Trace& trace,
-		bool isStatic, int isStaticTime, bool outOfTheFrame, objtype_t type, float confidence, cv::Vec<track_t, 2> velocity)
+		bool isStatic, int staticTime, bool outOfTheFrame, objtype_t type, float confidence, cv::Vec<track_t, 2> velocity)
 		:
         m_trace(trace), m_ID(ID), m_rrect(rrect), m_velocity(velocity), m_type(type), m_confidence(confidence),
-        m_isStatic(isStatic), m_isStaticTime(isStaticTime),
+        m_isStatic(isStatic), m_staticTime(staticTime),
         m_outOfTheFrame(outOfTheFrame)
 	{
 		//std::cout << "TrackingObject.m_rrect: " << m_rrect.center << ", " << m_rrect.angle << ", " << m_rrect.size << std::endl;
@@ -219,7 +219,7 @@ struct TrackingObject
 		m_type = track.m_type;
 		m_confidence = track.m_confidence;
 		m_isStatic = track.m_isStatic;
-		m_isStaticTime = track.m_isStaticTime;
+		m_staticTime = track.m_staticTime;
 		m_outOfTheFrame = track.m_outOfTheFrame;
 		m_lastRobust = track.m_lastRobust;
 

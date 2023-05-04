@@ -11,10 +11,42 @@
 //#define _USE_MATH_DEFINES // M_PI
 #include <cmath>
 #include <random>
+#include <limits>
 #include <assert.h>
 
 #include "FPCompare.h"
 #include "CircHelper.h"
+
+// ==========================================================================
+// macro for defining a circular-value type
+#define CircValTypeDef(_Name, _L, _H, _Z)             \
+    struct _Name                                      \
+    {                                                 \
+        static const double L  ; /* range: [L,H) */   \
+        static const double H  ;                      \
+        static const double Z  ; /* zero-value   */   \
+        static const double R  ; /* range        */   \
+        static const double R_2; /* half range   */   \
+    };                                                \
+                                                      \
+    const double _Name::L  = (_L)          ;          \
+    const double _Name::H  = (_H)          ;          \
+    const double _Name::Z  = (_Z)          ;          \
+    const double _Name::R  = ((_H)-(_L))   ;          \
+    const double _Name::R_2= ((_H)-(_L))/2.;
+
+// ==========================================================================
+// basic circular-value types
+CircValTypeDef(SignedDegRange  , -180.,   180.,  0. )
+CircValTypeDef(UnsignedDegRange,    0.,   360.,  0. )
+CircValTypeDef(SignedRadRange  , -M_PI,   M_PI,  0. )
+CircValTypeDef(UnsignedRadRange,    0., 2*M_PI,  0. )
+
+// some additional circular-value types - for testing
+CircValTypeDef(TestRange0      ,    3.,    10.,  5.3)
+CircValTypeDef(TestRange1      ,   -3.,    10., -3.0)
+CircValTypeDef(TestRange2      ,   -3.,    10.,  9.9)
+CircValTypeDef(TestRange3      ,  -13.,    -3., -5.3)
 
 
 // ==========================================================================
@@ -312,36 +344,3 @@ public:
     }
 };
 
-// ==========================================================================
-// macro for defining a circular-value type
-#define CircValTypeDef(_Name, _L, _H, _Z)             \
-    struct _Name                                      \
-    {                                                 \
-        static const double L  ; /* range: [L,H) */   \
-        static const double H  ;                      \
-        static const double Z  ; /* zero-value   */   \
-        static const double R  ; /* range        */   \
-        static const double R_2; /* half range   */   \
-                                                      \
-        static_assert((_H>_L) && (_Z>=_L) && (_Z<_H), \
-            #_Name##": Range not valid");             \
-    };                                                \
-                                                      \
-    const double _Name::L  = (_L)          ;          \
-    const double _Name::H  = (_H)          ;          \
-    const double _Name::Z  = (_Z)          ;          \
-    const double _Name::R  = ((_H)-(_L))   ;          \
-    const double _Name::R_2= ((_H)-(_L))/2.;
-
-// ==========================================================================
-// basic circular-value types
-CircValTypeDef(SignedDegRange  , -180.,   180.,  0. )
-CircValTypeDef(UnsignedDegRange,    0.,   360.,  0. )
-CircValTypeDef(SignedRadRange  , -M_PI,   M_PI,  0. )
-CircValTypeDef(UnsignedRadRange,    0., 2*M_PI,  0. )
-
-// some additional circular-value types - for testing
-CircValTypeDef(TestRange0      ,    3.,    10.,  5.3)
-CircValTypeDef(TestRange1      ,   -3.,    10., -3.0)
-CircValTypeDef(TestRange2      ,   -3.,    10.,  9.9)
-CircValTypeDef(TestRange3      ,  -13.,    -3., -5.3)

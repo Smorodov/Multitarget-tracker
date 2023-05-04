@@ -27,6 +27,20 @@ public:
     }
 
 private:
+    enum class ModelType
+    {
+        Unknown,
+        YOLOV3,
+        YOLOV3_TINY,
+        YOLOV4,
+        YOLOV4_TINY,
+        YOLOV5,
+        YOLOV6,
+        YOLOV7,
+        YOLOV7Mask,
+        YOLOV8
+    };
+
     cv::dnn::Net m_net;
 
     void DetectInCrop(const cv::UMat& colorFrame, const cv::Rect& crop, regions_t& tmpRegions);
@@ -41,6 +55,7 @@ private:
     float m_nmsThreshold = 0.4f;
     bool m_swapRB = false;
     float m_maxCropRatio = 2.0f;
+    ModelType m_netType = ModelType::Unknown;
     std::vector<std::string> m_classNames;
     std::vector<cv::String> m_outNames;
     std::vector<int> m_outLayers;

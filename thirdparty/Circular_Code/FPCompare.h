@@ -13,6 +13,9 @@
 
 #pragma once
 
+#include <cstddef>
+#include <cstdint>
+
 #define GTEST_OS_WINDOWS 1
 
 // ==========================================================================
@@ -90,8 +93,8 @@ template <>
 class TypeWithSize<8>
 {
 public:
-    typedef          __int64 Int ;
-    typedef unsigned __int64 UInt;
+    typedef int64_t Int;
+    typedef uint64_t UInt;
 };
 
 // ==========================================================================
