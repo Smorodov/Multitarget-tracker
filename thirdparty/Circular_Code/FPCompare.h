@@ -239,8 +239,8 @@ public:
 
         Bits bits= DistanceBetweenSignAndMagnitudeNumbers(u_.bits_, rhs.u_.bits_);
 
-        if (bits > kMaxUlps && bits<100000000)
-            __debugbreak();
+        //if (bits > kMaxUlps && bits<100000000)
+        //    __debugbreak();
 
         return bits <= kMaxUlps;
   }

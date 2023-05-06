@@ -3,11 +3,9 @@
 
 # Last changes
 
+* YOLOv8 detextor worked with TensorRT! Export pretrained Pytorch models [here (ultralytics/ultralytics)](https://github.com/ultralytics/ultralytics) to onnx format and run Multitarget-tracker with -e=6 example
+
 * Some experiments with YOLOv7_mask and results with rotated rectangles: detector works tracker in progress
-
-* Breaking change: removed static enum with types
-
-* Support ONNX with NMS
 
 * YOLOv7 worked with TensorRT! Export pretrained Pytorch models [here (WongKinYiu/yolov7)](https://github.com/WongKinYiu/yolov7) to onnx format and run Multitarget-tracker with -e=6 example
 
@@ -250,6 +248,7 @@ And so on.
 * STAPLE tracker: https://github.com/xuduo35/STAPLE
 * LDES tracker: https://github.com/yfji/LDESCpp
 * Ini file parser: https://github.com/benhoyt/inih
+* Circular Code from Lior Kogan
 
 #### License
 Apache 2.0: [LICENSE text](https://github.com/Smorodov/Multitarget-tracker/blob/master/LICENSE)
