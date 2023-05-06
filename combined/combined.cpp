@@ -328,7 +328,7 @@ bool CombinedDetector::InitDetector(cv::UMat frame)
 		YOLOv7Mask,
 		YOLOv8
 	};
-	YOLOModels usedModel = YOLOModels::YOLOv7;
+	YOLOModels usedModel = YOLOModels::YOLOv8;
 	switch (usedModel)
 	{
 	case YOLOModels::TinyYOLOv3:
@@ -416,11 +416,15 @@ bool CombinedDetector::InitDetector(cv::UMat frame)
 		break;
 
 	case YOLOModels::YOLOv8:
-		configDNN.emplace("modelConfiguration", pathToModel + "yolov8s.onnx");
-		configDNN.emplace("modelBinary", pathToModel + "yolov8s.onnx");
+		//configDNN.emplace("modelConfiguration", pathToModel + "yolov8s.onnx");
+		//configDNN.emplace("modelBinary", pathToModel + "yolov8s.onnx");
+		configDNN.emplace("modelConfiguration", "C:/work/mtracking/Nuzhny007/Multitarget-tracker/data/yolov8x.onnx");
+		configDNN.emplace("modelBinary", "C:/work/mtracking/Nuzhny007/Multitarget-tracker/data/yolov8x.onnx");
 		configDNN.emplace("confidenceThreshold", "0.2");
-		configDNN.emplace("inference_precision", "FP32");
+		configDNN.emplace("inference_precision", "FP16");
 		configDNN.emplace("net_type", "YOLOV8");
+		configDNN.emplace("inWidth", "640");
+		configDNN.emplace("inHeight", "640");
 		maxBatch = 1;
 		configDNN.emplace("maxCropRatio", "-1");
 		break;
@@ -434,9 +438,16 @@ bool CombinedDetector::InitDetector(cv::UMat frame)
     configDNN.emplace("white_list", "handbag");
     configDNN.emplace("white_list", "suitcase");
 
+#if 1
+	configDNN.emplace("dnnTarget", "DNN_TARGET_CPU");
+	configDNN.emplace("dnnBackend", "DNN_BACKEND_DEFAULT");
+#else
+	configDNN.emplace("dnnTarget", "DNN_TARGET_CUDA");
+	configDNN.emplace("dnnBackend", "DNN_BACKEND_CUDA");
+#endif
+
 	m_detectorDNN = BaseDetector::CreateDetector(tracking::Detectors::Yolo_TensorRT, configDNN, frame);
-	if (m_detectorDNN.get())
-		m_detectorDNN->SetMinObjectSize(cv::Size(frame.cols / 40, frame.rows / 40));
+	//m_detectorDNN = BaseDetector::CreateDetector(tracking::Detectors::DNN_OCV, configDNN, frame);
 
 	return m_detectorBGFG.get() && m_detectorDNN.get();
 }

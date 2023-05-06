@@ -790,6 +790,7 @@ void YoloONNX::ProcessBBoxesOutput(size_t imgIdx, const std::vector<float*>& out
             size_t ncInd = 1;
             size_t lenInd = 2;
             int nc = m_outpuDims[0].d[ncInd] - 4;
+            int dimensions = nc + 4;
             size_t len = static_cast<size_t>(m_outpuDims[0].d[lenInd]) / m_params.explicitBatchSize;
             auto Volume = [](const nvinfer1::Dims& d)
             {
@@ -797,7 +798,12 @@ void YoloONNX::ProcessBBoxesOutput(size_t imgIdx, const std::vector<float*>& out
             };
             auto volume = len * m_outpuDims[0].d[ncInd]; // Volume(m_outpuDims[0]);
             output += volume * imgIdx;
-            std::cout << "len = " << len << ", nc = " << nc << ", m_params.confThreshold = " << m_params.confThreshold << ", volume = " << volume << std::endl;
+            //std::cout << "len = " << len << ", nc = " << nc << ", m_params.confThreshold = " << m_params.confThreshold << ", volume = " << volume << std::endl;
+
+            cv::Mat rawMemory(1, dimensions * len, CV_32FC1, output);
+            rawMemory = rawMemory.reshape(1, dimensions);
+            cv::transpose(rawMemory, rawMemory);
+            output = (float*)rawMemory.data;
 
             std::vector<int> classIds;
             std::vector<float> confidences;
@@ -811,16 +817,6 @@ void YoloONNX::ProcessBBoxesOutput(size_t imgIdx, const std::vector<float*>& out
                 // Box
                 size_t k = i * (nc + 4);
                 float object_conf = output[k + 4];
-
-                if (i == 0)
-                {
-                	std::cout << "mem" << i << ": ";
-                	for (size_t ii = 0; ii < nc * 4; ++ii)
-                	{
-                		std::cout << output[k + ii] << " ";
-                	}
-                	std::cout << std::endl;
-                }
 
                 if (object_conf >= m_params.confThreshold)
                 {
@@ -845,8 +841,8 @@ void YoloONNX::ProcessBBoxesOutput(size_t imgIdx, const std::vector<float*>& out
 
                     class_conf *= object_conf;
 
-                    if (i == 0)
-                    	std::cout << i << ": object_conf = " << object_conf << ", class_conf = " << class_conf << ", classId = " << classId << ", rect = " << cv::Rect(cvRound(x), cvRound(y), cvRound(width), cvRound(height)) << std::endl;
+                    //if (i == 0)
+                    //	std::cout << i << ": object_conf = " << object_conf << ", class_conf = " << class_conf << ", classId = " << classId << ", rect = " << cv::Rect(cvRound(x), cvRound(y), cvRound(width), cvRound(height)) << std::endl;
 
                     classIds.push_back(classId);
                     confidences.push_back(class_conf);
