@@ -323,9 +323,7 @@ public:
         for (auto& b : mNames)
         {
             if (mBindings[b.second].isInput)
-            {
                 mBindings[b.second].buffer->hostToDevice(stream);
-            }
         }
     }
 
@@ -334,9 +332,7 @@ public:
         for (auto& b : mNames)
         {
             if (!mBindings[b.second].isInput)
-            {
                 mBindings[b.second].buffer->deviceToHost(stream);
-            }
         }
     }
 
@@ -451,9 +447,7 @@ public:
         {
             const auto binding = n.second;
             if (predicate(mBindings[binding]))
-            {
                 bindings.insert(n);
-            }
         }
         return bindings;
     }

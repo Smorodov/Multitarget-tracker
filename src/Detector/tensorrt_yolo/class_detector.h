@@ -13,7 +13,7 @@ namespace tensor_rt
 	struct Result
 	{
         cv::RotatedRect m_rrect;
-		cv::Rect m_brect;
+        cv::Rect m_brect;
         int m_id = -1;
         float m_prob = 0.f;
         cv::Mat m_boxMask;
