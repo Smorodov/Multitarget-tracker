@@ -255,10 +255,10 @@ std::vector<BBoxInfo> nmsAllClasses(const float nmsThresh,
 
     for (auto& boxes : splitBoxes)
     {
-		if (tensor_rt::YOLOV5 == model_type)
-			boxes =	diou_nms(nmsThresh, boxes);
-		else
-			boxes = nonMaximumSuppression(nmsThresh, boxes);
+        if (tensor_rt::YOLOV5 == model_type)
+            boxes = diou_nms(nmsThresh, boxes);
+        else
+            boxes = nonMaximumSuppression(nmsThresh, boxes);
         result.insert(result.end(), boxes.begin(), boxes.end());
     }
     return result;

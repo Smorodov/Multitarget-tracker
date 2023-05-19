@@ -700,21 +700,13 @@ void setMemoryPoolLimits(nvinfer1::IBuilderConfig& config, BuildOptions const& b
 {
     auto const roundToBytes = [](double const sizeInMB) { return static_cast<size_t>(sizeInMB * (1 << 20)); };
     if (build.workspace >= 0)
-    {
         config.setMemoryPoolLimit(nvinfer1::MemoryPoolType::kWORKSPACE, roundToBytes(build.workspace));
-    }
     if (build.dlaSRAM >= 0)
-    {
         config.setMemoryPoolLimit(nvinfer1::MemoryPoolType::kDLA_MANAGED_SRAM, roundToBytes(build.dlaSRAM));
-    }
     if (build.dlaLocalDRAM >= 0)
-    {
         config.setMemoryPoolLimit(nvinfer1::MemoryPoolType::kDLA_LOCAL_DRAM, roundToBytes(build.dlaLocalDRAM));
-    }
     if (build.dlaGlobalDRAM >= 0)
-    {
         config.setMemoryPoolLimit(nvinfer1::MemoryPoolType::kDLA_GLOBAL_DRAM, roundToBytes(build.dlaGlobalDRAM));
-    }
 }
 
 } // namespace
@@ -920,14 +912,10 @@ bool setupNetworkAndConfig(const BuildOptions& build, const SystemOptions& sys, 
     config.setAvgTimingIterations(build.avgTiming);
 
     if (build.fp16)
-    {
         config.setFlag(nvinfer1::BuilderFlag::kFP16);
-    }
 
     if (build.int8)
-    {
         config.setFlag(nvinfer1::BuilderFlag::kINT8);
-    }
 
     if (build.int8 && !build.fp16)
     {
@@ -948,9 +936,7 @@ bool setupNetworkAndConfig(const BuildOptions& build, const SystemOptions& sys, 
         {
             const auto& layer = network.getLayer(i);
             if (layer->getType() == nvinfer1::LayerType::kQUANTIZE || layer->getType() == nvinfer1::LayerType::kDEQUANTIZE)
-            {
                 return true;
-            }
         }
         return false;
     };
@@ -1011,26 +997,18 @@ bool setupNetworkAndConfig(const BuildOptions& build, const SystemOptions& sys, 
             auto const isDynamicInput = std::any_of(dims.d, dims.d + dims.nbDims, [](int32_t dim) { return dim == -1; });
 
             if (profileCalib)
-            {
                 elemCount.push_back(volume(profileCalib->getDimensions(input->getName(), nvinfer1::OptProfileSelector::kOPT)));
-            }
             else if (profile && isDynamicInput)
-            {
                 elemCount.push_back(volume(profile->getDimensions(input->getName(), nvinfer1::OptProfileSelector::kOPT)));
-            }
             else
-            {
                 elemCount.push_back(volume(input->getDimensions()));
-            }
         }
 
         config.setInt8Calibrator(new RndInt8Calibrator(1, elemCount, build.calibration, network, err));
     }
 
     if (build.directIO)
-    {
         config.setFlag(nvinfer1::BuilderFlag::kDIRECT_IO);
-    }
 
     switch (build.precisionConstraints)
     {
@@ -1044,24 +1022,16 @@ bool setupNetworkAndConfig(const BuildOptions& build, const SystemOptions& sys, 
     }
 
     if (!build.layerPrecisions.empty() && build.precisionConstraints != PrecisionConstraints::kNONE)
-    {
         setLayerPrecisions(network, build.layerPrecisions);
-    }
 
     if (!build.layerOutputTypes.empty() && build.precisionConstraints != PrecisionConstraints::kNONE)
-    {
         setLayerOutputTypes(network, build.layerOutputTypes);
-    }
 
     if (build.safe)
-    {
         config.setEngineCapability(sys.DLACore != -1 ? nvinfer1::EngineCapability::kDLA_STANDALONE : nvinfer1::EngineCapability::kSAFETY);
-    }
 
     if (build.restricted)
-    {
         config.setFlag(nvinfer1::BuilderFlag::kSAFETY_SCOPE);
-    }
 
     if (sys.DLACore != -1)
     {
@@ -1072,18 +1042,11 @@ bool setupNetworkAndConfig(const BuildOptions& build, const SystemOptions& sys, 
             config.setFlag(nvinfer1::BuilderFlag::kPREFER_PRECISION_CONSTRAINTS);
 
             if (sys.fallback)
-            {
                 config.setFlag(nvinfer1::BuilderFlag::kGPU_FALLBACK);
-            }
-            else
-            {
-                // Reformatting runs on GPU, so avoid I/O reformatting.
+            else // Reformatting runs on GPU, so avoid I/O reformatting
                 config.setFlag(nvinfer1::BuilderFlag::kDIRECT_IO);
-            }
             if (!build.int8)
-            {
                 config.setFlag(nvinfer1::BuilderFlag::kFP16);
-            }
         }
         else
         {
@@ -1220,9 +1183,7 @@ std::pair<std::vector<std::string>, std::vector<nvinfer1::WeightsRole>> getMissi
     std::vector<std::string> layerNameStrs(nbMissing);
     std::transform(layerNames.begin(), layerNames.end(), layerNameStrs.begin(), [](char const* name) {
         if (name == nullptr)
-        {
             return std::string{};
-        }
         return std::string{name};
     });
     return {layerNameStrs, weightsRoles};
@@ -1319,13 +1280,9 @@ bool getEngineBuildEnv(const ModelOptions& model, const BuildOptions& build, con
     bool createEngineSuccess {false};
 
     if (build.load)
-    {
         createEngineSuccess = loadEngineToEnv(build.engine, sys.DLACore, build.safe, build.consistency, env, err);
-    }
     else
-    {
         createEngineSuccess = modelToBuildEnv(model, build, sys, env, err);
-    }
 
     SMP_RETVAL_IF_FALSE(createEngineSuccess, "Failed to create engine from model.", false, err);
 
@@ -1492,9 +1449,7 @@ bool timeRefit(nvinfer1::INetworkDefinition const& network, nvinfer1::ICudaEngin
                 {
                     bool const success = refitter->setWeights(layer->getName(), roleWeights.first, roleWeights.second);
                     if (!success)
-                    {
                         return false;
-                    }
                 }
             }
         }

@@ -486,7 +486,7 @@ bool YoloONNX::VerifyOutputAspectRatio(size_t imgIdx, std::vector<tensor_rt::Res
         else
         {
             outputs.push_back(output);
-			++i;
+            ++i;
         }
 #endif
     }
@@ -749,14 +749,14 @@ void YoloONNX::ProcessBBoxesOutput(size_t imgIdx, const std::vector<float*>& out
 
         int objectsCount = m_outpuDims[1].d[1];
 
-		const float fw = static_cast<float>(frameSize.width) / static_cast<float>(m_inputDims.d[3]);
-		const float fh = static_cast<float>(frameSize.height) / static_cast<float>(m_inputDims.d[2]);
+        const float fw = static_cast<float>(frameSize.width) / static_cast<float>(m_inputDims.d[3]);
+        const float fh = static_cast<float>(frameSize.height) / static_cast<float>(m_inputDims.d[2]);
 
         //std::cout << "Dets[" << imgIdx << "] = " << dets[imgIdx] << ", objectsCount = " << objectsCount << std::endl;
 
         const size_t step1 = imgIdx * objectsCount;
         const size_t step2 = 4 * imgIdx * objectsCount;
-        for (size_t i = 0; i < dets[imgIdx]; ++i)
+        for (size_t i = 0; i < static_cast<size_t>(dets[imgIdx]); ++i)
         {
             // Box
             const size_t k = i * 4;
