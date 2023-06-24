@@ -37,8 +37,11 @@ endforeach()
 
 if(NOT TensorRT_LIBRARY)
   foreach(search ${_TensorRT_SEARCHES})
-    find_library(TensorRT_LIBRARY NAMES nvinfer ${${search}} PATH_SUFFIXES lib)
+    find_library(TRT_NVONNX_PARSER NAMES nvonnxparser ${${search}} PATH_SUFFIXES lib lib64 lib/x64)
+    find_library(TRT_NVINFER NAMES nvinfer ${${search}} PATH_SUFFIXES lib lib64 lib/x64)
+    find_library(TRT_NVINFER_PLUGIN NAMES nvinfer_plugin ${${search}} PATH_SUFFIXES lib lib64 lib/x64)
   endforeach()
+  list(APPEND TensorRT_LIBRARY ${TRT_NVINFER} ${TRT_NVINFER_PLUGIN} ${TRT_NVONNX_PARSER})
 endif()
 
 mark_as_advanced(TensorRT_INCLUDE_DIR)
