@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.9)
 
 project(MTTracking VERSION 1.1.0)
 
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
 unset(CMAKE_C_FLAGS CACHE)
 unset(CMAKE_CXX_FLAGS CACHE)
 unset(CMAKE_CXX_FLAGS_RELEASE CACHE)

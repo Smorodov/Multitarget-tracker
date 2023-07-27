@@ -118,3 +118,5 @@ if (MSVC)
     install(FILES "${LINK_DIRECTORY}/${LIB_PTHREAD}.lib"           
             DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
 endif()
+
+set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "libs")

@@ -155,3 +155,5 @@ if (PYBIND11_INSTALL)
     endif()
   endif()
 endif()
+
+set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "libs")

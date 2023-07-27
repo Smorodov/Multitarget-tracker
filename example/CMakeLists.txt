@@ -2,17 +2,13 @@ cmake_minimum_required (VERSION 3.5)
 
 project(MultitargetTracker)
 
-set(SOURCES
-    main.cpp
-    VideoExample.cpp
-)
+set(SOURCES main.cpp
+            VideoExample.cpp)
 
-set(HEADERS
-    MouseExample.h
-    VideoExample.h
-    examples.h
-    FileLogger.h
-)
+set(HEADERS MouseExample.h
+            VideoExample.h
+            examples.h
+            FileLogger.h)
 
 if (BUILD_CARS_COUNTING)
     set(SOURCES ${SOURCES} CarsCounting.cpp)
@@ -22,23 +18,19 @@ endif(BUILD_CARS_COUNTING)
 # ----------------------------------------------------------------------------
 # добавляем include директории
 # ----------------------------------------------------------------------------
-INCLUDE_DIRECTORIES(
-                    ${PROJECT_SOURCE_DIR}/../src
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/../src
                     ${PROJECT_SOURCE_DIR}/../src/common
                     ${PROJECT_SOURCE_DIR}/../src/Detector
                     ${PROJECT_SOURCE_DIR}/../src/Detector/vibe_src
                     ${PROJECT_SOURCE_DIR}/../src/Detector/Subsense
                     ${PROJECT_SOURCE_DIR}/../src/Tracker
                     ${PROJECT_SOURCE_DIR}/../src/Tracker/HungarianAlg
-                    ${PROJECT_SOURCE_DIR}/../thirdparty
-)
+                    ${PROJECT_SOURCE_DIR}/../thirdparty)
 
-set(LIBS
-    ${OpenCV_LIBS}
-    mtracking
-    mdetection
-    inih
-)
+set(LIBS ${OpenCV_LIBS}
+         mtracking
+         mdetection
+         inih)
 
 if (BUILD_YOLO_LIB)
     if (MSVC)
@@ -66,3 +58,5 @@ endif(BUILD_CARS_COUNTING)
 ADD_EXECUTABLE(${PROJECT_NAME} ${SOURCES} ${HEADERS})
 
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} PRIVATE ${LIBS})
+
+set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "apps")
