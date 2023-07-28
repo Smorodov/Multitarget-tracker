@@ -36,13 +36,9 @@ const char* keys =
     "{ cvat_res         |                    | Path to the xml file in cvat format with tracking result | }"
     "{ s settings       |                    | Path to the ini file with tracking settings | }"
     "{ bs batch_size    |1                   | Batch size - frames count for processing | }"
-    "{ inf inference    |darknet             | For CarsCounting: Type of inference framework: darknet, ocvdnn | }"
-    "{ w weights        |                    | For CarsCounting: Weights of neural network: yolov4.weights | }"
-    "{ c config         |                    | For CarsCounting: Config file of neural network: yolov4.cfg | }"
-    "{ n names          |                    | For CarsCounting: File with classes names: coco.names | }"
     "{ wf write_n_frame |1                   | Write logs on each N frame: 1 for writing each frame | }"
     "{ hm heat_map      |0                   | For CarsCounting: Draw heat map | }"
-    "{ gb geo_bind      |geo_bind.ini        | For CarsCounting: ini file with geographical binding | }"
+    "{ geo_bind         |geo_bind.ini        | For CarsCounting: ini file with geographical binding | }"
 };
 
 // ----------------------------------------------------------------------

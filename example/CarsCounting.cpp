@@ -16,29 +16,10 @@ CarsCounting::CarsCounting(const cv::CommandLineParser& parser)
 
     m_drawHeatMap = parser.get<int>("heat_map") != 0;
 
-    m_weightsFile = parser.get<std::string>("weights");
-    m_configFile = parser.get<std::string>("config");
-    m_namesFile = parser.get<std::string>("names");
-    if (m_weightsFile.empty() && m_configFile.empty())
-    {
-        m_weightsFile = pathToModel + "yolov4.weights";
-        m_configFile = pathToModel + "yolov4.cfg";
-    }
-    if (m_namesFile.empty())
-        m_namesFile = pathToModel + "coco.names";
+    std::string settingsFile = parser.get<std::string>("settings");
+    m_trackerSettingsLoaded = ParseTrackerSettings(settingsFile, m_trackerSettings);
 
-    std::map<std::string, tracking::Detectors> infMap;
-    infMap.emplace("darknet", tracking::Detectors::Yolo_Darknet);
-    infMap.emplace("tensorrt", tracking::Detectors::Yolo_TensorRT);
-    infMap.emplace("ocvdnn", tracking::Detectors::DNN_OCV);
-    std::string inference = parser.get<std::string>("inference");
-    auto infType = infMap.find(inference);
-    if (infType != std::end(infMap))
-        m_detectorType = infType->second;
-    else
-        m_detectorType = tracking::Detectors::Yolo_Darknet;
-
-    std::cout << "Inference framework set " << inference << " used " << m_detectorType << ", weights: " << m_weightsFile << ", config: " << m_configFile << ", names: " << m_namesFile << std::endl;
+    std::cout << "Inference loaded (" << m_trackerSettingsLoaded << ") from " << settingsFile << ": used " << m_trackerSettings.m_detectorBackend << " backend, weights: " << m_trackerSettings.m_nnWeights << ", config: " << m_trackerSettings.m_nnConfig << ", names: " << m_trackerSettings.m_classNames << std::endl;
 
     m_geoBindFile = parser.get<std::string>("geo_bind");
 }
@@ -155,64 +136,32 @@ void CarsCounting::DrawTrack(cv::Mat frame, const TrackingObject& track, bool dr
 ///
 bool CarsCounting::InitDetector(cv::UMat frame)
 {
+    if (!m_trackerSettingsLoaded)
+        return false;
+
     config_t config;
 
-#if 1
-    switch (m_detectorType)
+    config.emplace("modelConfiguration", m_trackerSettings.m_nnConfig);
+    config.emplace("modelBinary", m_trackerSettings.m_nnWeights);
+    config.emplace("confidenceThreshold", std::to_string(m_trackerSettings.m_confidenceThreshold));
+    config.emplace("classNames", m_trackerSettings.m_classNames);
+    config.emplace("maxCropRatio", std::to_string(m_trackerSettings.m_maxCropRatio));
+    config.emplace("maxBatch", std::to_string(m_trackerSettings.m_maxBatch));
+    config.emplace("gpuId", std::to_string(m_trackerSettings.m_gpuId));
+    config.emplace("net_type", m_trackerSettings.m_netType);
+    config.emplace("inference_precision", m_trackerSettings.m_inferencePrecision);
+    config.emplace("video_memory", std::to_string(m_trackerSettings.m_maxVideoMemory));
+    config.emplace("dnnTarget", m_trackerSettings.m_dnnTarget);
+    config.emplace("dnnBackend", m_trackerSettings.m_dnnBackend);
+    config.emplace("inWidth", std::to_string(m_trackerSettings.m_inputSize.width));
+    config.emplace("inHeight", std::to_string(m_trackerSettings.m_inputSize.height));
+
+    for (auto wname : m_trackerSettings.m_whiteList)
     {
-    case tracking::Detectors::Yolo_Darknet:
-        break;
-
-    case tracking::Detectors::DNN_OCV:
-#if 1
-        config.emplace("dnnTarget", "DNN_TARGET_CPU");
-        config.emplace("dnnBackend", "DNN_BACKEND_OPENCV");
-#else
-        config.emplace("dnnTarget", "DNN_TARGET_CUDA");
-        config.emplace("dnnBackend", "DNN_BACKEND_CUDA");
-#endif
-        break;
-
-    default:
-        break;
+        config.emplace("white_list", wname);
     }
 
-    config.emplace("modelConfiguration", m_configFile);
-    config.emplace("modelBinary", m_weightsFile);
-    config.emplace("classNames", m_namesFile);
-    config.emplace("confidenceThreshold", "0.5");
-    config.emplace("nmsThreshold", "0.4");
-    config.emplace("swapRB", "0");
-    config.emplace("maxCropRatio", "-1");
-    if (m_batchSize > 1)
-        config.emplace("maxBatch", std::to_string(m_batchSize));
-
-    config.emplace("white_list", "person");
-    config.emplace("white_list", "car");
-    config.emplace("white_list", "bicycle");
-    config.emplace("white_list", "motorbike");
-    config.emplace("white_list", "bus");
-    config.emplace("white_list", "truck");
-    config.emplace("white_list", "vehicle");
-
-    m_detector = BaseDetector::CreateDetector(m_detectorType, config, frame);
-
-#else // Background subtraction
-
-#if 1
-    config.emplace("history", std::to_string(cvRound(10 * minStaticTime * m_fps)));
-    config.emplace("varThreshold", "16");
-    config.emplace("detectShadows", "1");
-    m_detector = CreateDetector(tracking::Detectors::Motion_MOG2, config, frame);
-#else
-    config.emplace("minPixelStability", "15");
-    config.emplace("maxPixelStability", "900");
-    config.emplace("useHistory", "1");
-    config.emplace("isParallel", "1");
-    m_detector = CreateDetector(tracking::Detectors::Motion_CNT, config, m_useLocalTracking, frame);
-#endif
-
-#endif
+    m_detector = BaseDetector::CreateDetector((tracking::Detectors)m_trackerSettings.m_detectorBackend, config, frame);
 
     return m_detector.operator bool();
 }
@@ -223,6 +172,9 @@ bool CarsCounting::InitDetector(cv::UMat frame)
 ///
 bool CarsCounting::InitTracker(cv::UMat frame)
 {
+    if (!m_trackerSettingsLoaded)
+        return false;
+
     if (m_drawHeatMap)
     {
         if (frame.channels() == 3)
@@ -499,10 +451,10 @@ bool CarsCounting::ReadGeobindings(cv::Size frameSize)
         std::string y1 = line + "_y1";
         if (reader.HasValue("lines", x0) && reader.HasValue("lines", y0) && reader.HasValue("lines", x1) && reader.HasValue("lines", y1))
         {
-            cv::Point2f p0(reader.GetReal("lines", x0, 0), reader.GetReal("lines", y0, 0));
-            cv::Point2f p1(reader.GetReal("lines", x1, 0), reader.GetReal("lines", y1, 0));
+            cv::Point2f p0(static_cast<float>(reader.GetReal("lines", x0, 0)), static_cast<float>(reader.GetReal("lines", y0, 0)));
+            cv::Point2f p1(static_cast<float>(reader.GetReal("lines", x1, 0)), static_cast<float>(reader.GetReal("lines", y1, 0)));
             std::cout << "Line" << i << ": " << p0 << " - " << p1 << std::endl;
-            AddLine(RoadLine(p0, p1, i));
+            AddLine(RoadLine(p0, p1, static_cast<unsigned int>(i)));
         }
         else
         {

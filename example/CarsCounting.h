@@ -457,11 +457,6 @@ public:
 
 private:
 
-	std::string m_weightsFile;
-	std::string m_configFile;
-	std::string m_namesFile;
-	tracking::Detectors m_detectorType = tracking::Detectors::Yolo_Darknet;
-
 	bool m_drawHeatMap = false;
 
     bool InitDetector(cv::UMat frame) override;
