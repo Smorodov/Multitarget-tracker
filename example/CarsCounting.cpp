@@ -73,7 +73,7 @@ void CarsCounting::DrawTrack(cv::Mat frame, const TrackingObject& track, bool dr
                 label << TypeConverter::Type2Str(track.m_type) << " " << cvRound(velocity) << " km/h";
 
                 int baseLine = 0;
-                double fontScale = 0.5;
+                double fontScale = (frame.cols < 2000) ? 0.5 : 1.;
                 cv::Size labelSize = cv::getTextSize(label.str(), cv::FONT_HERSHEY_TRIPLEX, fontScale, 1, &baseLine);
 
                 if (brect.x < 0)
@@ -232,7 +232,7 @@ void CarsCounting::DrawData(cv::Mat frame, const std::vector<TrackingObject>& tr
     if (m_showLogs)
         std::cout << "Frame " << framesCounter << ": tracks = " << tracks.size() << ", time = " << currTime << std::endl;
 
-#if 0 // Debug output
+#if 1 // Debug output
     if (!m_geoParams.Empty())
     {
         std::vector<cv::Point> points = m_geoParams.GetFramePoints();
@@ -273,6 +273,12 @@ void CarsCounting::DrawData(cv::Mat frame, const std::vector<TrackingObject>& tr
 			cv::namedWindow("Geo map", cv::WINDOW_NORMAL);
 			cv::imshow("Geo map", geoMap);
 #endif
+            if (true)
+            {
+                double k = 0.25;
+                cv::Size mapPreview(cvRound(frame.cols * k), cvRound(((frame.cols * k) / geoMap.cols) * geoMap.rows));
+                cv::resize(geoMap, frame(cv::Rect(frame.cols - mapPreview.width - 1, frame.rows - mapPreview.height - 1, mapPreview.width, mapPreview.height)), mapPreview, 0, 0, cv::INTER_CUBIC);
+            }
 		}
     }
 
