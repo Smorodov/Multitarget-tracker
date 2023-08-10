@@ -167,16 +167,16 @@ public:
             cv::Point_<T> gp2(m_geoPoints[(i + 1) % m_geoPoints.size()]);
             cv::Point p2(m_p2mParams.Geo2Pix(gp2));
 
-            cv::line(map, p1, p2, cv::Scalar(255, 255, 255), 1, cv::LINE_AA);
+            cv::line(map, p1, p2, cv::Scalar(255, 255, 255), 2, cv::LINE_AA);
 
             //std::cout << p1 << " - " << p2 << std::endl;
 
             std::stringstream label;
             label << std::fixed << std::setw(5) << std::setprecision(5) << "[" << m_geoPoints[i].x << ", " << m_geoPoints[i].y << "]";
             int baseLine = 0;
-            double fontScale = 0.5;
-            cv::Size labelSize = cv::getTextSize(label.str(), cv::FONT_HERSHEY_SIMPLEX, fontScale, 1, &baseLine);
-            cv::putText(map, label.str(), p1, cv::FONT_HERSHEY_SIMPLEX, fontScale, cv::Scalar(255, 255, 255));
+            double fontScale = (map.cols < 1000 && map.rows < 1000) ? 0.5 : 1.;
+            cv::Size labelSize = cv::getTextSize(label.str(), cv::FONT_HERSHEY_TRIPLEX, fontScale, 1, &baseLine);
+            cv::putText(map, label.str(), p1, cv::FONT_HERSHEY_TRIPLEX, fontScale, cv::Scalar(255, 255, 255));
         }
 #endif
 
@@ -189,7 +189,7 @@ public:
                 auto center = m_p2mParams.Geo2Pix(geoCenter);
                 //std::cout << "Convert: " << track.m_rrect.center << " -> " << geoCenter << " -> " << center << std::endl;
                 if (center.x > 0 && center.x < map.cols && center.y > 0 && center.y < map.rows)
-                    cv::ellipse(map, center, cv::Size(3, 3), 0, 0, 360, cv::Scalar(255, 0, 255), cv::FILLED, 8);
+                    cv::ellipse(map, center, cv::Size(5, 5), 0, 0, 360, cv::Scalar(255, 0, 255), cv::FILLED, 8);
             }
         }
  
