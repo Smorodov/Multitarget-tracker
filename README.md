@@ -3,7 +3,7 @@
 
 # Last changes
 
-* YOLOv8 detextor worked with TensorRT! Export pretrained Pytorch models [here (ultralytics/ultralytics)](https://github.com/ultralytics/ultralytics) to onnx format and run Multitarget-tracker with -e=6 example
+* YOLOv8 detector worked with TensorRT! Export pretrained Pytorch models [here (ultralytics/ultralytics)](https://github.com/ultralytics/ultralytics) to onnx format and run Multitarget-tracker with -e=6 example
 
 * Some experiments with YOLOv7_mask and results with rotated rectangles: detector works tracker in progress
 
