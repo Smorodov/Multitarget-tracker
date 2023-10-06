@@ -22,7 +22,6 @@ struct RegionEmbedding
 {
     cv::Mat m_hist;
     cv::Mat m_embedding;
-    double m_embDot = 0.;
 };
 
 ///
