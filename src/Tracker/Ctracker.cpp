@@ -233,7 +233,7 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
         std::cout << "CTracker::UpdateTrackingState: Distance matrix between all tracks to all regions" << std::endl;
 #endif
         distMatrix_t costMatrix(N * M);
-        const track_t maxPossibleCost = static_cast<track_t>(currFrame.cols * currFrame.rows);
+        const track_t maxPossibleCost = std::max(static_cast<track_t>(1.), static_cast<track_t>(currFrame.cols * currFrame.rows));
         track_t maxCost = 0;
         CreateDistaceMatrix(regions, regionEmbeddings, costMatrix, maxPossibleCost, maxCost);
 #if DRAW_DBG_ASSIGNMENT
