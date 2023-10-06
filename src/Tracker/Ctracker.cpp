@@ -544,7 +544,7 @@ void CTracker::CreateDistaceMatrix(const regions_t& regions,
                         if (resCos.second)
                         {
                             dist += m_settings.m_distType[ind] * resCos.first;
-                            //std::cout << "CalcCosine: " << TypeConverter::Type2Str(track->LastRegion().m_type) << ", reg = " << reg.m_brect << ", track = " << track->LastRegion().m_brect << ": res = " << resCos.value() << ", dist = " << dist << std::endl;
+                            //std::cout << "CalcCosine: " << TypeConverter::Type2Str(track->LastRegion().m_type) << ", reg = " << reg.m_brect << ", track = " << track->LastRegion().m_brect << ": res = " << resCos.first << ", dist = " << dist << std::endl;
                         }
                         else
                         {
@@ -628,13 +628,12 @@ void CTracker::CalcEmbeddins(std::vector<RegionEmbedding>& regionEmbeddings, con
                     if (embCalc != std::end(m_embCalculators))
                     {
                         embCalc->second->Calc(currFrame, regions[j].m_brect, regionEmbeddings[j].m_embedding);
-                        regionEmbeddings[j].m_embDot = regionEmbeddings[j].m_embedding.dot(regionEmbeddings[j].m_embedding);
 
-                        // std::cout << "Founded! m_embedding = " << regionEmbeddings[j].m_embedding.size() << ", m_embDot = " << regionEmbeddings[j].m_embDot << std::endl;
+                        //std::cout << "Founded! m_embedding = " << regionEmbeddings[j].m_embedding.size() << std::endl;
                     }
                     else
                     {
-                        // std::cout << "Not found" << std::endl;
+                        //std::cout << "Not found" << std::endl;
                     }
                 }
             }

@@ -672,7 +672,7 @@ protected:
 	{
 		if (!m_trackerSettingsLoaded)
 		{
-			bool useDeepSORT = false;
+			bool useDeepSORT = true;
 			if (useDeepSORT)
 			{
 #ifdef _WIN32
@@ -681,26 +681,18 @@ protected:
 				std::string pathToModel = "../data/";
 #endif
 
-#if 1
-				m_trackerSettings.m_embeddings.emplace_back(pathToModel + "open_model_zoo/person-reidentification-retail-0286/FP16-INT8/person-reidentification-retail-0286.xml",
-                                                            pathToModel + "open_model_zoo/person-reidentification-retail-0286/FP16-INT8/person-reidentification-retail-0286.bin",
-                                                            cv::Size(128, 256),
-                                                            std::vector<objtype_t>{ TypeConverter::Str2Type("person") });
-#endif
-
-#if 0
-				m_trackerSettings.m_embeddings.emplace_back(pathToModel + "open_model_zoo/vehicle-reid-0001/osnet_ain_x1_0_vehicle_reid.xml",
-                                                            pathToModel + "open_model_zoo/vehicle-reid-0001/osnet_ain_x1_0_vehicle_reid.bin",
-                                                            cv::Size(208, 208),
-                                                            std::vector<objtype_t>{ TypeConverter::Str2Type("car"), TypeConverter::Str2Type("bus"), TypeConverter::Str2Type("truck"), TypeConverter::Str2Type("vehicle") });
-#endif
+				m_trackerSettings.m_embeddings.emplace_back(pathToModel + "reid/osnet_x0_25_msmt17.onnx",
+					pathToModel + "reid/osnet_x0_25_msmt17.onnx",
+					cv::Size(128, 256),
+					std::vector<objtype_t>{ TypeConverter::Str2Type("person"), TypeConverter::Str2Type("car"), TypeConverter::Str2Type("bus"), TypeConverter::Str2Type("truck"), TypeConverter::Str2Type("vehicle") });
 
 				std::array<track_t, tracking::DistsCount> distType{
 					0.f,   // DistCenters
 					0.f,   // DistRects
 					0.5f,  // DistJaccard
 					0.f,   // DistHist
-					0.5f   // DistFeatureCos
+					0.5f,  // DistFeatureCos
+					0.f    // DistMahalanobis
 				};
 				if (!m_trackerSettings.SetDistances(distType))
 					std::cerr << "SetDistances failed! Absolutly summ must be equal 1" << std::endl;
@@ -843,7 +835,7 @@ protected:
 				YOLOv7Mask,
 				YOLOv8
             };
-            YOLOModels usedModel = YOLOModels::YOLOv5;
+            YOLOModels usedModel = YOLOModels::YOLOv4;
             switch (usedModel)
             {
             case YOLOModels::TinyYOLOv3:
@@ -980,7 +972,37 @@ protected:
 	{
 		if (!m_trackerSettingsLoaded)
 		{
-			m_trackerSettings.SetDistance(tracking::DistCenters);
+			bool useDeepSORT = true;
+			if (useDeepSORT)
+			{
+#ifdef _WIN32
+				std::string pathToModel = "../../data/";
+#else
+				std::string pathToModel = "../data/";
+#endif
+
+				m_trackerSettings.m_embeddings.emplace_back(pathToModel + "reid/osnet_x0_25_msmt17.onnx",
+					pathToModel + "reid/osnet_x0_25_msmt17.onnx",
+					cv::Size(128, 256),
+					std::vector<objtype_t>{ TypeConverter::Str2Type("person"), TypeConverter::Str2Type("car"), TypeConverter::Str2Type("bus"), TypeConverter::Str2Type("truck"), TypeConverter::Str2Type("vehicle") });
+
+				std::array<track_t, tracking::DistsCount> distType{
+					0.f,   // DistCenters
+					0.f,   // DistRects
+					0.5f,  // DistJaccard
+					0.f,   // DistHist
+					0.5f,  // DistFeatureCos
+					0.f    // DistMahalanobis
+				};
+				if (!m_trackerSettings.SetDistances(distType))
+					std::cerr << "SetDistances failed! Absolutly summ must be equal 1" << std::endl;
+			}
+			else
+			{
+				m_trackerSettings.SetDistance(tracking::DistCenters);
+			}
+
+			//m_trackerSettings.SetDistance(tracking::DistCenters);
 			m_trackerSettings.m_kalmanType = tracking::KalmanLinear;
 			m_trackerSettings.m_filterGoal = tracking::FilterCenter;
 			m_trackerSettings.m_lostTrackType = tracking::TrackKCF;      // Use visual objects tracker for collisions resolving. Used if m_filterGoal == tracking::FilterRect

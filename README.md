@@ -3,13 +3,11 @@
 
 # Last changes
 
+* Re-identification model osnet_x0_25_msmt17 from [mikel-brostrom/yolo_tracking](https://github.com/mikel-brostrom/yolo_tracking)
+
 * YOLOv8 detector worked with TensorRT! Export pretrained Pytorch models [here (ultralytics/ultralytics)](https://github.com/ultralytics/ultralytics) to onnx format and run Multitarget-tracker with -e=6 example
 
 * Some experiments with YOLOv7_mask and results with rotated rectangles: detector works tracker in progress
-
-* YOLOv7 worked with TensorRT! Export pretrained Pytorch models [here (WongKinYiu/yolov7)](https://github.com/WongKinYiu/yolov7) to onnx format and run Multitarget-tracker with -e=6 example
-
-* YOLOv6 worked with TensorRT! Download pretrained onnx models [here (meituan/YOLOv6)](https://github.com/meituan/YOLOv6/releases/tag/0.1.0) and run Multitarget-tracker with -e=6 example
 
 # New videos!
 
