@@ -52,7 +52,7 @@ private:
     float m_inScaleFactor = 0.003921f;
     float m_meanVal = 0.f;
     float m_confidenceThreshold = 0.24f;
-    float m_nmsThreshold = 0.4f;
+    track_t m_nmsThreshold = static_cast<track_t>(0.4);
     bool m_swapRB = false;
     float m_maxCropRatio = 2.0f;
     ModelType m_netType = ModelType::Unknown;

@@ -149,7 +149,7 @@ public:
     objtype_t m_type = bad_type;
     cv::RotatedRect m_rrect;
     cv::Rect m_brect;
-    float m_confidence = -1;
+    track_t m_confidence = -1;
     cv::Mat m_boxMask;
 
 private:

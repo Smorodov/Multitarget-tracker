@@ -17,7 +17,7 @@ YoloTensorRTDetector::YoloTensorRTDetector(const cv::UMat& colorFrame)
                      "sheep", "sofa", "train", "tvmonitor" };
 
 	m_localConfig.calibration_image_list_file_txt = "";
-    m_localConfig.inference_precision = tensor_rt::FP32;
+	m_localConfig.inference_precision = tensor_rt::FP32;
 	m_localConfig.net_type = tensor_rt::YOLOV4;
 	m_localConfig.detect_thresh = 0.5f;
 	m_localConfig.gpu_id = 0;
@@ -38,7 +38,7 @@ YoloTensorRTDetector::YoloTensorRTDetector(const cv::Mat& colorFrame)
                      "sheep", "sofa", "train", "tvmonitor" };
 
 	m_localConfig.calibration_image_list_file_txt = "";
-    m_localConfig.inference_precision = tensor_rt::FP32;
+	m_localConfig.inference_precision = tensor_rt::FP32;
 	m_localConfig.net_type = tensor_rt::YOLOV4;
 	m_localConfig.detect_thresh = 0.5f;
 	m_localConfig.gpu_id = 0;
@@ -79,15 +79,15 @@ bool YoloTensorRTDetector::Init(const config_t& config)
 
     auto inference_precision = config.find("inference_precision");
     if (inference_precision != config.end())
-	{
-        std::map<std::string, tensor_rt::Precision> dictprecision;
-        dictprecision["INT8"] = tensor_rt::INT8;
-        dictprecision["FP16"] = tensor_rt::FP16;
-        dictprecision["FP32"] = tensor_rt::FP32;
-        auto precision = dictprecision.find(inference_precision->second);
-        if (precision != dictprecision.end())
+    {
+        std::map<std::string, tensor_rt::Precision> dictPrecision;
+        dictPrecision["INT8"] = tensor_rt::INT8;
+        dictPrecision["FP16"] = tensor_rt::FP16;
+        dictPrecision["FP32"] = tensor_rt::FP32;
+        auto precision = dictPrecision.find(inference_precision->second);
+        if (precision != dictPrecision.end())
             m_localConfig.inference_precision = precision->second;
-	}
+    }
 
 	auto net_type = config.find("net_type");
 	if (net_type != config.end())
@@ -117,6 +117,7 @@ bool YoloTensorRTDetector::Init(const config_t& config)
 			std::string className;
 			for (; std::getline(classNamesFile, className); )
 			{
+				className.erase(className.find_last_not_of(" \t\n\r\f\v") + 1);
 				m_classNames.push_back(className);
 			}
 			if (!FillTypesMap(m_classNames))
@@ -124,6 +125,11 @@ bool YoloTensorRTDetector::Init(const config_t& config)
 				std::cout << "Unknown types in class names!" << std::endl;
 				assert(0);
 			}
+		}
+		else
+		{
+			std::cout << "File with class names can not be opened!" << std::endl;
+			assert(0);
 		}
 	}
 

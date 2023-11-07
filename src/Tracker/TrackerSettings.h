@@ -207,12 +207,12 @@ struct TrackerSettings
 	///
 	TrackerSettings()
 	{
-		m_distType[tracking::DistCenters] = 0.0f;
-		m_distType[tracking::DistRects] = 0.0f;
-		m_distType[tracking::DistJaccard] = 0.5f;
-		m_distType[tracking::DistHist] = 0.5f;
-		m_distType[tracking::DistFeatureCos] = 0.0f;
-		m_distType[tracking::DistMahalanobis] = 0.0f;
+		m_distType[tracking::DistCenters] = static_cast<track_t>(0.0);
+		m_distType[tracking::DistRects] = static_cast<track_t>(0.0);
+		m_distType[tracking::DistJaccard] = static_cast<track_t>(0.5);
+		m_distType[tracking::DistHist] = static_cast<track_t>(0.5);
+		m_distType[tracking::DistFeatureCos] = static_cast<track_t>(0.0);
+		m_distType[tracking::DistMahalanobis] = static_cast<track_t>(0.0);
 
 		assert(CheckDistance());
 	}
@@ -220,10 +220,10 @@ struct TrackerSettings
 	///
 	bool CheckDistance() const
 	{
-		track_t sum = std::accumulate(m_distType.begin(), m_distType.end(), 0.0f);
-		track_t maxOne = std::max(1.0f, std::fabs(sum));
+		track_t sum = std::accumulate(m_distType.begin(), m_distType.end(), static_cast<track_t>(0.0));
+		track_t maxOne = std::max(static_cast<track_t>(1.0), std::fabs(sum));
 		//std::cout << "CheckDistance: " << sum << " - " << (std::numeric_limits<track_t>::epsilon() * maxOne) << ", " << std::fabs(sum - 1.0f) << std::endl;
-		return std::fabs(sum - 1.0f) <= std::numeric_limits<track_t>::epsilon() * maxOne;
+		return std::fabs(sum - static_cast<track_t>(1.0)) <= std::numeric_limits<track_t>::epsilon() * maxOne;
 	}
 
 	///
@@ -249,7 +249,7 @@ struct TrackerSettings
 	}
 
 	///
-    void AddNearTypes(objtype_t type1, objtype_t type2, bool sym)
+	void AddNearTypes(objtype_t type1, objtype_t type2, bool sym)
 	{
 		auto AddOne = [&](objtype_t type1, objtype_t type2)
 		{
@@ -259,9 +259,9 @@ struct TrackerSettings
 			else
 				it->second.insert(type2);
 		};
-        AddOne(type1, type2);
+		AddOne(type1, type2);
 		if (sym)
-            AddOne(type2, type1);
+			AddOne(type2, type1);
 	}
 
 	///

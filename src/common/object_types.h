@@ -38,6 +38,11 @@ public:
         return true;
     }
 
+	static size_t TypesCount()
+	{
+		return m_typeNames.size();
+	}
+
 private:
 	static std::vector<std::string> m_typeNames;
 	static std::string m_badTypeName;

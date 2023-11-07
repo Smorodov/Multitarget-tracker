@@ -40,9 +40,9 @@ private:
 
     void CreateDistaceMatrix(const regions_t& regions, const std::vector<RegionEmbedding>& regionEmbeddings, distMatrix_t& costMatrix, track_t maxPossibleCost, track_t& maxCost);
     void UpdateTrackingState(const regions_t& regions, cv::UMat currFrame, float fps);
-	void CalcEmbeddins(std::vector<RegionEmbedding>& regionEmbeddings, const regions_t& regions, cv::UMat currFrame) const;
+    void CalcEmbeddins(std::vector<RegionEmbedding>& regionEmbeddings, const regions_t& regions, cv::UMat currFrame) const;
 
-	track_t GetEllipseDist(const CTrack& trackRef, const CRegion& reg);
+    track_t GetEllipseDist(const CTrack& trackRef, const CRegion& reg);
 };
 // ----------------------------------------------------------------------
 
@@ -78,7 +78,7 @@ CTracker::CTracker(const TrackerSettings& settings)
         {
             for (auto objType : embParam.m_objectTypes)
             {
-                m_embCalculators.try_emplace(objType, embCalc);
+                m_embCalculators.try_emplace((objtype_t)objType, embCalc);
             }
         }
     }
@@ -221,7 +221,7 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
 #endif
         for (const auto& reg : regions)
         {
-			DrawRRect(dbgAssignment, reg.m_rrect, cv::Scalar(0, 255, 255), 2);
+            DrawRRect(dbgAssignment, reg.m_rrect, cv::Scalar(0, 255, 255), 2);
         }
     }
 #endif

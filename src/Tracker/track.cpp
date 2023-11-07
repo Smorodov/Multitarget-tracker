@@ -115,7 +115,10 @@ CTrack::CTrack(const CRegion& region,
 track_t CTrack::CalcDistCenter(const CRegion& reg) const
 {
     Point_t diff = m_predictionPoint - reg.m_rrect.center;
-    return sqrtf(sqr(diff.x) + sqr(diff.y));
+    if constexpr (sizeof(track_t) == sizeof(float))
+        return sqrtf(sqr(diff.x) + sqr(diff.y));
+    else
+        return sqrt(sqr(diff.x) + sqr(diff.y));
 }
 
 ///
@@ -137,7 +140,10 @@ track_t CTrack::CalcDistRect(const CRegion& reg) const
     {
         dist += sqr(diff[i]);
     }
-    return sqrtf(dist);
+    if constexpr (sizeof(track_t) == sizeof(float))
+        return sqrtf(dist);
+    else
+        return sqrt(dist);
 }
 
 ///
