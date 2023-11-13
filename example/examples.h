@@ -981,8 +981,7 @@ protected:
 				std::string pathToModel = "../data/";
 #endif
 
-				m_trackerSettings.m_embeddings.emplace_back(pathToModel + "reid/osnet_x0_25_msmt17.onnx",
-					pathToModel + "reid/osnet_x0_25_msmt17.onnx",
+				m_trackerSettings.m_embeddings.emplace_back(pathToModel + "reid/osnet_x0_25_msmt17.onnx", pathToModel + "reid/osnet_x0_25_msmt17.onnx",
 					cv::Size(128, 256),
 					std::vector<objtype_t>{ TypeConverter::Str2Type("person"), TypeConverter::Str2Type("car"), TypeConverter::Str2Type("bus"), TypeConverter::Str2Type("truck"), TypeConverter::Str2Type("vehicle") });
 

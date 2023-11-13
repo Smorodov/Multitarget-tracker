@@ -54,7 +54,7 @@ struct TrajectoryPoint
 
     Point_t m_prediction;
     Point_t m_raw;
-	bool m_hasRaw = false;
+    bool m_hasRaw = false;
 };
 
 ///
@@ -63,9 +63,9 @@ struct TrajectoryPoint
 class Trace
 {
 public:
-	///
-	Trace() = default;
-	///
+    ///
+    Trace() = default;
+    ///
     Trace(const Trace&) = default;
     ///
     Trace(Trace&&) = default;
@@ -102,6 +102,15 @@ public:
     /// \return
     ///
     const TrajectoryPoint& at(size_t i) const
+    {
+        return m_trace[i];
+    }
+    ///
+    /// \brief at
+    /// \param i
+    /// \return
+    ///
+    TrajectoryPoint& at(size_t i)
     {
         return m_trace[i];
     }

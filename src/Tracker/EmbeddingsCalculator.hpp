@@ -20,6 +20,9 @@ public:
 #else
 		m_net = cv::dnn::readNetFromTorch(weightsName);
 #endif
+
+		std::cout << "Re-id model " << weightsName << " loaded: " << (!m_net.empty()) << std::endl;
+
 		if (!m_net.empty())
 		{
 #if (((CV_VERSION_MAJOR == 4) && (CV_VERSION_MINOR >= 2)) || (CV_VERSION_MAJOR > 4))
