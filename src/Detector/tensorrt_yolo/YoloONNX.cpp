@@ -656,22 +656,23 @@ void YoloONNX::ProcessMaskOutput(size_t imgIdx, const std::vector<float*>& outpu
     {
         // Mask processing
         const float* pdata = outputs[1];
-        std::vector<float> mask(pdata, pdata + segChannels * segWidth * segHeight);
+        std::vector<float> maskFloat(pdata, pdata + segChannels * segWidth * segHeight);
 
         int INPUT_W = m_inputDims.d[3];
         int INPUT_H = m_inputDims.d[2];
         static constexpr float MASK_THRESHOLD = 0.5;
 
-        cv::Mat mask_protos = cv::Mat(mask);
+        cv::Mat mask_protos = cv::Mat(maskFloat);
         cv::Mat protos = mask_protos.reshape(0, { segChannels, segWidth * segHeight });
 
         cv::Mat matmulRes = (maskProposals * protos).t();//n*32 32*25600
-        cv::Mat masks = matmulRes.reshape(resBoxes.size(), { segWidth, segHeight });
+        cv::Mat masks = matmulRes.reshape(static_cast<int>(resBoxes.size()), { segWidth, segHeight });
         std::vector<cv::Mat> maskChannels;
         split(masks, maskChannels);
         for (int i = 0; i < resBoxes.size(); ++i)
         {
-            cv::Mat dest, mask;
+            cv::Mat dest;
+            cv::Mat mask;
             //sigmoid
             cv::exp(-maskChannels[i], dest);
             dest = 1.0 / (1.0 + dest);//160*160
@@ -800,7 +801,7 @@ void YoloONNX::ProcessBBoxesOutput(size_t imgIdx, const std::vector<float*>& out
             output += volume * imgIdx;
             //std::cout << "len = " << len << ", nc = " << nc << ", m_params.confThreshold = " << m_params.confThreshold << ", volume = " << volume << std::endl;
 
-            cv::Mat rawMemory(1, dimensions * len, CV_32FC1, output);
+            cv::Mat rawMemory(1, dimensions * static_cast<int>(len), CV_32FC1, output);
             rawMemory = rawMemory.reshape(1, dimensions);
             cv::transpose(rawMemory, rawMemory);
             output = (float*)rawMemory.data;
@@ -812,43 +813,39 @@ void YoloONNX::ProcessBBoxesOutput(size_t imgIdx, const std::vector<float*>& out
             confidences.reserve(len);
             rectBoxes.reserve(len);
 
-            for (size_t i = 0; i < len; ++i)
-            {
-                // Box
-                size_t k = i * (nc + 4);
-                float object_conf = output[k + 4];
+			for (size_t i = 0; i < len; ++i)
+			{
+				// Box
+				size_t k = i * (nc + 4);
 
-                if (object_conf >= m_params.confThreshold)
-                {
-                    // (center x, center y, width, height) to (x, y, w, h)
-                    float x = fw * (output[k] - output[k + 2] / 2);
-                    float y = fh * (output[k + 1] - output[k + 3] / 2);
-                    float width = fw * output[k + 2];
-                    float height = fh * output[k + 3];
+				int classId = -1;
+				float objectConf = 0.f;
+				for (int j = 0; j < nc; j++)
+				{
+					const float classConf = output[k + 4 + j];
+					if (classConf > objectConf)
+					{
+						classId = j;
+						objectConf = classConf;
+					}
+				}
 
-                    // Classes
-                    float class_conf = output[k + 4];
-                    int classId = 0;
+				//if (i == 0)
+				//	std::cout << i << ": object_conf = " << object_conf << ", class_conf = " << class_conf << ", classId = " << classId << ", rect = " << cv::Rect(cvRound(x), cvRound(y), cvRound(width), cvRound(height)) << std::endl;
 
-                    for (int j = 1; j < nc; j++)
-                    {
-                        if (class_conf < output[k + 4 + j])
-                        {
-                            classId = j;
-                            class_conf = output[k + 4 + j];
-                        }
-                    }
+				if (objectConf >= m_params.confThreshold)
+				{
+					classIds.push_back(classId);
+					confidences.push_back(objectConf);
 
-                    class_conf *= object_conf;
-
-                    //if (i == 0)
-                    //	std::cout << i << ": object_conf = " << object_conf << ", class_conf = " << class_conf << ", classId = " << classId << ", rect = " << cv::Rect(cvRound(x), cvRound(y), cvRound(width), cvRound(height)) << std::endl;
-
-                    classIds.push_back(classId);
-                    confidences.push_back(class_conf);
-                    rectBoxes.emplace_back(cvRound(x), cvRound(y), cvRound(width), cvRound(height));
-                }
-            }
+					// (center x, center y, width, height) to (x, y, w, h)
+					float x = fw * (output[k] - output[k + 2] / 2);
+					float y = fh * (output[k + 1] - output[k + 3] / 2);
+					float width = fw * output[k + 2];
+					float height = fh * output[k + 3];
+					rectBoxes.emplace_back(cvRound(x), cvRound(y), cvRound(width), cvRound(height));
+				}
+			}
 
             // Non-maximum suppression to eliminate redudant overlapping boxes
             std::vector<int> indices;
