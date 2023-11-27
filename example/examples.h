@@ -832,8 +832,9 @@ protected:
                 YOLOv5,
                 YOLOv6,
                 YOLOv7,
-				YOLOv7Mask,
-				YOLOv8
+                YOLOv7Mask,
+                YOLOv8,
+                YOLOv8Mask
             };
             YOLOModels usedModel = YOLOModels::YOLOv4;
             switch (usedModel)
@@ -924,6 +925,16 @@ protected:
 				config.emplace("confidenceThreshold", "0.2");
 				config.emplace("inference_precision", "FP32");
 				config.emplace("net_type", "YOLOV8");
+				maxBatch = 1;
+				config.emplace("maxCropRatio", "-1");
+				break;
+
+			case YOLOModels::YOLOv8Mask:
+				config.emplace("modelConfiguration", pathToModel + "yolov8s-seg.onnx");
+				config.emplace("modelBinary", pathToModel + "yolov8s-seg.onnx");
+				config.emplace("confidenceThreshold", "0.2");
+				config.emplace("inference_precision", "FP32");
+				config.emplace("net_type", "YOLOV8Mask");
 				maxBatch = 1;
 				config.emplace("maxCropRatio", "-1");
 				break;

@@ -38,7 +38,8 @@ private:
         YOLOV6,
         YOLOV7,
         YOLOV7Mask,
-        YOLOV8
+        YOLOV8,
+        YOLOV8Mask
     };
 
     cv::dnn::Net m_net;
