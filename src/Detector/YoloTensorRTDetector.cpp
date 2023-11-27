@@ -101,6 +101,7 @@ bool YoloTensorRTDetector::Init(const config_t& config)
         dictNetType["YOLOV7"] = tensor_rt::YOLOV7;
 		dictNetType["YOLOV7Mask"] = tensor_rt::YOLOV7Mask;
 		dictNetType["YOLOV8"] = tensor_rt::YOLOV8;
+		dictNetType["YOLOV8Mask"] = tensor_rt::YOLOV8Mask;
 
 		auto netType = dictNetType.find(net_type->second);
 		if (netType != dictNetType.end())
@@ -287,7 +288,7 @@ void YoloTensorRTDetector::Detect(const std::vector<cv::UMat>& frames, std::vect
 ///
 void YoloTensorRTDetector::CalcMotionMap(cv::Mat& frame)
 {
-	if (m_localConfig.net_type == tensor_rt::YOLOV7Mask)
+	if (m_localConfig.net_type == tensor_rt::YOLOV7Mask || m_localConfig.net_type == tensor_rt::YOLOV8Mask)
 	{
 		static std::vector<cv::Scalar> color;
 		if (color.empty())

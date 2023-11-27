@@ -56,7 +56,7 @@ namespace tensor_rt
             // Input tensor name of ONNX file & engine file
             if (config.net_type == ModelType::YOLOV6)
                 m_params.inputTensorNames.push_back("image_arrays");
-            else if (config.net_type == ModelType::YOLOV7 || config.net_type == ModelType::YOLOV7Mask || config.net_type == ModelType::YOLOV8)
+            else if (config.net_type == ModelType::YOLOV7 || config.net_type == ModelType::YOLOV7Mask || config.net_type == ModelType::YOLOV8 || config.net_type == ModelType::YOLOV8Mask)
                 m_params.inputTensorNames.push_back("images");
 
             // Threshold values
@@ -76,7 +76,7 @@ namespace tensor_rt
             {
                 m_params.outputTensorNames.push_back("outputs");
             }
-            else if (config.net_type == ModelType::YOLOV7 || config.net_type == ModelType::YOLOV7Mask || config.net_type == ModelType::YOLOV8)
+            else if (config.net_type == ModelType::YOLOV7 || config.net_type == ModelType::YOLOV7Mask || config.net_type == ModelType::YOLOV8 || config.net_type == ModelType::YOLOV8Mask)
             {
                 //if (config.batch_size == 1)
                 //{
@@ -84,6 +84,7 @@ namespace tensor_rt
                     m_params.outputTensorNames.push_back("516");      // For YOLOv7 instance segmentation
 
                     m_params.outputTensorNames.push_back("output0");  // For YOLOv8
+                    m_params.outputTensorNames.push_back("output1");  // For YOLOv8 instance segmentation
                 //}
                 //else
                 //{
@@ -96,7 +97,7 @@ namespace tensor_rt
 
             std::string precisionStr;
             std::map<tensor_rt::Precision, std::string> dictprecision;
-            dictprecision[tensor_rt::INT8] =  "kINT8";
+            dictprecision[tensor_rt::INT8] = "kINT8";
             dictprecision[tensor_rt::FP16] = "kHALF";
             dictprecision[tensor_rt::FP32] = "kFLOAT";
             auto precision = dictprecision.find(m_params.m_precision);
@@ -160,7 +161,7 @@ namespace tensor_rt
         if (m_impl)
             delete m_impl;
 
-        if (config.net_type == ModelType::YOLOV6 || config.net_type == ModelType::YOLOV7 || config.net_type == ModelType::YOLOV7Mask || config.net_type == ModelType::YOLOV8)
+        if (config.net_type == ModelType::YOLOV6 || config.net_type == ModelType::YOLOV7 || config.net_type == ModelType::YOLOV7Mask || config.net_type == ModelType::YOLOV8 || config.net_type == ModelType::YOLOV8Mask)
             m_impl = new YoloONNXImpl();
         else
             m_impl = new YoloDectectorImpl();

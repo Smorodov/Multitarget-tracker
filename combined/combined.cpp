@@ -326,7 +326,8 @@ bool CombinedDetector::InitDetector(cv::UMat frame)
 		YOLOv6,
 		YOLOv7,
 		YOLOv7Mask,
-		YOLOv8
+		YOLOv8,
+		YOLOv8Mask
 	};
 	YOLOModels usedModel = YOLOModels::YOLOv8;
 	switch (usedModel)
@@ -416,13 +417,23 @@ bool CombinedDetector::InitDetector(cv::UMat frame)
 		break;
 
 	case YOLOModels::YOLOv8:
-		//configDNN.emplace("modelConfiguration", pathToModel + "yolov8s.onnx");
-		//configDNN.emplace("modelBinary", pathToModel + "yolov8s.onnx");
-		configDNN.emplace("modelConfiguration", "C:/work/mtracking/Nuzhny007/Multitarget-tracker/data/yolov8x.onnx");
-		configDNN.emplace("modelBinary", "C:/work/mtracking/Nuzhny007/Multitarget-tracker/data/yolov8x.onnx");
+		configDNN.emplace("modelConfiguration", pathToModel + "yolov8s.onnx");
+		configDNN.emplace("modelBinary", pathToModel + "yolov8s.onnx");
 		configDNN.emplace("confidenceThreshold", "0.2");
 		configDNN.emplace("inference_precision", "FP16");
 		configDNN.emplace("net_type", "YOLOV8");
+		configDNN.emplace("inWidth", "640");
+		configDNN.emplace("inHeight", "640");
+		maxBatch = 1;
+		configDNN.emplace("maxCropRatio", "-1");
+		break;
+
+	case YOLOModels::YOLOv8Mask:
+		configDNN.emplace("modelConfiguration", pathToModel + "yolov8s-seg.onnx");
+		configDNN.emplace("modelBinary", pathToModel + "yolov8s-seg.onnx");
+		configDNN.emplace("confidenceThreshold", "0.2");
+		configDNN.emplace("inference_precision", "FP16");
+		configDNN.emplace("net_type", "YOLOV8Mask");
 		configDNN.emplace("inWidth", "640");
 		configDNN.emplace("inHeight", "640");
 		maxBatch = 1;

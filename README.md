@@ -3,6 +3,8 @@
 
 # Last changes
 
+* YOLOv8 instance segmentation models worked with TensorRT! Export pretrained Pytorch models [here (ultralytics/ultralytics)](https://github.com/ultralytics/ultralytics) to onnx format and run Multitarget-tracker with -e=6 example
+
 * Re-identification model osnet_x0_25_msmt17 from [mikel-brostrom/yolo_tracking](https://github.com/mikel-brostrom/yolo_tracking)
 
 * YOLOv8 detector worked with TensorRT! Export pretrained Pytorch models [here (ultralytics/ultralytics)](https://github.com/ultralytics/ultralytics) to onnx format and run Multitarget-tracker with -e=6 example

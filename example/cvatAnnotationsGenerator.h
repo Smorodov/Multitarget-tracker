@@ -171,7 +171,7 @@ private:
 		auto timer = std::chrono::system_clock::to_time_t(now);
 
 		// convert to broken time
-#ifdef WIN32
+#ifdef _WIN32
 		std::tm bt;
 		localtime_s(&bt, &timer);
 #else
