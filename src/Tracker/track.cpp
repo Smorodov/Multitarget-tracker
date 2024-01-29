@@ -704,6 +704,8 @@ void CTrack::RectUpdate(const CRegion& region,
         case tracking::TrackMOSSE:
         case tracking::TrackCSRT:
         case tracking::TrackDaSiamRPN:
+        case tracking::TrackNano:
+        case tracking::TrackVit:
 #ifdef USE_OCV_KCF
             {
                 roiRect.width = std::max(3 * brect.width, currFrame.cols / 4);
@@ -803,6 +805,8 @@ void CTrack::RectUpdate(const CRegion& region,
     case tracking::TrackMOSSE:
 	case tracking::TrackCSRT:
     case tracking::TrackDaSiamRPN:
+    case tracking::TrackNano:
+    case tracking::TrackVit:
 #ifdef USE_OCV_KCF
         {
             cv::Rect roiRect;
@@ -1140,6 +1144,39 @@ void CTrack::CreateExternalTracker(int channels)
         if (m_VOTTracker)
             m_VOTTracker = nullptr;
 		break;
+
+    case tracking::TrackNano:
+#ifdef USE_OCV_KCF
+        if (!m_tracker || m_tracker.empty())
+        {
+#if (((CV_VERSION_MAJOR == 4) && (CV_VERSION_MINOR > 5)) || ((CV_VERSION_MAJOR == 4) && (CV_VERSION_MINOR == 5) && (CV_VERSION_REVISION > 2))  || (CV_VERSION_MAJOR > 4))
+            cv::TrackerNano::Params params;
+            params.backbone = "nanotrack_backbone_sim.onnx";
+            params.neckhead = "nanotrack_head_sim.onnx";
+            // backend
+            // 0: automatically (by default)
+            // 1: Halide language
+            // 2: Intel's Deep Learning Inference Engine
+            // 3: OpenCV implementation
+            // 4: VKCOM
+            // 5: CUDA
+            params.backend = 0;
+            // target
+            // 0: CPU target (by default)
+            // 1: OpenCL
+            // 2: OpenCL fp16 (half-float precision)
+            // 3: VPU
+            // 4: Vulkan
+            // 6: CUDA
+            // 7: CUDA fp16 (half-float preprocess)
+            params.target = 0;
+            m_tracker = cv::TrackerNano::create(params);
+#endif
+        }
+#endif
+        if (m_VOTTracker)
+            m_VOTTracker = nullptr;
+        break;
 
     case tracking::TrackVit:
 #ifdef USE_OCV_KCF
