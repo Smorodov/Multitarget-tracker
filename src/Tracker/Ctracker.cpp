@@ -178,6 +178,15 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
 #if DRAW_DBG_ASSIGNMENT
     std::cout << "CTracker::UpdateTrackingState: m_tracks = " << N << ", regions = " << M << std::endl;
 
+    int fontType = cv::FONT_HERSHEY_TRIPLEX;
+    double fontSize = 0.6;
+    cv::Scalar colorRegionEllow(0, 255, 255);
+    cv::Scalar colorMatchedAboveThreshRed(0, 0, 255);
+    cv::Scalar colorMatchedGreen(0, 255, 0);
+    cv::Scalar colorMatchedNearMargenta(255, 0, 255);
+    cv::Scalar colorNotMatchedNearWhite(255, 255, 255);
+    cv::Scalar colorUnknownBlue(255, 0, 0);
+
 	auto DrawRRect = [](cv::Mat& img, const cv::RotatedRect& rr, const cv::Scalar& cl, int thikness)
 	{
 		cv::Point2f rectPoints[4];
@@ -221,7 +230,7 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
 #endif
         for (const auto& reg : regions)
         {
-            DrawRRect(dbgAssignment, reg.m_rrect, cv::Scalar(0, 255, 255), 2);
+            DrawRRect(dbgAssignment, reg.m_rrect, colorRegionEllow, 2);
         }
     }
 #endif
@@ -256,25 +265,25 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
 #if DRAW_DBG_ASSIGNMENT
         std::cout << "CTracker::UpdateTrackingState: Clean assignment from pairs with large distance" << std::endl;
 #endif
-        for (size_t i = 0; i < assignment.size(); i++)
+        for (size_t i = 0; i < assignment.size(); ++i)
         {
 #if DRAW_DBG_ASSIGNMENT
             std::stringstream ss;
             if (assignment[i] != -1)
             {
-                ss << std::fixed << std::setprecision(2) << costMatrix[i + assignment[i] * N];
+                ss << m_tracks[i]->GetID().ID2Str() << "-" << assignment[i] << ": " << std::fixed << std::setprecision(2) << costMatrix[i + assignment[i] * N];
 
 				if (costMatrix[i + assignment[i] * N] > m_settings.m_distThres)
                 {
                     ss << ">" << m_settings.m_distThres;
-                    cv::line(dbgAssignment, m_tracks[i]->GetLastRect().center, regions[assignment[i]].m_rrect.center, cv::Scalar(0, 0, 255), 1);
-					DrawRRect(dbgAssignment, m_tracks[i]->LastRegion().m_rrect, cv::Scalar(0, 0, 255), 1);
+                    cv::line(dbgAssignment, m_tracks[i]->GetLastRect().center, regions[assignment[i]].m_rrect.center, colorMatchedAboveThreshRed, 2);
+					DrawRRect(dbgAssignment, m_tracks[i]->LastRegion().m_rrect, colorMatchedAboveThreshRed, 1);
                 }
                 else
                 {
                     ss << "<" << m_settings.m_distThres;
-                    cv::line(dbgAssignment, m_tracks[i]->GetLastRect().center, regions[assignment[i]].m_rrect.center, cv::Scalar(0, 255, 0), 1);
-					DrawRRect(dbgAssignment, m_tracks[i]->LastRegion().m_rrect, cv::Scalar(0, 255, 0), 1);
+                    cv::line(dbgAssignment, m_tracks[i]->GetLastRect().center, regions[assignment[i]].m_rrect.center, colorMatchedGreen, 1);
+					DrawRRect(dbgAssignment, m_tracks[i]->LastRegion().m_rrect, colorMatchedGreen, 1);
                 }
 
                 for (size_t ri = 0; ri < regions.size(); ++ri)
@@ -285,15 +294,15 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
                         liness << std::fixed << std::setprecision(2) << costMatrix[i + ri * N];
                         auto p1 = m_tracks[i]->GetLastRect().center;
                         auto p2 = regions[ri].m_rrect.center;
-                        cv::line(dbgAssignment, p1, p2, cv::Scalar(255, 0, 255), 1);
-                        cv::putText(dbgAssignment, liness.str(), cv::Point((p1.x + p2.x) / 2, (p1.y + p2.y) / 2), cv::FONT_HERSHEY_DUPLEX, 0.7, cv::Scalar(255, 255, 255), 1, 8);
+                        cv::line(dbgAssignment, p1, p2, colorMatchedNearMargenta, 1);
+                        cv::putText(dbgAssignment, liness.str(), cv::Point((p1.x + p2.x) / 2, (p1.y + p2.y) / 2), fontType, fontSize, colorMatchedNearMargenta, 1, 8);
                     }
                 }
             }
             else
             {
                 // If track have no assigned detect, then increment skipped frames counter.
-				DrawRRect(dbgAssignment, m_tracks[i]->LastRegion().m_rrect, cv::Scalar(255, 0, 255), 1);
+				DrawRRect(dbgAssignment, m_tracks[i]->LastRegion().m_rrect, colorNotMatchedNearWhite, 1);
                 for (size_t ri = 0; ri < regions.size(); ++ri)
                 {
                     if (costMatrix[i + ri * N] < 1)
@@ -302,15 +311,15 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
                         liness << std::fixed << std::setprecision(2) << costMatrix[i + ri * N];
                         auto p1 = m_tracks[i]->GetLastRect().center;
                         auto p2 = regions[ri].m_rrect.center;
-                        cv::line(dbgAssignment, p1, p2, cv::Scalar(255, 255, 255), 1);
-                        cv::putText(dbgAssignment, liness.str(), cv::Point((p1.x + p2.x) / 2, (p1.y + p2.y) / 2), cv::FONT_HERSHEY_DUPLEX, 0.7, cv::Scalar(255, 255, 255), 1, 8);
+                        cv::line(dbgAssignment, p1, p2, colorNotMatchedNearWhite, 1);
+                        cv::putText(dbgAssignment, liness.str(), cv::Point((p1.x + p2.x) / 2, (p1.y + p2.y) / 2), fontType, fontSize, colorNotMatchedNearWhite, 1, 8);
                     }
                 }
             }
             if (ss.str().length() > 0)
             {
                 auto brect = m_tracks[i]->LastRegion().m_brect;
-                cv::putText(dbgAssignment, ss.str(), cv::Point(brect.x, brect.y), cv::FONT_HERSHEY_DUPLEX, 0.7, cv::Scalar(255, 0, 255), 1, 8);
+                cv::putText(dbgAssignment, ss.str(), cv::Point(brect.x, brect.y), fontType, fontSize, colorUnknownBlue, 1, 8);
             }
 #endif
 
@@ -651,7 +660,7 @@ track_t CTracker::GetEllipseDist(const CTrack& trackRef, const CRegion& reg)
 {
 	cv::Size_<track_t> minRadius;
 
-	if (m_settings.m_minAreaRadiusPix < 0)
+	if (m_settings.m_minAreaRadiusPix <= 0)
 	{
 		minRadius.width = m_settings.m_minAreaRadiusK * trackRef.LastRegion().m_rrect.size.width;
 		minRadius.height = m_settings.m_minAreaRadiusK * trackRef.LastRegion().m_rrect.size.height;

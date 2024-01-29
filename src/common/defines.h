@@ -427,6 +427,7 @@ enum LostTrackType
     TrackSTAPLE,
     TrackLDES,
     TrackDaSiamRPN,
+    TrackVit,
     SingleTracksCount
 };
 }
