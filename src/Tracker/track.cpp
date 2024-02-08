@@ -1149,7 +1149,7 @@ void CTrack::CreateExternalTracker(int channels)
 #ifdef USE_OCV_KCF
         if (!m_tracker || m_tracker.empty())
         {
-#if (((CV_VERSION_MAJOR == 4) && (CV_VERSION_MINOR > 5)) || ((CV_VERSION_MAJOR == 4) && (CV_VERSION_MINOR == 5) && (CV_VERSION_REVISION > 2))  || (CV_VERSION_MAJOR > 4))
+#if (((CV_VERSION_MAJOR == 4) && (CV_VERSION_MINOR > 6)) || (CV_VERSION_MAJOR > 4))
             cv::TrackerNano::Params params;
             params.backbone = "nanotrack_backbone_sim.onnx";
             params.neckhead = "nanotrack_head_sim.onnx";
