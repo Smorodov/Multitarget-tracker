@@ -654,6 +654,9 @@ void YoloONNX::ProcessMaskOutput(size_t imgIdx, const std::vector<float*>& outpu
 
                 std::vector<float> temp_proto(output + k + 5 + nc, output + k + net_width);
                 picked_proposals.push_back(temp_proto);
+
+                if (rectBoxes.size() >= CV_CN_MAX - 1)
+                    break;
             }
         }
 
