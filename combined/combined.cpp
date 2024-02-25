@@ -1,4 +1,4 @@
-#include <iomanip>
+﻿#include <iomanip>
 #include <ctime>
 #include <future>
 
@@ -327,7 +327,8 @@ bool CombinedDetector::InitDetector(cv::UMat frame)
 		YOLOv7,
 		YOLOv7Mask,
 		YOLOv8,
-		YOLOv8Mask
+		YOLOv8Mask,
+		YOLOv9
 	};
 	YOLOModels usedModel = YOLOModels::YOLOv8;
 	switch (usedModel)
@@ -434,6 +435,18 @@ bool CombinedDetector::InitDetector(cv::UMat frame)
 		configDNN.emplace("confidenceThreshold", "0.2");
 		configDNN.emplace("inference_precision", "FP16");
 		configDNN.emplace("net_type", "YOLOV8Mask");
+		configDNN.emplace("inWidth", "640");
+		configDNN.emplace("inHeight", "640");
+		maxBatch = 1;
+		configDNN.emplace("maxCropRatio", "-1");
+		break;
+
+	case YOLOModels::YOLOv9:
+		configDNN.emplace("modelConfiguration", pathToModel + "yolov9-c.onnx");
+		configDNN.emplace("modelBinary", pathToModel + "yolov9-c.onnx");
+		configDNN.emplace("confidenceThreshold", "0.2");
+		configDNN.emplace("inference_precision", "FP16");
+		configDNN.emplace("net_type", "YOLOV9");
 		configDNN.emplace("inWidth", "640");
 		configDNN.emplace("inHeight", "640");
 		maxBatch = 1;

@@ -56,7 +56,9 @@ namespace tensor_rt
             // Input tensor name of ONNX file & engine file
             if (config.net_type == ModelType::YOLOV6)
                 m_params.inputTensorNames.push_back("image_arrays");
-            else if (config.net_type == ModelType::YOLOV7 || config.net_type == ModelType::YOLOV7Mask || config.net_type == ModelType::YOLOV8 || config.net_type == ModelType::YOLOV8Mask)
+            else if (config.net_type == ModelType::YOLOV7 || config.net_type == ModelType::YOLOV7Mask ||
+                     config.net_type == ModelType::YOLOV8 || config.net_type == ModelType::YOLOV8Mask ||
+                     config.net_type == ModelType::YOLOV9)
                 m_params.inputTensorNames.push_back("images");
 
             // Threshold values
@@ -76,7 +78,9 @@ namespace tensor_rt
             {
                 m_params.outputTensorNames.push_back("outputs");
             }
-            else if (config.net_type == ModelType::YOLOV7 || config.net_type == ModelType::YOLOV7Mask || config.net_type == ModelType::YOLOV8 || config.net_type == ModelType::YOLOV8Mask)
+            else if (config.net_type == ModelType::YOLOV7 || config.net_type == ModelType::YOLOV7Mask ||
+                     config.net_type == ModelType::YOLOV8 || config.net_type == ModelType::YOLOV8Mask ||
+                     config.net_type == ModelType::YOLOV9)
             {
                 //if (config.batch_size == 1)
                 //{
@@ -161,7 +165,10 @@ namespace tensor_rt
         if (m_impl)
             delete m_impl;
 
-        if (config.net_type == ModelType::YOLOV6 || config.net_type == ModelType::YOLOV7 || config.net_type == ModelType::YOLOV7Mask || config.net_type == ModelType::YOLOV8 || config.net_type == ModelType::YOLOV8Mask)
+        if (config.net_type == ModelType::YOLOV6 ||
+            config.net_type == ModelType::YOLOV7 || config.net_type == ModelType::YOLOV7Mask ||
+            config.net_type == ModelType::YOLOV8 || config.net_type == ModelType::YOLOV8Mask ||
+            config.net_type == ModelType::YOLOV9)
             m_impl = new YoloONNXImpl();
         else
             m_impl = new YoloDectectorImpl();
