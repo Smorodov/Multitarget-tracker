@@ -139,6 +139,7 @@ bool OCVDNNDetector::Init(const config_t& config)
         dictNetType["YOLOV7Mask"] = ModelType::YOLOV7Mask;
         dictNetType["YOLOV8"] = ModelType::YOLOV8;
         dictNetType["YOLOV8Mask"] = ModelType::YOLOV8Mask;
+        dictNetType["YOLOV9"] = ModelType::YOLOV9;
 
         auto netType = dictNetType.find(net_type->second);
         if (netType != dictNetType.end())
@@ -345,7 +346,7 @@ void OCVDNNDetector::DetectInCrop(const cv::UMat& colorFrame, const cv::Rect& cr
     }
 	else
 	{
-        if (m_netType == ModelType::YOLOV8 || m_netType == ModelType::YOLOV5)
+        if (m_netType == ModelType::YOLOV8 || m_netType == ModelType::YOLOV5 || m_netType == ModelType::YOLOV9)
         {
             int rows = detections[0].size[1];
             int dimensions = detections[0].size[2];
@@ -367,7 +368,7 @@ void OCVDNNDetector::DetectInCrop(const cv::UMat& colorFrame, const cv::Rect& cr
 
             for (int i = 0; i < rows; ++i)
             {
-                if (m_netType == ModelType::YOLOV8)
+                if (m_netType == ModelType::YOLOV8 || m_netType == ModelType::YOLOV9)
                 {
                     float* classes_scores = data + 4;
 

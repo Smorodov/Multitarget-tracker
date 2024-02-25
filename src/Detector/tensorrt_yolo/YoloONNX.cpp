@@ -1087,7 +1087,7 @@ void YoloONNX::ProcessBBoxesOutput(size_t imgIdx, const std::vector<float*>& out
     }
     else if (outputs.size() == 1)
     {
-        if (m_params.m_netType == tensor_rt::ModelType::YOLOV8)
+        if (m_params.m_netType == tensor_rt::ModelType::YOLOV8 || m_params.m_netType == tensor_rt::ModelType::YOLOV9)
         {
 			//0: name: images, size: 1x3x640x640
 		    //1: name: output0, size: 1x84x8400
