@@ -4,6 +4,8 @@
 #include "RuCLIP.h"
 #include "RuCLIPProcessor.h"
 
+#include "../../src/common/defines.h"
+
 ///
 class ClassificationCLIP::ClassificationCLIPImpl
 {
@@ -55,15 +57,31 @@ public:
 		if (rois.empty())
 			return res;
 
+		result.resize(rois.size());
+
+		std::map<size_t, size_t> img2roi;
+
 		std::cout << "Resizing..." << std::endl;
-		std::vector<cv::Mat> images(rois.size());
+		std::vector<cv::Mat> images;
+		images.reserve(rois.size());
 		for (size_t i = 0; i < rois.size(); ++i)
 		{
-			cv::resize(cv::Mat(frame, rois[i]), images[i], cv::Size(m_inputImgSize, m_inputImgSize), cv::INTER_CUBIC);
+			cv::Rect r = Clamp(rois[i], frame.size());
+			if (r.width > m_inputImgSize / 10 && r.height > m_inputImgSize / 10)
+			{
+				img2roi[images.size()] = i;
+				cv::Mat tmp;
+				cv::resize(cv::Mat(frame, r), tmp, cv::Size(m_inputImgSize, m_inputImgSize), cv::INTER_CUBIC);
+				images.emplace_back(tmp);
+			}
+		}
+		if (images.empty())
+		{
+			std::cout << "CLIP::ProcessFrame: empty images" << std::endl;
+			return res;
 		}
 
 		std::cout << "Running on " << images.size() << "..." << std::endl;
-		result.reserve(images.size());
 		auto dummy_input = m_processor->operator()(m_labels, images);
 		try
 		{
@@ -85,7 +103,8 @@ public:
 						bestInd = labelInd;
 					}
 				}
-				result.emplace_back(m_labels[bestInd], bestConf);
+				result[img2roi[imgInd]] = CLIPResult(m_labels[bestInd], bestConf);
+				std::cout << "Object: " << m_labels[bestInd] << " - " << bestConf << std::endl;
 				tensorData += m_labels.size();
 			}
 			res = true;

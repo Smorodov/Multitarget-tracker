@@ -21,7 +21,7 @@ public:
     {
 		std::string clipModel = "C:/work/clip/ruclip_/CLIP/data/ruclip-vit-large-patch14-336";
 		std::string bpeModel = "C:/work/clip/ruclip_/CLIP/data/ruclip-vit-large-patch14-336/bpe.model";
-		m_clip.Init(clipModel, bpeModel, 336, 0, { "human", "pedestrian", "car", "vehicle", "truck", "bus" });
+		m_clip.Init(clipModel, bpeModel, 336, 0, { "pedestrian", "person", "suv", "pickup", "car", "truck", "bus" });
     }
 
 protected:
@@ -32,7 +32,7 @@ protected:
     ///
     bool InitDetector(cv::UMat frame) override
     {
-        m_minObjWidth = 0;//frame.cols / 20;
+        m_minObjWidth = frame.cols / 20;
 
         config_t config;
 		config.emplace("useRotatedRect", "0");
@@ -190,13 +190,13 @@ protected:
 				auto velocity = sqrt(sqr(track.m_velocity[0]) + sqr(track.m_velocity[1]));
 				if (track.IsRobust(4,             // Minimal trajectory size
 					0.3f,                         // Minimal ratio raw_trajectory_points / trajectory_lenght
-					cv::Size2f(0.2f, 5.0f)) &&    // Min and max ratio: width / height
-					velocity > 30)                // Velocity more than 30 pixels per second
+					cv::Size2f(0.2f, 5.0f)))    // Min and max ratio: width / height
+					//velocity > 30                // Velocity more than 30 pixels per second
 				{
-					track_t mean = 0;
-					track_t stddev = 0;
-					TrackingObject::LSParams lsParams;
-					if (track.LeastSquares2(20, mean, stddev, lsParams) && mean > stddev)
+					//track_t mean = 0;
+					//track_t stddev = 0;
+					//TrackingObject::LSParams lsParams;
+					//if (track.LeastSquares2(20, mean, stddev, lsParams) && mean > stddev)
 					{
 						DrawTrack(frame, track, true, framesCounter, clipResult[i].m_label + ", " + std::to_string(clipResult[i].m_conf));
 					}
