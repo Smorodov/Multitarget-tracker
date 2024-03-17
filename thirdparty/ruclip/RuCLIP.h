@@ -164,8 +164,7 @@ inline CLIP FromPretrained(const std::filesystem::path &folder)
 	json config = json::parse(f);
 
 	// Создание модели
-	auto clip = CLIP(
-		"ruclip",
+	auto clip = CLIP("ruclip",
 		int(config["embed_dim"]),
 		int(config["image_resolution"]),
 		int(config["vision_layers"]),
@@ -175,8 +174,7 @@ inline CLIP FromPretrained(const std::filesystem::path &folder)
 		int(config["vocab_size"]),
 		int(config["transformer_width"]),
 		int(config["transformer_heads"]),
-		int(config["transformer_layers"])
-	);
+		int(config["transformer_layers"]));
 
 	for (auto &k : clip->named_parameters())
 		std::cout << k.key() << std::endl;

@@ -1,7 +1,7 @@
 #include "RuCLIPProcessor.h"
 
 RuCLIPProcessor :: RuCLIPProcessor(
-	const std::filesystem::path &tokenizer_path,
+	const std::string& tokenizer_path,
 	const int image_size /*= 224*/,
 	const int text_seq_length /*= 77*/,
 	const std::vector<double> norm_mean /*= { 0.48145466, 0.4578275, 0.40821073 }*/,
@@ -9,7 +9,7 @@ RuCLIPProcessor :: RuCLIPProcessor(
 ) : ImageSize(image_size), TextSeqLength(text_seq_length), NormMean(norm_mean), NormStd(norm_std)
 {
 	vkcom::Status status;
-	Tokenizer = new vkcom::BaseEncoder(tokenizer_path.string(), -1, &status);
+	Tokenizer = new vkcom::BaseEncoder(tokenizer_path, -1, &status);
 }
 
 ///!!!Локали-юникоды

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "json.hpp"
-#include "bpe.h"
+#include "youtokentome/bpe.h"
 #include "TorchHeader.h"
 
 #include <opencv2/imgproc/imgproc.hpp>
@@ -61,7 +61,7 @@ protected:
 	vkcom::BaseEncoder * Tokenizer;
 public:
 	RuCLIPProcessor(
-		const std::filesystem::path &tokenizer_path,
+		const std::string& tokenizer_path,
 		const int image_size = 224,
 		const int text_seq_length = 77,
 		const std::vector<double> norm_mean = { 0.48145466, 0.4578275, 0.40821073 },
@@ -82,7 +82,7 @@ public:
 		json config = json::parse(f);
 
 		return RuCLIPProcessor(
-			tokenizer_path,
+			tokenizer_path.string(),
 			int(config["image_resolution"]),
 			int(config["context_length"]),
 			{ 0.48145466, 0.4578275, 0.40821073 },	//config.get("mean"),

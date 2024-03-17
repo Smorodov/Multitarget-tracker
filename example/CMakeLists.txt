@@ -8,6 +8,7 @@ set(SOURCES main.cpp
 set(HEADERS MouseExample.h
             VideoExample.h
             examples.h
+            MotionDetectorExample.h
             FileLogger.h)
 
 if (BUILD_CARS_COUNTING)

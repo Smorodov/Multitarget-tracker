@@ -1,5 +1,6 @@
 #include "MouseExample.h"
 #include "examples.h"
+#include "MotionDetectorExample.h"
 
 #ifdef BUILD_CARS_COUNTING
 #include "CarsCounting.h"
