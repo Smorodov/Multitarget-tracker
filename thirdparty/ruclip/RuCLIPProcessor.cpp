@@ -53,16 +53,29 @@ torch::Tensor RuCLIPProcessor :: PrepareTokens(/*std::vector<*/std::vector<int32
 }
 
 ///
-std::pair <torch::Tensor, torch::Tensor> RuCLIPProcessor :: operator () (const std::vector <std::string> &texts, const std::vector <cv::Mat> &images)
+void RuCLIPProcessor::CacheText(const std::vector <std::string>& texts)
 {
-	std::vector <torch::Tensor> texts_tensors,
-		images_tensors;
-	for (auto &it : texts)
+	m_textsTensors.clear();
+	for (auto& it : texts)
+	{
+		std::string s = it;
+		torch::Tensor text_tensor = EncodeText(s);
+		m_textsTensors.push_back(text_tensor);
+	}
+}
+
+///
+std::pair<torch::Tensor, torch::Tensor> RuCLIPProcessor::operator()(const std::vector <std::string> &texts, const std::vector <cv::Mat> &images)
+{
+	std::vector <torch::Tensor> texts_tensors;
+	for (auto& it : texts)
 	{
 		std::string s = it;
 		torch::Tensor text_tensor = EncodeText(s);
 		texts_tensors.push_back(text_tensor);
 	}
+
+	std::vector <torch::Tensor> images_tensors;
 	for (auto &it : images)
 	{
 		torch::Tensor img_tensor = CVMatToTorchTensor(it, true);
@@ -71,4 +84,18 @@ std::pair <torch::Tensor, torch::Tensor> RuCLIPProcessor :: operator () (const s
 		images_tensors.push_back(img_tensor);
 	}
 	return std::make_pair(/*torch::pad_sequence*/torch::stack(texts_tensors), torch::pad_sequence(images_tensors).squeeze(0));
+}
+
+///
+std::pair<torch::Tensor, torch::Tensor> RuCLIPProcessor::operator()(const std::vector <cv::Mat>& images)
+{
+	std::vector <torch::Tensor> images_tensors;
+	for (auto& it : images)
+	{
+		torch::Tensor img_tensor = CVMatToTorchTensor(it, true);
+		img_tensor = torch::data::transforms::Normalize<>(NormMean, NormStd)(img_tensor);
+		//img_tensor.clone();
+		images_tensors.push_back(img_tensor);
+	}
+	return std::make_pair(torch::stack(m_textsTensors), torch::pad_sequence(images_tensors).squeeze(0));
 }

@@ -19,10 +19,12 @@ public:
     MotionDetectorExample(const cv::CommandLineParser& parser)
         : VideoExample(parser), m_minObjWidth(10)
     {
+#ifdef USE_CLIP
 		std::string clipModel = "C:/work/clip/ruclip_/CLIP/data/ruclip-vit-large-patch14-336";
 		std::string bpeModel = "C:/work/clip/ruclip_/CLIP/data/ruclip-vit-large-patch14-336/bpe.model";
 		m_clip.Init(clipModel, bpeModel, 336, 0, { "pedestrian", "person", "suv", "pickup", "car", "truck", "bus" });
-    }
+#endif // USE_CLIP
+	}
 
 protected:
     ///
@@ -155,8 +157,11 @@ protected:
 			const auto& track = tracks[i];
             if (track.m_isStatic)
             {
+#ifdef USE_CLIP
                 DrawTrack(frame, track, false, framesCounter, clipResult[i].m_label + ", " + std::to_string(clipResult[i].m_conf));
-
+#else
+				DrawTrack(frame, track, false, framesCounter);
+#endif //USE_CLIP
 				std::string label = "abandoned " + track.m_ID.ID2Str();
 				int baseLine = 0;
 				cv::Size labelSize = cv::getTextSize(label, cv::FONT_HERSHEY_TRIPLEX, 0.5, 1, &baseLine);
@@ -198,7 +203,11 @@ protected:
 					//TrackingObject::LSParams lsParams;
 					//if (track.LeastSquares2(20, mean, stddev, lsParams) && mean > stddev)
 					{
+#ifdef USE_CLIP
 						DrawTrack(frame, track, true, framesCounter, clipResult[i].m_label + ", " + std::to_string(clipResult[i].m_conf));
+#else
+						DrawTrack(frame, track, true, framesCounter);
+#endif //USE_CLIP
 					}
 				}
             }

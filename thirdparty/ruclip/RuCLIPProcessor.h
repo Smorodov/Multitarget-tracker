@@ -48,30 +48,22 @@ inline cv::Mat TorchTensorToCVMat(const torch::Tensor tensor_image, const bool p
 //}
 
 ///
-class RuCLIPProcessor {
-protected:
-	uint32_t eos_id = 3,
-		bos_id = 2,
-		unk_id = 1,
-		pad_id = 0;
-	const int ImageSize{ 224 },
-		TextSeqLength{ 77 };
-	std::vector<double> NormMean,
-		NormStd;
-	vkcom::BaseEncoder * Tokenizer;
+class RuCLIPProcessor
+{
 public:
-	RuCLIPProcessor(
-		const std::string& tokenizer_path,
+	RuCLIPProcessor(const std::string& tokenizer_path,
 		const int image_size = 224,
 		const int text_seq_length = 77,
 		const std::vector<double> norm_mean = { 0.48145466, 0.4578275, 0.40821073 },
-		const std::vector<double> norm_std = { 0.26862954, 0.26130258, 0.27577711 }
-	);
+		const std::vector<double> norm_std = { 0.26862954, 0.26130258, 0.27577711 });
 
 	///!!!Локали-юникоды
 	torch::Tensor EncodeText(/*std::vector<*/std::string &text);
 	torch::Tensor PrepareTokens(/*std::vector<*/std::vector<int32_t> tokens);		//Передаю по значению чтобы внутри иметь дело с копией
-	std::pair <torch::Tensor, torch::Tensor> operator () (const std::vector <std::string> &texts, const std::vector <cv::Mat> &images);
+	std::pair <torch::Tensor, torch::Tensor> operator()(const std::vector <std::string>& texts, const std::vector <cv::Mat>& images);
+	std::pair <torch::Tensor, torch::Tensor> operator()(const std::vector <cv::Mat>& images);
+
+	void CacheText(const std::vector <std::string>& texts);
 
 	static RuCLIPProcessor FromPretrained(const std::filesystem::path &folder)
 	{
@@ -89,4 +81,18 @@ public:
 			{ 0.26862954, 0.26130258, 0.27577711 }	//config.get("std")
 		);
 	}
+
+private:
+	uint32_t eos_id = 3;
+	uint32_t bos_id = 2;
+	uint32_t unk_id = 1;
+	uint32_t pad_id = 0;
+	const int ImageSize{ 224 };
+	const int TextSeqLength{ 77 };
+	std::vector<double> NormMean;
+	std::vector<double> NormStd;
+	vkcom::BaseEncoder* Tokenizer = nullptr;
+
+	std::vector <torch::Tensor> m_textsTensors;
+
 };

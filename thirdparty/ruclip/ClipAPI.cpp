@@ -46,6 +46,8 @@ public:
 		std::vector<double> normStd{ 0.26862954, 0.26130258, 0.27577711 };
 		m_processor = std::make_unique<RuCLIPProcessor>(m_pathToBPE, m_inputImgSize, 77, normMean, normStd);
 
+		m_processor->CacheText(m_labels);
+
 		return res;
 	}
 
@@ -82,7 +84,7 @@ public:
 		}
 
 		std::cout << "Running on " << images.size() << "..." << std::endl;
-		auto dummy_input = m_processor->operator()(m_labels, images);
+		auto dummy_input = m_processor->operator()(images);
 		try
 		{
 			torch::Tensor logits_per_image = m_clip->forward(dummy_input.first.to(m_device), dummy_input.second.to(m_device));
