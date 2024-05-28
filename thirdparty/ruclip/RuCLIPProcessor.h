@@ -93,6 +93,5 @@ private:
 	std::vector<double> NormStd;
 	vkcom::BaseEncoder* Tokenizer = nullptr;
 
-	std::vector <torch::Tensor> m_textsTensors;
-
+	std::vector<torch::Tensor> m_textsTensors;
 };

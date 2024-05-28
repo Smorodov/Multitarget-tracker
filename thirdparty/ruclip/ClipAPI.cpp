@@ -122,8 +122,6 @@ public:
 
 
 private:
-	void* m_pImpl = nullptr;
-
 	std::string m_pathToClip = "";
 	std::string m_pathToBPE = "";
 	int m_inputImgSize = 336;
