@@ -56,6 +56,7 @@ class YoloONNX
 
 public:
     YoloONNX() = default;
+    virtual ~YoloONNX() = default;
 
     //!
     //! \brief Function builds the network engine
@@ -82,12 +83,14 @@ public:
     //!
     size_t GetNumClasses() const;
 
-private:
+protected:
     SampleYoloParams m_params; //!< The parameters for the sample.
-
     nvinfer1::Dims m_inputDims; //!< The dimensions of the input to the network.
     std::vector<nvinfer1::Dims> m_outpuDims; //!< The dimensions of the input to the network.
 
+    virtual std::vector<tensor_rt::Result> GetResult(size_t imgIdx, int keep_topk, const std::vector<float*>& outputs, cv::Size frameSize) = 0;
+
+private:    
     std::shared_ptr<nvinfer1::ICudaEngine> m_engine; //!< The TensorRT engine used to run the network
 
     cv::Mat m_resized;
@@ -110,14 +113,8 @@ private:
     bool ProcessInputAspectRatio(const cv::Mat &mSampleImage);
     bool ProcessInputAspectRatio(const std::vector<cv::Mat>& mSampleImage);
 
-    bool ProcessInput(const samplesCommon::BufferManager& buffers);
-
     //!
     //! \brief Filters output detections and verify results
     //!
     bool VerifyOutputAspectRatio(size_t imgIdx, std::vector<tensor_rt::Result>& nms_bboxes, cv::Size frameSize);
-
-    std::vector<tensor_rt::Result> GetResult(size_t imgIdx, int keep_topk, const std::vector<float*>& outputs, cv::Size frameSize);
-    void ProcessMaskOutput(size_t imgIdx, const std::vector<float*>& outputs, cv::Size frameSize, std::vector<tensor_rt::Result>& resBoxes);
-    void ProcessBBoxesOutput(size_t imgIdx, const std::vector<float*>& outputs, cv::Size frameSize, std::vector<tensor_rt::Result>& resBoxes);
 };

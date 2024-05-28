@@ -2,6 +2,13 @@
 #include "class_yolo_detector.hpp"
 #include "YoloONNX.hpp"
 
+#include "YoloONNXv6_bb.hpp"
+#include "YoloONNXv7_bb.hpp"
+#include "YoloONNXv7_instance.hpp"
+#include "YoloONNXv8_bb.hpp"
+#include "YoloONNXv8_instance.hpp"
+#include "YoloONNXv9_bb.hpp"
+
 namespace tensor_rt
 {
     ///
@@ -53,13 +60,45 @@ namespace tensor_rt
             // The onnx file to load
             m_params.onnxFileName = config.file_model_cfg; //"yolov6s.onnx"
 
-            // Input tensor name of ONNX file & engine file
-            if (config.net_type == ModelType::YOLOV6)
+            switch (config.net_type)
+            {
+            case ModelType::YOLOV6:
                 m_params.inputTensorNames.push_back("image_arrays");
-            else if (config.net_type == ModelType::YOLOV7 || config.net_type == ModelType::YOLOV7Mask ||
-                     config.net_type == ModelType::YOLOV8 || config.net_type == ModelType::YOLOV8Mask ||
-                     config.net_type == ModelType::YOLOV9)
+                m_params.outputTensorNames.push_back("outputs");
+                m_detector = std::make_unique<YOLOv6_bb_onnx>();
+                break;
+            case ModelType::YOLOV7:
                 m_params.inputTensorNames.push_back("images");
+                m_params.outputTensorNames.push_back("output");
+                m_params.outputTensorNames.push_back("num_dets");     // batch x 1
+                m_params.outputTensorNames.push_back("det_boxes");    // batch x 100 x 4
+                m_params.outputTensorNames.push_back("det_scores");   // batch x 100
+                m_params.outputTensorNames.push_back("det_classes");  // batch x 100
+                m_detector = std::make_unique<YOLOv7_bb_onnx>();
+                break;
+            case ModelType::YOLOV7Mask:
+                m_params.inputTensorNames.push_back("images");
+                m_params.outputTensorNames.push_back("output");
+                m_params.outputTensorNames.push_back("516");
+                m_detector = std::make_unique<YOLOv7_instance_onnx>();
+                break;
+            case ModelType::YOLOV8:
+                m_params.inputTensorNames.push_back("images");
+                m_params.outputTensorNames.push_back("output0");
+                m_detector = std::make_unique<YOLOv8_bb_onnx>();
+                break;
+            case ModelType::YOLOV8Mask:
+                m_params.inputTensorNames.push_back("images");
+                m_params.outputTensorNames.push_back("output0");
+                m_params.outputTensorNames.push_back("output1");
+                m_detector = std::make_unique<YOLOv8_instance_onnx>();
+                break;
+            case ModelType::YOLOV9:
+                m_params.inputTensorNames.push_back("images");
+                m_params.outputTensorNames.push_back("output0");
+                m_detector = std::make_unique<YOLOv9_bb_onnx>();
+                break;
+            }                
 
             // Threshold values
             m_params.confThreshold = config.detect_thresh;
@@ -73,32 +112,6 @@ namespace tensor_rt
             m_params.m_precision = config.inference_precision;
             m_params.m_netType = config.net_type;
 
-            // Output tensors when BatchedNMSPlugin is available
-            if (config.net_type == ModelType::YOLOV6)
-            {
-                m_params.outputTensorNames.push_back("outputs");
-            }
-            else if (config.net_type == ModelType::YOLOV7 || config.net_type == ModelType::YOLOV7Mask ||
-                     config.net_type == ModelType::YOLOV8 || config.net_type == ModelType::YOLOV8Mask ||
-                     config.net_type == ModelType::YOLOV9)
-            {
-                //if (config.batch_size == 1)
-                //{
-                    m_params.outputTensorNames.push_back("output");   //
-                    m_params.outputTensorNames.push_back("516");      // For YOLOv7 instance segmentation
-
-                    m_params.outputTensorNames.push_back("output0");  // For YOLOv8
-                    m_params.outputTensorNames.push_back("output1");  // For YOLOv8 instance segmentation
-                //}
-                //else
-                //{
-                    m_params.outputTensorNames.push_back("num_dets");     // batch x 1
-                    m_params.outputTensorNames.push_back("det_boxes");    // batch x 100 x 4
-                    m_params.outputTensorNames.push_back("det_scores");   // batch x 100
-                    m_params.outputTensorNames.push_back("det_classes");  // batch x 100
-                //}
-            }
-
             std::string precisionStr;
             std::map<tensor_rt::Precision, std::string> dictprecision;
             dictprecision[tensor_rt::INT8] = "kINT8";
@@ -109,7 +122,7 @@ namespace tensor_rt
                 precisionStr = precision->second;
             m_params.engineFileName = config.file_model_cfg + "-" + precisionStr + "-batch" + std::to_string(config.batch_size) + ".engine";
 
-            return m_detector.Init(m_params);
+            return m_detector->Init(m_params);
         }
 
         void Detect(const std::vector<cv::Mat>& mat_image, std::vector<BatchResult>& vec_batch_result) override
@@ -119,7 +132,7 @@ namespace tensor_rt
                 vec_batch_result.reserve(mat_image.size());
 
 #if 1
-            m_detector.Detect(mat_image, vec_batch_result);
+            m_detector->Detect(mat_image, vec_batch_result);
 #else
             for (const cv::Mat& frame : mat_image)
             {
@@ -132,11 +145,11 @@ namespace tensor_rt
 
         cv::Size GetInputSize() const override
         {
-            return m_detector.GetInputSize();
+            return m_detector->GetInputSize();
         }
 
     private:
-        YoloONNX m_detector;
+        std::unique_ptr<YoloONNX> m_detector;
         SampleYoloParams m_params;
     };
 
