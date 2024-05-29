@@ -505,7 +505,8 @@ void VideoExample::Tracking(FrameInfo& frame)
 void VideoExample::DrawTrack(cv::Mat frame,
                              const TrackingObject& track,
                              bool drawTrajectory,
-                             int framesCounter)
+                             int framesCounter,
+                             const std::string& userLabel)
 {
     cv::Scalar color = track.m_isStatic ? cv::Scalar(255, 0, 255) : cv::Scalar(0, 255, 0);
     cv::Point2f rectPoints[4];
@@ -587,6 +588,8 @@ void VideoExample::DrawTrack(cv::Mat frame,
     std::string label = track.m_ID.ID2Str();
     if (track.m_type != bad_type)
         label += ": " + TypeConverter::Type2Str(track.m_type);
+    else if (!userLabel.empty())
+        label += ": " + userLabel;
     if (track.m_confidence > 0)
         label += ", " + std::to_string(track.m_confidence);
 #if 0

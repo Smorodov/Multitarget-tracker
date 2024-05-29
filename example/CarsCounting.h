@@ -463,7 +463,7 @@ private:
     bool InitTracker(cv::UMat frame) override;
 
     void DrawData(cv::Mat frame, const std::vector<TrackingObject>& tracks, int framesCounter, int currTime) override;
-    void DrawTrack(cv::Mat frame, const TrackingObject& track, bool drawTrajectory, int framesCounter) override;
+    void DrawTrack(cv::Mat frame, const TrackingObject& track, bool drawTrajectory, int framesCounter, const std::string& userLabel = "") override;
 
     // Road lines
     std::deque<RoadLine> m_lines;

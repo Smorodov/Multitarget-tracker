@@ -31,7 +31,7 @@ CarsCounting::CarsCounting(const cv::CommandLineParser& parser)
 /// \param drawTrajectory
 /// \param framesCounters
 ///
-void CarsCounting::DrawTrack(cv::Mat frame, const TrackingObject& track, bool drawTrajectory, int framesCounter)
+void CarsCounting::DrawTrack(cv::Mat frame, const TrackingObject& track, bool drawTrajectory, int framesCounter, const std::string& /*userLabel*/)
 {
     cv::Rect brect = track.m_rrect.boundingRect();
 

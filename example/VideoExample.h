@@ -215,7 +215,7 @@ protected:
     void Tracking(FrameInfo& frame);
 
     virtual void DrawData(cv::Mat frame, const std::vector<TrackingObject>& tracks, int framesCounter, int currTime) = 0;
-    virtual void DrawTrack(cv::Mat frame, const TrackingObject& track, bool drawTrajectory, int framesCounter);
+    virtual void DrawTrack(cv::Mat frame, const TrackingObject& track, bool drawTrajectory, int framesCounter, const std::string& userLabel = "");
 
     TrackerSettings m_trackerSettings;
     bool m_trackerSettingsLoaded = false;

@@ -8,6 +8,7 @@ set(SOURCES main.cpp
 set(HEADERS MouseExample.h
             VideoExample.h
             examples.h
+            MotionDetectorExample.h
             FileLogger.h)
 
 if (BUILD_CARS_COUNTING)
@@ -54,6 +55,10 @@ if (BUILD_CARS_COUNTING)
     add_definitions(-DBUILD_CARS_COUNTING)
 endif(BUILD_CARS_COUNTING)
 
+if (USE_CLIP)
+    add_definitions(-DUSE_CLIP)
+    set(LIBS ${LIBS} ruclip)
+endif(USE_CLIP)
 
 ADD_EXECUTABLE(${PROJECT_NAME} ${SOURCES} ${HEADERS})
 

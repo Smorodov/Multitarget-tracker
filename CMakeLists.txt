@@ -61,6 +61,12 @@ if (BUILD_EXAMPLES)
     add_subdirectory(example)
 endif(BUILD_EXAMPLES)
 
+
+option(USE_CLIP "Should be used RuCLIP|CLIP for objects classification?" OFF)
+if (USE_CLIP)
+    add_definitions(-DUSE_CLIP)
+endif(USE_CLIP)
+
 option(BUILD_CARS_COUNTING "Should compiled Cars counting example?" OFF)
 if (BUILD_CARS_COUNTING)
     add_definitions(-DBUILD_CARS_COUNTING)
