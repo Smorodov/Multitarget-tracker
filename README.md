@@ -3,6 +3,8 @@
 
 # Last changes
 
+* YOLOv10 detector worked with TensorRT! Export pretrained Pytorch models [here (THU-MIG/yolov10)](https://github.com/THU-MIG/yolov10) to onnx format and run Multitarget-tracker with -e=6 example
+
 * YOLOv9 detector worked with TensorRT! Export pretrained Pytorch models [here (WongKinYiu/yolov9)](https://github.com/WongKinYiu/yolov9) to onnx format and run Multitarget-tracker with -e=6 example
 
 * YOLOv8 instance segmentation models worked with TensorRT! Export pretrained Pytorch models [here (ultralytics/ultralytics)](https://github.com/ultralytics/ultralytics) to onnx format and run Multitarget-tracker with -e=6 example
