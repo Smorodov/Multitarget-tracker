@@ -52,7 +52,8 @@ namespace tensor_rt
         YOLOV7Mask,
         YOLOV8,
         YOLOV8Mask,
-        YOLOV9
+        YOLOV9,
+        YOLOV10
 	};
 
     ///

@@ -8,6 +8,7 @@
 #include "YoloONNXv8_bb.hpp"
 #include "YoloONNXv8_instance.hpp"
 #include "YoloONNXv9_bb.hpp"
+#include "YoloONNXv10_bb.hpp"
 
 namespace tensor_rt
 {
@@ -98,6 +99,11 @@ namespace tensor_rt
                 m_params.outputTensorNames.push_back("output0");
                 m_detector = std::make_unique<YOLOv9_bb_onnx>();
                 break;
+            case ModelType::YOLOV10:
+                m_params.inputTensorNames.push_back("images");
+                m_params.outputTensorNames.push_back("output0");
+                m_detector = std::make_unique<YOLOv10_bb_onnx>();
+                break;
             }                
 
             // Threshold values
@@ -181,7 +187,7 @@ namespace tensor_rt
         if (config.net_type == ModelType::YOLOV6 ||
             config.net_type == ModelType::YOLOV7 || config.net_type == ModelType::YOLOV7Mask ||
             config.net_type == ModelType::YOLOV8 || config.net_type == ModelType::YOLOV8Mask ||
-            config.net_type == ModelType::YOLOV9)
+            config.net_type == ModelType::YOLOV9 || config.net_type == ModelType::YOLOV10)
             m_impl = new YoloONNXImpl();
         else
             m_impl = new YoloDectectorImpl();
