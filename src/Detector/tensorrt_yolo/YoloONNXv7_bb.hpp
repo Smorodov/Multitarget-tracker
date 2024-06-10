@@ -13,7 +13,7 @@ protected:
 /// \param output
 /// \return
 ///
-	std::vector<tensor_rt::Result> YoloONNX::GetResult(size_t imgIdx, int /*keep_topk*/, const std::vector<float*>& outputs, cv::Size frameSize)
+	std::vector<tensor_rt::Result> GetResult(size_t imgIdx, int /*keep_topk*/, const std::vector<float*>& outputs, cv::Size frameSize)
 	{
 		std::vector<tensor_rt::Result> resBoxes;
 
