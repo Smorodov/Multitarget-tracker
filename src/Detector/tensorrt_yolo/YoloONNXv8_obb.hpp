@@ -3,9 +3,9 @@
 #include "YoloONNX.hpp"
 
 ///
-/// \brief The YOLOv8_bb_onnx class
+/// \brief The YOLOv8_obb_onnx class
 ///
-class YOLOv8_bb_onnx : public YoloONNX
+class YOLOv8_obb_onnx : public YoloONNX
 {
 protected:
 	///
@@ -17,9 +17,8 @@ protected:
 	{
 		std::vector<tensor_rt::Result> resBoxes;
 
-		//0: name: images, size: 1x3x1024x1024
-		//1: name: output0, size: 1x20x21504
-		//20: 15 DOTA classes + x + y + w + h + a
+		//0: name: images, size: 1x3x640x640
+		//1: name: output0, size: 1x84x8400
 
 		const float fw = static_cast<float>(frameSize.width) / static_cast<float>(m_inputDims.d[3]);
 		const float fh = static_cast<float>(frameSize.height) / static_cast<float>(m_inputDims.d[2]);

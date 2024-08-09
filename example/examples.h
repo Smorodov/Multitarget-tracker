@@ -649,6 +649,7 @@ protected:
                 YOLOv7,
                 YOLOv7Mask,
                 YOLOv8,
+				YOLOV8_OBB,
                 YOLOv8Mask,
 				YOLOv9,
 				YOLOv10
@@ -742,6 +743,16 @@ protected:
 				config.emplace("confidenceThreshold", "0.2");
 				config.emplace("inference_precision", "FP32");
 				config.emplace("net_type", "YOLOV8");
+				maxBatch = 1;
+				config.emplace("maxCropRatio", "-1");
+				break;
+
+			case YOLOModels::YOLOV8_OBB:
+				config.emplace("modelConfiguration", pathToModel + "yolov8s-obb.onnx");
+				config.emplace("modelBinary", pathToModel + "yolov8s-obb.onnx");
+				config.emplace("confidenceThreshold", "0.2");
+				config.emplace("inference_precision", "FP16");
+				config.emplace("net_type", "YOLOV8_OBB");
 				maxBatch = 1;
 				config.emplace("maxCropRatio", "-1");
 				break;

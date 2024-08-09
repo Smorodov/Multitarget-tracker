@@ -50,6 +50,8 @@ YoloTensorRTDetector::YoloTensorRTDetector(const cv::Mat& colorFrame)
 ///
 bool YoloTensorRTDetector::Init(const config_t& config)
 {
+	//std::cout << "YoloTensorRTDetector::Init" << std::endl;
+
 	m_detector.reset();
 
 	auto modelConfiguration = config.find("modelConfiguration");
@@ -101,6 +103,7 @@ bool YoloTensorRTDetector::Init(const config_t& config)
         dictNetType["YOLOV7"] = tensor_rt::YOLOV7;
 		dictNetType["YOLOV7Mask"] = tensor_rt::YOLOV7Mask;
 		dictNetType["YOLOV8"] = tensor_rt::YOLOV8;
+		dictNetType["YOLOV8_OBB"] = tensor_rt::YOLOV8_OBB;
 		dictNetType["YOLOV8Mask"] = tensor_rt::YOLOV8Mask;
 		dictNetType["YOLOV9"] = tensor_rt::YOLOV9;
 		dictNetType["YOLOV10"] = tensor_rt::YOLOV10;

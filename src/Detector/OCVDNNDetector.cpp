@@ -138,6 +138,7 @@ bool OCVDNNDetector::Init(const config_t& config)
         dictNetType["YOLOV7"] = ModelType::YOLOV7;
         dictNetType["YOLOV7Mask"] = ModelType::YOLOV7Mask;
         dictNetType["YOLOV8"] = ModelType::YOLOV8;
+        dictNetType["YOLOV8_OBB"] = ModelType::YOLOV8_OBB;
         dictNetType["YOLOV8Mask"] = ModelType::YOLOV8Mask;
         dictNetType["YOLOV9"] = ModelType::YOLOV9;
         dictNetType["YOLOV10"] = ModelType::YOLOV10;

@@ -6,6 +6,7 @@
 #include "YoloONNXv7_bb.hpp"
 #include "YoloONNXv7_instance.hpp"
 #include "YoloONNXv8_bb.hpp"
+#include "YoloONNXv8_obb.hpp"
 #include "YoloONNXv8_instance.hpp"
 #include "YoloONNXv9_bb.hpp"
 #include "YoloONNXv10_bb.hpp"
@@ -87,6 +88,11 @@ namespace tensor_rt
                 m_params.inputTensorNames.push_back("images");
                 m_params.outputTensorNames.push_back("output0");
                 m_detector = std::make_unique<YOLOv8_bb_onnx>();
+                break;
+            case ModelType::YOLOV8_OBB:
+                m_params.inputTensorNames.push_back("images");
+                m_params.outputTensorNames.push_back("output0");
+                m_detector = std::make_unique<YOLOv8_obb_onnx>();
                 break;
             case ModelType::YOLOV8Mask:
                 m_params.inputTensorNames.push_back("images");
@@ -186,7 +192,7 @@ namespace tensor_rt
 
         if (config.net_type == ModelType::YOLOV6 ||
             config.net_type == ModelType::YOLOV7 || config.net_type == ModelType::YOLOV7Mask ||
-            config.net_type == ModelType::YOLOV8 || config.net_type == ModelType::YOLOV8Mask ||
+            config.net_type == ModelType::YOLOV8 || config.net_type == ModelType::YOLOV8_OBB || config.net_type == ModelType::YOLOV8Mask ||
             config.net_type == ModelType::YOLOV9 || config.net_type == ModelType::YOLOV10)
             m_impl = new YoloONNXImpl();
         else

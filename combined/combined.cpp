@@ -328,6 +328,7 @@ bool CombinedDetector::InitDetector(cv::UMat frame)
 		YOLOv7Mask,
 		YOLOv8,
 		YOLOv8Mask,
+		YOLOV8_OBB,
 		YOLOv9
 	};
 	YOLOModels usedModel = YOLOModels::YOLOv8;

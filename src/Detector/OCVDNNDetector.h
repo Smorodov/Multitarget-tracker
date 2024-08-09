@@ -39,6 +39,7 @@ private:
         YOLOV7,
         YOLOV7Mask,
         YOLOV8,
+        YOLOV8_OBB,
         YOLOV8Mask,
         YOLOV9,
         YOLOV10
