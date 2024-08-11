@@ -19,6 +19,8 @@ protected:
 
 		//0: name: images, size: 1x3x640x640
 		//1: name: output0, size: 1x84x8400
+		//84: 80 COCO classes + x + y + w + h
+		constexpr int shapeDataSize = 4;
 
 		const float fw = static_cast<float>(frameSize.width) / static_cast<float>(m_inputDims.d[3]);
 		const float fh = static_cast<float>(frameSize.height) / static_cast<float>(m_inputDims.d[2]);
@@ -27,8 +29,8 @@ protected:
 
 		size_t ncInd = 1;
 		size_t lenInd = 2;
-		int nc = m_outpuDims[0].d[ncInd] - 4;
-		int dimensions = nc + 4;
+		int nc = m_outpuDims[0].d[ncInd] - shapeDataSize;
+		int dimensions = nc + shapeDataSize;
 		size_t len = static_cast<size_t>(m_outpuDims[0].d[lenInd]) / m_params.explicitBatchSize;
 		//auto Volume = [](const nvinfer1::Dims& d)
 		//{
@@ -65,13 +67,13 @@ protected:
 		for (size_t i = 0; i < len; ++i)
 		{
 			// Box
-			size_t k = i * (nc + 4);
+			size_t k = i * (nc + shapeDataSize);
 
 			int classId = -1;
 			float objectConf = 0.f;
 			for (int j = 0; j < nc; ++j)
 			{
-				const float classConf = output[k + 4 + j];
+				const float classConf = output[k + shapeDataSize + j];
 				if (classConf > objectConf)
 				{
 					classId = j;
