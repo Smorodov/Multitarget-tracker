@@ -3,6 +3,8 @@
 
 # Last changes
 
+* YOLOv8-obb detector worked with TensorRT! Export pretrained Pytorch models [here (ultralytics/ultralytics)](https://github.com/ultralytics/ultralytics) to onnx format and run Multitarget-tracker with -e=6 example
+
 * YOLOv10 detector worked with TensorRT! Export pretrained Pytorch models [here (THU-MIG/yolov10)](https://github.com/THU-MIG/yolov10) to onnx format and run Multitarget-tracker with -e=6 example
 
 * YOLOv9 detector worked with TensorRT! Export pretrained Pytorch models [here (WongKinYiu/yolov9)](https://github.com/WongKinYiu/yolov9) to onnx format and run Multitarget-tracker with -e=6 example
@@ -12,6 +14,11 @@
 * Re-identification model osnet_x0_25_msmt17 from [mikel-brostrom/yolo_tracking](https://github.com/mikel-brostrom/yolo_tracking)
 
 # New videos!
+
+* YOLOv8-obb detection with rotated boxes (DOTA v1.0 trained)
+
+[![YOLOv8-obb detection:](https://img.youtube.com/vi/1e6ur57Fhzs/0.jpg)](https://youtu.be/1e6ur57Fhzs)
+
 
 * YOLOv7 instance segmentation
 

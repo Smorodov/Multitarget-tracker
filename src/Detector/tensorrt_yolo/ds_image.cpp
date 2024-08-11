@@ -49,7 +49,7 @@ DsImage::DsImage(const cv::Mat& mat_image_, tensor_rt::ModelType net_type, const
 	}
     if (tensor_rt::ModelType::YOLOV5 == net_type || tensor_rt::ModelType::YOLOV6 == net_type ||
 		tensor_rt::ModelType::YOLOV7 == net_type || tensor_rt::ModelType::YOLOV7Mask == net_type ||
-		tensor_rt::ModelType::YOLOV8 == net_type || tensor_rt::ModelType::YOLOV8Mask == net_type ||
+		tensor_rt::ModelType::YOLOV8 == net_type || tensor_rt::ModelType::YOLOV8_OBB == net_type || tensor_rt::ModelType::YOLOV8Mask == net_type ||
 		tensor_rt::ModelType::YOLOV9 == net_type || tensor_rt::ModelType::YOLOV10 == net_type)
 	{
 		// resize the DsImage with scale
@@ -100,7 +100,7 @@ DsImage::DsImage(const std::string& path, tensor_rt::ModelType net_type, const i
 
     if (tensor_rt::ModelType::YOLOV5 == net_type || tensor_rt::ModelType::YOLOV6 == net_type ||
 		tensor_rt::ModelType::YOLOV7 == net_type || tensor_rt::ModelType::YOLOV7Mask == net_type ||
-		tensor_rt::ModelType::YOLOV8 == net_type || tensor_rt::ModelType::YOLOV8Mask == net_type ||
+		tensor_rt::ModelType::YOLOV8 == net_type || tensor_rt::ModelType::YOLOV8_OBB == net_type || tensor_rt::ModelType::YOLOV8Mask == net_type ||
 		tensor_rt::ModelType::YOLOV9 == net_type || tensor_rt::ModelType::YOLOV10 == net_type)
 	{
 		// resize the DsImage with scale

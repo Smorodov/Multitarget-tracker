@@ -50,6 +50,8 @@ YoloTensorRTDetector::YoloTensorRTDetector(const cv::Mat& colorFrame)
 ///
 bool YoloTensorRTDetector::Init(const config_t& config)
 {
+	//std::cout << "YoloTensorRTDetector::Init" << std::endl;
+
 	m_detector.reset();
 
 	auto modelConfiguration = config.find("modelConfiguration");
@@ -101,6 +103,7 @@ bool YoloTensorRTDetector::Init(const config_t& config)
         dictNetType["YOLOV7"] = tensor_rt::YOLOV7;
 		dictNetType["YOLOV7Mask"] = tensor_rt::YOLOV7Mask;
 		dictNetType["YOLOV8"] = tensor_rt::YOLOV8;
+		dictNetType["YOLOV8_OBB"] = tensor_rt::YOLOV8_OBB;
 		dictNetType["YOLOV8Mask"] = tensor_rt::YOLOV8Mask;
 		dictNetType["YOLOV9"] = tensor_rt::YOLOV9;
 		dictNetType["YOLOV10"] = tensor_rt::YOLOV10;
@@ -232,7 +235,12 @@ void YoloTensorRTDetector::Detect(const cv::UMat& colorFrame)
 				for (const tensor_rt::Result& bbox : detects[j])
 				{
 					if (m_classesWhiteList.empty() || m_classesWhiteList.find(T2T(bbox.m_id)) != std::end(m_classesWhiteList))
-						tmpRegions.emplace_back(cv::Rect(bbox.m_brect.x + crop.x, bbox.m_brect.y + crop.y, bbox.m_brect.width, bbox.m_brect.height), T2T(bbox.m_id), bbox.m_prob);
+					{
+						cv::RotatedRect newRRect(bbox.m_rrect);
+						newRRect.center.x += crop.x;
+						newRRect.center.y += crop.y;
+						tmpRegions.emplace_back(newRRect, T2T(bbox.m_id), bbox.m_prob);
+					}
 				}
 			}
         }
@@ -276,8 +284,8 @@ void YoloTensorRTDetector::Detect(const std::vector<cv::UMat>& frames, std::vect
             const tensor_rt::BatchResult& dets = detects[i];
             for (const tensor_rt::Result& bbox : dets)
             {
-                if (m_classesWhiteList.empty() || m_classesWhiteList.find(T2T(bbox.m_id)) != std::end(m_classesWhiteList))
-                    regions[i].emplace_back(bbox.m_brect, T2T(bbox.m_id), bbox.m_prob);
+				if (m_classesWhiteList.empty() || m_classesWhiteList.find(T2T(bbox.m_id)) != std::end(m_classesWhiteList))
+					regions[i].emplace_back(bbox.m_rrect, T2T(bbox.m_id), bbox.m_prob);
             }
         }
         m_regions.assign(std::begin(regions.back()), std::end(regions.back()));

@@ -82,7 +82,7 @@ public:
         for (size_t i = 0; i < frames.size(); ++i)
         {
             Detect(frames[i]);
-            auto res = GetDetects();
+            const auto& res = GetDetects();
             regions[i].assign(std::begin(res), std::end(res));
         }
     }
