@@ -20,8 +20,8 @@ protected:
 		const float fw = static_cast<float>(frameSize.width) / static_cast<float>(m_inputDims.d[3]);
 		const float fh = static_cast<float>(frameSize.height) / static_cast<float>(m_inputDims.d[2]);
 
-		size_t outInd = (outputs.size() == 0) ? 0 : 1;
-		size_t segInd = (outputs.size() == 0) ? 1 : 0;
+		size_t outInd = (outputs.size() == 0) ? 1 : 0;
+		size_t segInd = (outputs.size() == 0) ? 0 : 1;
 
 		auto output = outputs[0];
 
@@ -39,8 +39,8 @@ protected:
 		//std::cout << ";" << std::endl;
 
 		//0: name: images, size: 1x3x640x640
-		//1: name: output1, size: 1x32x160x160
-		//2: name: output0, size: 1x116x8400
+		//1: name: output0, size: 1x116x8400
+		//2: name: output1, size: 1x32x160x160
 		// 25200 = 3x80x80 + 3x40x40 + 3x20x20
 		// 116 = x, y, w, h, 80 classes, 32 seg ancors
 		// 80 * 8 = 640, 40 * 16 = 640, 20 * 32 = 640
