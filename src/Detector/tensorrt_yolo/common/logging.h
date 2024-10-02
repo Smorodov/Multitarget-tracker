@@ -1,11 +1,12 @@
 /*
- * Copyright (c) 1993-2022, NVIDIA CORPORATION. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 1993-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,7 +18,7 @@
 #ifndef TENSORRT_LOGGING_H
 #define TENSORRT_LOGGING_H
 
-#include "NvInferRuntimeCommon.h"
+#include "NvInferRuntime.h"
 #include "sampleOptions.h"
 #include <cassert>
 #include <ctime>
@@ -162,7 +163,7 @@ public:
     }
     LogStreamConsumer(const LogStreamConsumer& other) = delete;
     LogStreamConsumer() = delete;
-    ~LogStreamConsumer() = default;
+    ~LogStreamConsumer() override = default;
     LogStreamConsumer& operator=(const LogStreamConsumer&) = delete;
     LogStreamConsumer& operator=(LogStreamConsumer&&) = delete;
 
@@ -291,7 +292,7 @@ public:
     };
 
     //!
-    //! \brief Forward-compatible method for retrieving the nvinfer::ILogger associated with this Logger
+    //! \brief Forward-compatible method for retrieving the nvinfer1::ILogger associated with this Logger
     //! \return The nvinfer1::ILogger associated with this Logger
     //!
     //! TODO Once all samples are updated to use this method to register the logger with TensorRT,
@@ -353,7 +354,7 @@ public:
     //!
     //! \brief Define a test for logging
     //!
-    //! \param[in] name The name of the test.  This should be a string starting with
+    //! \param[in] name The name of the test. This should be a string starting with
     //!                  "TensorRT" and containing dot-separated strings containing
     //!                  the characters [A-Za-z0-9_].
     //!                  For example, "TensorRT.sample_googlenet"
@@ -379,7 +380,8 @@ public:
     static TestAtom defineTest(const std::string& name, int32_t argc, char const* const* argv)
     {
         // Append TensorRT version as info
-        const std::string vname = name + " [TensorRT v" + std::to_string(NV_TENSORRT_VERSION) + "]";
+        const std::string vname = name + " [TensorRT v" + std::to_string(NV_TENSORRT_VERSION) + "] [b"
+            + std::to_string(NV_TENSORRT_BUILD) + "]";
         auto cmdline = genCmdlineString(argc, argv);
         return defineTest(vname, cmdline);
     }
