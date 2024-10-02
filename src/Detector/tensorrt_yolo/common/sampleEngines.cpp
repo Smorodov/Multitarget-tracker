@@ -559,7 +559,7 @@ void setLayerDeviceTypes(
         if (match != layerDeviceTypes.end())
         {
             DeviceType const deviceType = match->second;
-            sample::gLogInfo << "Set layer " << layerName << " to device type " << deviceType << std::endl;
+            sample::gLogInfo << "Set layer " << layerName << " to device type " << (int)deviceType << std::endl;
             config.setDeviceType(layer, deviceType);
         }
     }
@@ -845,7 +845,11 @@ bool setupNetworkAndConfig(BuildOptions const& build, SystemOptions const& sys, 
 
     if (build.maxTactics != defaultMaxTactics)
     {
+#if (NV_TENSORRT_MAJOR < 9)
         config.setMaxNbTactics(build.maxTactics);
+#else
+        config.setTacticSources(build.maxTactics);
+#endif
     }
 
     if (build.timingCacheMode == TimingCacheMode::kDISABLE)

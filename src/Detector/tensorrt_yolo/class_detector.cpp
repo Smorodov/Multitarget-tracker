@@ -10,6 +10,10 @@
 #include "YoloONNXv8_instance.hpp"
 #include "YoloONNXv9_bb.hpp"
 #include "YoloONNXv10_bb.hpp"
+#include "YoloONNXv11_bb.hpp"
+#include "YoloONNXv11_obb.hpp"
+#include "YoloONNXv11_instance.hpp"
+
 
 namespace tensor_rt
 {
@@ -110,6 +114,22 @@ namespace tensor_rt
                 m_params.outputTensorNames.push_back("output0");
                 m_detector = std::make_unique<YOLOv10_bb_onnx>();
                 break;
+            case ModelType::YOLOV11:
+                m_params.inputTensorNames.push_back("images");
+                m_params.outputTensorNames.push_back("output0");
+                m_detector = std::make_unique<YOLOv11_bb_onnx>();
+                break;
+            case ModelType::YOLOV11_OBB:
+                m_params.inputTensorNames.push_back("images");
+                m_params.outputTensorNames.push_back("output0");
+                m_detector = std::make_unique<YOLOv11_obb_onnx>();
+                break;
+            case ModelType::YOLOV11Mask:
+                m_params.inputTensorNames.push_back("images");
+                m_params.outputTensorNames.push_back("output0");
+                m_params.outputTensorNames.push_back("output1");
+                m_detector = std::make_unique<YOLOv11_instance_onnx>();
+                break;
             }                
 
             // Threshold values
@@ -193,7 +213,8 @@ namespace tensor_rt
         if (config.net_type == ModelType::YOLOV6 ||
             config.net_type == ModelType::YOLOV7 || config.net_type == ModelType::YOLOV7Mask ||
             config.net_type == ModelType::YOLOV8 || config.net_type == ModelType::YOLOV8_OBB || config.net_type == ModelType::YOLOV8Mask ||
-            config.net_type == ModelType::YOLOV9 || config.net_type == ModelType::YOLOV10)
+            config.net_type == ModelType::YOLOV9 || config.net_type == ModelType::YOLOV10 ||
+            config.net_type == ModelType::YOLOV11 || config.net_type == ModelType::YOLOV11_OBB || config.net_type == ModelType::YOLOV11Mask)
             m_impl = new YoloONNXImpl();
         else
             m_impl = new YoloDectectorImpl();
