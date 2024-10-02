@@ -46,6 +46,15 @@ if(NOT _include_dir_notfound EQUAL -1)
     message(FATAL_ERROR "Fail to find TensorRT, please set TensorRT_ROOT. Include path not found.")
   endif()
   return()
+
+if(NOT TensorRT_LIBRARY)
+  foreach(search ${_TensorRT_SEARCHES})
+    find_library(TRT_NVONNX_PARSER NAMES nvonnxparser ${${search}} PATH_SUFFIXES lib lib64 lib/x64)
+    find_library(TRT_NVINFER NAMES nvinfer ${${search}} PATH_SUFFIXES lib lib64 lib/x64)
+    find_library(TRT_NVINFER_PLUGIN NAMES nvinfer_plugin ${${search}} PATH_SUFFIXES lib lib64 lib/x64)
+  endforeach()
+  list(APPEND TensorRT_LIBRARY ${TRT_NVINFER} ${TRT_NVINFER_PLUGIN} ${TRT_NVONNX_PARSER})
+
 endif()
 set(TensorRT_INCLUDE_DIRS ${TensorRT_INCLUDE_DIR})
 
