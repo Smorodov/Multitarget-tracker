@@ -58,12 +58,19 @@ file(GLOB TENSORRT_CUDA_FILES *.cu)
 cuda_add_library(${libname_rt} SHARED
     ${TENSORRT_CUDA_FILES}
     ${TENSORRT_SOURCE_FILES}
-    ${TENSORRT_HEADER_FILES}
-)
+    ${TENSORRT_HEADER_FILES})
 
 #message("TensorRT OpenCV libraries:")
 #message("${OpenCV_LIBS}")
 #message(${OpenCV_DIR})
+
+if (MSVC)
+    file(GLOB TensorRT_LIBRARIES ${TensorRT_LIBRARY})
+endif()
+
+message("TensorRT_LIBRARY: ${TensorRT_LIBRARY}")
+message("TensorRT_LIBRARIES: ${TensorRT_LIBRARIES}")
+
 
 set(TENSORRT_LIBS
     ${OpenCV_LIBS}
@@ -74,8 +81,7 @@ set(TENSORRT_LIBS
     ${CUDA_curand_LIBRARY}
     ${CUDNN_LIBRARY}
     # ${LIB_PTHREAD}
-    ${TensorRT_LIBRARIES}
-)
+    ${TensorRT_LIBRARIES})
 
 if (CMAKE_COMPILER_IS_GNUCXX)
     set(TENSORRT_LIBS ${TENSORRT_LIBS} stdc++fs nvinfer_plugin nvonnxparser)

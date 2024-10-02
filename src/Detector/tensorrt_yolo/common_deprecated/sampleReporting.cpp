@@ -1,12 +1,11 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 1993-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
- * SPDX-License-Identifier: Apache-2.0
+ * Copyright (c) 1993-2022, NVIDIA CORPORATION. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -27,8 +26,6 @@
 #include "sampleOptions.h"
 #include "sampleReporting.h"
 
-using namespace nvinfer1;
-
 namespace sample
 {
 
@@ -48,7 +45,7 @@ float findPercentile(float percentile, std::vector<InferenceTime> const& timings
     {
         return std::numeric_limits<float>::infinity();
     }
-    if (percentile < 0.F || percentile > 100.F)
+    if (percentile < 0.0f || percentile > 100.0f)
     {
         throw std::runtime_error("percentile is not in [0, 100]!");
     }
@@ -102,26 +99,8 @@ float findCoeffOfVariance(std::vector<InferenceTime> const& timings, T const& to
 
 inline InferenceTime traceToTiming(const InferenceTrace& a)
 {
-    return InferenceTime(
-        (a.enqEnd - a.enqStart), (a.h2dEnd - a.h2dStart), (a.computeEnd - a.computeStart), (a.d2hEnd - a.d2hStart));
-}
-
-inline std::string dimsToString(Dims const& shape)
-{
-    std::stringstream ss;
-
-    if (shape.nbDims == 0)
-    {
-        ss << "scalar";
-    }
-    else
-    {
-        for (int32_t i = 0; i < shape.nbDims; i++)
-        {
-            ss << shape.d[i] << (i != shape.nbDims - 1 ? "x" : "");
-        }
-    }
-    return ss.str();
+    return InferenceTime((a.enqEnd - a.enqStart), (a.h2dEnd - a.h2dStart), (a.computeEnd - a.computeStart),
+        (a.d2hEnd - a.d2hStart), (a.d2hEnd - a.h2dStart));
 }
 
 } // namespace
@@ -134,40 +113,29 @@ void printProlog(int32_t warmups, int32_t timings, float warmupMs, float benchTi
 
 void printTiming(std::vector<InferenceTime> const& timings, int32_t runsPerAvg, std::ostream& os)
 {
-    int64_t count = 0;
+    int32_t count = 0;
     InferenceTime sum;
 
     os << std::endl;
     os << "=== Trace details ===" << std::endl;
     os << "Trace averages of " << runsPerAvg << " runs:" << std::endl;
-
-    // Show only the first N lines and the last N lines, where N = kTIMING_PRINT_THRESHOLD.
-    constexpr int64_t kTIMING_PRINT_THRESHOLD{200};
-    int64_t const maxNbTimings{kTIMING_PRINT_THRESHOLD * runsPerAvg};
-
-    for (int64_t idx = 0, size = timings.size(); idx < size; ++idx)
+    for (auto const& t : timings)
     {
-        // Omit some latency printing to avoid very long logs.
-        if (size > 2 * maxNbTimings && idx == maxNbTimings)
-        {
-            os << "... Omitting " << (size - 2 * maxNbTimings) << " lines" << std::endl;
-            idx = size - kTIMING_PRINT_THRESHOLD * runsPerAvg - 1;
-        }
-
-        sum += timings[idx];
+        sum += t;
 
         if (++count == runsPerAvg)
         {
             // clang-format off
             os << "Average on " << runsPerAvg << " runs - GPU latency: " << sum.compute / runsPerAvg
-               << " ms - Host latency: " << sum.latency() / runsPerAvg << " ms (enqueue " << sum.enq / runsPerAvg
-               << " ms)" << std::endl;
+               << " ms - Host latency: " << sum.latency() / runsPerAvg << " ms (end to end " << sum.e2e / runsPerAvg
+               << " ms, enqueue " << sum.enq / runsPerAvg << " ms)" << std::endl;
             // clang-format on
             count = 0;
             sum.enq = 0;
             sum.h2d = 0;
             sum.compute = 0;
             sum.d2h = 0;
+            sum.e2e = 0;
         }
     }
 }
@@ -198,10 +166,14 @@ void printMetricExplanations(std::ostream& os)
     os << "Latency: the summation of H2D Latency, GPU Compute Time, and D2H Latency. This is the latency to infer a "
           "single query."
        << std::endl;
+    os << "End-to-End Host Latency: the duration from when the H2D of a query is called to when the D2H of the same "
+          "query is completed, which includes the latency to wait for the completion of the previous query. This is "
+          "the latency of a query if multiple queries are enqueued consecutively."
+       << std::endl;
 }
 
 PerformanceResult getPerformanceResult(std::vector<InferenceTime> const& timings,
-    std::function<float(InferenceTime const&)> metricGetter, std::vector<float> const& percentiles)
+    std::function<float(InferenceTime const&)> metricGetter, float percentile)
 {
     auto const metricComparator
         = [metricGetter](InferenceTime const& a, InferenceTime const& b) { return metricGetter(a) < metricGetter(b); };
@@ -211,44 +183,40 @@ PerformanceResult getPerformanceResult(std::vector<InferenceTime> const& timings
     PerformanceResult result;
     result.min = metricGetter(newTimings.front());
     result.max = metricGetter(newTimings.back());
-    result.mean = std::accumulate(newTimings.begin(), newTimings.end(), 0.0F, metricAccumulator) / newTimings.size();
+    result.mean = std::accumulate(newTimings.begin(), newTimings.end(), 0.0f, metricAccumulator) / newTimings.size();
     result.median = findMedian(newTimings, metricGetter);
-    for (auto percentile : percentiles)
-    {
-        result.percentiles.emplace_back(findPercentile(percentile, newTimings, metricGetter));
-    }
+    result.percentile = findPercentile(percentile, newTimings, metricGetter);
     result.coeffVar = findCoeffOfVariance(newTimings, metricGetter, result.mean);
     return result;
 }
 
-void printEpilog(std::vector<InferenceTime> const& timings, float walltimeMs, std::vector<float> const& percentiles,
-    int32_t batchSize, int32_t infStreams, std::ostream& osInfo, std::ostream& osWarning, std::ostream& osVerbose)
+void printEpilog(std::vector<InferenceTime> const& timings, float walltimeMs, float percentile, int32_t batchSize,
+    std::ostream& osInfo, std::ostream& osWarning, std::ostream& osVerbose)
 {
     float const throughput = batchSize * timings.size() / walltimeMs * 1000;
 
     auto const getLatency = [](InferenceTime const& t) { return t.latency(); };
-    auto const latencyResult = getPerformanceResult(timings, getLatency, percentiles);
+    auto const latencyResult = getPerformanceResult(timings, getLatency, percentile);
+
+    auto const getEndToEnd = [](InferenceTime const& t) { return t.e2e; };
+    auto const e2eLatencyResult = getPerformanceResult(timings, getEndToEnd, percentile);
 
     auto const getEnqueue = [](InferenceTime const& t) { return t.enq; };
-    auto const enqueueResult = getPerformanceResult(timings, getEnqueue, percentiles);
+    auto const enqueueResult = getPerformanceResult(timings, getEnqueue, percentile);
 
     auto const getH2d = [](InferenceTime const& t) { return t.h2d; };
-    auto const h2dResult = getPerformanceResult(timings, getH2d, percentiles);
+    auto const h2dResult = getPerformanceResult(timings, getH2d, percentile);
 
     auto const getCompute = [](InferenceTime const& t) { return t.compute; };
-    auto const gpuComputeResult = getPerformanceResult(timings, getCompute, percentiles);
+    auto const gpuComputeResult = getPerformanceResult(timings, getCompute, percentile);
 
     auto const getD2h = [](InferenceTime const& t) { return t.d2h; };
-    auto const d2hResult = getPerformanceResult(timings, getD2h, percentiles);
+    auto const d2hResult = getPerformanceResult(timings, getD2h, percentile);
 
-    auto const toPerfString = [&](const PerformanceResult& r) {
+    auto const toPerfString = [percentile](const PerformanceResult& r) {
         std::stringstream s;
         s << "min = " << r.min << " ms, max = " << r.max << " ms, mean = " << r.mean << " ms, "
-          << "median = " << r.median << " ms";
-        for (int32_t i = 0, n = percentiles.size(); i < n; ++i)
-        {
-            s << ", percentile(" << percentiles[i] << "%) = " << r.percentiles[i] << " ms";
-        }
+          << "median = " << r.median << " ms, percentile(" << percentile << "%) = " << r.percentile << " ms";
         return s.str();
     };
 
@@ -256,6 +224,7 @@ void printEpilog(std::vector<InferenceTime> const& timings, float walltimeMs, st
     osInfo << "=== Performance summary ===" << std::endl;
     osInfo << "Throughput: " << throughput << " qps" << std::endl;
     osInfo << "Latency: " << toPerfString(latencyResult) << std::endl;
+    osInfo << "End-to-End Host Latency: " << toPerfString(e2eLatencyResult) << std::endl;
     osInfo << "Enqueue Time: " << toPerfString(enqueueResult) << std::endl;
     osInfo << "H2D Latency: " << toPerfString(h2dResult) << std::endl;
     osInfo << "GPU Compute Time: " << toPerfString(gpuComputeResult) << std::endl;
@@ -299,13 +268,6 @@ void printEpilog(std::vector<InferenceTime> const& timings, float walltimeMs, st
                   << "stability." << std::endl;
     }
 
-    // Report warnings if multiple inference streams are used.
-    if (infStreams > 1)
-    {
-        osWarning << "* Multiple inference streams are used. Latencies may not be accurate since inferences may run in "
-                  << "  parallel. Please use \"Throughput\" as the performance metric instead." << std::endl;
-    }
-
     // Explain what the metrics mean.
     osInfo << "Explanations of the performance metrics are printed in the verbose logs." << std::endl;
     printMetricExplanations(osVerbose);
@@ -313,28 +275,27 @@ void printEpilog(std::vector<InferenceTime> const& timings, float walltimeMs, st
     osInfo << std::endl;
 }
 
-void printPerformanceReport(std::vector<InferenceTrace> const& trace, ReportingOptions const& reportingOpts,
-    InferenceOptions const& infOpts, std::ostream& osInfo, std::ostream& osWarning, std::ostream& osVerbose)
+void printPerformanceReport(std::vector<InferenceTrace> const& trace, const ReportingOptions& reporting, float warmupMs,
+    int32_t batchSize, std::ostream& osInfo, std::ostream& osWarning, std::ostream& osVerbose)
 {
-    int32_t batchSize = infOpts.batch;
-    float const warmupMs = infOpts.warmup;
     auto const isNotWarmup = [&warmupMs](const InferenceTrace& a) { return a.computeStart >= warmupMs; };
     auto const noWarmup = std::find_if(trace.begin(), trace.end(), isNotWarmup);
     int32_t const warmups = noWarmup - trace.begin();
     float const benchTime = trace.back().d2hEnd - noWarmup->h2dStart;
+    // when implicit batch used, batchSize = options.inference.batch, which is parsed through --batch
+    // when explicit batch used, batchSize = options.inference.batch = 0
     // treat inference with explicit batch as a single query and report the throughput
     batchSize = batchSize ? batchSize : 1;
     printProlog(warmups * batchSize, (trace.size() - warmups) * batchSize, warmupMs, benchTime, osInfo);
 
     std::vector<InferenceTime> timings(trace.size() - warmups);
     std::transform(noWarmup, trace.end(), timings.begin(), traceToTiming);
-    printTiming(timings, reportingOpts.avgs, osInfo);
-    printEpilog(
-        timings, benchTime, reportingOpts.percentiles, batchSize, infOpts.infStreams, osInfo, osWarning, osVerbose);
+    printTiming(timings, reporting.avgs, osInfo);
+    printEpilog(timings, benchTime, reporting.percentile, batchSize, osInfo, osWarning, osVerbose);
 
-    if (!reportingOpts.exportTimes.empty())
+    if (!reporting.exportTimes.empty())
     {
-        exportJSONTrace(trace, reportingOpts.exportTimes, warmups);
+        exportJSONTrace(trace, reporting.exportTimes);
     }
 }
 
@@ -342,16 +303,15 @@ void printPerformanceReport(std::vector<InferenceTrace> const& trace, ReportingO
 //! [ value, ...]
 //! value ::= { "start enq : time, "end enq" : time, "start h2d" : time, "end h2d" : time, "start compute" : time,
 //!             "end compute" : time, "start d2h" : time, "end d2h" : time, "h2d" : time, "compute" : time,
-//!             "d2h" : time, "latency" : time }
+//!             "d2h" : time, "latency" : time, "end to end" : time }
 //!
-void exportJSONTrace(std::vector<InferenceTrace> const& trace, std::string const& fileName, int32_t const nbWarmups)
+void exportJSONTrace(std::vector<InferenceTrace> const& trace, std::string const& fileName)
 {
     std::ofstream os(fileName, std::ofstream::trunc);
     os << "[" << std::endl;
     char const* sep = "  ";
-    for (auto iter = trace.begin() + nbWarmups; iter < trace.end(); ++iter)
+    for (auto const& t : trace)
     {
-        auto const& t = *iter;
         InferenceTime const it(traceToTiming(t));
         os << sep << "{ ";
         sep = ", ";
@@ -361,8 +321,8 @@ void exportJSONTrace(std::vector<InferenceTrace> const& trace, std::string const
            << "\"startComputeMs\" : " << t.computeStart << sep << "\"endComputeMs\" : " << t.computeEnd << sep
            << "\"startD2hMs\" : "     << t.d2hStart     << sep << "\"endD2hMs\" : "     << t.d2hEnd     << sep
            << "\"h2dMs\" : "          << it.h2d         << sep << "\"computeMs\" : "    << it.compute   << sep
-           << "\"d2hMs\" : "          << it.d2h         << sep << "\"latencyMs\" : "    << it.latency() << " }"
-           << std::endl;
+           << "\"d2hMs\" : "          << it.d2h         << sep << "\"latencyMs\" : "    << it.latency() << sep
+           << "\"endToEndMs\" : "     << it.e2e         << " }"                                         << std::endl;
         // clang-format on
     }
     os << "]" << std::endl;
@@ -386,49 +346,42 @@ void Profiler::reportLayerTime(char const* layerName, float timeMs) noexcept
         }
     }
 
-    mIterator->timeMs.push_back(timeMs);
+    mIterator->timeMs += timeMs;
     ++mIterator;
 }
 
 void Profiler::print(std::ostream& os) const noexcept
 {
-    std::string const nameHdr("   Layer");
-    std::string const timeHdr("   Time(ms)");
-    std::string const avgHdr("     Avg.(ms)");
-    std::string const medHdr("   Median(ms)");
-    std::string const percentageHdr("   Time(%)");
+    std::string const nameHdr("Layer");
+    std::string const timeHdr("   Time (ms)");
+    std::string const avgHdr("   Avg. Time (ms)");
+    std::string const percentageHdr("   Time %");
 
     float const totalTimeMs = getTotalTime();
 
+    auto const cmpLayer = [](LayerProfile const& a, LayerProfile const& b) { return a.name.size() < b.name.size(); };
+    auto const longestName = std::max_element(mLayers.begin(), mLayers.end(), cmpLayer);
+    auto const nameLength = std::max(longestName->name.size() + 1, nameHdr.size());
     auto const timeLength = timeHdr.size();
     auto const avgLength = avgHdr.size();
-    auto const medLength = medHdr.size();
     auto const percentageLength = percentageHdr.size();
 
     os << std::endl
        << "=== Profile (" << mUpdatesCount << " iterations ) ===" << std::endl
-       << timeHdr << avgHdr << medHdr << percentageHdr << nameHdr << std::endl;
+       << std::setw(nameLength) << nameHdr << timeHdr << avgHdr << percentageHdr << std::endl;
 
     for (auto const& p : mLayers)
     {
-        if (p.timeMs.empty() || getTotalTime(p) == 0.F)
-        {
-            // there is no point to print profiling for layer that didn't run at all
-            continue;
-        }
         // clang-format off
-        os << std::setw(timeLength) << std::fixed << std::setprecision(2) << getTotalTime(p)
-           << std::setw(avgLength) << std::fixed << std::setprecision(4) << getAvgTime(p)
-           << std::setw(medLength) << std::fixed << std::setprecision(4) << getMedianTime(p)
-           << std::setw(percentageLength) << std::fixed << std::setprecision(1) << getTotalTime(p) / totalTimeMs * 100
-           << "   " << p.name << std::endl;
+        os << std::setw(nameLength) << p.name << std::setw(timeLength) << std::fixed << std::setprecision(2) << p.timeMs
+           << std::setw(avgLength) << std::fixed << std::setprecision(4) << p.timeMs / mUpdatesCount
+           << std::setw(percentageLength) << std::fixed << std::setprecision(1) << p.timeMs / totalTimeMs * 100
+           << std::endl;
     }
     {
-        os << std::setw(timeLength) << std::fixed << std::setprecision(2)
+        os << std::setw(nameLength) << "Total" << std::setw(timeLength) << std::fixed << std::setprecision(2)
            << totalTimeMs << std::setw(avgLength) << std::fixed << std::setprecision(4) << totalTimeMs / mUpdatesCount
-           << std::setw(medLength) << std::fixed << std::setprecision(4) << getMedianTime()
-           << std::setw(percentageLength) << std::fixed << std::setprecision(1) << 100.0
-           << "   Total" << std::endl;
+           << std::setw(percentageLength) << std::fixed << std::setprecision(1) << 100.0 << std::endl;
         // clang-format on
     }
     os << std::endl;
@@ -444,11 +397,10 @@ void Profiler::exportJSONProfile(std::string const& fileName) const noexcept
     for (auto const& l : mLayers)
     {
         // clang-format off
-        os << ", {" << R"( "name" : ")"      << l.name << R"(")"
-                       R"(, "timeMs" : )"     << getTotalTime(l)
-           <<          R"(, "averageMs" : )"  << getAvgTime(l)
-           <<          R"(, "medianMs" : )"  << getMedianTime(l)
-           <<          R"(, "percentage" : )" << getTotalTime(l) / totalTimeMs * 100
+        os << ", {" << " \"name\" : \""      << l.name << "\""
+                       ", \"timeMs\" : "     << l.timeMs
+           <<          ", \"averageMs\" : "  << l.timeMs / mUpdatesCount
+           <<          ", \"percentage\" : " << l.timeMs / totalTimeMs * 100
            << " }"  << std::endl;
         // clang-format on
     }
@@ -463,13 +415,8 @@ void dumpInputs(nvinfer1::IExecutionContext const& context, Bindings const& bind
 
 void dumpOutputs(nvinfer1::IExecutionContext const& context, Bindings const& bindings, std::ostream& os)
 {
-    auto isOutput = [](Binding const& b) { return !b.isInput; };
-    bindings.dumpBindings(context, isOutput, os);
-}
-
-void dumpRawBindingsToFiles(nvinfer1::IExecutionContext const& context, Bindings const& bindings, std::ostream& os)
-{
-    bindings.dumpRawBindingToFiles(context, os);
+    os << "Output Tensors:" << std::endl;
+    bindings.dumpOutputs(context, os);
 }
 
 void exportJSONOutput(
@@ -482,10 +429,10 @@ void exportJSONOutput(
     for (auto const& binding : output)
     {
         // clang-format off
-        os << sep << R"({ "name" : ")" << binding.first << "\"" << std::endl;
+        os << sep << "{ \"name\" : \"" << binding.first << "\"" << std::endl;
         sep = ", ";
-        os << "  " << sep << R"("dimensions" : ")";
-        bindings.dumpBindingDimensions(binding.first, context, os);
+        os << "  " << sep << "\"dimensions\" : \"";
+        bindings.dumpBindingDimensions(binding.second, context, os);
         os << "\"" << std::endl;
         os << "  " << sep << "\"values\" : [ ";
         bindings.dumpBindingValues(context, binding.second, os, sep, batch);
@@ -493,117 +440,6 @@ void exportJSONOutput(
         // clang-format on
     }
     os << "]" << std::endl;
-}
-
-void exportJSONOutput(
-    nvinfer1::IExecutionContext const& context, Bindings const& bindings, std::string const& fileName, int32_t batch);
-
-void printLayerInfo(
-    ReportingOptions const& reporting, nvinfer1::ICudaEngine* engine, nvinfer1::IExecutionContext* context)
-{
-    if (reporting.layerInfo)
-    {
-        sample::gLogInfo << "Layer Information:" << std::endl;
-        sample::gLogInfo << getLayerInformation(engine, context, nvinfer1::LayerInformationFormat::kONELINE)
-                         << std::flush;
-    }
-    if (!reporting.exportLayerInfo.empty())
-    {
-        std::ofstream os(reporting.exportLayerInfo, std::ofstream::trunc);
-        os << getLayerInformation(engine, context, nvinfer1::LayerInformationFormat::kJSON) << std::flush;
-    }
-}
-
-void printOptimizationProfileInfo(ReportingOptions const& reporting, nvinfer1::ICudaEngine const* engine)
-{
-    if (reporting.optProfileInfo)
-    {
-        sample::gLogInfo << "Optimization Profile Information:" << std::endl;
-        for (int32_t i = 0; i < engine->getNbOptimizationProfiles(); i++)
-        {
-            for (int32_t j = 0, e = engine->getNbIOTensors(); j < e; j++)
-            {
-                auto const tensorName = engine->getIOTensorName(j);
-
-                if (engine->getTensorIOMode(tensorName) == nvinfer1::TensorIOMode::kINPUT)
-                {
-                    auto tensorMinShape = engine->getProfileShape(tensorName, i, nvinfer1::OptProfileSelector::kMIN);
-                    auto tensorOptShape = engine->getProfileShape(tensorName, i, nvinfer1::OptProfileSelector::kOPT);
-                    auto tensorMaxShape = engine->getProfileShape(tensorName, i, nvinfer1::OptProfileSelector::kMAX);
-
-                    sample::gLogInfo << "Model input " << tensorName << " (profile " << i << "): "
-                                     << "min=" << dimsToString(tensorMinShape)
-                                     << ", opt=" << dimsToString(tensorOptShape)
-                                     << ", max=" << dimsToString(tensorMaxShape) << std::endl;
-                }
-            }
-        }
-    }
-}
-
-void printPerformanceProfile(ReportingOptions const& reporting, InferenceEnvironment& iEnv)
-{
-    if (reporting.profile)
-    {
-        iEnv.profiler->print(sample::gLogInfo);
-    }
-    if (!reporting.exportProfile.empty())
-    {
-        iEnv.profiler->exportJSONProfile(reporting.exportProfile);
-    }
-
-    // Print an warning about total per-layer latency when auxiliary streams are used.
-    if (!iEnv.safe && (reporting.profile || !reporting.exportProfile.empty()))
-    {
-        int32_t const nbAuxStreams = iEnv.engine.get()->getNbAuxStreams();
-        if (nbAuxStreams > 0)
-        {
-            sample::gLogWarning << "The engine uses " << nbAuxStreams << " auxiliary streams, so the \"Total\" latency "
-                                << "may not be accurate because some layers may have run in parallel!" << std::endl;
-        }
-    }
-}
-
-namespace details
-{
-void dump(std::unique_ptr<nvinfer1::IExecutionContext> const& context, std::unique_ptr<Bindings> const& binding,
-    ReportingOptions const& reporting, int32_t batch)
-{
-    if (!context)
-    {
-        sample::gLogError << "Empty context! Skip printing outputs." << std::endl;
-        return;
-    }
-    if (reporting.output)
-    {
-        dumpOutputs(*context, *binding, sample::gLogInfo);
-    }
-    if (reporting.dumpRawBindings)
-    {
-        dumpRawBindingsToFiles(*context, *binding, sample::gLogInfo);
-    }
-    if (!reporting.exportOutput.empty())
-    {
-        exportJSONOutput(*context, *binding, reporting.exportOutput, batch);
-    }
-}
-} // namespace details
-
-void printOutput(ReportingOptions const& reporting, InferenceEnvironment const& iEnv, int32_t batch)
-{
-    auto const& binding = iEnv.bindings.at(0);
-    if (!binding)
-    {
-        sample::gLogError << "Empty bindings! Skip printing outputs." << std::endl;
-        return;
-    }
-    if (iEnv.safe)
-    {
-        sample::gLogError << "Safe inferernce is not supported!" << std::endl;
-        return;
-    }
-    auto const& context = iEnv.contexts.at(0);
-    details::dump(context, binding, reporting, batch);
 }
 
 } // namespace sample

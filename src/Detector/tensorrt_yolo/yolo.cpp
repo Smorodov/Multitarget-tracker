@@ -78,7 +78,31 @@ Yolo::Yolo(const NetworkInfo& networkInfo, const InferParams& inferParams)
 	assert(m_Engine != nullptr);
 	m_Context = m_Engine->createExecutionContext();
 	assert(m_Context != nullptr);
+
+	auto numBindings = m_Engine->getNbIOTensors();
+	//std::cout << "** Bindings: " << numBindings << " **" << std::endl;
+	for (int32_t i = 0; i < numBindings; ++i)
+	{
+		std::string bindName = m_Engine->getIOTensorName(i);
+		m_tensorNames.emplace(bindName, i);
+		nvinfer1::Dims dim = m_Engine->getTensorShape(bindName.c_str());
+
+		std::cout << i << ": name: " << bindName;
+		std::cout << ", size: ";
+		for (int j = 0; j < dim.nbDims; ++j)
+		{
+			std::cout << dim.d[j];
+			if (j < dim.nbDims - 1)
+				std::cout << "x";
+		}
+		std::cout << std::endl;
+
+		if (m_InputBlobName == bindName)
+			m_InputBindingIndex = i;
+	}
+#if (NV_TENSORRT_MAJOR < 9)
 	m_InputBindingIndex = m_Engine->getBindingIndex(m_InputBlobName.c_str());
+#endif
 	assert(m_InputBindingIndex != -1);
 	assert(m_BatchSize <= static_cast<uint32_t>(m_Engine->getMaxBatchSize()));
 	allocateBuffers();
@@ -464,7 +488,14 @@ void Yolo::createYOLOEngine(const nvinfer1::DataType dataType, Int8EntropyCalibr
 
     // Build the engine
     std::cout << "Building the TensorRT Engine..." << std::endl;
-    m_Engine = m_Builder->buildEngineWithConfig(*m_Network, *config);
+#if (NV_TENSORRT_MAJOR < 9)
+	m_Engine = m_Builder->buildEngineWithConfig(*m_Network, *config);
+#else
+	nvinfer1::IRuntime* inferRuntime = nvinfer1::createInferRuntime(m_Logger);
+	nvinfer1::IHostMemory* serialNetmork = m_Builder->buildSerializedNetwork(*m_Network, *config);
+	m_Engine = inferRuntime->deserializeCudaEngine(serialNetmork->data(), serialNetmork->size());
+	delete inferRuntime;
+#endif
     assert(m_Engine != nullptr);
     std::cout << "Building complete!" << std::endl;
 
@@ -942,7 +973,15 @@ void Yolo::create_engine_yolov5(const nvinfer1::DataType dataType, Int8EntropyCa
 #endif
 	// Build the engine
 	std::cout << "Building the TensorRT Engine..." << std::endl;
+#if (NV_TENSORRT_MAJOR < 9)
 	m_Engine = m_Builder->buildEngineWithConfig(*m_Network, *config);
+#else
+	nvinfer1::IRuntime* inferRuntime = nvinfer1::createInferRuntime(m_Logger);
+	nvinfer1::IHostMemory* serialNetmork = m_Builder->buildSerializedNetwork(*m_Network, *config);
+	m_Engine = inferRuntime->deserializeCudaEngine(serialNetmork->data(), serialNetmork->size());
+	delete inferRuntime;
+#endif
+
 	assert(m_Engine != nullptr);
 	std::cout << "Building complete!" << std::endl;
 
@@ -987,7 +1026,8 @@ void Yolo::doInference(const unsigned char* input, const uint32_t batchSize)
                                   batchSize * m_InputSize * sizeof(float), cudaMemcpyHostToDevice,
                                   m_CudaStream));
 
-    m_Context->enqueue(batchSize, m_DeviceBuffers.data(), m_CudaStream, nullptr);
+    //m_Context->enqueueV3(batchSize, m_DeviceBuffers.data(), m_CudaStream, nullptr);
+	m_Context->enqueueV3(m_CudaStream);
     for (auto& tensor : m_OutputTensors)
     {
         NV_CUDA_CHECK(cudaMemcpyAsync(tensor.hostBuffer, m_DeviceBuffers.at(tensor.bindingIndex),
@@ -1249,8 +1289,7 @@ void Yolo::parse_cfg_blocks_v5(const  std::vector<std::map<std::string, std::str
 				}
 				outputTensor.stride_h = m_InputH / outputTensor.grid_h;
 				outputTensor.stride_w = m_InputW / outputTensor.grid_w;
-				outputTensor.volume = outputTensor.grid_h * outputTensor.grid_w
-					*(outputTensor.numBBoxes*(5 + outputTensor.numClasses));
+				outputTensor.volume = outputTensor.grid_h * outputTensor.grid_w*(outputTensor.numBBoxes*(5 + outputTensor.numClasses));
 				m_OutputTensors.push_back(outputTensor);
 
 				if (m_ClassNames.empty())
@@ -1268,19 +1307,21 @@ void Yolo::parse_cfg_blocks_v5(const  std::vector<std::map<std::string, std::str
 
 void Yolo::allocateBuffers()
 {
-    m_DeviceBuffers.resize(m_Engine->getNbBindings(), nullptr);
+    m_DeviceBuffers.resize(m_Engine->getNbIOTensors(), nullptr);
     assert(m_InputBindingIndex != -1 && "Invalid input binding index");
-    NV_CUDA_CHECK(cudaMalloc(&m_DeviceBuffers.at(m_InputBindingIndex),
-                             m_BatchSize * m_InputSize * sizeof(float)));
+    NV_CUDA_CHECK(cudaMalloc(&m_DeviceBuffers.at(m_InputBindingIndex), m_BatchSize * m_InputSize * sizeof(float)));
 
     for (auto& tensor : m_OutputTensors)
     {
+#if (NV_TENSORRT_MAJOR < 9)
         tensor.bindingIndex = m_Engine->getBindingIndex(tensor.blobName.c_str());
+#else
+		auto it = m_tensorNames.find(tensor.blobName);
+		tensor.bindingIndex = (it != std::end(m_tensorNames)) ? it->second : -1;
+#endif
         assert((tensor.bindingIndex != -1) && "Invalid output binding index");
-        NV_CUDA_CHECK(cudaMalloc(&m_DeviceBuffers.at(tensor.bindingIndex),
-                                 m_BatchSize * tensor.volume * sizeof(float)));
-        NV_CUDA_CHECK(
-            cudaMallocHost(&tensor.hostBuffer, tensor.volume * m_BatchSize * sizeof(float)));
+        NV_CUDA_CHECK(cudaMalloc(&m_DeviceBuffers.at(tensor.bindingIndex), m_BatchSize * tensor.volume * sizeof(float)));
+        NV_CUDA_CHECK(cudaMallocHost((void**)&tensor.hostBuffer, tensor.volume * m_BatchSize * sizeof(float)));
     }
 }
 

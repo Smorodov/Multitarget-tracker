@@ -1,12 +1,11 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 1993-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
- * SPDX-License-Identifier: Apache-2.0
+ * Copyright (c) 1993-2022, NVIDIA CORPORATION. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -24,7 +23,6 @@
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
-#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -34,10 +32,9 @@ namespace sample
 {
 
 // Build default params
+constexpr int32_t maxBatchNotProvided{0};
+constexpr int32_t defaultMinTiming{1};
 constexpr int32_t defaultAvgTiming{8};
-constexpr int32_t defaultMaxAuxStreams{-1};
-constexpr int32_t defaultBuilderOptimizationLevel{-1};
-constexpr int32_t defaultMaxTactics{-1};
 
 // System default params
 constexpr int32_t defaultDevice{0};
@@ -47,16 +44,14 @@ constexpr int32_t defaultBatch{1};
 constexpr int32_t batchNotProvided{0};
 constexpr int32_t defaultStreams{1};
 constexpr int32_t defaultIterations{10};
-constexpr int32_t defaultOptProfileIndex{0};
 constexpr float defaultWarmUp{200.F};
 constexpr float defaultDuration{3.F};
 constexpr float defaultSleep{};
 constexpr float defaultIdle{};
-constexpr float defaultPersistentCacheRatio{0};
 
 // Reporting default params
 constexpr int32_t defaultAvgRuns{10};
-constexpr std::array<float, 3> defaultPercentiles{90, 95, 99};
+constexpr float defaultPercentile{99};
 
 enum class PrecisionConstraints
 {
@@ -68,7 +63,9 @@ enum class PrecisionConstraints
 enum class ModelFormat
 {
     kANY,
-    kONNX
+    kCAFFE,
+    kONNX,
+    kUFF
 };
 
 enum class SparsityFlag
@@ -85,55 +82,7 @@ enum class TimingCacheMode
     kGLOBAL
 };
 
-enum class MemoryAllocationStrategy
-{
-    kSTATIC,  //< Allocate device memory based on max size across all profiles.
-    kPROFILE, //< Allocate device memory based on max size of the current profile.
-    kRUNTIME, //< Allocate device memory based on the current input shapes.
-};
-
-//!
-//! \enum RuntimeMode
-//!
-//! \brief Used to dictate which TensorRT runtime library to dynamically load.
-//!
-enum class RuntimeMode
-{
-    //! Maps to libnvinfer.so or nvinfer.dll
-    kFULL,
-
-    //! Maps to libnvinfer_dispatch.so or nvinfer_dispatch.dll
-    kDISPATCH,
-
-    //! Maps to libnvinfer_lean.so or nvinfer_lean.dll
-    kLEAN,
-};
-
-inline std::ostream& operator<<(std::ostream& os, RuntimeMode const mode)
-{
-    switch (mode)
-    {
-    case RuntimeMode::kFULL:
-    {
-        os << "full";
-        break;
-    }
-    case RuntimeMode::kDISPATCH:
-    {
-        os << "dispatch";
-        break;
-    }
-    case RuntimeMode::kLEAN:
-    {
-        os << "lean";
-        break;
-    }
-    }
-
-    return os;
-}
-
-using Arguments = std::unordered_multimap<std::string, std::pair<std::string, int32_t>>;
+using Arguments = std::unordered_multimap<std::string, std::string>;
 
 using IOFormat = std::pair<nvinfer1::DataType, nvinfer1::TensorFormats>;
 
@@ -141,34 +90,14 @@ using ShapeRange = std::array<std::vector<int32_t>, nvinfer1::EnumMax<nvinfer1::
 
 using LayerPrecisions = std::unordered_map<std::string, nvinfer1::DataType>;
 using LayerOutputTypes = std::unordered_map<std::string, std::vector<nvinfer1::DataType>>;
-using LayerDeviceTypes = std::unordered_map<std::string, nvinfer1::DeviceType>;
 
-using StringSet = std::unordered_set<std::string>;
-
-class WeightStreamingBudget
+struct Options
 {
-public:
-    static constexpr int64_t kDISABLE{-2};
-    static constexpr int64_t kAUTOMATIC{-1};
-    int64_t bytes{kDISABLE};
-    double percent{static_cast<double>(100.0)};
-
-    bool isDisabled()
-    {
-        return bytes == kDISABLE && percent == kDISABLE;
-    }
-};
-
-class Options
-{
-public:
-    virtual ~Options() = default;
     virtual void parse(Arguments& arguments) = 0;
 };
 
-class BaseModelOptions : public Options
+struct BaseModelOptions : public Options
 {
-public:
     ModelFormat format{ModelFormat::kANY};
     std::string model;
 
@@ -177,165 +106,119 @@ public:
     static void help(std::ostream& out);
 };
 
-class ModelOptions : public Options
+struct UffInput : public Options
 {
-public:
-    BaseModelOptions baseModel;
-    std::string prototxt;
-    std::vector<std::string> outputs;
+    std::vector<std::pair<std::string, nvinfer1::Dims>> inputs;
+    bool NHWC{false};
 
     void parse(Arguments& arguments) override;
 
     static void help(std::ostream& out);
 };
 
-constexpr nvinfer1::TempfileControlFlags getTempfileControlDefaults()
+struct ModelOptions : public Options
 {
-    using F = nvinfer1::TempfileControlFlag;
-    return (1U << static_cast<uint32_t>(F::kALLOW_TEMPORARY_FILES))
-        | (1U << static_cast<uint32_t>(F::kALLOW_IN_MEMORY_FILES));
-}
+    BaseModelOptions baseModel;
+    std::string prototxt;
+    std::vector<std::string> outputs;
+    UffInput uffInputs;
 
-class BuildOptions : public Options
+    void parse(Arguments& arguments) override;
+
+    static void help(std::ostream& out);
+};
+
+struct BuildOptions : public Options
 {
-public:
-    // Unit in MB.
+    int32_t maxBatch{maxBatchNotProvided};
     double workspace{-1.0};
-    // Unit in MB.
     double dlaSRAM{-1.0};
-    // Unit in MB.
     double dlaLocalDRAM{-1.0};
-    // Unit in MB.
     double dlaGlobalDRAM{-1.0};
-    // Unit in KB.
-    double tacticSharedMem{-1.0};
+    int32_t minTiming{defaultMinTiming};
     int32_t avgTiming{defaultAvgTiming};
-    size_t calibProfile{defaultOptProfileIndex};
     bool tf32{true};
     bool fp16{false};
-    bool bf16{false};
     bool int8{false};
-    bool fp8{false};
-    bool int4{false};
-    bool stronglyTyped{false};
     bool directIO{false};
     PrecisionConstraints precisionConstraints{PrecisionConstraints::kNONE};
     LayerPrecisions layerPrecisions;
     LayerOutputTypes layerOutputTypes;
-    LayerDeviceTypes layerDeviceTypes;
-    StringSet debugTensors;
-    StringSet debugTensorStates;
     bool safe{false};
-    bool buildDLAStandalone{false};
-    bool allowGPUFallback{false};
+    bool consistency{false};
     bool restricted{false};
-    bool skipInference{false};
     bool save{false};
     bool load{false};
     bool refittable{false};
-    bool stripWeights{false};
-    bool versionCompatible{false};
-    bool pluginInstanceNorm{false};
-    bool excludeLeanRuntime{false};
-    bool disableCompilationCache{false};
-    int32_t builderOptimizationLevel{defaultBuilderOptimizationLevel};
-    int32_t maxTactics{defaultMaxTactics};
     SparsityFlag sparsity{SparsityFlag::kDISABLE};
-    nvinfer1::ProfilingVerbosity profilingVerbosity{nvinfer1::ProfilingVerbosity::kLAYER_NAMES_ONLY};
+#if (NV_TENSORRT_MAJOR > 7)
+	nvinfer1::ProfilingVerbosity profilingVerbosity{nvinfer1::ProfilingVerbosity::kLAYER_NAMES_ONLY};
+#else
+	nvinfer1::ProfilingVerbosity profilingVerbosity{ nvinfer1::ProfilingVerbosity::kDEFAULT };
+#endif
     std::string engine;
     std::string calibration;
-    using ShapeProfile = std::unordered_map<std::string, ShapeRange>;
-    std::vector<ShapeProfile> optProfiles;
-    ShapeProfile shapesCalib;
+    std::unordered_map<std::string, ShapeRange> shapes;
+    std::unordered_map<std::string, ShapeRange> shapesCalib;
     std::vector<IOFormat> inputFormats;
     std::vector<IOFormat> outputFormats;
     nvinfer1::TacticSources enabledTactics{0};
     nvinfer1::TacticSources disabledTactics{0};
     TimingCacheMode timingCacheMode{TimingCacheMode::kLOCAL};
     std::string timingCacheFile{};
-    bool errorOnTimingCacheMiss{false};
-    // C++11 does not automatically generate hash function for enum class.
-    // Use int32_t to support C++11 compilers.
-    std::unordered_map<int32_t, bool> previewFeatures;
-    nvinfer1::HardwareCompatibilityLevel hardwareCompatibilityLevel{nvinfer1::HardwareCompatibilityLevel::kNONE};
-    nvinfer1::RuntimePlatform runtimePlatform{nvinfer1::RuntimePlatform::kSAME_AS_BUILD};
-    std::string tempdir{};
-    nvinfer1::TempfileControlFlags tempfileControls{getTempfileControlDefaults()};
-    RuntimeMode useRuntime{RuntimeMode::kFULL};
-    std::string leanDLLPath{};
-    int32_t maxAuxStreams{defaultMaxAuxStreams};
-    bool getPlanVersionOnly{false};
-
-    bool allowWeightStreaming{false};
-
     void parse(Arguments& arguments) override;
 
     static void help(std::ostream& out);
 };
 
-class SystemOptions : public Options
+struct SystemOptions : public Options
 {
-public:
     int32_t device{defaultDevice};
     int32_t DLACore{-1};
-    bool ignoreParsedPluginLibs{false};
+    bool fallback{false};
     std::vector<std::string> plugins;
-    std::vector<std::string> setPluginsToSerialize;
-    std::vector<std::string> dynamicPlugins;
 
     void parse(Arguments& arguments) override;
 
     static void help(std::ostream& out);
 };
 
-class InferenceOptions : public Options
+struct InferenceOptions : public Options
 {
-public:
     int32_t batch{batchNotProvided};
     int32_t iterations{defaultIterations};
-    int32_t infStreams{defaultStreams};
-    int32_t optProfileIndex{defaultOptProfileIndex};
+    int32_t streams{defaultStreams};
     float warmup{defaultWarmUp};
     float duration{defaultDuration};
     float sleep{defaultSleep};
     float idle{defaultIdle};
-    float persistentCacheRatio{defaultPersistentCacheRatio};
     bool overlap{true};
     bool skipTransfers{false};
     bool useManaged{false};
     bool spin{false};
     bool threads{false};
     bool graph{false};
+    bool skip{false};
     bool rerun{false};
     bool timeDeserialize{false};
     bool timeRefit{false};
-    bool setOptProfile{false};
     std::unordered_map<std::string, std::string> inputs;
-    using ShapeProfile = std::unordered_map<std::string, std::vector<int32_t>>;
-    ShapeProfile shapes;
-    nvinfer1::ProfilingVerbosity nvtxVerbosity{nvinfer1::ProfilingVerbosity::kLAYER_NAMES_ONLY};
-    MemoryAllocationStrategy memoryAllocationStrategy{MemoryAllocationStrategy::kSTATIC};
-    std::unordered_map<std::string, std::string> debugTensorFileNames;
-
-    WeightStreamingBudget weightStreamingBudget;
+    std::unordered_map<std::string, std::vector<int32_t>> shapes;
 
     void parse(Arguments& arguments) override;
 
     static void help(std::ostream& out);
 };
 
-class ReportingOptions : public Options
+struct ReportingOptions : public Options
 {
-public:
     bool verbose{false};
     int32_t avgs{defaultAvgRuns};
-    std::vector<float> percentiles{defaultPercentiles.begin(), defaultPercentiles.end()};
+    float percentile{defaultPercentile};
     bool refit{false};
     bool output{false};
-    bool dumpRawBindings{false};
     bool profile{false};
     bool layerInfo{false};
-    bool optProfileInfo{false};
     std::string exportTimes;
     std::string exportOutput;
     std::string exportProfile;
@@ -346,9 +229,8 @@ public:
     static void help(std::ostream& out);
 };
 
-class SafeBuilderOptions : public Options
+struct SafeBuilderOptions : public Options
 {
-public:
     std::string serialized{};
     std::string onnxModelFile{};
     bool help{false};
@@ -356,24 +238,18 @@ public:
     std::vector<IOFormat> inputFormats;
     std::vector<IOFormat> outputFormats;
     bool int8{false};
-    bool fp8{false};
-    bool int4{false};
     std::string calibFile{};
     std::vector<std::string> plugins;
+    bool consistency{false};
     bool standard{false};
-    TimingCacheMode timingCacheMode{TimingCacheMode::kLOCAL};
-    std::string timingCacheFile{};
-    SparsityFlag sparsity{SparsityFlag::kDISABLE};
-    int32_t avgTiming{defaultAvgTiming};
 
     void parse(Arguments& arguments) override;
 
     static void printHelp(std::ostream& out);
 };
 
-class AllOptions : public Options
+struct AllOptions : public Options
 {
-public:
     ModelOptions model;
     BuildOptions build;
     SystemOptions system;
@@ -386,20 +262,6 @@ public:
     static void help(std::ostream& out);
 };
 
-class TaskInferenceOptions : public Options
-{
-public:
-    std::string engine;
-    int32_t device{defaultDevice};
-    int32_t DLACore{-1};
-    int32_t batch{batchNotProvided};
-    bool graph{false};
-    float persistentCacheRatio{defaultPersistentCacheRatio};
-    void parse(Arguments& arguments) override;
-    static void help(std::ostream& out);
-};
-
-
 Arguments argsToArgumentsMap(int32_t argc, char* argv[]);
 
 bool parseHelp(Arguments& arguments);
@@ -409,6 +271,8 @@ void helpHelp(std::ostream& out);
 // Functions to print options
 
 std::ostream& operator<<(std::ostream& os, const BaseModelOptions& options);
+
+std::ostream& operator<<(std::ostream& os, const UffInput& input);
 
 std::ostream& operator<<(std::ostream& os, const IOFormat& format);
 
@@ -427,10 +291,6 @@ std::ostream& operator<<(std::ostream& os, const ReportingOptions& options);
 std::ostream& operator<<(std::ostream& os, const AllOptions& options);
 
 std::ostream& operator<<(std::ostream& os, const SafeBuilderOptions& options);
-
-std::ostream& operator<<(std::ostream& os, nvinfer1::DataType dtype);
-
-std::ostream& operator<<(std::ostream& os, nvinfer1::DeviceType devType);
 
 inline std::ostream& operator<<(std::ostream& os, const nvinfer1::Dims& dims)
 {
@@ -469,11 +329,13 @@ inline std::ostream& operator<<(std::ostream& os, const nvinfer1::WeightsRole ro
         os << "Constant";
         break;
     }
+#if (NV_TENSORRT_MAJOR > 7)
     case nvinfer1::WeightsRole::kANY:
     {
         os << "Any";
         break;
     }
+#endif
     }
 
     return os;

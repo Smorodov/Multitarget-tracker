@@ -1,12 +1,11 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 1993-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
- * SPDX-License-Identifier: Apache-2.0
+ * Copyright (c) 1993-2022, NVIDIA CORPORATION. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -36,13 +35,15 @@
  *
  */
 
+using namespace std;
+
 class ParserOnnxConfig : public nvonnxparser::IOnnxConfig
 {
 
 protected:
-    std::string mModelFilename{};
-    std::string mTextFilename{};
-    std::string mFullTextFilename{};
+    string mModelFilename{};
+    string mTextFilename{};
+    string mFullTextFilename{};
     nvinfer1::DataType mModelDtype;
     nvonnxparser::IOnnxConfig::Verbosity mVerbosity;
     bool mPrintLayercInfo;
@@ -61,7 +62,8 @@ public:
 #endif
     }
 
-    ~ParserOnnxConfig() override
+protected:
+    ~ParserOnnxConfig()
     {
 #ifdef ONNX_DEBUG
         if (isDebug())
@@ -72,62 +74,62 @@ public:
     }
 
 public:
-    void setModelDtype(const nvinfer1::DataType modelDtype) noexcept override
+    virtual void setModelDtype(const nvinfer1::DataType modelDtype) noexcept
     {
         mModelDtype = modelDtype;
     }
 
-    nvinfer1::DataType getModelDtype() const noexcept override
+    virtual nvinfer1::DataType getModelDtype() const noexcept
     {
         return mModelDtype;
     }
 
-    const char* getModelFileName() const noexcept override
+    virtual const char* getModelFileName() const noexcept
     {
         return mModelFilename.c_str();
     }
-    void setModelFileName(const char* onnxFilename) noexcept override
+    virtual void setModelFileName(const char* onnxFilename) noexcept
     {
-        mModelFilename = std::string(onnxFilename);
+        mModelFilename = string(onnxFilename);
     }
-    nvonnxparser::IOnnxConfig::Verbosity getVerbosityLevel() const noexcept override
+    virtual nvonnxparser::IOnnxConfig::Verbosity getVerbosityLevel() const noexcept
     {
         return mVerbosity;
     }
-    void addVerbosity() noexcept override
+    virtual void addVerbosity() noexcept
     {
         ++mVerbosity;
     }
-    void reduceVerbosity() noexcept override
+    virtual void reduceVerbosity() noexcept
     {
         --mVerbosity;
     }
-    void setVerbosityLevel(nvonnxparser::IOnnxConfig::Verbosity verbosity) noexcept override
+    virtual void setVerbosityLevel(nvonnxparser::IOnnxConfig::Verbosity verbosity) noexcept
     {
         mVerbosity = verbosity;
     }
 
-    const char* getTextFileName() const noexcept override
+    virtual const char* getTextFileName() const noexcept
     {
         return mTextFilename.c_str();
     }
-    void setTextFileName(const char* textFilename) noexcept override
+    virtual void setTextFileName(const char* textFilename) noexcept
     {
-        mTextFilename = std::string(textFilename);
+        mTextFilename = string(textFilename);
     }
-    const char* getFullTextFileName() const noexcept override
+    virtual const char* getFullTextFileName() const noexcept
     {
         return mFullTextFilename.c_str();
     }
-    void setFullTextFileName(const char* fullTextFilename) noexcept override
+    virtual void setFullTextFileName(const char* fullTextFilename) noexcept
     {
-        mFullTextFilename = std::string(fullTextFilename);
+        mFullTextFilename = string(fullTextFilename);
     }
-    bool getPrintLayerInfo() const noexcept override
+    virtual bool getPrintLayerInfo() const noexcept
     {
         return mPrintLayercInfo;
     }
-    void setPrintLayerInfo(bool src) noexcept override
+    virtual void setPrintLayerInfo(bool src) noexcept
     {
         mPrintLayercInfo = src;
     } //!< get the boolean variable corresponding to the Layer Info, see getPrintLayerInfo()
@@ -140,6 +142,12 @@ public:
         return false;
 #endif
     }
+
+    virtual void destroy() noexcept
+    {
+        delete this;
+    }
+
 }; // class ParserOnnxConfig
 
 #endif

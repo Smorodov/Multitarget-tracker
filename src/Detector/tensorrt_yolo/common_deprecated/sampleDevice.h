@@ -1,12 +1,11 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 1993-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
- * SPDX-License-Identifier: Apache-2.0
+ * Copyright (c) 1993-2022, NVIDIA CORPORATION. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -24,13 +23,17 @@
 #include <iostream>
 #include <thread>
 
-#include "sampleUtils.h"
-
 namespace sample
 {
 
-//! Check if the CUDA return status shows any error. If so, exit the program immediately.
-void cudaCheck(cudaError_t ret, std::ostream& err = std::cerr);
+inline void cudaCheck(cudaError_t ret, std::ostream& err = std::cerr)
+{
+    if (ret != cudaSuccess)
+    {
+        err << "Cuda failure: " << cudaGetErrorString(ret) << std::endl;
+        abort();
+    }
+}
 
 class TrtCudaEvent;
 
@@ -235,18 +238,16 @@ public:
 
     TrtCudaBuffer(TrtCudaBuffer&& rhs)
     {
-        reset(rhs.mPtr, rhs.mSize);
+        reset(rhs.mPtr);
         rhs.mPtr = nullptr;
-        rhs.mSize = 0;
     }
 
     TrtCudaBuffer& operator=(TrtCudaBuffer&& rhs)
     {
         if (this != &rhs)
         {
-            reset(rhs.mPtr, rhs.mSize);
+            reset(rhs.mPtr);
             rhs.mPtr = nullptr;
-            rhs.mSize = 0;
         }
         return *this;
     }
@@ -259,24 +260,21 @@ public:
     TrtCudaBuffer(size_t size)
     {
         A()(&mPtr, size);
-        mSize = size;
     }
 
     void allocate(size_t size)
     {
         reset();
         A()(&mPtr, size);
-        mSize = size;
     }
 
-    void reset(void* ptr = nullptr, size_t size = 0)
+    void reset(void* ptr = nullptr)
     {
         if (mPtr)
         {
             D()(mPtr);
         }
         mPtr = ptr;
-        mSize = size;
     }
 
     void* get() const
@@ -284,14 +282,8 @@ public:
         return mPtr;
     }
 
-    size_t getSize() const
-    {
-        return mSize;
-    }
-
 private:
     void* mPtr{nullptr};
-    size_t mSize{0};
 };
 
 struct DeviceAllocator
@@ -391,39 +383,39 @@ public:
 }; // class IMirroredBuffer
 
 //!
-//! Class to have a separate memory buffer for discrete device and host allocations.
+//! Class to have a seperate memory buffer for discrete device and host allocations.
 //!
 class DiscreteMirroredBuffer : public IMirroredBuffer
 {
 public:
-    void allocate(size_t size) override
+    void allocate(size_t size)
     {
         mSize = size;
         mHostBuffer.allocate(size);
         mDeviceBuffer.allocate(size);
     }
 
-    void* getDeviceBuffer() const override
+    void* getDeviceBuffer() const
     {
         return mDeviceBuffer.get();
     }
 
-    void* getHostBuffer() const override
+    void* getHostBuffer() const
     {
         return mHostBuffer.get();
     }
 
-    void hostToDevice(TrtCudaStream& stream) override
+    void hostToDevice(TrtCudaStream& stream)
     {
         cudaCheck(cudaMemcpyAsync(mDeviceBuffer.get(), mHostBuffer.get(), mSize, cudaMemcpyHostToDevice, stream.get()));
     }
 
-    void deviceToHost(TrtCudaStream& stream) override
+    void deviceToHost(TrtCudaStream& stream)
     {
         cudaCheck(cudaMemcpyAsync(mHostBuffer.get(), mDeviceBuffer.get(), mSize, cudaMemcpyDeviceToHost, stream.get()));
     }
 
-    size_t getSize() const override
+    size_t getSize() const
     {
         return mSize;
     }
@@ -440,33 +432,33 @@ private:
 class UnifiedMirroredBuffer : public IMirroredBuffer
 {
 public:
-    void allocate(size_t size) override
+    void allocate(size_t size)
     {
         mSize = size;
         mBuffer.allocate(size);
     }
 
-    void* getDeviceBuffer() const override
+    void* getDeviceBuffer() const
     {
         return mBuffer.get();
     }
 
-    void* getHostBuffer() const override
+    void* getHostBuffer() const
     {
         return mBuffer.get();
     }
 
-    void hostToDevice(TrtCudaStream& stream) override
+    void hostToDevice(TrtCudaStream& /*stream*/)
     {
         // Does nothing since we are using unified memory.
     }
 
-    void deviceToHost(TrtCudaStream& stream) override
+    void deviceToHost(TrtCudaStream& /*stream*/)
     {
         // Does nothing since we are using unified memory.
     }
 
-    size_t getSize() const override
+    size_t getSize() const
     {
         return mSize;
     }
@@ -476,70 +468,26 @@ private:
     TrtManagedBuffer mBuffer;
 }; // class UnifiedMirroredBuffer
 
-//!
-//! Class to allocate memory for outputs with data-dependent shapes. The sizes of those are unknown so pre-allocation is
-//! not possible.
-//!
-class OutputAllocator : public nvinfer1::IOutputAllocator
+inline void setCudaDevice(int device, std::ostream& os)
 {
-public:
-    OutputAllocator(IMirroredBuffer* buffer)
-        : mBuffer(buffer)
-    {
-    }
+    cudaCheck(cudaSetDevice(device));
 
-    void* reallocateOutput(
-        char const* tensorName, void* currentMemory, uint64_t size, uint64_t alignment) noexcept override
-    {
-        // Some memory allocators return nullptr when allocating zero bytes, but TensorRT requires a non-null ptr
-        // even for empty tensors, so allocate a dummy byte.
-        size = std::max(size, static_cast<uint64_t>(1));
-        if (size > mSize)
-        {
-            mBuffer->allocate(roundUp(size, alignment));
-            mSize = size;
-        }
-        return mBuffer->getDeviceBuffer();
-    }
+    cudaDeviceProp properties;
+    cudaCheck(cudaGetDeviceProperties(&properties, device));
 
-    //! IMirroredBuffer does not implement Async allocation, hence this is just a wrap around
-    void* reallocateOutputAsync(char const* tensorName, void* currentMemory, uint64_t size, uint64_t alignment,
-        cudaStream_t /*stream*/) noexcept override
-    {
-        return reallocateOutput(tensorName, currentMemory, size, alignment);
-    }
-
-    void notifyShape(char const* tensorName, nvinfer1::Dims const& dims) noexcept override
-    {
-        mFinalDims = dims;
-    }
-
-    IMirroredBuffer* getBuffer()
-    {
-        return mBuffer.get();
-    }
-
-    nvinfer1::Dims getFinalDims()
-    {
-        return mFinalDims;
-    }
-
-    ~OutputAllocator() override {}
-
-private:
-    std::unique_ptr<IMirroredBuffer> mBuffer;
-    uint64_t mSize{};
-    nvinfer1::Dims mFinalDims;
-};
-
-//! Set the GPU to run the inference on.
-void setCudaDevice(int32_t device, std::ostream& os);
-
-//! Get the CUDA version of the current CUDA driver.
-int32_t getCudaDriverVersion();
-
-//! Get the CUDA version of the current CUDA runtime.
-int32_t getCudaRuntimeVersion();
+// clang-format off
+    os << "=== Device Information ===" << std::endl;
+    os << "Selected Device: "      << properties.name                                               << std::endl;
+    os << "Compute Capability: "   << properties.major << "." << properties.minor                   << std::endl;
+    os << "SMs: "                  << properties.multiProcessorCount                                << std::endl;
+    os << "Compute Clock Rate: "   << properties.clockRate / 1000000.0F << " GHz"                   << std::endl;
+    os << "Device Global Memory: " << (properties.totalGlobalMem >> 20) << " MiB"                   << std::endl;
+    os << "Shared Memory per SM: " << (properties.sharedMemPerMultiprocessor >> 10) << " KiB"       << std::endl;
+    os << "Memory Bus Width: "     << properties.memoryBusWidth << " bits"
+                        << " (ECC " << (properties.ECCEnabled != 0 ? "enabled" : "disabled") << ")" << std::endl;
+    os << "Memory Clock Rate: "    << properties.memoryClockRate / 1000000.0F << " GHz"             << std::endl;
+    // clang-format on
+}
 
 } // namespace sample
 

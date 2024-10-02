@@ -15,23 +15,32 @@
  * limitations under the License.
  */
 
-#ifndef LOGGER_H
-#define LOGGER_H
+#pragma once
 
-#include "logging.h"
+#include <cstdint>
 
-class SampleErrorRecorder;
-extern SampleErrorRecorder gRecorder;
 namespace sample
 {
-extern Logger gLogger;
-extern LogStreamConsumer gLogVerbose;
-extern LogStreamConsumer gLogInfo;
-extern LogStreamConsumer gLogWarning;
-extern LogStreamConsumer gLogError;
-extern LogStreamConsumer gLogFatal;
 
-void setReportableSeverity(Logger::Severity severity);
+//! Implements "Brain Floating Point": like an IEEE FP32,
+//! but the significand is only 7 bits instead of 23 bits.
+class BFloat16
+{
+public:
+    BFloat16()
+        : mRep(0)
+    {
+    }
+
+    // Rounds to even if there is a tie.
+    BFloat16(float x);
+
+    operator float() const;
+
+private:
+    //! Value stored in BFloat16 representation.
+    uint16_t mRep;
+};
+BFloat16 operator+(BFloat16 x, BFloat16 y);
+
 } // namespace sample
-
-#endif // LOGGER_H

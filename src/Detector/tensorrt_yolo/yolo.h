@@ -158,6 +158,7 @@ protected:
     std::vector<void*> m_DeviceBuffers;
     int m_InputBindingIndex = -1;
     cudaStream_t m_CudaStream = nullptr;
+    std::map<std::string, int> m_tensorNames;
 
     virtual std::vector<BBoxInfo> decodeTensor(const int imageIdx, const int imageH, const int imageW, const TensorInfo& tensor) = 0;
 

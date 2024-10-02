@@ -1,12 +1,11 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 1993-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
- * SPDX-License-Identifier: Apache-2.0
+ * Copyright (c) 1993-2022, NVIDIA CORPORATION. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,13 +16,22 @@
 
 #ifndef TENSORRT_COMMON_H
 #define TENSORRT_COMMON_H
-#include "NvInfer.h"
-#if !TRT_WINML
-#include "NvInferPlugin.h"
+
+// For loadLibrary
+#ifdef _MSC_VER
+// Needed so that the max/min definitions in windows.h do not conflict with std::max/min.
+#ifndef NOMINMAX
+#define NOMINMAX
 #endif
+#include <windows.h>
+#undef NOMINMAX
+#else
+#include <dlfcn.h>
+#endif
+
+#include "NvInfer.h"
+#include "NvInferPlugin.h"
 #include "logger.h"
-#include "safeCommon.h"
-#include "timingCache.h"
 #include <algorithm>
 #include <cassert>
 #include <chrono>
@@ -31,7 +39,6 @@
 #include <cstring>
 #include <cuda_runtime_api.h>
 #include <fstream>
-#include <functional>
 #include <iomanip>
 #include <iostream>
 #include <iterator>
@@ -45,15 +52,7 @@
 #include <utility>
 #include <vector>
 
-#ifdef _MSC_VER
-// For loadLibrary
-// Needed so that the max/min definitions in windows.h do not conflict with std::max/min.
-#define NOMINMAX
-#include <windows.h>
-#undef NOMINMAX
-#else
-#include <dlfcn.h>
-#endif
+#include "safeCommon.h"
 
 #ifdef _MSC_VER
 #define FN_NAME __FUNCTION__
@@ -83,7 +82,7 @@
         if (!(condition))                                                   \
         {                                                                   \
             sample::gLogError << "Assertion failure: " << #condition << std::endl;  \
-            exit(EXIT_FAILURE);                                                       \
+            abort();                                                        \
         }                                                                   \
     } while (0)
 
@@ -97,7 +96,7 @@ OBJ_GUARD(T)
 makeObjGuard(T_* t)
 {
     CHECK(!(std::is_base_of<T, T_>::value || std::is_same<T, T_>::value));
-    auto deleter = [](T* t) { delete t; };
+    auto deleter = [](T* t) { t->destroy(); };
     return std::unique_ptr<T, decltype(deleter)>{static_cast<T*>(t), deleter};
 }
 
@@ -114,6 +113,21 @@ constexpr long double operator"" _KiB(long double val)
     return val * (1 << 10);
 }
 
+// These is necessary if we want to be able to write 1_GiB instead of 1.0_GiB.
+// Since the return type is signed, -1_GiB will work as expected.
+constexpr long long int operator"" _GiB(unsigned long long val)
+{
+    return val * (1 << 30);
+}
+constexpr long long int operator"" _MiB(unsigned long long val)
+{
+    return val * (1 << 20);
+}
+constexpr long long int operator"" _KiB(unsigned long long val)
+{
+    return val * (1 << 10);
+}
+
 struct SimpleProfiler : public nvinfer1::IProfiler
 {
     struct Record
@@ -122,7 +136,7 @@ struct SimpleProfiler : public nvinfer1::IProfiler
         int count{0};
     };
 
-    void reportLayerTime(const char* layerName, float ms) noexcept override
+    virtual void reportLayerTime(const char* layerName, float ms) noexcept
     {
         mProfile[layerName].count++;
         mProfile[layerName].time += ms;
@@ -169,7 +183,7 @@ struct SimpleProfiler : public nvinfer1::IProfiler
         auto old_precision = out.precision();
         // Output header
         {
-            out << std::setfill(' ') << std::setw(maxLayerNameLength) << layerNameStr << " ";
+            out << std::setw(maxLayerNameLength) << layerNameStr << " ";
             out << std::setw(12) << "Runtime, "
                 << "%"
                 << " ";
@@ -200,12 +214,80 @@ private:
     std::map<std::string, Record> mProfile;
 };
 
+//! Locate path to file, given its filename or filepath suffix and possible dirs it might lie in.
+//! Function will also walk back MAX_DEPTH dirs from CWD to check for such a file path.
+inline std::string locateFile(
+    const std::string& filepathSuffix, const std::vector<std::string>& directories, bool reportError = true)
+{
+    const int MAX_DEPTH{10};
+    bool found{false};
+    std::string filepath;
+
+    for (auto& dir : directories)
+    {
+        if (!dir.empty() && dir.back() != '/')
+        {
+#ifdef _MSC_VER
+            filepath = dir + "\\" + filepathSuffix;
+#else
+            filepath = dir + "/" + filepathSuffix;
+#endif
+        }
+        else
+        {
+            filepath = dir + filepathSuffix;
+        }
+
+        for (int i = 0; i < MAX_DEPTH && !found; i++)
+        {
+            const std::ifstream checkFile(filepath);
+            found = checkFile.is_open();
+            if (found)
+            {
+                break;
+            }
+
+            filepath = "../" + filepath; // Try again in parent dir
+        }
+
+        if (found)
+        {
+            break;
+        }
+
+        filepath.clear();
+    }
+
+    // Could not find the file
+    if (filepath.empty())
+    {
+        const std::string dirList = std::accumulate(directories.begin() + 1, directories.end(), directories.front(),
+            [](const std::string& a, const std::string& b) { return a + "\n\t" + b; });
+        std::cout << "Could not find " << filepathSuffix << " in data directories:\n\t" << dirList << std::endl;
+
+        if (reportError)
+        {
+            std::cout << "&&&& FAILED" << std::endl;
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    return filepath;
+}
+
+inline void readPGMFile(const std::string& fileName, uint8_t* buffer, int inH, int inW)
+{
+    std::ifstream infile(fileName, std::ifstream::binary);
+    assert(infile.is_open() && "Attempting to read from a file that is not open.");
+    std::string magic, h, w, max;
+    infile >> magic >> h >> w >> max;
+    infile.seekg(1, infile.cur);
+    infile.read(reinterpret_cast<char*>(buffer), inH * inW);
+}
+
 namespace samplesCommon
 {
-using nvinfer1::utils::loadTimingCacheFile;
-using nvinfer1::utils::buildTimingCacheFromFile;
-using nvinfer1::utils::saveTimingCacheFile;
-using nvinfer1::utils::updateTimingCacheFile;
+
 // Swaps endianness of an integral type.
 template <typename T, typename std::enable_if<std::is_integral<T>::value, int>::type = 0>
 inline T swapEndianness(const T& value)
@@ -257,7 +339,7 @@ public:
     {
         mData = new ElemType[size];
     };
-    ~TypedHostMemory() noexcept override
+    ~TypedHostMemory() noexcept
     {
         delete[](ElemType*) mData;
     }
@@ -278,7 +360,7 @@ inline void* safeCudaMalloc(size_t memSize)
     if (deviceMem == nullptr)
     {
         std::cerr << "Out of memory" << std::endl;
-        exit(EXIT_FAILURE);
+        exit(1);
     }
     return deviceMem;
 }
@@ -293,20 +375,25 @@ struct InferDeleter
     template <typename T>
     void operator()(T* obj) const
     {
+#if (NV_TENSORRT_MAJOR < 8)
+		obj->destroy();
+#else
         delete obj;
+#endif
     }
 };
 
 template <typename T>
-using SampleUniquePtr = std::unique_ptr<T>;
+using SampleUniquePtr = std::unique_ptr<T, InferDeleter>;
 
-static auto StreamDeleter = [](cudaStream_t* pStream) {
-    if (pStream)
+static auto StreamDeleter = [](cudaStream_t* pStream)
     {
-        static_cast<void>(cudaStreamDestroy(*pStream));
-        delete pStream;
-    }
-};
+        if (pStream)
+        {
+            cudaStreamDestroy(*pStream);
+            delete pStream;
+        }
+    };
 
 inline std::unique_ptr<cudaStream_t, decltype(StreamDeleter)> makeCudaStream()
 {
@@ -444,7 +531,7 @@ inline float getMaxValue(const float* buffer, int64_t size)
 //
 // The default parameter values choosen arbitrarily. Range values should be choosen such that
 // we avoid underflow or overflow. Also range value should be non zero to avoid uniform zero scale tensor.
-inline void setAllDynamicRanges(nvinfer1::INetworkDefinition* network, float inRange = 2.0F, float outRange = 4.0F)
+inline void setAllDynamicRanges(nvinfer1::INetworkDefinition* network, float inRange = 2.0f, float outRange = 4.0f)
 {
     // Ensure that all layer inputs have a scale.
     for (int i = 0; i < network->getNbLayers(); i++)
@@ -492,15 +579,14 @@ inline void setDummyInt8DynamicRanges(const nvinfer1::IBuilderConfig* c, nvinfer
     // Set dummy per-tensor dynamic range if Int8 mode is requested.
     if (c->getFlag(nvinfer1::BuilderFlag::kINT8))
     {
-        sample::gLogWarning << "Int8 calibrator not provided. Generating dummy per-tensor dynamic range. Int8 accuracy "
-                               "is not guaranteed."
-                            << std::endl;
+        sample::gLogWarning
+            << "Int8 calibrator not provided. Generating dummy per-tensor dynamic range. Int8 accuracy is not guaranteed."
+            << std::endl;
         setAllDynamicRanges(n);
     }
 }
 
-inline void enableDLA(
-    nvinfer1::IBuilder* builder, nvinfer1::IBuilderConfig* config, int useDLACore, bool allowGPUFallback = true)
+inline void enableDLA(nvinfer1::IBuilder* builder, nvinfer1::IBuilderConfig* config, int useDLACore, bool allowGPUFallback = true)
 {
     if (useDLACore >= 0)
     {
@@ -541,28 +627,18 @@ inline uint32_t getElementSize(nvinfer1::DataType t) noexcept
 {
     switch (t)
     {
-    case nvinfer1::DataType::kINT64: return 8;
-    case nvinfer1::DataType::kINT32:
+    case nvinfer1::DataType::kINT32: return 4;
     case nvinfer1::DataType::kFLOAT: return 4;
-    case nvinfer1::DataType::kBF16:
     case nvinfer1::DataType::kHALF: return 2;
     case nvinfer1::DataType::kBOOL:
-    case nvinfer1::DataType::kUINT8:
-    case nvinfer1::DataType::kINT8:
-    case nvinfer1::DataType::kFP8: return 1;
-    case nvinfer1::DataType::kINT4:
-        ASSERT(false && "Element size is not implemented for sub-byte data-types");
+    case nvinfer1::DataType::kINT8: return 1;
     }
     return 0;
 }
 
-inline int64_t volume(nvinfer1::Dims const& dims, int32_t start, int32_t stop)
+inline int64_t volume(const nvinfer1::Dims& d)
 {
-    ASSERT(start >= 0);
-    ASSERT(start <= stop);
-    ASSERT(stop <= dims.nbDims);
-    ASSERT(std::all_of(dims.d + start, dims.d + stop, [](int32_t x) { return x >= 0; }));
-    return std::accumulate(dims.d + start, dims.d + stop, int64_t{1}, std::multiplies<int64_t>{});
+    return std::accumulate(d.d, d.d + d.nbDims, 1, std::multiplies<int64_t>());
 }
 
 template <int C, int H, int W>
@@ -622,7 +698,7 @@ void writePPMFileWithBBox(const std::string& filename, PPM<C, H, W>& ppm, const 
             << ppm.w << " " << ppm.h << "\n"
             << ppm.max << "\n";
 
-    auto round = [](float x) -> int { return int(std::floor(x + 0.5F)); };
+    auto round = [](float x) -> int { return int(std::floor(x + 0.5f)); };
     const int x1 = std::min(std::max(0, round(int(bbox.x1))), W - 1);
     const int x2 = std::min(std::max(0, round(int(bbox.x2))), W - 1);
     const int y1 = std::min(std::max(0, round(int(bbox.y1))), H - 1);
@@ -663,7 +739,7 @@ inline void writePPMFileWithBBox(const std::string& filename, vPPM ppm, std::vec
             << "\n"
             << ppm.w << " " << ppm.h << "\n"
             << ppm.max << "\n";
-    auto round = [](float x) -> int { return int(std::floor(x + 0.5F)); };
+    auto round = [](float x) -> int { return int(std::floor(x + 0.5f)); };
 
     for (auto bbox : dets)
     {
@@ -702,7 +778,7 @@ public:
     virtual void stop() {}
     float microseconds() const noexcept
     {
-        return mMs * 1000.F;
+        return mMs * 1000.f;
     }
     float milliseconds() const noexcept
     {
@@ -710,15 +786,15 @@ public:
     }
     float seconds() const noexcept
     {
-        return mMs / 1000.F;
+        return mMs / 1000.f;
     }
     void reset() noexcept
     {
-        mMs = 0.F;
+        mMs = 0.f;
     }
 
 protected:
-    float mMs{0.0F};
+    float mMs{0.0f};
 };
 
 class GpuTimer : public TimerBase
@@ -735,14 +811,14 @@ public:
         CHECK(cudaEventDestroy(mStart));
         CHECK(cudaEventDestroy(mStop));
     }
-    void start() override
+    void start()
     {
         CHECK(cudaEventRecord(mStart, mStream));
     }
-    void stop() override
+    void stop()
     {
         CHECK(cudaEventRecord(mStop, mStream));
-        float ms{0.0F};
+        float ms{0.0f};
         CHECK(cudaEventSynchronize(mStop));
         CHECK(cudaEventElapsedTime(&ms, mStart, mStop));
         mMs += ms;
@@ -759,11 +835,11 @@ class CpuTimer : public TimerBase
 public:
     using clock_type = Clock;
 
-    void start() override
+    void start()
     {
         mStart = Clock::now();
     }
-    void stop() override
+    void stop()
     {
         mStop = Clock::now();
         mMs += std::chrono::duration<float, std::milli>{mStop - mStart}.count();
@@ -789,7 +865,13 @@ inline std::vector<std::string> splitString(std::string str, char delimiter = ',
     return splitVect;
 }
 
-inline int getC(nvinfer1::Dims const& d)
+// Return m rounded up to nearest multiple of n
+inline int roundUp(int m, int n)
+{
+    return ((m + n - 1) / n) * n;
+}
+
+inline int getC(const nvinfer1::Dims& d)
 {
     return d.nbDims >= 3 ? d.d[d.nbDims - 3] : 1;
 }
@@ -804,111 +886,54 @@ inline int getW(const nvinfer1::Dims& d)
     return d.nbDims >= 1 ? d.d[d.nbDims - 1] : 1;
 }
 
-//! Platform-agnostic wrapper around dynamic libraries.
-class DynamicLibrary
+inline void loadLibrary(const std::string& path)
 {
-public:
-    explicit DynamicLibrary(std::string const& name)
-        : mLibName{name}
-    {
-#if defined(_WIN32)
-        mHandle = LoadLibraryA(name.c_str());
-#else // defined(_WIN32)
-        int32_t flags{RTLD_LAZY};
+#ifdef _MSC_VER
+    void* handle = LoadLibrary(path.c_str());
+#else
+    int32_t flags{RTLD_LAZY};
 #if ENABLE_ASAN
-        // https://github.com/google/sanitizers/issues/89
-        // asan doesn't handle module unloading correctly and there are no plans on doing
-        // so. In order to get proper stack traces, don't delete the shared library on
-        // close so that asan can resolve the symbols correctly.
-        flags |= RTLD_NODELETE;
+    // https://github.com/google/sanitizers/issues/89
+    // asan doesn't handle module unloading correctly and there are no plans on doing
+    // so. In order to get proper stack traces, don't delete the shared library on
+    // close so that asan can resolve the symbols correctly.
+    flags |= RTLD_NODELETE;
 #endif // ENABLE_ASAN
 
-        mHandle = dlopen(name.c_str(), flags);
-#endif // defined(_WIN32)
-
-        if (mHandle == nullptr)
-        {
-            std::string errorStr{};
-#if !defined(_WIN32)
-            errorStr = std::string{" due to "} + std::string{dlerror()};
+    void* handle = dlopen(path.c_str(), flags);
 #endif
-            throw std::runtime_error("Unable to open library: " + name + errorStr);
-        }
-    }
-
-    DynamicLibrary(DynamicLibrary const&) = delete;
-    DynamicLibrary(DynamicLibrary const&&) = delete;
-
-    //!
-    //! Retrieve a function symbol from the loaded library.
-    //!
-    //! \return the loaded symbol on success
-    //! \throw std::invalid_argument if loading the symbol failed.
-    //!
-    template <typename Signature>
-    std::function<Signature> symbolAddress(char const* name)
+    if (handle == nullptr)
     {
-        if (mHandle == nullptr)
-        {
-            throw std::runtime_error("Handle to library is nullptr.");
-        }
-        void* ret;
-#if defined(_MSC_VER)
-        ret = static_cast<void*>(GetProcAddress(static_cast<HMODULE>(mHandle), name));
+#ifdef _MSC_VER
+        sample::gLogError << "Could not load plugin library: " << path << std::endl;
 #else
-        ret = dlsym(mHandle, name);
+        sample::gLogError << "Could not load plugin library: " << path << ", due to: " << dlerror() << std::endl;
 #endif
-        if (ret == nullptr)
-        {
-            std::string const kERROR_MSG(mLibName + ": error loading symbol: " + std::string(name));
-            throw std::invalid_argument(kERROR_MSG);
-        }
-        return reinterpret_cast<Signature*>(ret);
     }
-
-    ~DynamicLibrary()
-    {
-        try
-        {
-#if defined(_WIN32)
-            ASSERT(static_cast<bool>(FreeLibrary(static_cast<HMODULE>(mHandle))));
-#else
-            ASSERT(dlclose(mHandle) == 0);
-#endif
-        }
-        catch (...)
-        {
-            sample::gLogError << "Unable to close library: " << mLibName << std::endl;
-        }
-    }
-
-private:
-    std::string mLibName{}; //!< Name of the DynamicLibrary
-    void* mHandle{};        //!< Handle to the DynamicLibrary
-};
-
-inline std::unique_ptr<DynamicLibrary> loadLibrary(std::string const& path)
-{
-    // make_unique not available until C++14 - we still need to support C++11 builds.
-    return std::unique_ptr<DynamicLibrary>(new DynamicLibrary{path});
 }
 
-inline int32_t getMaxPersistentCacheSize()
+inline int32_t getSMVersion()
 {
-    int32_t deviceIndex{};
+    int32_t deviceIndex = 0;
     CHECK(cudaGetDevice(&deviceIndex));
 
-    int32_t maxPersistentL2CacheSize{};
-#if CUDART_VERSION >= 11030 && !TRT_WINML
-    CHECK(cudaDeviceGetAttribute(&maxPersistentL2CacheSize, cudaDevAttrMaxPersistingL2CacheSize, deviceIndex));
-#endif
+    int32_t major, minor;
+    CHECK(cudaDeviceGetAttribute(&major, cudaDevAttrComputeCapabilityMajor, deviceIndex));
+    CHECK(cudaDeviceGetAttribute(&minor, cudaDevAttrComputeCapabilityMinor, deviceIndex));
 
-    return maxPersistentL2CacheSize;
+    return ((major << 8) | minor);
+}
+
+inline bool isSMSafe()
+{
+    const int32_t smVersion = getSMVersion();
+    return smVersion == 0x0700 || smVersion == 0x0702 || smVersion == 0x0705 ||
+           smVersion == 0x0800 || smVersion == 0x0806 || smVersion == 0x0807;
 }
 
 inline bool isDataTypeSupported(nvinfer1::DataType dataType)
 {
-    auto builder = SampleUniquePtr<nvinfer1::IBuilder>(createBuilder());
+    auto builder = SampleUniquePtr<nvinfer1::IBuilder>(nvinfer1::createInferBuilder(sample::gLogger.getTRTLogger()));
     if (!builder)
     {
         return false;
@@ -922,6 +947,7 @@ inline bool isDataTypeSupported(nvinfer1::DataType dataType)
 
     return true;
 }
+
 } // namespace samplesCommon
 
 inline std::ostream& operator<<(std::ostream& os, const nvinfer1::Dims& dims)

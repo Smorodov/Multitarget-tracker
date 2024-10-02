@@ -1,12 +1,11 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 1993-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
- * SPDX-License-Identifier: Apache-2.0
+ * Copyright (c) 1993-2022, NVIDIA CORPORATION. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -56,9 +55,9 @@ private:
     bool mDebugBuilder{false};
     InputDataFormat mInputDataFormat{InputDataFormat::kASCII};
     uint64_t mTopK{0};
-    float mFailurePercentage{-1.0F};
-    float mTolerance{0.0F};
-    float mAbsTolerance{1e-5F};
+    float mFailurePercentage{-1.0f};
+    float mTolerance{0.0f};
+    float mAbsTolerance{1e-5f};
 
 public:
     SampleConfig()
@@ -71,7 +70,8 @@ public:
 #endif
     }
 
-    ~SampleConfig() override
+protected:
+    ~SampleConfig()
     {
 #ifdef ONNX_DEBUG
         if (isDebug())
@@ -82,12 +82,12 @@ public:
     }
 
 public:
-    void setModelDtype(const nvinfer1::DataType mdt) noexcept override
+    void setModelDtype(const nvinfer1::DataType mdt) noexcept
     {
         mModelDtype = mdt;
     }
 
-    nvinfer1::DataType getModelDtype() const noexcept override
+    nvinfer1::DataType getModelDtype() const noexcept
     {
         return mModelDtype;
     }
@@ -102,28 +102,28 @@ public:
         mTF32 = enabled;
     }
 
-    const char* getModelFileName() const noexcept override
+    const char* getModelFileName() const noexcept
     {
         return mModelFilename.c_str();
     }
 
-    void setModelFileName(const char* onnxFilename) noexcept override
+    void setModelFileName(const char* onnxFilename) noexcept
     {
         mModelFilename = std::string(onnxFilename);
     }
-    Verbosity getVerbosityLevel() const noexcept override
+    Verbosity getVerbosityLevel() const noexcept
     {
         return mVerbosity;
     }
-    void addVerbosity() noexcept override
+    void addVerbosity() noexcept
     {
         ++mVerbosity;
     }
-    void reduceVerbosity() noexcept override
+    void reduceVerbosity() noexcept
     {
         --mVerbosity;
     }
-    void setVerbosityLevel(Verbosity v) noexcept override
+    virtual void setVerbosityLevel(Verbosity v) noexcept
     {
         mVerbosity = v;
     }
@@ -135,19 +135,19 @@ public:
     {
         mEngineFilename = std::string(engineFilename);
     }
-    const char* getTextFileName() const noexcept override
+    const char* getTextFileName() const noexcept
     {
         return mTextFilename.c_str();
     }
-    void setTextFileName(const char* textFilename) noexcept override
+    void setTextFileName(const char* textFilename) noexcept
     {
         mTextFilename = std::string(textFilename);
     }
-    const char* getFullTextFileName() const noexcept override
+    const char* getFullTextFileName() const noexcept
     {
         return mFullTextFilename.c_str();
     }
-    void setFullTextFileName(const char* fullTextFilename) noexcept override
+    void setFullTextFileName(const char* fullTextFilename) noexcept
     {
         mFullTextFilename = std::string(fullTextFilename);
     }
@@ -161,12 +161,12 @@ public:
         return mLabel;
     } //!<  get the Label
 
-    bool getPrintLayerInfo() const noexcept override
+    bool getPrintLayerInfo() const noexcept
     {
         return mPrintLayercInfo;
     }
 
-    void setPrintLayerInfo(bool b) noexcept override
+    void setPrintLayerInfo(bool b) noexcept
     {
         mPrintLayercInfo = b;
     } //!< get the boolean variable corresponding to the Layer Info, see getPrintLayerInfo()
@@ -312,7 +312,7 @@ public:
     {
         return mTimingCacheFilename.c_str();
     }
-
+    
     void setTimingCacheFileName(const char* timingCacheFilename) noexcept
     {
         mTimingCacheFilename = std::string(timingCacheFilename);
@@ -326,6 +326,12 @@ public:
         return false;
 #endif
     }
+
+    void destroy() noexcept
+    {
+        delete this;
+    }
+
 }; // class SampleConfig
 
 #endif

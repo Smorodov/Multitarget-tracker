@@ -1,12 +1,11 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 1993-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
- * SPDX-License-Identifier: Apache-2.0
+ * Copyright (c) 1993-2022, NVIDIA CORPORATION. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -29,8 +28,8 @@ template <typename TBatchStream>
 class EntropyCalibratorImpl
 {
 public:
-    EntropyCalibratorImpl(TBatchStream const& stream, int firstBatch, std::string const& networkName,
-        const char* inputBlobName, bool readCache = true)
+    EntropyCalibratorImpl(
+        TBatchStream stream, int firstBatch, std::string networkName, const char* inputBlobName, bool readCache = true)
         : mStream{stream}
         , mCalibrationTableName("CalibrationTable" + networkName)
         , mInputBlobName(inputBlobName)
@@ -52,12 +51,11 @@ public:
         return mStream.getBatchSize();
     }
 
-    bool getBatch(void* bindings[], const char* names[], int nbBindings) noexcept
+    bool getBatch(void* bindings[], const char* names[], int /*nbBindings*/) noexcept
     {
         if (!mStream.next())
-        {
             return false;
-        }
+
         CHECK(cudaMemcpy(mDeviceInput, mStream.getBatch(), mInputCount * sizeof(float), cudaMemcpyHostToDevice));
         ASSERT(!strcmp(names[0], mInputBlobName));
         bindings[0] = mDeviceInput;
@@ -103,8 +101,8 @@ template <typename TBatchStream>
 class Int8EntropyCalibrator2 : public nvinfer1::IInt8EntropyCalibrator2
 {
 public:
-    Int8EntropyCalibrator2(TBatchStream const& stream, int32_t firstBatch, const char* networkName,
-        const char* inputBlobName, bool readCache = true)
+    Int8EntropyCalibrator2(
+        TBatchStream stream, int firstBatch, const char* networkName, const char* inputBlobName, bool readCache = true)
         : mImpl(stream, firstBatch, networkName, inputBlobName, readCache)
     {
     }

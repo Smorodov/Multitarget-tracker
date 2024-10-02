@@ -1,12 +1,11 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 1993-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
- * SPDX-License-Identifier: Apache-2.0
+ * Copyright (c) 1993-2022, NVIDIA CORPORATION. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,14 +19,14 @@
 
 #include <functional>
 #include <iostream>
-#include <numeric>
+
+#include "NvInfer.h"
 
 #include "sampleOptions.h"
+#include "sampleUtils.h"
 
 namespace sample
 {
-
-class Bindings;
 
 //!
 //! \struct InferenceTime
@@ -35,11 +34,12 @@ class Bindings;
 //!
 struct InferenceTime
 {
-    InferenceTime(float q, float i, float c, float o)
+    InferenceTime(float q, float i, float c, float o, float e)
         : enq(q)
         , h2d(i)
         , compute(c)
         , d2h(o)
+        , e2e(e)
     {
     }
 
@@ -54,6 +54,7 @@ struct InferenceTime
     float h2d{0};     // Host to Device
     float compute{0}; // Compute
     float d2h{0};     // Device to Host
+    float e2e{0};     // end to end
 
     // ideal latency
     float latency() const
@@ -101,7 +102,7 @@ struct InferenceTrace
 
 inline InferenceTime operator+(InferenceTime const& a, InferenceTime const& b)
 {
-    return InferenceTime(a.enq + b.enq, a.h2d + b.h2d, a.compute + b.compute, a.d2h + b.d2h);
+    return InferenceTime(a.enq + b.enq, a.h2d + b.h2d, a.compute + b.compute, a.d2h + b.d2h, a.e2e + b.e2e);
 }
 
 inline InferenceTime operator+=(InferenceTime& a, InferenceTime const& b)
@@ -115,12 +116,12 @@ inline InferenceTime operator+=(InferenceTime& a, InferenceTime const& b)
 //!
 struct PerformanceResult
 {
-    float min{0.F};
-    float max{0.F};
-    float mean{0.F};
-    float median{0.F};
-    std::vector<float> percentiles;
-    float coeffVar{0.F}; // coefficient of variation
+    float min{0};
+    float max{0};
+    float mean{0};
+    float median{0};
+    float percentile{0};
+    float coeffVar{0}; // coefficient of variation
 };
 
 //!
@@ -136,14 +137,14 @@ void printTiming(std::vector<InferenceTime> const& timings, int32_t runsPerAvg, 
 //!
 //! \brief Print the performance summary of a trace
 //!
-void printEpilog(std::vector<InferenceTime> const& timings, std::vector<float> const& percentiles, int32_t batchSize,
-    std::ostream& osInfo, std::ostream& osWarning, std::ostream& osVerbose);
+void printEpilog(std::vector<InferenceTime> const& timings, float percentile, int32_t batchSize, std::ostream& osInfo,
+    std::ostream& osWarning, std::ostream& osVerbose);
 
 //!
 //! \brief Get the result of a specific performance metric from a trace
 //!
 PerformanceResult getPerformanceResult(std::vector<InferenceTime> const& timings,
-    std::function<float(InferenceTime const&)> metricGetter, std::vector<float> const& percentiles);
+    std::function<float(InferenceTime const&)> metricGetter, float percentile);
 
 //!
 //! \brief Print the explanations of the performance metrics printed in printEpilog() function.
@@ -153,14 +154,13 @@ void printMetricExplanations(std::ostream& os);
 //!
 //! \brief Print and summarize a timing trace
 //!
-void printPerformanceReport(std::vector<InferenceTrace> const& trace, ReportingOptions const& reportingOpts,
-    InferenceOptions const& infOpts, std::ostream& osInfo, std::ostream& osWarning, std::ostream& osVerbose);
+void printPerformanceReport(std::vector<InferenceTrace> const& trace, ReportingOptions const& reporting, float warmupMs,
+    int32_t batchSize, std::ostream& osInfo, std::ostream& osWarning, std::ostream& osVerbose);
 
 //!
 //! \brief Export a timing trace to JSON file
 //!
-void exportJSONTrace(
-    std::vector<InferenceTrace> const& InferenceTime, std::string const& fileName, int32_t const nbWarmups);
+void exportJSONTrace(std::vector<InferenceTrace> const& trace, std::string const& fileName);
 
 //!
 //! \brief Print input tensors to stream
@@ -171,8 +171,6 @@ void dumpInputs(nvinfer1::IExecutionContext const& context, Bindings const& bind
 //! \brief Print output tensors to stream
 //!
 void dumpOutputs(nvinfer1::IExecutionContext const& context, Bindings const& bindings, std::ostream& os);
-
-void dumpRawBindingsToFiles(nvinfer1::IExecutionContext const& context, Bindings const& bindings, std::ostream& os);
 
 //!
 //! \brief Export output tensors to JSON file
@@ -187,7 +185,7 @@ void exportJSONOutput(
 struct LayerProfile
 {
     std::string name;
-    std::vector<float> timeMs;
+    float timeMs{0};
 };
 
 //!
@@ -210,88 +208,14 @@ public:
 private:
     float getTotalTime() const noexcept
     {
-        auto const plusLayerTime = [](float accumulator, LayerProfile const& lp) {
-            return accumulator + std::accumulate(lp.timeMs.begin(), lp.timeMs.end(), 0.F, std::plus<float>());
-        };
-        return std::accumulate(mLayers.begin(), mLayers.end(), 0.0F, plusLayerTime);
-    }
-
-    float getMedianTime() const noexcept
-    {
-        if (mLayers.empty())
-        {
-            return 0.F;
-        }
-        std::vector<float> totalTime;
-        for (size_t run = 0; run < mLayers[0].timeMs.size(); ++run)
-        {
-            auto const layerTime
-                = [&run](float accumulator, LayerProfile const& lp) { return accumulator + lp.timeMs[run]; };
-            auto t = std::accumulate(mLayers.begin(), mLayers.end(), 0.F, layerTime);
-            totalTime.push_back(t);
-        }
-        return median(totalTime);
-    }
-
-    float getMedianTime(LayerProfile const& p) const noexcept
-    {
-        return median(p.timeMs);
-    }
-
-    static float median(std::vector<float> vals)
-    {
-        if (vals.empty())
-        {
-            return 0.F;
-        }
-        std::sort(vals.begin(), vals.end());
-        if (vals.size() % 2U == 1U)
-        {
-            return vals[vals.size() / 2U];
-        }
-        return (vals[vals.size() / 2U - 1U] + vals[vals.size() / 2U]) * 0.5F;
-    }
-
-    //! return the total runtime of given layer profile
-    float getTotalTime(LayerProfile const& p) const noexcept
-    {
-        auto const& vals = p.timeMs;
-        return std::accumulate(vals.begin(), vals.end(), 0.F, std::plus<float>());
-    }
-
-    float getAvgTime(LayerProfile const& p) const noexcept
-    {
-        return getTotalTime(p) / p.timeMs.size();
+        auto const plusLayerTime = [](float accumulator, LayerProfile const& lp) { return accumulator + lp.timeMs; };
+        return std::accumulate(mLayers.begin(), mLayers.end(), 0.0, plusLayerTime);
     }
 
     std::vector<LayerProfile> mLayers;
     std::vector<LayerProfile>::iterator mIterator{mLayers.begin()};
     int32_t mUpdatesCount{0};
 };
-
-//!
-//! \brief Print layer info to logger or export it to output JSON file.
-//!
-void printLayerInfo(
-    ReportingOptions const& reporting, nvinfer1::ICudaEngine* engine, nvinfer1::IExecutionContext* context);
-
-//!
-//! \brief Print optimization profile info to logger.
-//!
-void printOptimizationProfileInfo(ReportingOptions const& reporting, nvinfer1::ICudaEngine const* engine);
-
-//! Forward declaration.
-struct InferenceEnvironment;
-
-//!
-//! \brief Print per-layer perf profile data to logger or export it to output JSON file.
-//!
-void printPerformanceProfile(ReportingOptions const& reporting, InferenceEnvironment& iEnv);
-
-//!
-//! \brief Print binding output values to logger or export them to output JSON file.
-//!
-void printOutput(ReportingOptions const& reporting, InferenceEnvironment const& iEnv, int32_t batch);
 
 } // namespace sample
 

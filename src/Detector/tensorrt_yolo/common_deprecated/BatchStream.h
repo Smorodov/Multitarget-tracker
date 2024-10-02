@@ -1,12 +1,11 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 1993-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
- * SPDX-License-Identifier: Apache-2.0
+ * Copyright (c) 1993-2022, NVIDIA CORPORATION. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -120,7 +119,7 @@ private:
         file.read(reinterpret_cast<char*>(rawData.data()), numElements * sizeof(uint8_t));
         mData.resize(numElements);
         std::transform(
-            rawData.begin(), rawData.end(), mData.begin(), [](uint8_t val) { return static_cast<float>(val) / 255.F; });
+            rawData.begin(), rawData.end(), mData.begin(), [](uint8_t val) { return static_cast<float>(val) / 255.f; });
     }
 
     void readLabelsFile(const std::string& labelsFilePath)
@@ -153,39 +152,42 @@ private:
 class BatchStream : public IBatchStream
 {
 public:
-    BatchStream(int batchSize, int maxBatches, std::string const& prefix, std::string const& suffix,
-        std::vector<std::string> const& directories)
+    BatchStream(
+        int batchSize, int maxBatches, std::string prefix, std::string suffix, std::vector<std::string> directories)
         : mBatchSize(batchSize)
         , mMaxBatches(maxBatches)
         , mPrefix(prefix)
         , mSuffix(suffix)
         , mDataDir(directories)
     {
-        std::ifstream file(locateFile(mPrefix + std::string("0") + mSuffix, mDataDir).c_str(), std::ios::binary);
-        ASSERT(file.good());
+        FILE* file = fopen(locateFile(mPrefix + std::string("0") + mSuffix, mDataDir).c_str(), "rb");
+        ASSERT(file != nullptr);
         int d[4];
-        file.read(reinterpret_cast<char*>(d), 4 * sizeof(int32_t));
+        size_t readSize = fread(d, sizeof(int), 4, file);
+        ASSERT(readSize == 4);
         mDims.nbDims = 4;  // The number of dimensions.
         mDims.d[0] = d[0]; // Batch Size
         mDims.d[1] = d[1]; // Channels
         mDims.d[2] = d[2]; // Height
         mDims.d[3] = d[3]; // Width
         ASSERT(mDims.d[0] > 0 && mDims.d[1] > 0 && mDims.d[2] > 0 && mDims.d[3] > 0);
+        fclose(file);
 
         mImageSize = mDims.d[1] * mDims.d[2] * mDims.d[3];
         mBatch.resize(mBatchSize * mImageSize, 0);
         mLabels.resize(mBatchSize, 0);
         mFileBatch.resize(mDims.d[0] * mImageSize, 0);
         mFileLabels.resize(mDims.d[0], 0);
+        reset(0);
     }
 
-    BatchStream(int batchSize, int maxBatches, std::string const& prefix, std::vector<std::string> const& directories)
+    BatchStream(int batchSize, int maxBatches, std::string prefix, std::vector<std::string> directories)
         : BatchStream(batchSize, maxBatches, prefix, ".batch", directories)
     {
     }
 
-    BatchStream(int batchSize, int maxBatches, nvinfer1::Dims const& dims, std::string const& listFile,
-        std::vector<std::string> const& directories)
+    BatchStream(
+        int batchSize, int maxBatches, nvinfer1::Dims dims, std::string listFile, std::vector<std::string> directories)
         : mBatchSize(batchSize)
         , mMaxBatches(maxBatches)
         , mDims(dims)
@@ -197,6 +199,7 @@ public:
         mLabels.resize(mBatchSize, 0);
         mFileBatch.resize(mDims.d[0] * mImageSize, 0);
         mFileLabels.resize(mDims.d[0], 0);
+        reset(0);
     }
 
     // Resets data members
@@ -216,7 +219,7 @@ public:
             return false;
         }
 
-        for (int64_t csize = 1, batchPos = 0; batchPos < mBatchSize; batchPos += csize, mFileBatchPos += csize)
+        for (int csize = 1, batchPos = 0; batchPos < mBatchSize; batchPos += csize, mFileBatchPos += csize)
         {
             ASSERT(mFileBatchPos > 0 && mFileBatchPos <= mDims.d[0]);
             if (mFileBatchPos == mDims.d[0] && !update())
@@ -292,16 +295,22 @@ private:
         if (mListFile.empty())
         {
             std::string inputFileName = locateFile(mPrefix + std::to_string(mFileCount++) + mSuffix, mDataDir);
-            std::ifstream file(inputFileName.c_str(), std::ios::binary);
+            FILE* file = fopen(inputFileName.c_str(), "rb");
             if (!file)
             {
                 return false;
             }
+
             int d[4];
-            file.read(reinterpret_cast<char*>(d), 4 * sizeof(int32_t));
+            size_t readSize = fread(d, sizeof(int), 4, file);
+            ASSERT(readSize == 4);
             ASSERT(mDims.d[0] == d[0] && mDims.d[1] == d[1] && mDims.d[2] == d[2] && mDims.d[3] == d[3]);
-            file.read(reinterpret_cast<char*>(getFileBatch()), sizeof(float) * mDims.d[0] * mImageSize);
-            file.read(reinterpret_cast<char*>(getFileLabels()), sizeof(float) * mDims.d[0]);
+            size_t readInputCount = fread(getFileBatch(), sizeof(float), mDims.d[0] * mImageSize, file);
+            ASSERT(readInputCount == size_t(mDims.d[0] * mImageSize));
+            size_t readLabelCount = fread(getFileLabels(), sizeof(float), mDims.d[0], file);
+            ASSERT(readLabelCount == 0 || readLabelCount == size_t(mDims.d[0]));
+
+            fclose(file);
         }
         else
         {
@@ -359,7 +368,7 @@ private:
         return true;
     }
 
-    int64_t mBatchSize{0};
+    int mBatchSize{0};
     int mMaxBatches{0};
     int mBatchCount{0};
     int mFileCount{0};

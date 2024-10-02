@@ -22,14 +22,13 @@ bool YoloONNX::Init(const SampleYoloParams& params)
 
     auto GetBindings = [&]()
     {
-        auto numBindings = m_engine->getNbBindings();
+        auto numBindings = m_engine->getNbIOTensors();
 
         std::cout << "** Bindings: " << numBindings << " **" << std::endl;
         for (int32_t i = 0; i < numBindings; ++i)
         {
-            nvinfer1::Dims dim = m_engine->getBindingDimensions(i);
-
-            std::string bindName = m_engine->getBindingName(i);
+            std::string bindName = m_engine->getIOTensorName(i);
+            nvinfer1::Dims dim = m_engine->getTensorShape(bindName.c_str());
             for (const auto& outName : m_params.outputTensorNames)
             {
                 if (bindName == outName)
@@ -77,27 +76,17 @@ bool YoloONNX::Init(const SampleYoloParams& params)
         delete infer;
 #endif
 
-        sample::gLogInfo << "TRT Engine loaded from: " << m_params.engineFileName << std::endl;
-
-        GetBindings();
-
-        if (!m_engine)
+        if (m_engine)
         {
-            res = false;
+            GetBindings();
+            m_inputDims = m_engine->getTensorShape(m_engine->getIOTensorName(0));
+            res = true;
         }
         else
         {
-#if 1
-            m_inputDims = m_engine->getBindingDimensions(0);
-#else
-            m_inputDims.nbDims = 4;
-            m_inputDims.d[0] = m_params.explicitBatchSize;
-            m_inputDims.d[1] = 3;
-            m_inputDims.d[2] = m_params.width;
-            m_inputDims.d[3] = m_params.height;
-#endif
             res = true;
         }
+        sample::gLogInfo << "TRT Engine loaded from: " << m_params.engineFileName << " with res = " << res << std::endl;
     }
     else
     {
@@ -177,7 +166,7 @@ bool YoloONNX::ConstructNetwork(YoloONNXUniquePtr<nvinfer1::IBuilder>& builder,
     size_t dlaGlobalDRAMSize = config->getMemoryPoolLimit(nvinfer1::MemoryPoolType::kDLA_GLOBAL_DRAM);
 	std::cout << "workspaceSize = " << workspaceSize << ", dlaManagedSRAMSize = " << dlaManagedSRAMSize << ", dlaLocalDRAMSize = " << dlaLocalDRAMSize << ", dlaGlobalDRAMSize = " << dlaGlobalDRAMSize << std::endl;
 
-    config->setMemoryPoolLimit(nvinfer1::MemoryPoolType::kWORKSPACE, m_params.videoMemory ? m_params.videoMemory : 4096_MiB);
+    config->setMemoryPoolLimit(nvinfer1::MemoryPoolType::kWORKSPACE, m_params.videoMemory ? m_params.videoMemory : (1 << 20));
 #endif
 
     config->setFlag(nvinfer1::BuilderFlag::kGPU_FALLBACK);
