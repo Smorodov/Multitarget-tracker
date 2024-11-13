@@ -351,7 +351,9 @@ void OCVDNNDetector::DetectInCrop(const cv::UMat& colorFrame, const cv::Rect& cr
     }
 	else
 	{
-        if (m_netType == ModelType::YOLOV8 || m_netType == ModelType::YOLOV5 || m_netType == ModelType::YOLOV9 || m_netType == ModelType::YOLOV10 || m_netType == ModelType::YOLOV11)
+        if (m_netType == ModelType::YOLOV8 || m_netType == ModelType::YOLOV5 ||
+            m_netType == ModelType::YOLOV9 || m_netType == ModelType::YOLOV10 ||
+            m_netType == ModelType::YOLOV11)
         {
             int rows = detections[0].size[1];
             int dimensions = detections[0].size[2];

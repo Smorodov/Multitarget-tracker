@@ -104,7 +104,9 @@ Yolo::Yolo(const NetworkInfo& networkInfo, const InferParams& inferParams)
 	m_InputBindingIndex = m_Engine->getBindingIndex(m_InputBlobName.c_str());
 #endif
 	assert(m_InputBindingIndex != -1);
+#if (NV_TENSORRT_MAJOR < 9)
 	assert(m_BatchSize <= static_cast<uint32_t>(m_Engine->getMaxBatchSize()));
+#endif
 	allocateBuffers();
 	NV_CUDA_CHECK(cudaStreamCreate(&m_CudaStream));
 	assert(verifyYoloEngine());
@@ -1327,6 +1329,7 @@ void Yolo::allocateBuffers()
 
 bool Yolo::verifyYoloEngine()
 {
+#if (NV_TENSORRT_MAJOR < 9)
     assert((m_Engine->getNbBindings() == (1 + m_OutputTensors.size())
             && "Binding info doesn't match between cfg and engine file \n"));
 
@@ -1343,6 +1346,7 @@ bool Yolo::verifyYoloEngine()
     assert(m_Engine->getBindingName(m_InputBindingIndex) == m_InputBlobName
            && "Input blob name doesn't match between config and engine file");
     assert(get3DTensorVolume(m_Engine->getBindingDimensions(m_InputBindingIndex)) == m_InputSize);
+#endif
     return true;
 }
 

@@ -81,7 +81,7 @@ set(TENSORRT_LIBS
     ${TensorRT_LIBRARIES})
 
 if (CMAKE_COMPILER_IS_GNUCXX)
-    set(TENSORRT_LIBS ${TENSORRT_LIBS} stdc++fs)
+    set(TENSORRT_LIBS ${TENSORRT_LIBS} stdc++fs nvinfer_plugin nvonnxparser)
 endif(CMAKE_COMPILER_IS_GNUCXX)
 
 message("TENSORRT_LIBS: ${TENSORRT_LIBS}")

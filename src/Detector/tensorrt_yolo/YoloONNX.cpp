@@ -146,6 +146,8 @@ bool YoloONNX::ConstructNetwork(YoloONNXUniquePtr<nvinfer1::IBuilder>& builder,
                                 YoloONNXUniquePtr<nvinfer1::INetworkDefinition>& network, YoloONNXUniquePtr<nvinfer1::IBuilderConfig>& config,
                                 YoloONNXUniquePtr<nvonnxparser::IParser>& parser)
 {
+    bool res = false;
+
     // Parse ONNX model file to populate TensorRT INetwork
     //int verbosity = (int) nvinfer1::ILogger::Severity::kERROR;
     int verbosity = (int)nvinfer1::ILogger::Severity::kVERBOSE;
@@ -155,7 +157,7 @@ bool YoloONNX::ConstructNetwork(YoloONNXUniquePtr<nvinfer1::IBuilder>& builder,
     if (!parser->parseFromFile(m_params.onnxFileName.c_str(), verbosity))
     {
         sample::gLogError << "Unable to parse ONNX model file: " << m_params.onnxFileName << std::endl;
-        return false;
+        return res;
     }
 
 #if (NV_TENSORRT_MAJOR < 8)
@@ -207,12 +209,15 @@ bool YoloONNX::ConstructNetwork(YoloONNXUniquePtr<nvinfer1::IBuilder>& builder,
     if (m_params.dlaCore >= 0)
         infer->setDLACore(m_params.dlaCore);
     nvinfer1::IHostMemory* mem = builder->buildSerializedNetwork(*network, *config);
-    m_engine = std::shared_ptr<nvinfer1::ICudaEngine>(infer->deserializeCudaEngine(mem->data(), mem->size()), samplesCommon::InferDeleter());
+    if (mem)
+        m_engine = std::shared_ptr<nvinfer1::ICudaEngine>(infer->deserializeCudaEngine(mem->data(), mem->size()), samplesCommon::InferDeleter());
+    else
+        sample::gLogError << "Unable to buildSerializedNetwork" << std::endl;
     delete infer;
 #endif
 
     if (!m_engine)
-        return false;
+        return res;
 
     if (m_params.engineFileName.size() > 0)
     {
@@ -231,8 +236,9 @@ bool YoloONNX::ConstructNetwork(YoloONNXUniquePtr<nvinfer1::IBuilder>& builder,
         p.close();
         sample::gLogInfo << "TRT Engine file saved to: " << m_params.engineFileName << std::endl;
     }
+    res = true;
 
-    return true;
+    return res;
 }
 
 //!
