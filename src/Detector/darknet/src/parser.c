@@ -217,13 +217,11 @@ convolutional_layer parse_convolutional(list *options, size_params params)
     int stretch = option_find_int_quiet(options, "stretch", 0);
     int stretch_sway = option_find_int_quiet(options, "stretch_sway", 0);
     if ((sway + rotate + stretch + stretch_sway) > 1) {
-        printf(" Error: should be used only 1 param: sway=1, rotate=1 or stretch=1 in the [convolutional] layer \n");
-        exit(0);
+        error("Error: should be used only 1 param: sway=1, rotate=1 or stretch=1 in the [convolutional] layer", DARKNET_LOC);
     }
     int deform = sway || rotate || stretch || stretch_sway;
     if (deform && size == 1) {
-        printf(" Error: params (sway=1, rotate=1 or stretch=1) should be used only with size >=3 in the [convolutional] layer \n");
-        exit(0);
+        error("Error: params (sway=1, rotate=1 or stretch=1) should be used only with size >=3 in the [convolutional] layer", DARKNET_LOC);
     }
 
     convolutional_layer layer = make_convolutional_layer(batch,1,h,w,c,n,groups,size,stride_x,stride_y,dilation,padding,activation, batch_normalize, binary, xnor, params.net.adam, use_bin_output, params.index, antialiasing, share_layer, assisted_excitation, deform, params.train);
@@ -362,17 +360,17 @@ connected_layer parse_connected(list *options, size_params params)
 
 softmax_layer parse_softmax(list *options, size_params params)
 {
-	int groups = option_find_int_quiet(options, "groups", 1);
-	softmax_layer layer = make_softmax_layer(params.batch, params.inputs, groups);
-	layer.temperature = option_find_float_quiet(options, "temperature", 1);
-	char *tree_file = option_find_str(options, "tree", 0);
-	if (tree_file) layer.softmax_tree = read_tree(tree_file);
-	layer.w = params.w;
-	layer.h = params.h;
-	layer.c = params.c;
-	layer.spatial = option_find_float_quiet(options, "spatial", 0);
-	layer.noloss = option_find_int_quiet(options, "noloss", 0);
-	return layer;
+    int groups = option_find_int_quiet(options, "groups", 1);
+    softmax_layer layer = make_softmax_layer(params.batch, params.inputs, groups);
+    layer.temperature = option_find_float_quiet(options, "temperature", 1);
+    char *tree_file = option_find_str(options, "tree", 0);
+    if (tree_file) layer.softmax_tree = read_tree(tree_file);
+    layer.w = params.w;
+    layer.h = params.h;
+    layer.c = params.c;
+    layer.spatial = option_find_float_quiet(options, "spatial", 0);
+    layer.noloss = option_find_int_quiet(options, "noloss", 0);
+    return layer;
 }
 
 contrastive_layer parse_contrastive(list *options, size_params params)
@@ -384,8 +382,7 @@ contrastive_layer parse_contrastive(list *options, size_params params)
     if(yolo_layer_id != 0) yolo_layer = params.net.layers + yolo_layer_id;
     if (yolo_layer->type != YOLO) {
         printf(" Error: [contrastive] layer should point to the [yolo] layer instead of %d layer! \n", yolo_layer_id);
-        getchar();
-        exit(0);
+        error("Error!", DARKNET_LOC);
     }
 
     contrastive_layer layer = make_contrastive_layer(params.batch, params.w, params.h, params.c, classes, params.inputs, yolo_layer);
@@ -427,7 +424,7 @@ float *get_classes_multipliers(char *cpc, const int classes, const float max_del
         int *counters_per_class = parse_yolo_mask(cpc, &classes_counters);
         if (classes_counters != classes) {
             printf(" number of values in counters_per_class = %d doesn't match with classes = %d \n", classes_counters, classes);
-            exit(0);
+            error("Error!", DARKNET_LOC);
         }
         float max_counter = 0;
         int i;
@@ -458,12 +455,8 @@ layer parse_yolo(list *options, size_params params)
     int max_boxes = option_find_int_quiet(options, "max", 200);
     layer l = make_yolo_layer(params.batch, params.w, params.h, num, total, mask, classes, max_boxes);
     if (l.outputs != params.inputs) {
-        printf("Error: l.outputs == params.inputs \n");
-        printf("filters= in the [convolutional]-layer doesn't correspond to classes= or mask= in [yolo]-layer \n");
-        exit(EXIT_FAILURE);
+        error("Error: l.outputs == params.inputs, filters= in the [convolutional]-layer doesn't correspond to classes= or mask= in [yolo]-layer", DARKNET_LOC);
     }
-    //assert(l.outputs == params.inputs);
-
     l.show_details = option_find_int_quiet(options, "show_details", 1);
     l.max_delta = option_find_float_quiet(options, "max_delta", FLT_MAX);   // set 10
     char *cpc = option_find_str(options, "counters_per_class", 0);
@@ -532,7 +525,6 @@ layer parse_yolo(list *options, size_params params)
         printf(" embedding_size = %d \n", l.embedding_size);
         if (le.n % l.n != 0) {
             printf(" Warning: filters=%d number in embedding_layer=%d isn't divisable by number of anchors %d \n", le.n, embedding_layer_id, l.n);
-            getchar();
         }
     }
 
@@ -592,11 +584,8 @@ layer parse_gaussian_yolo(list *options, size_params params) // Gaussian_YOLOv3
     int *mask = parse_gaussian_yolo_mask(a, &num);
     layer l = make_gaussian_yolo_layer(params.batch, params.w, params.h, num, total, mask, classes, max_boxes);
     if (l.outputs != params.inputs) {
-        printf("Error: l.outputs == params.inputs \n");
-        printf("filters= in the [convolutional]-layer doesn't correspond to classes= or mask= in [Gaussian_yolo]-layer \n");
-        exit(EXIT_FAILURE);
+        error("Error: l.outputs == params.inputs, filters= in the [convolutional]-layer doesn't correspond to classes= or mask= in [Gaussian_yolo]-layer", DARKNET_LOC);
     }
-    //assert(l.outputs == params.inputs);
     l.max_delta = option_find_float_quiet(options, "max_delta", FLT_MAX);   // set 10
     char *cpc = option_find_str(options, "counters_per_class", 0);
     l.classes_multipliers = get_classes_multipliers(cpc, classes, l.max_delta);
@@ -683,9 +672,7 @@ layer parse_region(list *options, size_params params)
 
     layer l = make_region_layer(params.batch, params.w, params.h, num, classes, coords, max_boxes);
     if (l.outputs != params.inputs) {
-        printf("Error: l.outputs == params.inputs \n");
-        printf("filters= in the [convolutional]-layer doesn't correspond to classes= or num= in [region]-layer \n");
-        exit(EXIT_FAILURE);
+        error("Error: l.outputs == params.inputs, filters= in the [convolutional]-layer doesn't correspond to classes= or num= in [region]-layer", DARKNET_LOC);
     }
     //assert(l.outputs == params.inputs);
 
@@ -936,8 +923,7 @@ layer parse_shortcut(list *options, size_params params, network net)
     else if (strcmp(weights_type_str, "per_channel") == 0) weights_type = PER_CHANNEL;
     else if (strcmp(weights_type_str, "none") != 0) {
         printf("Error: Incorrect weights_type = %s \n Use one of: none, per_feature, per_channel \n", weights_type_str);
-        getchar();
-        exit(0);
+        error("Error!", DARKNET_LOC);
     }
 
     char *weights_normalization_str = option_find_str_quiet(options, "weights_normalization", "none");
@@ -946,8 +932,7 @@ layer parse_shortcut(list *options, size_params params, network net)
     else if (strcmp(weights_normalization_str, "softmax") == 0) weights_normalization = SOFTMAX_NORMALIZATION;
     else if (strcmp(weights_type_str, "none") != 0) {
         printf("Error: Incorrect weights_normalization = %s \n Use one of: none, relu, softmax \n", weights_normalization_str);
-        getchar();
-        exit(0);
+        error("Error!", DARKNET_LOC);
     }
 
     char *l = option_find(options, "from");
@@ -1227,8 +1212,7 @@ void parse_net_options(list *options, network *net)
     net->contrastive_color = option_find_int_quiet(options, "contrastive_color", 0);
     net->unsupervised = option_find_int_quiet(options, "unsupervised", 0);
     if (net->contrastive && mini_batch < 2) {
-        printf(" Error: mini_batch size (batch/subdivisions) should be higher than 1 for Contrastive loss \n");
-        exit(0);
+        error("Error: mini_batch size (batch/subdivisions) should be higher than 1 for Contrastive loss!", DARKNET_LOC);
     }
     net->label_smooth_eps = option_find_float_quiet(options, "label_smooth_eps", 0.0f);
     net->resize_step = option_find_float_quiet(options, "resize_step", 32);
@@ -1837,7 +1821,7 @@ list *read_cfg(char *filename)
                 free(line);
                 break;
             default:
-                if(!current || (current && !read_option(line, current->options))){
+                if(!read_option(line, current->options)){
                     fprintf(stderr, "Config file error line %d, could parse: %s\n", nu, line);
                     free(line);
                 }
@@ -2006,12 +1990,12 @@ void save_weights_upto(network net, char *filename, int cutoff, int save_ema)
     FILE *fp = fopen(filename, "wb");
     if(!fp) file_error(filename);
 
-    int major = MAJOR_VERSION;
-    int minor = MINOR_VERSION;
-    int revision = PATCH_VERSION;
-    fwrite(&major, sizeof(int), 1, fp);
-    fwrite(&minor, sizeof(int), 1, fp);
-    fwrite(&revision, sizeof(int), 1, fp);
+    int32_t major = MAJOR_VERSION;
+    int32_t minor = MINOR_VERSION;
+    int32_t revision = PATCH_VERSION;
+    fwrite(&major, sizeof(int32_t), 1, fp);
+    fwrite(&minor, sizeof(int32_t), 1, fp);
+    fwrite(&revision, sizeof(int32_t), 1, fp);
     (*net.seen) = get_current_iteration(net) * net.batch * net.subdivisions; // remove this line, when you will save to weights-file both: seen & cur_iteration
     fwrite(net.seen, sizeof(uint64_t), 1, fp);
 
@@ -2267,12 +2251,12 @@ void load_weights_upto(network *net, char *filename, int cutoff)
     FILE *fp = fopen(filename, "rb");
     if(!fp) file_error(filename);
 
-    int major;
-    int minor;
-    int revision;
-    fread(&major, sizeof(int), 1, fp);
-    fread(&minor, sizeof(int), 1, fp);
-    fread(&revision, sizeof(int), 1, fp);
+    int32_t major;
+    int32_t minor;
+    int32_t revision;
+    fread(&major, sizeof(int32_t), 1, fp);
+    fread(&minor, sizeof(int32_t), 1, fp);
+    fread(&revision, sizeof(int32_t), 1, fp);
     if ((major * 10 + minor) >= 2) {
         printf("\n seen 64");
         uint64_t iseen = 0;

@@ -508,7 +508,7 @@ public:
                 }
 
                 char head[400];
-                sprintf(head, "--mjpegstream\r\nContent-Type: image/jpeg\r\nContent-Length: %zu\r\n\r\n", outlen);
+                sprintf(head, "--mjpegstream\r\nContent-Type: image/jpeg\r\nContent-Length: %d\r\n\r\n", outlen);
                 _write(s, head, 0);
                 int n = _write(s, (char*)(&outbuf[0]), outlen);
                 cerr << "known client: " << s << ", sent = " << n << ", must be sent outlen = " << outlen << endl;
@@ -782,8 +782,7 @@ int check_prob(detection det, float thresh)
 int check_classes_id(detection det1, detection det2, float thresh)
 {
     if (det1.classes != det2.classes) {
-        printf(" Error: det1.classes != det2.classes \n");
-        getchar();
+        error("Error: det1.classes != det2.classes", DARKNET_LOC);
     }
 
     int det1_id = -1;
@@ -832,7 +831,7 @@ float *make_float_array(float* src, size_t size)
 }
 
 struct detection_t : detection {
-    int det_count = 0;
+    int det_count;
     detection_t(detection det) : detection(det), det_count(0)
     {
         if (embeddings) embeddings = make_float_array(det.embeddings, embedding_size);
@@ -840,7 +839,7 @@ struct detection_t : detection {
         if (uc) uc = make_float_array(det.uc, 4);
     }
 
-    detection_t(detection_t const& det) : detection(det), det_count(0)
+    detection_t(detection_t const& det) : detection(det)
     {
         if (embeddings) embeddings = make_float_array(det.embeddings, embedding_size);
         if (prob) prob = make_float_array(det.prob, classes);

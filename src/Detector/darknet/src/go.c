@@ -142,7 +142,7 @@ void train_go(char *cfgfile, char *weightfile)
         float loss = train_network_datum(net, board, move) / net.batch;
         if(avg_loss == -1) avg_loss = loss;
         avg_loss = avg_loss*.95 + loss*.05;
-        printf("%d, %.3f: %f, %f avg, %f rate, %lf seconds, %ld images\n", get_current_batch(net), (float)(*net.seen)/N, loss, avg_loss, get_current_rate(net), sec(clock()-time), *net.seen);
+        printf("%d, %.3f: %f, %f avg, %f rate, %lf seconds, %" PRIu64 " images\n", get_current_batch(net), (float)(*net.seen)/N, loss, avg_loss, get_current_rate(net), sec(clock()-time), *net.seen);
         if(*net.seen/N > epoch){
             epoch = *net.seen/N;
             char buff[256];
@@ -580,9 +580,9 @@ void engine_go(char *filename, char *weightfile, int multi)
                 fprintf(f, "final_status_list dead\n");
                 fclose(f);
 #ifdef _WIN32
-				FILE *p = _popen("./gnugo --mode gtp < game.txt", "r");
+                FILE *p = _popen("./gnugo --mode gtp < game.txt", "r");
 #else
-				FILE *p = popen("./gnugo --mode gtp < game.txt", "r");
+                FILE *p = popen("./gnugo --mode gtp < game.txt", "r");
 #endif
                 for(i = 0; i < count; ++i){
                     free(fgetl(p));
@@ -721,9 +721,9 @@ float score_game(float *board)
     fprintf(f, "final_score\n");
     fclose(f);
 #ifdef _WIN32
-	FILE *p = _popen("./gnugo --mode gtp < game.txt", "r");
+    FILE *p = _popen("./gnugo --mode gtp < game.txt", "r");
 #else
-	FILE *p = popen("./gnugo --mode gtp < game.txt", "r");
+    FILE *p = popen("./gnugo --mode gtp < game.txt", "r");
 #endif
     for(i = 0; i < count; ++i){
         free(fgetl(p));
@@ -740,9 +740,9 @@ float score_game(float *board)
     }
     if(player == 'W') score = -score;
 #ifdef _WIN32
-	_pclose(p);
+    _pclose(p);
 #else
-	pclose(p);
+    pclose(p);
 #endif
     return score;
 }

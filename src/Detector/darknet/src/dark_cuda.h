@@ -25,6 +25,18 @@ extern int gpu_index;
 #include <curand.h>
 #include <cublas_v2.h>
 #include <cuda_runtime_api.h>
+
+#ifdef CUDA_OPENGL_INTEGRATION
+// On Windows, we need to include <windows.h> before
+// including OpenGL headers or else we will get various
+// compiler errors due to missing macros.
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#endif // _WIN32
+
+#include <cuda_gl_interop.h>
+#endif // CUDA_OPENGL_INTEGRATION
 //#include <driver_types.h>
 
 #ifdef CUDNN
@@ -54,11 +66,11 @@ extern int gpu_index;
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
-    void check_error(cudaError_t status);
-    void check_error_extended(cudaError_t status, const char *file, int line, const char *date_time);
-    void cublas_check_error_extended(cublasStatus_t status, const char *file, int line, const char *date_time);
-#define CHECK_CUDA(X) check_error_extended(X, __FILE__ " : " __FUNCTION__, __LINE__,  __DATE__ " - " __TIME__ );
-#define CHECK_CUBLAS(X) cublas_check_error_extended(X, __FILE__ " : " __FUNCTION__, __LINE__,  __DATE__ " - " __TIME__ );
+    void check_error(cudaError_t status, const char * const filename, const char * const funcname, const int line);
+    void check_error_extended(cudaError_t status, const char * const filename, const char * const funcname, const int line);
+    void cublas_check_error_extended(cublasStatus_t status, const char * const filename, const char * const funcname, const int line);
+#define CHECK_CUDA(X) check_error_extended(X, __FILE__, __func__, __LINE__ );
+#define CHECK_CUBLAS(X) cublas_check_error_extended(X, __FILE__, __func__, __LINE__ );
 
     cublasHandle_t blas_handle();
     void free_pinned_memory();
@@ -68,7 +80,7 @@ extern "C" {
     float *cuda_make_array(float *x, size_t n);
     void **cuda_make_array_pointers(void **x, size_t n);
     int *cuda_make_int_array(size_t n);
-	int *cuda_make_int_array_new_api(int *x, size_t n);
+    int *cuda_make_int_array_new_api(int *x, size_t n);
     void cuda_push_array(float *x_gpu, float *x, size_t n);
     //LIB_API void cuda_pull_array(float *x_gpu, float *x, size_t n);
     //LIB_API void cuda_set_device(int n);
@@ -92,8 +104,8 @@ extern "C" {
 cudnnHandle_t cudnn_handle();
 enum {cudnn_fastest, cudnn_smallest, cudnn_specify};
 
-void cudnn_check_error_extended(cudnnStatus_t status, const char *file, int line, const char *date_time);
-#define CHECK_CUDNN(X) cudnn_check_error_extended(X, __FILE__ " : " __FUNCTION__, __LINE__,  __DATE__ " - " __TIME__ );
+void cudnn_check_error_extended(cudnnStatus_t status, const char * const filename, const char * const function, const int line);
+#define CHECK_CUDNN(X) cudnn_check_error_extended(X, __FILE__, __func__, __LINE__);
 #endif
 
 #ifdef __cplusplus

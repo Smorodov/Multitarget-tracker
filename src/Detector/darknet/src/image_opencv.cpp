@@ -113,7 +113,6 @@ extern "C" mat_cv *load_image_mat_cv(const char *filename, int flag)
             cerr << "Cannot load image " << shrinked_filename << std::endl;
             std::ofstream bad_list("bad.list", std::ios::out | std::ios::app);
             bad_list << shrinked_filename << std::endl;
-            //if (check_mistakes) getchar();
             return NULL;
         }
         cv::Mat dst;
@@ -1161,12 +1160,12 @@ extern "C" void draw_train_loss(char *windows_name, mat_cv* img_src, int img_siz
             if (iteration_old == 0)
                 cv::putText(img, accuracy_name, cv::Point(10, 12), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.7, CV_RGB(255, 0, 0), 1, CV_AA);
 
-	        if (iteration_old != 0){
-            	    cv::line(img,
+            if (iteration_old != 0){
+                    cv::line(img,
                         cv::Point(img_offset + draw_size * (float)iteration_old / max_batches, draw_size * (1 - old_precision)),
                         cv::Point(img_offset + draw_size * (float)current_batch / max_batches, draw_size * (1 - precision)),
                         CV_RGB(255, 0, 0), 1, 8, 0);
-	        }
+            }
 
             sprintf(char_buff, "%2.1f%% ", precision * 100);
             cv::putText(img, char_buff, cv::Point(10, 28), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.7, CV_RGB(255, 255, 255), 5, CV_AA);
@@ -1347,8 +1346,8 @@ extern "C" image image_data_augmentation(mat_cv* mat, int w, int h,
         // Mat -> image
         out = mat_to_image(sized);
     }
-    catch (...) {
-        cerr << "OpenCV can't augment image: " << w << " x " << h << " \n";
+    catch (const std::exception& e) {
+        cerr << "OpenCV can't augment image: " << w << " x " << h << " \n" << e.what() << " \n";
         out = mat_to_image(*(cv::Mat*)mat);
     }
     return out;

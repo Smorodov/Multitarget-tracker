@@ -222,7 +222,7 @@ void backward_network_gpu(network net, network_state state)
             int state_input_nan_inf = is_nan_or_inf(state.input, l.outputs * l.batch);
             printf("\n i - %d  is_nan_or_inf(s.delta) = %d \n", i, state_delta_nan_inf);
             printf(" i - %d  is_nan_or_inf(s.input) = %d \n", i, state_input_nan_inf);
-            if (state_delta_nan_inf || state_input_nan_inf) { printf(" found "); getchar(); }
+            if (state_delta_nan_inf || state_input_nan_inf) { printf(" found "); }
         }
         */
     }
@@ -376,7 +376,7 @@ float train_network_datum_gpu(network net, float *x, float *y)
         float scale = (get_current_iteration(net) / ((float)net.max_batches));
         //scale = sin(scale * M_PI);
         net.learning_rate = net.adversarial_lr * scale;
-        layer l = net.layers[net.n - 1];
+        //layer l = net.layers[net.n - 1];
         int y_size = get_network_output_size(net)*net.batch;
         if (net.layers[net.n - 1].truths) y_size = net.layers[net.n - 1].truths*net.batch;
         float *truth_cpu = (float *)xcalloc(y_size, sizeof(float));
@@ -747,3 +747,92 @@ float *network_predict_gpu(network net, float *input)
     //cuda_free(state.input);   // will be freed in the free_network()
     return out;
 }
+
+#ifdef CUDA_OPENGL_INTEGRATION
+float *network_predict_gpu_gl_texture(network net, uint32_t texture_id)
+{
+    if (net.gpu_index != cuda_get_device())
+        cuda_set_device(net.gpu_index);
+    int size = get_network_input_size(net) * net.batch;
+
+    // Map the OpenGL texture resource so CUDA can access it.
+    cudaGraphicsResource_t graphics_resource = NULL;
+    unsigned int flags = cudaGraphicsRegisterFlagsReadOnly;
+    CHECK_CUDA(cudaGraphicsGLRegisterImage(&graphics_resource, texture_id, GL_TEXTURE_2D, flags));
+    CHECK_CUDA(cudaGraphicsMapResources(1, &graphics_resource, 0));
+
+    //void* dev_ptr = NULL;
+    cudaArray_t dev_array = NULL;
+    CHECK_CUDA(cudaGraphicsSubResourceGetMappedArray(&dev_array, graphics_resource, 0, 0));
+
+    size_t width = net.w;
+    size_t height = net.h;
+    size_t pitch = width * sizeof(float);
+
+    CHECK_CUDA(cudaMemcpy2DFromArray(
+            net.input_state_gpu,     // dst
+            pitch,                   // dst_pitch
+            dev_array,               // src
+            0,                       // width offset
+            0,                       // height offset
+            width * sizeof(float),   // width (in bytes)
+            height * net.c,          // height (in rows)
+            cudaMemcpyDeviceToDevice // Transfer type
+    ));
+
+    network_state state;
+    state.index = 0;
+    state.net = net;
+    state.input = net.input_state_gpu;
+    state.truth = 0;
+    state.train = 0;
+    state.delta = 0;
+
+    //cudaGraphExec_t instance = (cudaGraphExec_t)net.cuda_graph_exec;
+    static cudaGraphExec_t instance;
+
+    if ((*net.cuda_graph_ready) == 0) {
+        static cudaGraph_t graph;
+        if (net.use_cuda_graph == 1) {
+            int i;
+            for (i = 0; i < 16; ++i) switch_stream(i);
+
+            cudaStream_t stream0 = switch_stream(0);
+            CHECK_CUDA(cudaDeviceSynchronize());
+            printf("Try to capture graph... \n");
+            //cudaGraph_t graph = (cudaGraph_t)net.cuda_graph;
+            CHECK_CUDA(cudaStreamBeginCapture(stream0, cudaStreamCaptureModeGlobal));
+        }
+
+        // cuda_push_array(state.input, net.input_pinned_cpu, size);
+        forward_network_gpu(net, state);
+
+        if (net.use_cuda_graph == 1) {
+            cudaStream_t stream0 = switch_stream(0);
+            CHECK_CUDA(cudaStreamEndCapture(stream0, &graph));
+            CHECK_CUDA(cudaGraphInstantiate(&instance, graph, NULL, NULL, 0));
+            (*net.cuda_graph_ready) = 1;
+            printf(" graph is captured... \n");
+            CHECK_CUDA(cudaDeviceSynchronize());
+        }
+        CHECK_CUDA(cudaStreamSynchronize(get_cuda_stream()));
+    }
+    else {
+        cudaStream_t stream0 = switch_stream(0);
+        //printf(" cudaGraphLaunch \n");
+        CHECK_CUDA( cudaGraphLaunch(instance, stream0) );
+        CHECK_CUDA( cudaStreamSynchronize(stream0) );
+        //printf(" ~cudaGraphLaunch \n");
+    }
+
+    float *out = get_network_output_gpu(net);
+    reset_wait_stream_events();
+    //cuda_free(state.input);   // will be freed in the free_network()
+
+    // Unmap the OpenGL texture.
+    cudaGraphicsUnmapResources(1, &graphics_resource, 0);
+    cudaGraphicsUnregisterResource(graphics_resource);
+
+    return out;
+}
+#endif // CUDA_OPENGL_INTEGRATION
