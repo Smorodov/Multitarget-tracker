@@ -76,10 +76,6 @@ set(DARKNET_HEADER_FILES ${DARKNET_HEADER_FILES} include/darknet.h include/yolo_
 
 file(GLOB DARKNET_CUDA_FILES src/*.cu)
 
-add_definitions(-DYOLO_DETECTOR_EXPORTS)
-add_definitions(-DLIB_EXPORTS)
-add_definitions(-DGPU)
-add_definitions(-DCUDNN)
 # add_definitions(-DOPENCV)
 
 #if(NOT CMAKE_DEBUG_POSTFIX)
@@ -106,6 +102,13 @@ set(YOLO_LIBS
 # message("${YOLO_LIBS}")
 
 target_link_libraries(${libname} ${YOLO_LIBS})
+
+target_compile_definitions(${libname} PRIVATE -DYOLO_DETECTOR_EXPORTS)
+target_compile_definitions(${libname} PRIVATE -DLIB_EXPORTS)
+target_compile_definitions(${libname} PRIVATE -DGPU)
+target_compile_definitions(${libname} PRIVATE -DCUDNN)
+target_compile_definitions(${libname} PRIVATE -DCUDNN_HALF)
+
 
 install(TARGETS ${libname}
         EXPORT MTTrackingExports

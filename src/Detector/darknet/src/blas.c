@@ -342,32 +342,32 @@ void fill_cpu(int N, float ALPHA, float *X, int INCX)
     }
 }
 
-void deinter_cpu(int NX, float *X, int NY, float *Y, int B, float *OUT)
+void deinter_cpu(int NX, float *X, int NY, float *Y, int B, float *OUTPUT)
 {
     int i, j;
     int index = 0;
     for(j = 0; j < B; ++j) {
         for(i = 0; i < NX; ++i){
-            if(X) X[j*NX + i] += OUT[index];
+            if(X) X[j*NX + i] += OUTPUT[index];
             ++index;
         }
         for(i = 0; i < NY; ++i){
-            if(Y) Y[j*NY + i] += OUT[index];
+            if(Y) Y[j*NY + i] += OUTPUT[index];
             ++index;
         }
     }
 }
 
-void inter_cpu(int NX, float *X, int NY, float *Y, int B, float *OUT)
+void inter_cpu(int NX, float *X, int NY, float *Y, int B, float *OUTPUT)
 {
     int i, j;
     int index = 0;
     for(j = 0; j < B; ++j) {
         for(i = 0; i < NX; ++i){
-            OUT[index++] = X[j*NX + i];
+            OUTPUT[index++] = X[j*NX + i];
         }
         for(i = 0; i < NY; ++i){
-            OUT[index++] = Y[j*NY + i];
+            OUTPUT[index++] = Y[j*NY + i];
         }
     }
 }
@@ -511,7 +511,7 @@ void fix_nan_and_inf_cpu(float *input, size_t size)
     int i;
     for (i = 0; i < size; ++i) {
         float val = input[i];
-        if (i > 0 && (isnan(val) || isinf(val)))
+        if (isnan(val) || isinf(val))
             input[i] = 1.0f / i;  // pseudo random value
     }
 }
@@ -594,8 +594,8 @@ float find_sim(size_t i, size_t j, contrastive_params *contrast_p, int contrast_
         if (contrast_p[z].i == i && contrast_p[z].j == j) break;
     }
     if (z == contrast_p_size) {
-        printf(" Error: find_sim(): sim isn't found: i = %d, j = %d, z = %d \n", i, j, z);
-        getchar();
+        printf(" Error: find_sim(): sim isn't found: i = %zu, j = %zu, z = %zu \n", i, j, z);
+        error("Error!", DARKNET_LOC);
     }
 
     return contrast_p[z].sim;
@@ -608,8 +608,8 @@ float find_P_constrastive(size_t i, size_t j, contrastive_params *contrast_p, in
         if (contrast_p[z].i == i && contrast_p[z].j == j) break;
     }
     if (z == contrast_p_size) {
-        printf(" Error: find_P_constrastive(): P isn't found: i = %d, j = %d, z = %d \n", i, j, z);
-        getchar();
+        printf(" Error: find_P_constrastive(): P isn't found: i = %zu, j = %zu, z = %zu \n", i, j, z);
+        error("Error!", DARKNET_LOC);
     }
 
     return contrast_p[z].P;
@@ -648,8 +648,8 @@ float P_constrastive_f_det(size_t il, int *labels, float **z, unsigned int featu
 float P_constrastive_f(size_t i, size_t l, int *labels, float **z, unsigned int feature_size, float temperature, contrastive_params *contrast_p, int contrast_p_size)
 {
     if (i == l) {
-        fprintf(stderr, " Error: in P_constrastive must be i != l, while i = %d, l = %d \n", i, l);
-        getchar();
+        fprintf(stderr, " Error: in P_constrastive must be i != l, while i = %zu, l = %zu \n", i, l);
+        error("Error!", DARKNET_LOC);
     }
 
     const float sim = find_sim(i, l, contrast_p, contrast_p_size); // cosine_similarity(z[i], z[l], feature_size);
@@ -686,8 +686,7 @@ void grad_contrastive_loss_positive_f(size_t i, int *class_ids, int *labels, siz
     if (N == 0 || temperature == 0 || vec_len == 0) {
         fprintf(stderr, " Error: N == 0 || temperature == 0 || vec_len == 0. N=%f, temperature=%f, vec_len=%f, labels[i] = %d \n",
             N, temperature, vec_len, labels[i]);
-        getchar();
-        return;
+        error("Error!", DARKNET_LOC);
     }
     const float mult = 1 / ((N - 1) * temperature * vec_len);
 
@@ -732,8 +731,7 @@ void grad_contrastive_loss_negative_f(size_t i, int *class_ids, int *labels, siz
     if (N == 0 || temperature == 0 || vec_len == 0) {
         fprintf(stderr, " Error: N == 0 || temperature == 0 || vec_len == 0. N=%f, temperature=%f, vec_len=%f, labels[i] = %d \n",
             N, temperature, vec_len, labels[i]);
-        getchar();
-        return;
+        error("Error!", DARKNET_LOC);
     }
     const float mult = 1 / ((N - 1) * temperature * vec_len);
 
@@ -782,8 +780,8 @@ void grad_contrastive_loss_negative_f(size_t i, int *class_ids, int *labels, siz
 float P_constrastive(size_t i, size_t l, int *labels, size_t num_of_samples, float **z, unsigned int feature_size, float temperature, float *cos_sim, float *exp_cos_sim)
 {
     if (i == l) {
-        fprintf(stderr, " Error: in P_constrastive must be i != l, while i = %d, l = %d \n", i, l);
-        getchar();
+        fprintf(stderr, " Error: in P_constrastive must be i != l, while i = %zu, l = %zu \n", i, l);
+        error("Error!", DARKNET_LOC);
     }
 
     //const float sim = cos_sim[i*num_of_samples + l]; // cosine_similarity(z[i], z[l], feature_size);
@@ -820,7 +818,7 @@ void grad_contrastive_loss_positive(size_t i, int *labels, size_t num_of_samples
     }
     if (N == 0 || temperature == 0 || vec_len == 0) {
         fprintf(stderr, " Error: N == 0 || temperature == 0 || vec_len == 0. N=%f, temperature=%f, vec_len=%f \n", N, temperature, vec_len);
-        getchar();
+        error("Error!", DARKNET_LOC);
     }
     const float mult = 1 / ((N - 1) * temperature * vec_len);
 
@@ -860,7 +858,7 @@ void grad_contrastive_loss_negative(size_t i, int *labels, size_t num_of_samples
     }
     if (N == 0 || temperature == 0 || vec_len == 0) {
         fprintf(stderr, " Error: N == 0 || temperature == 0 || vec_len == 0. N=%f, temperature=%f, vec_len=%f \n", N, temperature, vec_len);
-        getchar();
+        error("Error!", DARKNET_LOC);
     }
     const float mult = 1 / ((N - 1) * temperature * vec_len);
 

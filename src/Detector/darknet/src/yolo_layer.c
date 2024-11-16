@@ -11,8 +11,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-extern int check_mistakes;
-
 layer make_yolo_layer(int batch, int w, int h, int n, int total, int *mask, int classes, int max_boxes)
 {
     int i;
@@ -31,6 +29,7 @@ layer make_yolo_layer(int batch, int w, int h, int n, int total, int *mask, int 
     l.classes = classes;
     l.cost = (float*)xcalloc(1, sizeof(float));
     l.biases = (float*)xcalloc(total * 2, sizeof(float));
+    l.nbiases = total * 2;
     if(mask) l.mask = mask;
     else{
         l.mask = (int*)xcalloc(n, sizeof(int));
@@ -433,7 +432,6 @@ void *process_batch(void* ptr)
                         if (class_id >= l.classes || class_id < 0) {
                             printf("\n Warning: in txt-labels class_id=%d >= classes=%d in cfg-file. In txt-labels class_id should be [from 0 to %d] \n", class_id, l.classes, l.classes - 1);
                             printf("\n truth.x = %f, truth.y = %f, truth.w = %f, truth.h = %f, class_id = %d \n", truth.x, truth.y, truth.w, truth.h, class_id);
-                            if (check_mistakes) getchar();
                             continue; // if label contains class_id more than number of classes in the cfg-file and class_id check garbage value
                         }
 

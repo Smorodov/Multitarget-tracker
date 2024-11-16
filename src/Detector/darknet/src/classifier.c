@@ -74,7 +74,7 @@ void train_classifier(char *datacfg, char *cfgfile, char *weightfile, int *gpus,
     if (classes != l.outputs && (l.type == SOFTMAX || l.type == COST)) {
         printf("\n Error: num of filters = %d in the last conv-layer in cfg-file doesn't match to classes = %d in data-file \n",
             l.outputs, classes);
-        getchar();
+        error("Error!", DARKNET_LOC);
     }
 
     char **labels = get_labels(label_list);
@@ -208,7 +208,7 @@ void train_classifier(char *datacfg, char *cfgfile, char *weightfile, int *gpus,
         if (avg_time < 0) avg_time = time_remaining;
         else avg_time = alpha_time * time_remaining + (1 -  alpha_time) * avg_time;
         start = what_time_is_it_now();
-        printf("%d, %.3f: %f, %f avg, %f rate, %lf seconds, %ld images, %f hours left\n", get_current_batch(net), (float)(*net.seen)/ train_images_num, loss, avg_loss, get_current_rate(net), sec(clock()-time), *net.seen, avg_time);
+        printf("%d, %.3f: %f, %f avg, %f rate, %lf seconds, %" PRIu64 " images, %f hours left\n", get_current_batch(net), (float)(*net.seen)/ train_images_num, loss, avg_loss, get_current_rate(net), sec(clock()-time), *net.seen, avg_time);
 #ifdef OPENCV
         if (net.contrastive) {
             float cur_con_acc = -1;
@@ -845,7 +845,7 @@ void predict_classifier(char *datacfg, char *cfgfile, char *weightfile, char *fi
     if (classes != l.outputs && (l.type == SOFTMAX || l.type == COST)) {
         printf("\n Error: num of filters = %d in the last conv-layer in cfg-file doesn't match to classes = %d in data-file \n",
             l.outputs, classes);
-        getchar();
+        error("Error!", DARKNET_LOC);
     }
     if (top == 0) top = option_find_int(options, "top", 1);
     if (top > classes) top = classes;
@@ -1129,11 +1129,8 @@ void threat_classifier(char *datacfg, char *cfgfile, char *weightfile, int cam_i
         sprintf(buff, "tmp/threat_%06d", count);
         //save_image(out, buff);
 
-#ifndef _WIN32
-        printf("\033[2J");
-        printf("\033[1;1H");
-#endif
-        printf("\nFPS:%.0f\n",fps);
+        printf("\033[H\033[J");
+        printf("\nFPS:%.0f\n", fps);
 
         for(i = 0; i < top; ++i){
             int index = indexes[i];
@@ -1208,8 +1205,7 @@ void gun_classifier(char *datacfg, char *cfgfile, char *weightfile, int cam_inde
         float *predictions = network_predict(net, in_s.data);
         top_predictions(net, top, indexes);
 
-        printf("\033[2J");
-        printf("\033[1;1H");
+        printf("\033[H\033[J");
 
         int threat = 0;
         for(i = 0; i < sizeof(bad_cats)/sizeof(bad_cats[0]); ++i){
@@ -1308,11 +1304,7 @@ void demo_classifier(char *datacfg, char *cfgfile, char *weightfile, int cam_ind
         if(net.hierarchy) hierarchy_predictions(predictions, net.outputs, net.hierarchy, 1);
         top_predictions(net, top, indexes);
 
-#ifndef _WIN32
-        printf("\033[2J");
-        printf("\033[1;1H");
-#endif
-
+        printf("\033[H\033[J");
 
         if (!benchmark) {
             printf("\rFPS: %.2f  (use -benchmark command line flag for correct measurement)\n", fps);

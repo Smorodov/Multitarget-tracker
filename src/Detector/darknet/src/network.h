@@ -1,6 +1,17 @@
 // Oh boy, why am I about to do this....
 #ifndef NETWORK_H
 #define NETWORK_H
+
+/*
+ * Necessary in C++ to get format macros out of inttypes.h
+ */
+#ifdef __cplusplus
+#ifndef __STDC_FORMAT_MACROS
+#define __STDC_FORMAT_MACROS 1
+#endif
+#endif
+#include <inttypes.h>
+
 #include "darknet.h"
 
 #include <stdint.h>
@@ -23,7 +34,7 @@ typedef struct network{
     float *workspace;
     int n;
     int batch;
-	uint64_t *seen;
+    uint64_t *seen;
     float epoch;
     int subdivisions;
     float momentum;
@@ -61,7 +72,7 @@ typedef struct network{
     float exposure;
     float saturation;
     float hue;
-	int small_object;
+    int small_object;
 
     int gpu_index;
     tree *hierarchy;
@@ -71,11 +82,11 @@ typedef struct network{
 
     float **input_gpu;
     float **truth_gpu;
-	float **input16_gpu;
-	float **output16_gpu;
-	size_t *max_input16_size;
-	size_t *max_output16_size;
-	int wait_stream;
+    float **input16_gpu;
+    float **output16_gpu;
+    size_t *max_input16_size;
+    size_t *max_output16_size;
+    int wait_stream;
     #endif
 } network;
 
@@ -96,6 +107,7 @@ float train_networks(network *nets, int n, data d, int interval);
 void sync_nets(network *nets, int n, int interval);
 float train_network_datum_gpu(network net, float *x, float *y);
 float *network_predict_gpu(network net, float *input);
+float *network_predict_gpu_gl_texture(network net, uint32_t texture_id);
 float * get_network_output_gpu_layer(network net, int i);
 float * get_network_delta_gpu_layer(network net, int i);
 float *get_network_output_gpu(network net);
@@ -144,7 +156,7 @@ int get_predicted_class_network(network net);
 void print_network(network net);
 void visualize_network(network net);
 int resize_network(network *net, int w, int h);
-void set_batch_network(network *net, int b);
+//LIB_API void set_batch_network(network *net, int b);
 int get_network_input_size(network net);
 float get_network_cost(network net);
 //LIB_API layer* get_network_layer(network* net, int i);
