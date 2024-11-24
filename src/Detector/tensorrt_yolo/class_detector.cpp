@@ -163,16 +163,7 @@ namespace tensor_rt
             if (vec_batch_result.capacity() < mat_image.size())
                 vec_batch_result.reserve(mat_image.size());
 
-#if 1
             m_detector->Detect(mat_image, vec_batch_result);
-#else
-            for (const cv::Mat& frame : mat_image)
-            {
-                std::vector<tensor_rt::Result> bboxes;
-                m_detector.Detect(frame, bboxes);
-                vec_batch_result.emplace_back(bboxes);
-            }
-#endif
         }
 
         cv::Size GetInputSize() const override
