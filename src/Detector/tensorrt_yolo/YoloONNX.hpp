@@ -66,11 +66,6 @@ public:
     //!
     //! \brief Runs the TensorRT inference engine for this sample
     //!
-    bool Detect(cv::Mat frame, std::vector<tensor_rt::Result>& bboxes);
-
-    //!
-    //! \brief Runs the TensorRT inference engine for this sample
-    //!
     bool Detect(const std::vector<cv::Mat>& frames, std::vector<tensor_rt::BatchResult>& bboxes);
 
     //!
@@ -110,8 +105,7 @@ private:
     //!
     //! \brief Reads the input and mean data, preprocesses, and stores the result in a managed buffer
     //!
-    bool ProcessInputAspectRatio(const cv::Mat &mSampleImage);
-    bool ProcessInputAspectRatio(const std::vector<cv::Mat>& mSampleImage);
+    bool ProcessInputAspectRatio(const std::vector<cv::Mat>& sampleImages);
 
     //!
     //! \brief Filters output detections and verify results

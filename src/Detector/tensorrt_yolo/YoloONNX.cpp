@@ -241,37 +241,6 @@ bool YoloONNX::ConstructNetwork(YoloONNXUniquePtr<nvinfer1::IBuilder>& builder,
     return res;
 }
 
-//!
-//! \brief Runs the TensorRT inference engine for this sample
-//!
-//! \details This function is the main execution function of the sample. It allocates the buffer,
-//!          sets inputs and executes the engine.
-//!
-bool YoloONNX::Detect(cv::Mat frame, std::vector<tensor_rt::Result>& bboxes)
-{
-    // Read the input data into the managed buffers
-    assert(m_params.inputTensorNames.size() == 1);
-
-    if (!ProcessInputAspectRatio(frame))
-        return false;
-
-    // Memcpy from host input buffers to device input buffers
-    m_buffers->copyInputToDevice();
-
-    bool status = m_context->executeV2(m_buffers->getDeviceBindings().data());
-    if (!status)
-        return false;
-
-    // Memcpy from device output buffers to host output buffers
-    m_buffers->copyOutputToHost();
-
-    // Post-process detections and verify results
-    if (!VerifyOutputAspectRatio(0, bboxes, frame.size()))
-        return false;
-
-    return true;
-}
-
 ///
 /// \brief YoloONNX::Detect
 /// \param frames
@@ -283,25 +252,9 @@ bool YoloONNX::Detect(const std::vector<cv::Mat>& frames, std::vector<tensor_rt:
     // Read the input data into the managed buffers
     assert(m_params.inputTensorNames.size() == 1);
 
-#if 1
     if (!ProcessInputAspectRatio(frames))
         return false;
-#else
-    std::vector<DsImage> vec_ds_images;
-    cv::Size netSize = GetInputSize();
-    for (const auto& img : frames)
-    {
-        vec_ds_images.emplace_back(img, m_params.m_netType, netSize.height, netSize.width);
-    }
-    int sz[] = { m_params.explicitBatchSize, 3, netSize.height, netSize.width };
-    float* hostInputBuffer = nullptr;
-    if (m_params.inputTensorNames[0].empty())
-        hostInputBuffer = static_cast<float*>(m_buffers->getHostBuffer(0));
-    else
-        hostInputBuffer = static_cast<float*>(m_buffers->getHostBuffer(m_params.inputTensorNames[0]));
-    cv::Mat blob(4, sz, CV_32F, hostInputBuffer);
-    blobFromDsImages(vec_ds_images, blob, netSize.height, netSize.width);
-#endif
+
     // Memcpy from host input buffers to device input buffers
     m_buffers->copyInputToDevice();
 
@@ -352,7 +305,7 @@ size_t YoloONNX::GetNumClasses() const
 //!
 //! \brief Reads the input and mean data, preprocesses, and stores the result in a managed buffer
 //!
-bool YoloONNX::ProcessInputAspectRatio(const cv::Mat& mSampleImage)
+bool YoloONNX::ProcessInputAspectRatio(const std::vector<cv::Mat>& sampleImages)
 {
     const int inputB = m_inputDims.d[0];
     const int inputC = m_inputDims.d[1];
@@ -373,72 +326,59 @@ bool YoloONNX::ProcessInputAspectRatio(const cv::Mat& mSampleImage)
         }
     }
 
-    auto scaleSize = cv::Size(inputW, inputH);
-    cv::resize(mSampleImage, m_resized, scaleSize, 0, 0, cv::INTER_LINEAR);
+#if 0
+
+    // resize the DsImage with scale
+    const float imgHeight = static_cast<float>(sampleImages[0].rows);
+    const float imgWidth = static_cast<float>(sampleImages[0].cols);
+    float dim = std::max(imgHeight, imgWidth);
+    int resizeH = ((imgHeight / dim) * inputH);
+    int resizeW = ((imgWidth / dim) * inputW);
+    float scalingFactor = static_cast<float>(resizeH) / static_cast<float>(imgHeight);
+
+    // Additional checks for images with non even dims
+    if ((inputW - resizeW) % 2)
+        resizeW--;
+    if ((inputH - resizeH) % 2)
+        resizeH--;
+    assert((inputW - resizeW) % 2 == 0);
+    assert((inputH - resizeH) % 2 == 0);
+
+    float xOffset = (inputW - resizeW) / 2;
+    float yOffset = (inputH - resizeH) / 2;
+
+    assert(2 * xOffset + resizeW == inputW);
+    assert(2 * yOffset + resizeH == inputH);
+
+    cv::Size scaleSize(inputW, inputH);
+    cv::Rect roiRect(xOffset, yOffset, resizeW, resizeH);
+
+    if (m_resizedBatch.size() < sampleImages.size())
+        m_resizedBatch.resize(sampleImages.size());
 
     // Each element in batch share the same image matrix
     for (int b = 0; b < inputB; ++b)
     {
-        cv::split(m_resized, m_inputChannels[b]);
-        std::swap(m_inputChannels[b][0], m_inputChannels[b][2]);
-    }
-
-    int volBatch = inputC * inputH * inputW;
-    int volChannel = inputH * inputW;
-
-    constexpr float to1 =  1.f / 255.0f;
-
-    int d_batch_pos = 0;
-    for (int b = 0; b < inputB; ++b)
-    {
-        int d_c_pos = d_batch_pos;
-        for (int c = 0; c < inputC; ++c)
-        {
-            m_inputChannels[b][c].convertTo(cv::Mat(inputH, inputW, CV_32FC1, &hostInputBuffer[d_c_pos]), CV_32FC1, to1, 0);
-            d_c_pos += volChannel;
-        }
-        d_batch_pos += volBatch;
-    }
-
-    return true;
-}
-
-//!
-//! \brief Reads the input and mean data, preprocesses, and stores the result in a managed buffer
-//!
-bool YoloONNX::ProcessInputAspectRatio(const std::vector<cv::Mat>& mSampleImage)
-{
-    const int inputB = m_inputDims.d[0];
-    const int inputC = m_inputDims.d[1];
-    const int inputH = m_inputDims.d[2];
-    const int inputW = m_inputDims.d[3];
-
-    float* hostInputBuffer = nullptr;
-    if (m_params.inputTensorNames[0].empty())
-        hostInputBuffer = static_cast<float*>(m_buffers->getHostBuffer(0));
-    else
-        hostInputBuffer = static_cast<float*>(m_buffers->getHostBuffer(m_params.inputTensorNames[0]));
-
-    if (static_cast<int>(m_inputChannels.size()) < inputB)
-    {
-        for (int b = 0; b < inputB; ++b)
-        {
-            m_inputChannels.push_back(std::vector<cv::Mat> {static_cast<size_t>(inputC)});
-        }
-    }
-
-    auto scaleSize = cv::Size(inputW, inputH);
-
-    if (m_resizedBatch.size() < mSampleImage.size())
-        m_resizedBatch.resize(mSampleImage.size());
-
-    // Each element in batch share the same image matrix
-    for (int b = 0; b < inputB; ++b)
-    {
-        cv::resize(mSampleImage[b], m_resizedBatch[b], scaleSize, 0, 0, cv::INTER_LINEAR);
+        if (m_resizedBatch[b].size() != scaleSize)
+            m_resizedBatch[b] = cv::Mat(scaleSize, sampleImages[b].type(), cv::Scalar::all(128));
+        cv::resize(sampleImages[b], cv::Mat(m_resizedBatch[b], roiRect), roiRect.size(), 0, 0, cv::INTER_LINEAR);
         cv::split(m_resizedBatch[b], m_inputChannels[b]);
         std::swap(m_inputChannels[b][0], m_inputChannels[b][2]);
     }
+#else
+    auto scaleSize = cv::Size(inputW, inputH);
+
+    if (m_resizedBatch.size() < sampleImages.size())
+        m_resizedBatch.resize(sampleImages.size());
+
+    // Each element in batch share the same image matrix
+    for (int b = 0; b < inputB; ++b)
+    {
+        cv::resize(sampleImages[b], m_resizedBatch[b], scaleSize, 0, 0, cv::INTER_LINEAR);
+        cv::split(m_resizedBatch[b], m_inputChannels[b]);
+        std::swap(m_inputChannels[b][0], m_inputChannels[b][2]);
+    }
+#endif
 
     int volBatch = inputC * inputH * inputW;
     int volChannel = inputH * inputW;
