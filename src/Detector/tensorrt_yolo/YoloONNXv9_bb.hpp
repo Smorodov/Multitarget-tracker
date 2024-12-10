@@ -22,8 +22,8 @@ protected:
 		//84: 80 COCO classes + x + y + w + h
 		constexpr int shapeDataSize = 4;
 
-		const float fw = static_cast<float>(frameSize.width) / static_cast<float>(m_inputDims.d[3]);
-		const float fh = static_cast<float>(frameSize.height) / static_cast<float>(m_inputDims.d[2]);
+		const float fw = static_cast<float>(frameSize.width) / static_cast<float>(m_resizedROI.width);
+		const float fh = static_cast<float>(frameSize.height) / static_cast<float>(m_resizedROI.height);
 
 		auto output = outputs[0];
 
@@ -90,8 +90,8 @@ protected:
 				confidences.push_back(objectConf);
 
 				// (center x, center y, width, height) to (x, y, w, h)
-				float x = fw * (output[k] - output[k + 2] / 2);
-				float y = fh * (output[k + 1] - output[k + 3] / 2);
+				float x = fw * (output[k] - output[k + 2] / 2 - m_resizedROI.x);
+				float y = fh * (output[k + 1] - output[k + 3] / 2 - m_resizedROI.y);
 				float width = fw * output[k + 2];
 				float height = fh * output[k + 3];
 				rectBoxes.emplace_back(cvRound(x), cvRound(y), cvRound(width), cvRound(height));

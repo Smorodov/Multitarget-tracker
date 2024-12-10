@@ -22,8 +22,8 @@ protected:
 		//20: 15 DOTA classes + x + y + w + h + a
 		constexpr int shapeDataSize = 5;
 
-		const float fw = static_cast<float>(frameSize.width) / static_cast<float>(m_inputDims.d[3]);
-		const float fh = static_cast<float>(frameSize.height) / static_cast<float>(m_inputDims.d[2]);
+		const float fw = static_cast<float>(frameSize.width) / static_cast<float>(m_resizedROI.width);
+		const float fh = static_cast<float>(frameSize.height) / static_cast<float>(m_resizedROI.height);
 
 		auto output = outputs[0];
 
@@ -96,8 +96,8 @@ protected:
 				confidences.push_back(objectConf);
 
 				// (center x, center y, width, height)
-				float cx = fw * output[k];
-				float cy = fh * output[k + 1];
+				float cx = fw * (output[k] - m_resizedROI.x);
+				float cy = fh * (output[k + 1] - m_resizedROI.y);
 				float width = fw * output[k + 2];
 				float height = fh * output[k + 3];
 				float angle = 180.f * output[k + nc + shapeDataSize - 1] / M_PI;

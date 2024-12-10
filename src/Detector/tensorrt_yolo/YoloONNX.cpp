@@ -326,8 +326,9 @@ bool YoloONNX::ProcessInputAspectRatio(const std::vector<cv::Mat>& sampleImages)
         }
     }
 
-#if 0
+    m_resizedROI = cv::Rect(0, 0, inputW, inputH);
 
+#if 1
     // resize the DsImage with scale
     const float imgHeight = static_cast<float>(sampleImages[0].rows);
     const float imgWidth = static_cast<float>(sampleImages[0].cols);
@@ -351,7 +352,7 @@ bool YoloONNX::ProcessInputAspectRatio(const std::vector<cv::Mat>& sampleImages)
     assert(2 * yOffset + resizeH == inputH);
 
     cv::Size scaleSize(inputW, inputH);
-    cv::Rect roiRect(xOffset, yOffset, resizeW, resizeH);
+    m_resizedROI = cv::Rect(xOffset, yOffset, resizeW, resizeH);
 
     if (m_resizedBatch.size() < sampleImages.size())
         m_resizedBatch.resize(sampleImages.size());
@@ -361,7 +362,7 @@ bool YoloONNX::ProcessInputAspectRatio(const std::vector<cv::Mat>& sampleImages)
     {
         if (m_resizedBatch[b].size() != scaleSize)
             m_resizedBatch[b] = cv::Mat(scaleSize, sampleImages[b].type(), cv::Scalar::all(128));
-        cv::resize(sampleImages[b], cv::Mat(m_resizedBatch[b], roiRect), roiRect.size(), 0, 0, cv::INTER_LINEAR);
+        cv::resize(sampleImages[b], cv::Mat(m_resizedBatch[b], m_resizedROI), m_resizedROI.size(), 0, 0, cv::INTER_LINEAR);
         cv::split(m_resizedBatch[b], m_inputChannels[b]);
         std::swap(m_inputChannels[b][0], m_inputChannels[b][2]);
     }

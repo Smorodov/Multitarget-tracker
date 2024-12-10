@@ -12,6 +12,8 @@
 #include <iterator>
 #include <utility>
 #include <type_traits>
+#include <stdexcept>
+
 
 #ifdef _MSC_VER
 #define SKA_NOINLINE(...) __declspec(noinline) __VA_ARGS__

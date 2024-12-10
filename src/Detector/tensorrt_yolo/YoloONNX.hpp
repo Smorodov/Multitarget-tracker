@@ -79,9 +79,10 @@ public:
     size_t GetNumClasses() const;
 
 protected:
-    SampleYoloParams m_params; //!< The parameters for the sample.
-    nvinfer1::Dims m_inputDims; //!< The dimensions of the input to the network.
-    std::vector<nvinfer1::Dims> m_outpuDims; //!< The dimensions of the input to the network.
+    SampleYoloParams m_params;               //!< The parameters for the sample
+    nvinfer1::Dims m_inputDims;              //!< The dimensions of the input to the network
+    std::vector<nvinfer1::Dims> m_outpuDims; //!< The dimensions of the input to the network
+    cv::Rect m_resizedROI;                   //!< Input frame resized into input dimensions with the frame aspect ratio
 
     virtual std::vector<tensor_rt::Result> GetResult(size_t imgIdx, int keep_topk, const std::vector<float*>& outputs, cv::Size frameSize) = 0;
 

@@ -8,45 +8,6 @@
 #include <filesystem>
 #include <fstream>
 
-inline torch::Tensor CVMatToTorchTensor(const cv::Mat img, const bool perm = true)
-{
-	auto tensor_image = torch::from_blob(img.data, { img.rows, img.cols, img.channels() }, at::kByte);
-	if (perm)
-		tensor_image = tensor_image.permute({ 2,0,1 });
-	tensor_image.unsqueeze_(0);
-	tensor_image = tensor_image.toType(c10::kFloat).div(255);
-	return tensor_image;		//tensor_image.clone();
-}
-
-inline cv::Mat TorchTensorToCVMat(const torch::Tensor tensor_image, const bool perm = true)
-{
-	auto t = tensor_image.detach().squeeze().cpu();
-	if (perm)
-		t = t.permute({ 1, 2, 0 });
-	t = t.mul(255).clamp(0, 255).to(torch::kU8);
-	cv::Mat result_img;
-	cv::Mat(static_cast<int>(t.size(0)), static_cast<int>(t.size(1)), CV_MAKETYPE(CV_8U, t.sizes().size() >= 3 ? static_cast<int>(t.size(2)) : 1), t.data_ptr()).copyTo(result_img);
-	return result_img;
-}
-
-//template <typename T>
-//std::basic_string<T> lowercase(const std::basic_string<T>& s)
-//{
-//	std::basic_string<T> s2 = s;
-//	std::transform(s2.begin(), s2.end(), s2.begin(),
-//		[](const T v) { return static_cast<T>(std::tolower(v)); });
-//	return s2;
-//}
-//
-//template <typename T>
-//std::basic_string<T> uppercase(const std::basic_string<T>& s)
-//{
-//	std::basic_string<T> s2 = s;
-//	std::transform(s2.begin(), s2.end(), s2.begin(),
-//		[](const T v) { return static_cast<T>(std::toupper(v)); });
-//	return s2;
-//}
-
 ///
 class RuCLIPProcessor
 {
@@ -95,3 +56,34 @@ private:
 
 	std::vector<torch::Tensor> m_textsTensors;
 };
+
+//relevancy for batch size == 1 at this moment,   float lv = result.index({0,0}).item<float>();
+///
+///std::vector<torch::Tensor> canon_texts_tensors;
+///canon_texts_tensors.push_back(ClipProcessor->EncodeText(std::string("объект")));
+///canon_texts_tensors.push_back(ClipProcessor->EncodeText(std::string("вещи")));
+///canon_texts_tensors.push_back(ClipProcessor->EncodeText(std::string("текстура")));
+///int negatives_len =  (int)canon_texts_tensors.size();
+///auto canon_features = Clip->EncodeText(torch::stack(canon_texts_tensors).to(Device)).to(torch::kCPU); ///[3, 768]
+///canon_features = canon_features / canon_features.norm(2/*L2*/, -1, true);
+///auto input = ClipProcessor->EncodeText(std::string("малый барабан"));
+///auto text_features = Clip->EncodeText(input.unsqueeze(0).to(Device)).to(torch::kCPU);		///[1, 768]
+///text_features = text_features / text_features.norm(2/*L2*/, -1, true);
+///torch::Tensor image_features = PyramidClipEmbedding.GetPixelValue(i,j,0.5f,img_id,pyramid_embedder_properties,cv::Size(data.W, data.H)).to(torch::kCPU);
+///image_features = image_features / image_features.norm(2/*L2*/, -1, true);
+///torch::Tensor rel = Relevancy(image_features, text_features, canon_features);
+///float lv = rel.index({0,0}).item<float>();
+inline torch::Tensor Relevancy(torch::Tensor embeds, torch::Tensor positives, torch::Tensor negatives)
+{
+	auto embeds2 = torch::cat({ positives, negatives });
+	auto logits = /*scale * */torch::mm(embeds, embeds2.t());  //[batch_size x phrases]
+	auto positive_vals = logits.index({ "...", torch::indexing::Slice(0, 1) });  // [batch_size x 1]
+	auto negative_vals = logits.index({ "...", torch::indexing::Slice(1, torch::indexing::None) });		// [batch_size x negative_phrase_n]
+	auto repeated_pos = positive_vals.repeat({ 1, negatives.sizes()[0] });  //[batch_size x negative_phrase_n]
+	auto sims = torch::stack({ repeated_pos, negative_vals }, -1);   //[batch_size x negative_phrase_n x 2]
+	auto smx = torch::softmax(10 * sims, -1);                      // [batch_size x negative_phrase_n x 2]
+	auto best_id = smx.index({ "...", 0 }).argmin(1);                // [batch_size x 2]
+	auto result = torch::gather(smx, 1, best_id.index({ "...", torch::indexing::None, torch::indexing::None }).expand({ best_id.sizes()[0], negatives.sizes()[0], 2 })
+	).index({ torch::indexing::Slice(), 0, torch::indexing::Slice() });// [batch_size x 2]
+	return result;
+}
