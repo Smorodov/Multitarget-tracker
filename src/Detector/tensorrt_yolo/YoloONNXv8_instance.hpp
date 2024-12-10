@@ -17,8 +17,8 @@ protected:
 	{
 		std::vector<tensor_rt::Result> resBoxes;
 
-		const float fw = static_cast<float>(frameSize.width) / static_cast<float>(m_inputDims.d[3]);
-		const float fh = static_cast<float>(frameSize.height) / static_cast<float>(m_inputDims.d[2]);
+		const float fw = static_cast<float>(frameSize.width) / static_cast<float>(m_resizedROI.width);
+		const float fh = static_cast<float>(frameSize.height) / static_cast<float>(m_resizedROI.height);
 
 		size_t outInd = (outputs.size() == 0) ? 0 : 1;
 		size_t segInd = (outputs.size() == 0) ? 1 : 0;
@@ -155,8 +155,8 @@ protected:
 			if (objectConf >= m_params.confThreshold)
 			{
 				// (center x, center y, width, height) to (x, y, w, h)
-				float x = fw * (output[k] - output[k + 2] / 2);
-				float y = fh * (output[k + 1] - output[k + 3] / 2);
+				float x = fw * (output[k] - output[k + 2] / 2 - m_resizedROI.x);
+				float y = fh * (output[k + 1] - output[k + 3] / 2 - m_resizedROI.y);
 				float width = fw * output[k + 2];
 				float height = fh * output[k + 3];
 

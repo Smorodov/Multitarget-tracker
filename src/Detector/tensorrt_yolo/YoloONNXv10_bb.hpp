@@ -20,8 +20,8 @@ protected:
 		//0: name: images, size: 1x3x640x640
 		//1: name: output0, size: 1x300x6
 
-		const float fw = static_cast<float>(frameSize.width) / static_cast<float>(m_inputDims.d[3]);
-		const float fh = static_cast<float>(frameSize.height) / static_cast<float>(m_inputDims.d[2]);
+		const float fw = static_cast<float>(frameSize.width) / static_cast<float>(m_resizedROI.width);
+		const float fh = static_cast<float>(frameSize.height) / static_cast<float>(m_resizedROI.height);
 
 		auto output = outputs[0];
 
@@ -51,8 +51,8 @@ protected:
 			//if (i == 0)
 			//	std::cout << i << ": " << output[k + 0] << " " << output[k + 1] << " " << output[k + 2] << " " << output[k + 3] << " " << output[k + 4] << " " << output[k + 5] << std::endl;
 
-			float x = fw * output[k + 0];
-			float y = fh * output[k + 1];
+			float x = fw * (output[k + 0] - m_resizedROI.x);
+			float y = fh * (output[k + 1] - m_resizedROI.y);
 			float width = fw * (output[k + 2] - output[k + 0]);
 			float height = fh * (output[k + 3] - output[k + 1]);
 			float objectConf = output[k + 4];

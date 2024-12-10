@@ -17,6 +17,9 @@ protected:
 	{
 		std::vector<tensor_rt::Result> resBoxes;
 
+		const float fw = static_cast<float>(frameSize.width) / static_cast<float>(m_resizedROI.width);
+		const float fh = static_cast<float>(frameSize.height) / static_cast<float>(m_resizedROI.height);
+
 		if (outputs.size() == 4)
 		{
 			auto dets = reinterpret_cast<int*>(outputs[0]);
@@ -25,9 +28,6 @@ protected:
 			auto classes = reinterpret_cast<int*>(outputs[3]);
 
 			int objectsCount = m_outpuDims[1].d[1];
-
-			const float fw = static_cast<float>(frameSize.width) / static_cast<float>(m_inputDims.d[3]);
-			const float fh = static_cast<float>(frameSize.height) / static_cast<float>(m_inputDims.d[2]);
 
 			//std::cout << "Dets[" << imgIdx << "] = " << dets[imgIdx] << ", objectsCount = " << objectsCount << std::endl;
 
@@ -41,8 +41,8 @@ protected:
 				int classId = classes[i + step1];
 				if (class_conf >= m_params.confThreshold)
 				{
-					float x = fw * boxes[k + 0 + step2];
-					float y = fh * boxes[k + 1 + step2];
+					float x = fw * (boxes[k + 0 + step2] - m_resizedROI.x);
+					float y = fh * (boxes[k + 1 + step2] - m_resizedROI.y);
 					float width = fw * boxes[k + 2 + step2] - x;
 					float height = fh * boxes[k + 3 + step2] - y;
 
@@ -57,9 +57,6 @@ protected:
 		}
 		else if (outputs.size() == 1)
 		{
-			const float fw = static_cast<float>(frameSize.width) / static_cast<float>(m_inputDims.d[3]);
-			const float fh = static_cast<float>(frameSize.height) / static_cast<float>(m_inputDims.d[2]);
-
 			auto output = outputs[0];
 
 			size_t ncInd = 2;
@@ -96,8 +93,8 @@ protected:
 					int classId = cvRound(output[k + 5]);
 					if (class_conf >= m_params.confThreshold)
 					{
-						float x = fw * output[k + 1];
-						float y = fh * output[k + 2];
+						float x = fw * (output[k + 1] - m_resizedROI.x);
+						float y = fh * (output[k + 2] - m_resizedROI.y);
 						float width = fw * (output[k + 3] - output[k + 1]);
 						float height = fh * (output[k + 4] - output[k + 2]);
 
@@ -150,8 +147,8 @@ protected:
 					if (object_conf >= m_params.confThreshold)
 					{
 						// (center x, center y, width, height) to (x, y, w, h)
-						float x = fw * (output[k] - output[k + 2] / 2);
-						float y = fh * (output[k + 1] - output[k + 3] / 2);
+						float x = fw * (output[k] - output[k + 2] / 2 - m_resizedROI.x);
+						float y = fh * (output[k + 1] - output[k + 3] / 2 - m_resizedROI.y);
 						float width = fw * output[k + 2];
 						float height = fh * output[k + 3];
 
