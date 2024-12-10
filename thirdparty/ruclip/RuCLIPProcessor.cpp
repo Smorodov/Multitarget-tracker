@@ -1,5 +1,29 @@
 #include "RuCLIPProcessor.h"
 
+///
+torch::Tensor CVMatToTorchTensor(const cv::Mat img, const bool perm = true)
+{
+	auto tensor_image = torch::from_blob(img.data, { img.rows, img.cols, img.channels() }, at::kByte);
+	if (perm)
+		tensor_image = tensor_image.permute({ 2,0,1 });
+	tensor_image.unsqueeze_(0);
+	tensor_image = tensor_image.toType(c10::kFloat).div(255);
+	return tensor_image;		//tensor_image.clone();
+}
+
+///
+cv::Mat TorchTensorToCVMat(const torch::Tensor tensor_image, const bool perm = true)
+{
+	auto t = tensor_image.detach().squeeze().cpu();
+	if (perm)
+		t = t.permute({ 1, 2, 0 });
+	t = t.mul(255).clamp(0, 255).to(torch::kU8);
+	cv::Mat result_img;
+	cv::Mat(static_cast<int>(t.size(0)), static_cast<int>(t.size(1)), CV_MAKETYPE(CV_8U, t.sizes().size() >= 3 ? static_cast<int>(t.size(2)) : 1), t.data_ptr()).copyTo(result_img);
+	return result_img;
+}
+
+///
 RuCLIPProcessor :: RuCLIPProcessor(
 	const std::string& tokenizer_path,
 	const int image_size /*= 224*/,
