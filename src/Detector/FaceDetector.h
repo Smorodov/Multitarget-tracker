@@ -2,6 +2,7 @@
 
 #include "BaseDetector.h"
 
+#if (CV_VERSION_MAJOR < 5)
 ///
 /// \brief The FaceDetector class
 ///
@@ -24,3 +25,4 @@ public:
 private:
     cv::CascadeClassifier m_cascade;
 };
+#endif //(CV_VERSION_MAJOR < 5)

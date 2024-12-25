@@ -1,7 +1,11 @@
 #pragma once
 
 #include <opencv2/core.hpp>
+#if (CV_VERSION_MAJOR < 5)
 #include <opencv2/features2d/features2d.hpp>
+#else
+#include <opencv2/features.hpp>
+#endif //(CV_VERSION_MAJOR < 5)
 #include "DistanceUtils.h"
 
 /*!

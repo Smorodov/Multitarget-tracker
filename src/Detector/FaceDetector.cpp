@@ -1,5 +1,7 @@
 #include "FaceDetector.h"
 
+#if (CV_VERSION_MAJOR < 5)
+
 ///
 /// \brief FaceDetector::FaceDetector
 /// \param gray
@@ -57,3 +59,5 @@ void FaceDetector::Detect(const cv::UMat& gray)
         m_regions.push_back(rect);
     }
 }
+
+#endif //(CV_VERSION_MAJOR < 5)

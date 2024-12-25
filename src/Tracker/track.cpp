@@ -236,7 +236,7 @@ std::pair<track_t, bool> CTrack::CalcCosine(const RegionEmbedding& embedding) co
         //assert(0);
         //CV_Assert(!embedding.m_embedding.empty());
         //CV_Assert(!m_regionEmbedding.m_embedding.empty());
-        return { 0, false };
+        return { (track_t)0, false };
     }
 }
 
@@ -486,7 +486,8 @@ bool CTrack::CheckStatic(int trajLen, cv::UMat currFrame, const CRegion& region,
         track_t speed = sqrt(sqr(velocity[0]) + sqr(velocity[1]));
         
         bool inCenter = true;
-        cv::Rect centerROI(m_trace[m_trace.size() - trajLen].x - region.m_brect.width / 2, m_trace[m_trace.size() - trajLen].y - region.m_brect.height / 2, region.m_brect.width, region.m_brect.height);
+        cv::Rect centerROI(cvRound(m_trace[m_trace.size() - trajLen].x) - region.m_brect.width / 2,
+                           cvRound(m_trace[m_trace.size() - trajLen].y) - region.m_brect.height / 2, region.m_brect.width, region.m_brect.height);
         for (size_t i = m_trace.size() - trajLen; i < m_trace.size() - 1; ++i)
         {
             if (!centerROI.contains(m_trace[i]))
@@ -1053,6 +1054,7 @@ void CTrack::CreateExternalTracker(int channels)
 #ifdef USE_OCV_KCF
         if (!m_tracker || m_tracker.empty())
         {
+#if (CV_VERSION_MAJOR < 5)
             cv::TrackerGOTURN::Params params;
 
 #if (((CV_VERSION_MAJOR == 3) && (CV_VERSION_MINOR >= 3)) || (CV_VERSION_MAJOR > 3))
@@ -1060,6 +1062,10 @@ void CTrack::CreateExternalTracker(int channels)
 #else
             m_tracker = cv::TrackerGOTURN::createTracker(params);
 #endif
+#else
+        std::cerr << "TrackerGOTURN not supported in OpenCV 5.0 and newer!" << std::endl;
+        CV_Assert(0);
+#endif //(CV_VERSION_MAJOR < 5)
         }
 #endif
         if (m_VOTTracker)

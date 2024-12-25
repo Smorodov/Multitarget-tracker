@@ -1,6 +1,9 @@
 #pragma once
 
 #include "BaseDetector.h"
+
+#if (CV_VERSION_MAJOR < 5)
+
 #include "pedestrians/c4-pedestrian-detector.h"
 
 ///
@@ -47,3 +50,5 @@ private:
     static const int HUMAN_xdiv = 9;
     static const int HUMAN_ydiv = 4;
 };
+
+#endif //(CV_VERSION_MAJOR < 5)

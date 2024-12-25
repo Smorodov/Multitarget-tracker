@@ -9,7 +9,9 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
+#if (CV_VERSION_MAJOR < 5)
 #include <opencv2/features2d/features2d.hpp>
+#endif //(CV_VERSION_MAJOR < 5)
 
 #include "../VOTTracker.hpp"
 
