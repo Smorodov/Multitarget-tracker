@@ -76,14 +76,20 @@ private:
 inline torch::Tensor Relevancy(torch::Tensor embeds, torch::Tensor positives, torch::Tensor negatives)
 {
 	auto embeds2 = torch::cat({ positives, negatives });
-	auto logits = /*scale * */torch::mm(embeds, embeds2.t());  //[batch_size x phrases]
-	auto positive_vals = logits.index({ "...", torch::indexing::Slice(0, 1) });  // [batch_size x 1]
+	auto logits = /*scale * */torch::mm(embeds, embeds2.t());              // [batch_size x phrases]
+	auto positive_vals = logits.index({ "...", torch::indexing::Slice(0, 1) }); // [batch_size x 1]
 	auto negative_vals = logits.index({ "...", torch::indexing::Slice(1, torch::indexing::None) });		// [batch_size x negative_phrase_n]
-	auto repeated_pos = positive_vals.repeat({ 1, negatives.sizes()[0] });  //[batch_size x negative_phrase_n]
-	auto sims = torch::stack({ repeated_pos, negative_vals }, -1);   //[batch_size x negative_phrase_n x 2]
-	auto smx = torch::softmax(10 * sims, -1);                      // [batch_size x negative_phrase_n x 2]
-	auto best_id = smx.index({ "...", 0 }).argmin(1);                // [batch_size x 2]
-	auto result = torch::gather(smx, 1, best_id.index({ "...", torch::indexing::None, torch::indexing::None }).expand({ best_id.sizes()[0], negatives.sizes()[0], 2 })
-	).index({ torch::indexing::Slice(), 0, torch::indexing::Slice() });// [batch_size x 2]
+	auto repeated_pos = positive_vals.repeat({ 1, negatives.sizes()[0] }); // [batch_size x negative_phrase_n]
+	auto sims = torch::stack({ repeated_pos, negative_vals }, -1);         // [batch_size x negative_phrase_n x 2]
+	auto smx = torch::softmax(10 * sims, -1);                              // [batch_size x negative_phrase_n x 2]
+	auto best_id = smx.index({ "...", 0 }).argmin(1);                      // [batch_size x 2]
+	auto result = torch::gather(smx, 1, best_id.index({
+		"...", torch::indexing::None, torch::indexing::None 
+		}).expand(
+			{ best_id.sizes()[0], negatives.sizes()[0], 2
+			})
+	).index(
+		{ torch::indexing::Slice(), 0, torch::indexing::Slice()
+		});// [batch_size x 2]
 	return result;
 }

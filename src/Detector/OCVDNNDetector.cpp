@@ -48,14 +48,23 @@ bool OCVDNNDetector::Init(const config_t& config)
     dictTargets[cv::dnn::DNN_TARGET_MYRIAD] = "DNN_TARGET_MYRIAD";
     dictTargets[cv::dnn::DNN_TARGET_CUDA] = "DNN_TARGET_CUDA";
     dictTargets[cv::dnn::DNN_TARGET_CUDA_FP16] = "DNN_TARGET_CUDA_FP16";
+#if (CV_VERSION_MAJOR > 4)
+    dictTargets[cv::dnn::DNN_TARGET_HDDL] = "DNN_TARGET_HDDL";
+    dictTargets[cv::dnn::DNN_TARGET_NPU] = "DNN_TARGET_NPU";
+    dictTargets[cv::dnn::DNN_TARGET_CPU_FP16] = "DNN_TARGET_CPU_FP16";
+#endif
 
     std::map<int, std::string> dictBackends;
     dictBackends[cv::dnn::DNN_BACKEND_DEFAULT] = "DNN_BACKEND_DEFAULT";
-    dictBackends[cv::dnn::DNN_BACKEND_HALIDE] = "DNN_BACKEND_HALIDE";
     dictBackends[cv::dnn::DNN_BACKEND_INFERENCE_ENGINE] = "DNN_BACKEND_INFERENCE_ENGINE";
     dictBackends[cv::dnn::DNN_BACKEND_OPENCV] = "DNN_BACKEND_OPENCV";
     dictBackends[cv::dnn::DNN_BACKEND_VKCOM] = "DNN_BACKEND_VKCOM";
     dictBackends[cv::dnn::DNN_BACKEND_CUDA] = "DNN_BACKEND_CUDA";
+#if (CV_VERSION_MAJOR > 4)
+    dictBackends[cv::dnn::DNN_BACKEND_WEBNN] = "DNN_BACKEND_WEBNN";
+    dictBackends[cv::dnn::DNN_BACKEND_TIMVX] = "DNN_BACKEND_TIMVX";
+    dictBackends[cv::dnn::DNN_BACKEND_CANN] = "DNN_BACKEND_CANN";
+#endif
     dictBackends[1000000] = "DNN_BACKEND_INFERENCE_ENGINE_NGRAPH";
     dictBackends[1000000 + 1] = "DNN_BACKEND_INFERENCE_ENGINE_NN_BUILDER_2019";
 
@@ -86,6 +95,12 @@ bool OCVDNNDetector::Init(const config_t& config)
         targets["DNN_TARGET_CUDA"] = cv::dnn::DNN_TARGET_CUDA;
         targets["DNN_TARGET_CUDA_FP16"] = cv::dnn::DNN_TARGET_CUDA_FP16;
 #endif
+#if (CV_VERSION_MAJOR > 4)
+        targets["DNN_TARGET_HDDL"] = cv::dnn::DNN_TARGET_HDDL;
+        targets["DNN_TARGET_NPU"] = cv::dnn::DNN_TARGET_NPU;
+        targets["DNN_TARGET_CPU_FP16"] = cv::dnn::DNN_TARGET_CPU_FP16;
+#endif
+            
         std::cout << "Trying to set target " << dnnTarget->second << "... ";
         auto target = targets.find(dnnTarget->second);
         if (target != std::end(targets))
@@ -105,13 +120,18 @@ bool OCVDNNDetector::Init(const config_t& config)
     {
         std::map<std::string, cv::dnn::Backend> backends;
         backends["DNN_BACKEND_DEFAULT"] = cv::dnn::DNN_BACKEND_DEFAULT;
-        backends["DNN_BACKEND_HALIDE"] = cv::dnn::DNN_BACKEND_HALIDE;
         backends["DNN_BACKEND_INFERENCE_ENGINE"] = cv::dnn::DNN_BACKEND_INFERENCE_ENGINE;
         backends["DNN_BACKEND_OPENCV"] = cv::dnn::DNN_BACKEND_OPENCV;
         backends["DNN_BACKEND_VKCOM"] = cv::dnn::DNN_BACKEND_VKCOM;
 #if (((CV_VERSION_MAJOR == 4) && (CV_VERSION_MINOR >= 2)) || (CV_VERSION_MAJOR > 4))
         backends["DNN_BACKEND_CUDA"] = cv::dnn::DNN_BACKEND_CUDA;
 #endif
+#if (CV_VERSION_MAJOR > 4)
+        backends["DNN_BACKEND_WEBNN"] = cv::dnn::DNN_BACKEND_WEBNN;
+        backends["DNN_BACKEND_TIMVX"] = cv::dnn::DNN_BACKEND_TIMVX;
+        backends["DNN_BACKEND_CANN"] = cv::dnn::DNN_BACKEND_CANN;
+#endif
+
         std::cout << "Trying to set backend " << dnnBackend->second << "... ";
         auto backend = backends.find(dnnBackend->second);
         if (backend != std::end(backends))
@@ -209,9 +229,15 @@ bool OCVDNNDetector::Init(const config_t& config)
         m_outLayers = m_net.getUnconnectedOutLayers();
         m_outLayerType = m_net.getLayer(m_outLayers[0])->type;
 
+#if (CV_VERSION_MAJOR < 5)
         std::vector<cv::dnn::MatShape> outputs;
         std::vector<cv::dnn::MatShape> internals;
         m_net.getLayerShapes(cv::dnn::MatShape(), 0, outputs, internals);
+#else
+        std::vector<cv::MatShape> outputs;
+        std::vector<cv::MatShape> internals;
+        m_net.getLayerShapes(cv::MatShape(), CV_32F, 0, outputs, internals);
+#endif
         std::cout << "getLayerShapes: outputs (" << outputs.size() << ") = " << (outputs.size() > 0 ? outputs[0].size() : 0) << ", internals (" << internals.size() << ") = " << (internals.size() > 0 ? internals[0].size() : 0) << std::endl;
         if (outputs.size() && outputs[0].size() > 3)
         {

@@ -1,4 +1,8 @@
+#include <opencv2/opencv.hpp>
+#if (CV_VERSION_MAJOR < 5)
 #include <opencv2/imgproc/imgproc_c.h>
+#endif //(CV_VERSION_MAJOR < 5)
+
 #include "dat_tracker.hpp"
 
 ///
@@ -42,19 +46,19 @@ void DAT_TRACKER::Initialize(const cv::Mat &im, cv::Rect region)
     case 1: //1rgb
 		if (img.channels() == 1)
 		{
-			cv::cvtColor(img, img, CV_GRAY2BGR);
+			cv::cvtColor(img, img, cv::COLOR_GRAY2BGR);
 		}
         break;
     case 2: //2lab
-        cv::cvtColor(img, img, CV_BGR2Lab);
+        cv::cvtColor(img, img, cv::COLOR_BGR2Lab);
         break;
     case 3: //3hsv
-        cv::cvtColor(img, img, CV_BGR2HSV);
+        cv::cvtColor(img, img, cv::COLOR_BGR2HSV);
         break;
     case 4: //4gray
 		if (img.channels() == 3)
 		{
-			cv::cvtColor(img, img, CV_BGR2GRAY);
+			cv::cvtColor(img, img, cv::COLOR_BGR2GRAY);
 		}
         break;
     default:
@@ -95,7 +99,7 @@ cv::RotatedRect DAT_TRACKER::Update(const cv::Mat &im, float& confidence)
     case 1://1rgb
 		if (img_preprocessed.channels() == 1)
 		{
-			cv::cvtColor(img_preprocessed, img, CV_GRAY2BGR);
+			cv::cvtColor(img_preprocessed, img, cv::COLOR_GRAY2BGR);
 		}
 		else
 		{
@@ -103,15 +107,15 @@ cv::RotatedRect DAT_TRACKER::Update(const cv::Mat &im, float& confidence)
 		}
         break;
     case 2://2lab
-        cv::cvtColor(img_preprocessed, img, CV_BGR2Lab);
+        cv::cvtColor(img_preprocessed, img, cv::COLOR_BGR2Lab);
         break;
     case 3://3hsv
-        cv::cvtColor(img_preprocessed, img, CV_BGR2HSV);
+        cv::cvtColor(img_preprocessed, img, cv::COLOR_BGR2HSV);
         break;
     case 4://4gray
 		if (img_preprocessed.channels() == 3)
 		{
-			cv::cvtColor(img_preprocessed, img, CV_BGR2GRAY);
+			cv::cvtColor(img_preprocessed, img, cv::COLOR_BGR2GRAY);
 		}
         break;
     default:

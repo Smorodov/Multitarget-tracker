@@ -33,14 +33,23 @@ public:
 			dictTargets[cv::dnn::DNN_TARGET_MYRIAD] = "DNN_TARGET_MYRIAD";
 			dictTargets[cv::dnn::DNN_TARGET_CUDA] = "DNN_TARGET_CUDA";
 			dictTargets[cv::dnn::DNN_TARGET_CUDA_FP16] = "DNN_TARGET_CUDA_FP16";
+#if (CV_VERSION_MAJOR > 4)
+			dictTargets[cv::dnn::DNN_TARGET_HDDL] = "DNN_TARGET_HDDL";
+			dictTargets[cv::dnn::DNN_TARGET_NPU] = "DNN_TARGET_NPU";
+			dictTargets[cv::dnn::DNN_TARGET_CPU_FP16] = "DNN_TARGET_CPU_FP16";
+#endif
 
 			std::map<int, std::string> dictBackends;
 			dictBackends[cv::dnn::DNN_BACKEND_DEFAULT] = "DNN_BACKEND_DEFAULT";
-			dictBackends[cv::dnn::DNN_BACKEND_HALIDE] = "DNN_BACKEND_HALIDE";
 			dictBackends[cv::dnn::DNN_BACKEND_INFERENCE_ENGINE] = "DNN_BACKEND_INFERENCE_ENGINE";
 			dictBackends[cv::dnn::DNN_BACKEND_OPENCV] = "DNN_BACKEND_OPENCV";
 			dictBackends[cv::dnn::DNN_BACKEND_VKCOM] = "DNN_BACKEND_VKCOM";
 			dictBackends[cv::dnn::DNN_BACKEND_CUDA] = "DNN_BACKEND_CUDA";
+#if (CV_VERSION_MAJOR > 4)
+			dictBackends[cv::dnn::DNN_BACKEND_WEBNN] = "DNN_BACKEND_WEBNN";
+			dictBackends[cv::dnn::DNN_BACKEND_TIMVX] = "DNN_BACKEND_TIMVX";
+			dictBackends[cv::dnn::DNN_BACKEND_CANN] = "DNN_BACKEND_CANN";
+#endif
 			dictBackends[1000000] = "DNN_BACKEND_INFERENCE_ENGINE_NGRAPH";
 			dictBackends[1000000 + 1] = "DNN_BACKEND_INFERENCE_ENGINE_NN_BUILDER_2019";
 
@@ -63,9 +72,15 @@ public:
 			auto outLayers = m_net.getUnconnectedOutLayers();
 			auto outLayerType = m_net.getLayer(outLayers[0])->type;
 
+#if (CV_VERSION_MAJOR < 5)
 			std::vector<cv::dnn::MatShape> outputs;
 			std::vector<cv::dnn::MatShape> internals;
 			m_net.getLayerShapes(cv::dnn::MatShape(), 0, outputs, internals);
+#else
+			std::vector<cv::MatShape> outputs;
+			std::vector<cv::MatShape> internals;
+			m_net.getLayerShapes(cv::MatShape(), CV_32F, 0, outputs, internals);
+#endif
 			std::cout << "REID: getLayerShapes: outputs (" << outputs.size() << ") = " << (outputs.size() > 0 ? outputs[0].size() : 0) << ", internals (" << internals.size() << ") = " << (internals.size() > 0 ? internals[0].size() : 0) << std::endl;
 			if (outputs.size() && outputs[0].size() > 3)
 				std::cout << "outputs = [" << outputs[0][0] << ", " << outputs[0][1] << ", " << outputs[0][2] << ", " << outputs[0][3] << "], internals = [" << internals[0][0] << ", " << internals[0][1] << ", " << internals[0][2] << ", " << internals[0][3] << "]" << std::endl;

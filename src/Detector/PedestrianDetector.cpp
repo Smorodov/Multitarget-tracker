@@ -1,6 +1,8 @@
 #include "PedestrianDetector.h"
 #include "nms.h"
 
+#if (CV_VERSION_MAJOR < 5)
+
 ///
 /// \brief PedestrianDetector::PedestrianDetector
 /// \param gray
@@ -103,3 +105,4 @@ void PedestrianDetector::Detect(const cv::UMat& gray)
         m_regions.push_back(rect);
     }
 }
+#endif //(CV_VERSION_MAJOR < 5)

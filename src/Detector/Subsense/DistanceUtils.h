@@ -1,6 +1,6 @@
 #pragma once
 
-#include <opencv2/core/types_c.h>
+//#include <opencv2/core/types_c.h>
 
 //! computes the L1 distance between two integer values
 template<typename T> static inline typename std::enable_if<std::is_integral<T>::value,size_t>::type L1dist(T a, T b) {
