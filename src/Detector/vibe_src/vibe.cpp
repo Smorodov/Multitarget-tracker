@@ -21,7 +21,7 @@ namespace vibe
 	}
 
 	///
-	cv::Vec<size_t, 2> VIBE::getRndNeighbor(int i, int j)
+	cv::Vec2i VIBE::getRndNeighbor(int i, int j)
 	{
 		int neighbor_count = (m_pixelNeighbor * 2 + 1) * (m_pixelNeighbor * 2 + 1);
 		int rnd = m_rng[m_rngIdx = (m_rngIdx + 1) % RANDOM_BUFFER_SIZE] % neighbor_count;
