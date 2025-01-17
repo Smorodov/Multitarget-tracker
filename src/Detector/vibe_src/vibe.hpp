@@ -37,7 +37,7 @@ private:
     unsigned int m_rng[RANDOM_BUFFER_SIZE];
     int m_rngIdx = 0;
 
-    cv::Vec<size_t, 2> getRndNeighbor(int i, int j);
+    cv::Vec2i getRndNeighbor(int i, int j);
 	void init(const cv::Mat& img);
 };
 }
