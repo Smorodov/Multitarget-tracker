@@ -1,6 +1,6 @@
 [![Status](https://github.com/Nuzhny007/Multitarget-tracker/actions/workflows/cmake.yml/badge.svg?branch=master)](https://github.com/Nuzhny007/Multitarget-tracker/actions?query=workflow%3Abuild-Ubuntu)
 [![CodeQL](https://github.com/Smorodov/Multitarget-tracker/workflows/CodeQL/badge.svg?branch=master)](https://github.com/Smorodov/Multitarget-tracker/actions?query=workflow%3ACodeQL)
-[<img src="https://api.gitsponsors.com/api/badge/img?id=11808499" height="20">](https://api.gitsponsors.com/api/badge/link?p=6q1rTjdBjLjf5G2fCSxCTzyERe4pzd4sPCg+j00rj2HmH9GjcBoZ5Bz6Fk0cfukzuOKYf+mgdxVy2i7V+4JTfw==)
+
 # Last changes
 
 * TensorRT 10 is supported
