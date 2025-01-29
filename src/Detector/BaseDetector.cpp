@@ -54,22 +54,12 @@ std::unique_ptr<BaseDetector> BaseDetector::CreateDetector(tracking::Detectors d
         break;
 
     case tracking::Face_HAAR:
-#if (CV_VERSION_MAJOR < 5)
         detector = std::make_unique<FaceDetector>(frame);
-#else
-        std::cerr << "Haar detector was removed from OpenCV 5.0" << std::endl;
-        CV_Assert(0);
-#endif
         break;
 
     case tracking::Pedestrian_HOG:
     case tracking::Pedestrian_C4:
-#if (CV_VERSION_MAJOR < 5)
         detector = std::make_unique<PedestrianDetector>(frame);
-#else
-        std::cerr << "HOG detector was removed from OpenCV 5.0" << std::endl;
-        CV_Assert(0);
-#endif
         break;
 
 #ifdef USE_OCV_DNN
