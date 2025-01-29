@@ -100,7 +100,7 @@ protected:
 				float cy = fh * (output[k + 1] - m_resizedROI.y);
 				float width = fw * output[k + 2];
 				float height = fh * output[k + 3];
-				float angle = 180.f * output[k + nc + shapeDataSize - 1] / M_PI;
+				float angle = 180.f * output[k + nc + shapeDataSize - 1] / static_cast<float>(M_PI);
 				rectBoxes.emplace_back(cv::Point2f(cx, cy), cv::Size2f(width, height), angle);
 
 				//if (rectBoxes.size() == 1)

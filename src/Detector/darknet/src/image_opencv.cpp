@@ -36,8 +36,6 @@
 #include <opencv2/core/version.hpp>
 #endif
 
-//using namespace cv;
-
 using std::cerr;
 using std::endl;
 
