@@ -336,9 +336,6 @@ void send_json(detection *dets, int nboxes, int classes, char **names, long long
 #ifndef CV_VERSION_EPOCH
 #include <opencv2/videoio/videoio.hpp>
 #endif
-using namespace cv;
-
-
 
 class MJPG_sender
 {
