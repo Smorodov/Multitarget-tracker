@@ -503,11 +503,19 @@ public:
     }
 
     //! IMirroredBuffer does not implement Async allocation, hence this is just a wrap around
+#if (NV_TENSORRT_MAJOR > 8)
     void* reallocateOutputAsync(char const* tensorName, void* currentMemory, uint64_t size, uint64_t alignment,
         cudaStream_t /*stream*/) noexcept override
     {
         return reallocateOutput(tensorName, currentMemory, size, alignment);
     }
+#else
+    void* reallocateOutputAsync(char const* tensorName, void* currentMemory, uint64_t size, uint64_t alignment,
+        cudaStream_t /*stream*/) noexcept
+    {
+        return reallocateOutput(tensorName, currentMemory, size, alignment);
+    }
+#endif
 
     void notifyShape(char const* tensorName, nvinfer1::Dims const& dims) noexcept override
     {

@@ -145,9 +145,23 @@ template <>
 nvinfer1::DataType stringToValue<nvinfer1::DataType>(const std::string& option)
 {
     const std::unordered_map<std::string, nvinfer1::DataType> strToDT{{"fp32", nvinfer1::DataType::kFLOAT},
-        {"fp16", nvinfer1::DataType::kHALF}, {"bf16", nvinfer1::DataType::kBF16}, {"int8", nvinfer1::DataType::kINT8},
-        {"fp8", nvinfer1::DataType::kFP8}, {"int32", nvinfer1::DataType::kINT32}, {"int64", nvinfer1::DataType::kINT64},
-        {"bool", nvinfer1::DataType::kBOOL}, {"uint8", nvinfer1::DataType::kUINT8}, {"int4", nvinfer1::DataType::kINT4}};
+                                                                      {"fp16", nvinfer1::DataType::kHALF},
+#if (NV_TENSORRT_MAJOR > 8)
+                                                                      {"bf16", nvinfer1::DataType::kBF16},
+#endif
+                                                                      {"int8", nvinfer1::DataType::kINT8},
+                                                                      {"fp8", nvinfer1::DataType::kFP8},
+                                                                      {"int32", nvinfer1::DataType::kINT32},
+#if (NV_TENSORRT_MAJOR > 8)
+                                                                      {"int64", nvinfer1::DataType::kINT64},
+#endif
+                                                                      {"bool", nvinfer1::DataType::kBOOL},
+                                                                      {"uint8", nvinfer1::DataType::kUINT8}
+#if (NV_TENSORRT_MAJOR > 8)
+                                                                      ,
+                                                                      {"int4", nvinfer1::DataType::kINT4}
+#endif
+                                                                     };
     const auto& dt = strToDT.find(option);
     if (dt == strToDT.end())
     {
@@ -905,7 +919,9 @@ std::string previewFeatureToString(PreviewFeature feature)
         gLogWarning << "profileSharing0806 is on by default in TensorRT 10.0. This flag is deprecated and has no effect." << std::endl;
         break;
     }
+#if (NV_TENSORRT_MAJOR > 8)
     case PreviewFeature::kALIASED_PLUGIN_IO_10_03: return "kALIASED_PLUGIN_IO_10_03";
+#endif
     }
     return "Invalid Preview Feature";
     // clang-format on
@@ -926,9 +942,9 @@ std::ostream& printPreviewFlags(std::ostream& os, BuildOptions const& options)
             os << previewFeatureToString(feat) << (options.previewFeatures.at(featVal) ? " [ON], " : " [OFF], ");
         }
     };
-
+#if (NV_TENSORRT_MAJOR > 8)
     addFlag(PreviewFeature::kALIASED_PLUGIN_IO_10_03);
-
+#endif
     return os;
 }
 
@@ -1446,7 +1462,7 @@ void BuildOptions::parse(Arguments& arguments)
     getAndDelOption(arguments, "--errorOnTimingCacheMiss", errorOnTimingCacheMiss);
     getAndDelOption(arguments, "--builderOptimizationLevel", builderOptimizationLevel);
     getAndDelOption(arguments, "--maxTactics", maxTactics);
-
+#if (NV_TENSORRT_MAJOR > 8)
     std::string runtimePlatformArgs;
     getAndDelOption(arguments, "--runtimePlatform", runtimePlatformArgs);
     if (runtimePlatformArgs == "SameAsBuild" || runtimePlatformArgs.empty())
@@ -1462,7 +1478,7 @@ void BuildOptions::parse(Arguments& arguments)
         throw std::invalid_argument(std::string("Unknown runtime platform: ") + runtimePlatformArgs
             + ". Valid options: SameAsBuild, WindowsAMD64.");
     }
-
+#endif
     std::string hardwareCompatibleArgs;
     getAndDelOption(arguments, "--hardwareCompatibilityLevel", hardwareCompatibleArgs);
     if (hardwareCompatibleArgs == "none" || hardwareCompatibleArgs.empty())
@@ -1511,10 +1527,12 @@ void BuildOptions::parse(Arguments& arguments)
                 << "profileSharing0806 is on by default in TensorRT 10.0. This flag is deprecated and has no effect."
                 << std::endl;
         }
+#if (NV_TENSORRT_MAJOR > 8)
         else if (featureName == "aliasedPluginIO1003")
         {
             feat = PreviewFeature::kALIASED_PLUGIN_IO_10_03;
         }
+#endif
         else
         {
             throw std::invalid_argument(std::string("Unknown preview feature: ") + featureName);
@@ -1769,10 +1787,12 @@ void AllOptions::parse(Arguments& arguments)
         {
             build.buildDLAStandalone = true;
         }
+#if (NV_TENSORRT_MAJOR > 8)
         if (build.runtimePlatform != nvinfer1::RuntimePlatform::kSAME_AS_BUILD)
         {
             build.skipInference = true;
         }
+#endif
         if (build.buildDLAStandalone)
         {
             build.skipInference = true;
@@ -1923,11 +1943,13 @@ std::ostream& operator<<(std::ostream& os, nvinfer1::DataType dtype)
         os << "fp16";
         break;
     }
+#if (NV_TENSORRT_MAJOR > 8)
     case nvinfer1::DataType::kBF16:
     {
         os << "bf16";
         break;
     }
+#endif
     case nvinfer1::DataType::kINT8:
     {
         os << "int8";
@@ -1953,6 +1975,7 @@ std::ostream& operator<<(std::ostream& os, nvinfer1::DataType dtype)
         os << "fp8";
         break;
     }
+#if (NV_TENSORRT_MAJOR > 8)
     case nvinfer1::DataType::kINT64:
     {
         os << "int64";
@@ -1963,6 +1986,7 @@ std::ostream& operator<<(std::ostream& os, nvinfer1::DataType dtype)
         os << "int4";
         break;
     }
+#endif
     }
     return os;
 }
@@ -2070,6 +2094,7 @@ std::ostream& operator<<(std::ostream& os, nvinfer1::DeviceType devType)
     return os;
 }
 
+#if (NV_TENSORRT_MAJOR > 8)
 std::ostream& operator<<(std::ostream& os, nvinfer1::RuntimePlatform platform)
 {
     switch (platform)
@@ -2087,6 +2112,7 @@ std::ostream& operator<<(std::ostream& os, nvinfer1::RuntimePlatform platform)
     }
     return os;
 }
+#endif
 
 std::ostream& operator<<(std::ostream& os, const ShapeRange& dims)
 {
@@ -2182,7 +2208,9 @@ std::ostream& operator<<(std::ostream& os, const BuildOptions& options)
           "MaxTactics: " << options.maxTactics                                                                          << std::endl <<
           "Calibration Profile Index: " << options.calibProfile                                                         << std::endl <<
           "Weight Streaming: " << boolToEnabled(options.allowWeightStreaming)                                           << std::endl <<
+#if (NV_TENSORRT_MAJOR > 8)
           "Runtime Platform: " << options.runtimePlatform                                                               << std::endl <<
+#endif
           "Debug Tensors: " << options.debugTensors                                                                     << std::endl;
     // clang-format on
 

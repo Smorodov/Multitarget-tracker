@@ -32,7 +32,7 @@
 
 namespace sample
 {
-
+#if (NV_TENSORRT_MAJOR > 8)
 // IDebugListener class for writing debug tensors to output file.
 class DebugTensorWriter : public nvinfer1::IDebugListener
 {
@@ -48,6 +48,7 @@ public:
 private:
     std::unordered_map<std::string, std::string> mDebugTensorFileNames;
 };
+#endif
 
 struct InferenceEnvironment
 {
@@ -64,7 +65,9 @@ struct InferenceEnvironment
     std::vector<TrtDeviceBuffer>
         deviceMemory; //< Device memory used for inference when the allocation strategy is not static.
     std::vector<std::unique_ptr<Bindings>> bindings;
+#if (NV_TENSORRT_MAJOR > 8)
     std::unique_ptr<DebugTensorWriter> listener;
+#endif
     bool error{false};
 
     bool safe{false};

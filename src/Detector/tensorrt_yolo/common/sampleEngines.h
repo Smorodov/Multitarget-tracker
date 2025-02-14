@@ -80,7 +80,9 @@ public:
         , mTempfileControls(tempfileControls)
         , mLeanDLLPath(leanDLLPath)
     {
+#if (NV_TENSORRT_MAJOR > 8)
         mFileReader = std::make_unique<samplesCommon::FileStreamReader>();
+#endif
     }
 
     //!
@@ -108,8 +110,10 @@ public:
     //!
     EngineBlob const getBlob() const
     {
+#if (NV_TENSORRT_MAJOR > 8)
         ASSERT((!mFileReader || !mFileReader->isOpen())
             && "Attempting to access the glob when there is an open file reader!");
+#endif
         if (!mEngineBlob.empty())
         {
             return EngineBlob{const_cast<void*>(static_cast<void const*>(mEngineBlob.data())), mEngineBlob.size()};
@@ -149,7 +153,7 @@ public:
         mEngineBlob.clear();
         mEngineBlobHostMemory.reset();
     }
-
+#if (NV_TENSORRT_MAJOR > 8)
     //!
     //! \brief Get the file stream reader used for deserialization
     //!
@@ -158,7 +162,7 @@ public:
         ASSERT(mFileReader);
         return *mFileReader;
     }
-
+#endif
     //!
     //! \brief Get if safe mode is enabled.
     //!
@@ -177,8 +181,9 @@ private:
     bool mVersionCompatible{false};
     int32_t mDLACore{-1};
     std::vector<uint8_t> mEngineBlob;
+#if (NV_TENSORRT_MAJOR > 8)
     std::unique_ptr<samplesCommon::FileStreamReader> mFileReader;
-
+#endif
     // Directly use the host memory of a serialized engine instead of duplicating the engine in CPU memory.
     std::unique_ptr<nvinfer1::IHostMemory> mEngineBlobHostMemory;
 
