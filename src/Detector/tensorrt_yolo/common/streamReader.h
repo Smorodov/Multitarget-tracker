@@ -22,6 +22,8 @@
 #include "sampleUtils.h"
 #include <iostream>
 
+#if (NV_TENSORRT_MAJOR > 8)
+
 namespace samplesCommon
 {
 
@@ -74,5 +76,7 @@ private:
 };
 
 } // namespace samplesCommon
+
+#endif // #if (NV_TENSORRT_MAJOR > 8)
 
 #endif // STREAM_READER_H
