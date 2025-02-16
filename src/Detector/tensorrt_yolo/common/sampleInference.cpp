@@ -201,6 +201,7 @@ bool allocateContextMemory(InferenceEnvironment& iEnv, InferenceOptions const& i
         }
         else
         {
+#if (NV_TENSORRT_MAJOR > 8)
             size_t sizeToAlloc{0};
             const char* allocReason{nullptr};
             if (inference.memoryAllocationStrategy == MemoryAllocationStrategy::kPROFILE)
@@ -225,6 +226,9 @@ bool allocateContextMemory(InferenceEnvironment& iEnv, InferenceOptions const& i
                              << (engine->getDeviceMemorySizeV2() / 1.0_MiB) << " MiB" << std::endl;
             sample::gLogInfo << "Only allocated device memory enough for " << allocReason << ": "
                              << (sizeToAlloc / 1.0_MiB) << " MiB" << std::endl;
+#else
+            std::cerr << "setDeviceMemoryV2 worked only in TensorRT 10.x and higher" << std::endl;
+#endif
         }
     }
     return true;
@@ -256,6 +260,7 @@ bool setUpInference(InferenceEnvironment& iEnv, InferenceOptions const& inferenc
     // Release serialized blob to save memory space.
     iEnv.engine.releaseBlob();
 
+#if (NV_TENSORRT_MAJOR > 8)
     // Setup weight streaming if enabled
     if (engine->getStreamableWeightsSize() > 0)
     {
@@ -301,6 +306,7 @@ bool setUpInference(InferenceEnvironment& iEnv, InferenceOptions const& inferenc
         }
         }
     }
+#endif
 
     int32_t const nbOptProfiles = engine->getNbOptimizationProfiles();
 
@@ -330,11 +336,13 @@ bool setUpInference(InferenceEnvironment& iEnv, InferenceOptions const& inferenc
             // Let TRT pre-allocate and manage the memory.
             ec = engine->createExecutionContext();
         }
+#if (NV_TENSORRT_MAJOR > 8)
         else
         {
             // Allocate based on the current profile or runtime shapes.
             ec = engine->createExecutionContext(ExecutionContextAllocationStrategy::kUSER_MANAGED);
         }
+#endif
         if (ec == nullptr)
         {
             sample::gLogError << "Unable to create execution context for stream " << s << "." << std::endl;
@@ -484,7 +492,7 @@ bool setUpInference(InferenceEnvironment& iEnv, InferenceOptions const& inferenc
             }
         }
     }
-
+#if (NV_TENSORRT_MAJOR > 8)
     // Create Debug Listener and turn on debug states if client requested dumping debug tensors.
     if (!inference.debugTensorFileNames.empty())
     {
@@ -495,6 +503,9 @@ bool setUpInference(InferenceEnvironment& iEnv, InferenceOptions const& inferenc
             iEnv.contexts.front()->setTensorDebugState(s.first.c_str(), true);
         }
     }
+#else
+        std::cerr << "Can not setDebugListener. Use TensorRT 10.x or higher" << std::endl;
+#endif
 
     if (!allocateContextMemory(iEnv, inference))
     {
@@ -1170,17 +1181,22 @@ bool timeDeserialize(InferenceEnvironment& iEnv, SystemOptions const& sys)
         engine.reset(nullptr);
         auto startClock = std::chrono::high_resolution_clock::now();
         SMP_RETVAL_IF_FALSE(!iEnv.safe, "Safe inference is not supported!", false, sample::gLogError);
-
+#if (NV_TENSORRT_MAJOR > 8)
         auto& reader = iEnv.engine.getFileReader();
         reader.reset();
         ASSERT(reader.isOpen());
+#endif
 #if !TRT_WINML
         for (auto const& pluginPath : sys.dynamicPlugins)
         {
             rt->getPluginRegistry().loadLibrary(pluginPath.c_str());
         }
 #endif
+#if (NV_TENSORRT_MAJOR > 8)
         engine.reset(rt->deserializeCudaEngine(reader));
+#else
+        std::cerr << "FileReader is not implemented! Use TensorRT 10.x and higher" << std::endl;
+#endif
         deserializeOK = (engine != nullptr);
         auto endClock = std::chrono::high_resolution_clock::now();
         // return NAN if deserialization failed.
@@ -1270,11 +1286,13 @@ void Binding::fill()
         fillBuffer<int32_t>(buffer->getHostBuffer(), volume, -128, 127);
         break;
     }
+#if (NV_TENSORRT_MAJOR > 8)
     case nvinfer1::DataType::kINT64:
     {
         fillBuffer<int64_t>(buffer->getHostBuffer(), volume, -128, 127);
         break;
     }
+#endif
     case nvinfer1::DataType::kINT8:
     {
         fillBuffer<int8_t>(buffer->getHostBuffer(), volume, -128, 127);
@@ -1290,18 +1308,22 @@ void Binding::fill()
         fillBuffer<__half>(buffer->getHostBuffer(), volume, -1.0F, 1.0F);
         break;
     }
+#if (NV_TENSORRT_MAJOR > 8)
     case nvinfer1::DataType::kBF16:
     {
         fillBuffer<BFloat16>(buffer->getHostBuffer(), volume, -1.0F, 1.0F);
         break;
     }
+#endif
     case nvinfer1::DataType::kUINT8:
     {
         fillBuffer<uint8_t>(buffer->getHostBuffer(), volume, 0, 255);
         break;
     }
     case nvinfer1::DataType::kFP8: ASSERT(false && "FP8 is not supported");
+#if (NV_TENSORRT_MAJOR > 8)
     case nvinfer1::DataType::kINT4: ASSERT(false && "INT4 is not supported");
+#endif
     }
 }
 
@@ -1347,23 +1369,29 @@ void Binding::dump(std::ostream& os, Dims dims, Dims strides, int32_t vectorDim,
         dumpBuffer<__half>(outputBuffer, separator, os, dims, strides, vectorDim, spv);
         break;
     }
+#if (NV_TENSORRT_MAJOR > 8)
     case nvinfer1::DataType::kBF16:
     {
         dumpBuffer<BFloat16>(outputBuffer, separator, os, dims, strides, vectorDim, spv);
         break;
     }
+#endif
     case nvinfer1::DataType::kUINT8:
     {
         dumpBuffer<uint8_t>(outputBuffer, separator, os, dims, strides, vectorDim, spv);
         break;
     }
+#if (NV_TENSORRT_MAJOR > 8)
     case nvinfer1::DataType::kINT64:
     {
         dumpBuffer<int64_t>(outputBuffer, separator, os, dims, strides, vectorDim, spv);
         break;
     }
+#endif
     case nvinfer1::DataType::kFP8: ASSERT(false && "FP8 is not supported");
+#if (NV_TENSORRT_MAJOR > 8)
     case nvinfer1::DataType::kINT4: ASSERT(false && "INT4 is not supported");
+#endif
     }
 }
 
@@ -1594,7 +1622,7 @@ bool Bindings::setTensorAddresses(nvinfer1::IExecutionContext& context) const
     }
     return true;
 }
-
+#if (NV_TENSORRT_MAJOR > 8)
 bool DebugTensorWriter::processDebugTensor(void const* addr, nvinfer1::TensorLocation location, nvinfer1::DataType type,
     nvinfer1::Dims const& shape, char const* name, cudaStream_t stream)
 {
@@ -1618,5 +1646,5 @@ bool DebugTensorWriter::processDebugTensor(void const* addr, nvinfer1::TensorLoc
     CHECK(cudaStreamSynchronize(stream));
     return true;
 }
-
+#endif
 } // namespace sample

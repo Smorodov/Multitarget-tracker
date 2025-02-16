@@ -541,17 +541,23 @@ inline uint32_t getElementSize(nvinfer1::DataType t) noexcept
 {
     switch (t)
     {
+#if (NV_TENSORRT_MAJOR > 8)
     case nvinfer1::DataType::kINT64: return 8;
+#endif
     case nvinfer1::DataType::kINT32:
     case nvinfer1::DataType::kFLOAT: return 4;
+#if (NV_TENSORRT_MAJOR > 8)
     case nvinfer1::DataType::kBF16:
+#endif
     case nvinfer1::DataType::kHALF: return 2;
     case nvinfer1::DataType::kBOOL:
     case nvinfer1::DataType::kUINT8:
     case nvinfer1::DataType::kINT8:
     case nvinfer1::DataType::kFP8: return 1;
+#if (NV_TENSORRT_MAJOR > 8)
     case nvinfer1::DataType::kINT4:
         ASSERT(false && "Element size is not implemented for sub-byte data-types");
+#endif
     }
     return 0;
 }
