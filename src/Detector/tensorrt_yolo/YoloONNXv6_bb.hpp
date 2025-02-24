@@ -7,6 +7,13 @@
 ///
 class YOLOv6_bb_onnx : public YoloONNX
 {
+public:
+	YOLOv6_bb_onnx(std::vector<std::string>& inputTensorNames, std::vector<std::string>& outputTensorNames)
+	{
+		inputTensorNames.push_back("image_arrays");
+		outputTensorNames.push_back("outputs");
+	}
+
 protected:
 	///
 	/// \brief GetResult
