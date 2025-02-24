@@ -2,3 +2,8 @@ build
 CMakeLists.txt.user*
 CMakeFiles
 CMakeCache.txt
+*.engine
+*.onnx
+*.weights
+*.pt
+*.pth

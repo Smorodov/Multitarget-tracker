@@ -167,6 +167,7 @@ bool OCVDNNDetector::Init(const config_t& config)
         dictNetType["YOLOV11"] = ModelType::YOLOV11;
         dictNetType["YOLOV11_OBB"] = ModelType::YOLOV11_OBB;
         dictNetType["YOLOV11Mask"] = ModelType::YOLOV11Mask;
+        dictNetType["YOLOV12"] = ModelType::YOLOV12;
 
         auto netType = dictNetType.find(net_type->second);
         if (netType != dictNetType.end())
@@ -331,6 +332,9 @@ void OCVDNNDetector::DetectInCrop(const cv::UMat& colorFrame, const cv::Rect& cr
         ParseYOLOv10(crop, detections, tmpRegions);
         break;
 	case ModelType::YOLOV11:
+        ParseYOLOv11(crop, detections, tmpRegions);
+        break;
+    case ModelType::YOLOV12:
         ParseYOLOv11(crop, detections, tmpRegions);
         break;
 
