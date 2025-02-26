@@ -1,7 +1,7 @@
 #include "RuCLIPProcessor.h"
 
 ///
-torch::Tensor CVMatToTorchTensor(const cv::Mat img, const bool perm = true)
+inline torch::Tensor CVMatToTorchTensor(const cv::Mat img, const bool perm = true)
 {
 	auto tensor_image = torch::from_blob(img.data, { img.rows, img.cols, img.channels() }, at::kByte);
 	if (perm)
@@ -12,7 +12,7 @@ torch::Tensor CVMatToTorchTensor(const cv::Mat img, const bool perm = true)
 }
 
 ///
-cv::Mat TorchTensorToCVMat(const torch::Tensor tensor_image, const bool perm = true)
+inline cv::Mat TorchTensorToCVMat(const torch::Tensor tensor_image, const bool perm = true)
 {
 	auto t = tensor_image.detach().squeeze().cpu();
 	if (perm)
@@ -33,11 +33,11 @@ RuCLIPProcessor :: RuCLIPProcessor(
 ) : ImageSize(image_size), TextSeqLength(text_seq_length), NormMean(norm_mean), NormStd(norm_std)
 {
 	vkcom::Status status;
-	Tokenizer = new vkcom::BaseEncoder(tokenizer_path, -1, &status);
+	Tokenizer = std::make_unique<vkcom::BaseEncoder>(tokenizer_path, -1, &status);
 }
 
 ///!!!Локали-юникоды
-torch::Tensor RuCLIPProcessor :: EncodeText(/*std::vector<*/std::string &text)
+torch::Tensor RuCLIPProcessor :: EncodeText(const/*std::vector<*/std::string &text)
 {
 	std::vector<std::vector<int32_t>> ret_ids;
 	vkcom::Status status;
@@ -59,6 +59,13 @@ torch::Tensor RuCLIPProcessor :: EncodeText(/*std::vector<*/std::string &text)
 	it.push_back(eos_id);
 	//}
 	return PrepareTokens(it);
+}
+
+torch::Tensor RuCLIPProcessor::EncodeImage(const cv::Mat& img)
+{
+	torch::Tensor img_tensor = CVMatToTorchTensor(img, true);
+	img_tensor = torch::data::transforms::Normalize<>(NormMean, NormStd)(img_tensor);
+	return img_tensor;
 }
 
 torch::Tensor RuCLIPProcessor :: PrepareTokens(/*std::vector<*/std::vector<int32_t> tokens)		//Передаю по значению чтобы внутри иметь дело с копией
@@ -107,7 +114,7 @@ std::pair<torch::Tensor, torch::Tensor> RuCLIPProcessor::operator()(const std::v
 		//img_tensor.clone();
 		images_tensors.push_back(img_tensor);
 	}
-	return std::make_pair(/*torch::pad_sequence*/torch::stack(texts_tensors), torch::pad_sequence(images_tensors).squeeze(0));
+	return std::make_pair(!texts_tensors.empty()?/*torch::pad_sequence*/torch::stack(texts_tensors):torch::Tensor(), torch::pad_sequence(images_tensors).squeeze(0));
 }
 
 ///

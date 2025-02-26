@@ -57,9 +57,9 @@ torch::Tensor TransformerImpl :: forward(const torch::Tensor& x)
 
 void TransformerImpl :: InitializeParameters()
 {
-	float proj_std = powf(Width, -0.5f) * pow(2 * Layers, -0.5f);
-	float attn_std = powf(Width, -0.5f);
-	float fc_std = powf(2 * Width, -0.5f);
+	float proj_std = powf((float)Width, -0.5f) * powf(2.f * Layers, -0.5f);
+	float attn_std = powf((float)Width, -0.5f);
+	float fc_std = powf(2.f * Width, -0.5f);
 
 	for (int i = 0; i < Resblocks->size(); i++)
 	{
@@ -90,7 +90,7 @@ VisionTransformerImpl :: VisionTransformerImpl(
 ) : torch::nn::Module(module_name), InputResolution(input_resolution), OutputDim(output_dim)
 {
 	Conv1 = torch::nn::Conv2d(torch::nn::Conv2dOptions(3, width, patch_size).stride(patch_size).bias(false));
-	float scale = powf(width, -0.5);
+	float scale = powf((float)width, -0.5);
 	ClassEmbedding = scale * torch::randn(width);
 	PositionalEmbedding = scale * torch::randn({ (int)pow(input_resolution / patch_size/*деление нацело*/, 2) + 1, width });
 	LnPre = RCLayerNorm(std::vector<int64_t>() = { (int64_t)width });
