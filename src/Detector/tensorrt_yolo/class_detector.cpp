@@ -13,7 +13,7 @@
 #include "YoloONNXv11_bb.hpp"
 #include "YoloONNXv11_obb.hpp"
 #include "YoloONNXv11_instance.hpp"
-
+#include "YoloONNXv12_bb.hpp"
 
 namespace tensor_rt
 {
@@ -69,66 +69,40 @@ namespace tensor_rt
             switch (config.net_type)
             {
             case ModelType::YOLOV6:
-                m_params.inputTensorNames.push_back("image_arrays");
-                m_params.outputTensorNames.push_back("outputs");
-                m_detector = std::make_unique<YOLOv6_bb_onnx>();
+                m_detector = std::make_unique<YOLOv6_bb_onnx>(m_params.inputTensorNames, m_params.outputTensorNames);
                 break;
             case ModelType::YOLOV7:
-                m_params.inputTensorNames.push_back("images");
-                m_params.outputTensorNames.push_back("output");
-                m_params.outputTensorNames.push_back("num_dets");     // batch x 1
-                m_params.outputTensorNames.push_back("det_boxes");    // batch x 100 x 4
-                m_params.outputTensorNames.push_back("det_scores");   // batch x 100
-                m_params.outputTensorNames.push_back("det_classes");  // batch x 100
-                m_detector = std::make_unique<YOLOv7_bb_onnx>();
+                m_detector = std::make_unique<YOLOv7_bb_onnx>(m_params.inputTensorNames, m_params.outputTensorNames);
                 break;
             case ModelType::YOLOV7Mask:
-                m_params.inputTensorNames.push_back("images");
-                m_params.outputTensorNames.push_back("output");
-                m_params.outputTensorNames.push_back("516");
-                m_detector = std::make_unique<YOLOv7_instance_onnx>();
+                m_detector = std::make_unique<YOLOv7_instance_onnx>(m_params.inputTensorNames, m_params.outputTensorNames);
                 break;
             case ModelType::YOLOV8:
-                m_params.inputTensorNames.push_back("images");
-                m_params.outputTensorNames.push_back("output0");
-                m_detector = std::make_unique<YOLOv8_bb_onnx>();
+                m_detector = std::make_unique<YOLOv8_bb_onnx>(m_params.inputTensorNames, m_params.outputTensorNames);
                 break;
             case ModelType::YOLOV8_OBB:
-                m_params.inputTensorNames.push_back("images");
-                m_params.outputTensorNames.push_back("output0");
-                m_detector = std::make_unique<YOLOv8_obb_onnx>();
+                m_detector = std::make_unique<YOLOv8_obb_onnx>(m_params.inputTensorNames, m_params.outputTensorNames);
                 break;
             case ModelType::YOLOV8Mask:
-                m_params.inputTensorNames.push_back("images");
-                m_params.outputTensorNames.push_back("output0");
-                m_params.outputTensorNames.push_back("output1");
-                m_detector = std::make_unique<YOLOv8_instance_onnx>();
+                m_detector = std::make_unique<YOLOv8_instance_onnx>(m_params.inputTensorNames, m_params.outputTensorNames);
                 break;
             case ModelType::YOLOV9:
-                m_params.inputTensorNames.push_back("images");
-                m_params.outputTensorNames.push_back("output0");
-                m_detector = std::make_unique<YOLOv9_bb_onnx>();
+                m_detector = std::make_unique<YOLOv9_bb_onnx>(m_params.inputTensorNames, m_params.outputTensorNames);
                 break;
             case ModelType::YOLOV10:
-                m_params.inputTensorNames.push_back("images");
-                m_params.outputTensorNames.push_back("output0");
-                m_detector = std::make_unique<YOLOv10_bb_onnx>();
+                m_detector = std::make_unique<YOLOv10_bb_onnx>(m_params.inputTensorNames, m_params.outputTensorNames);
                 break;
             case ModelType::YOLOV11:
-                m_params.inputTensorNames.push_back("images");
-                m_params.outputTensorNames.push_back("output0");
-                m_detector = std::make_unique<YOLOv11_bb_onnx>();
+                m_detector = std::make_unique<YOLOv11_bb_onnx>(m_params.inputTensorNames, m_params.outputTensorNames);
                 break;
             case ModelType::YOLOV11_OBB:
-                m_params.inputTensorNames.push_back("images");
-                m_params.outputTensorNames.push_back("output0");
-                m_detector = std::make_unique<YOLOv11_obb_onnx>();
+                m_detector = std::make_unique<YOLOv11_obb_onnx>(m_params.inputTensorNames, m_params.outputTensorNames);
                 break;
             case ModelType::YOLOV11Mask:
-                m_params.inputTensorNames.push_back("images");
-                m_params.outputTensorNames.push_back("output0");
-                m_params.outputTensorNames.push_back("output1");
-                m_detector = std::make_unique<YOLOv11_instance_onnx>();
+                m_detector = std::make_unique<YOLOv11_instance_onnx>(m_params.inputTensorNames, m_params.outputTensorNames);
+                break;
+            case ModelType::YOLOV12:
+                m_detector = std::make_unique<YOLOv12_bb_onnx>(m_params.inputTensorNames, m_params.outputTensorNames);
                 break;
             }                
 

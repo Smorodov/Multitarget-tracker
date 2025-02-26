@@ -7,6 +7,14 @@
 ///
 class YOLOv8_instance_onnx : public YoloONNX
 {
+public:
+	YOLOv8_instance_onnx(std::vector<std::string>& inputTensorNames, std::vector<std::string>& outputTensorNames)
+	{
+		inputTensorNames.push_back("images");
+		outputTensorNames.push_back("output0");
+		outputTensorNames.push_back("output1");
+	}
+
 protected:
 	///
 	/// \brief GetResult

@@ -7,6 +7,17 @@
 ///
 class YOLOv7_bb_onnx : public YoloONNX
 {
+public:
+	YOLOv7_bb_onnx(std::vector<std::string>& inputTensorNames, std::vector<std::string>& outputTensorNames)
+	{
+		inputTensorNames.push_back("images");
+		outputTensorNames.push_back("output");
+		outputTensorNames.push_back("num_dets");     // batch x 1
+		outputTensorNames.push_back("det_boxes");    // batch x 100 x 4
+		outputTensorNames.push_back("det_scores");   // batch x 100
+		outputTensorNames.push_back("det_classes");  // batch x 100
+	}
+
 protected:
 	///
 /// \brief GetResult

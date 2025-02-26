@@ -655,7 +655,8 @@ protected:
 				YOLOv10,
 				YOLOv11,
 				YOLOv11_OBB,
-				YOLOv11Mask
+				YOLOv11Mask,
+				YOLOv12
             };
             YOLOModels usedModel = YOLOModels::YOLOv9;
             switch (usedModel)

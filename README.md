@@ -3,6 +3,8 @@
 
 # Last changes
 
+* YOLOv12 detector worked with TensorRT! Export pretrained Pytorch models [here (sunsmarterjie/yolov12)](https://github.com/sunsmarterjie/yolov12) to onnx format and run Multitarget-tracker with -e=6 example
+
 * TensorRT 10 is supported
 
 * YOLOv11, YOLOv11-obb and YOLOv11-seg detector worked with TensorRT! Export pretrained Pytorch models [here (ultralytics/ultralytics)](https://github.com/ultralytics/ultralytics) to onnx format and run Multitarget-tracker with -e=6 example

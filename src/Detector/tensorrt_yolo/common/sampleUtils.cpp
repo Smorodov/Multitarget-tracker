@@ -28,17 +28,23 @@ size_t dataTypeSize(nvinfer1::DataType dataType)
 {
     switch (dataType)
     {
+#if (NV_TENSORRT_MAJOR > 8)
     case nvinfer1::DataType::kINT64: return 8U;
+#endif
     case nvinfer1::DataType::kINT32:
     case nvinfer1::DataType::kFLOAT: return 4U;
+#if (NV_TENSORRT_MAJOR > 8)
     case nvinfer1::DataType::kBF16:
+#endif
     case nvinfer1::DataType::kHALF: return 2U;
     case nvinfer1::DataType::kBOOL:
     case nvinfer1::DataType::kUINT8:
     case nvinfer1::DataType::kINT8:
     case nvinfer1::DataType::kFP8: return 1U;
+#if (NV_TENSORRT_MAJOR > 8)
     case nvinfer1::DataType::kINT4:
         ASSERT(false && "Element size is not implemented for sub-byte data-types.");
+#endif
     }
     return 0;
 }
@@ -391,16 +397,22 @@ void sparsify(Weights const& weights, int32_t k, int32_t trs, std::vector<int8_t
     case DataType::kHALF:
         sparsify(static_cast<half_float::half const*>(weights.values), weights.count, k, trs, sparseWeights);
         break;
+#if (NV_TENSORRT_MAJOR > 8)
     case DataType::kBF16:
         sparsify(static_cast<BFloat16 const*>(weights.values), weights.count, k, trs, sparseWeights);
         break;
+#endif
     case DataType::kINT8:
     case DataType::kINT32:
     case DataType::kUINT8:
     case DataType::kBOOL:
+#if (NV_TENSORRT_MAJOR > 8)
     case DataType::kINT4:
+#endif
     case DataType::kFP8:
+#if (NV_TENSORRT_MAJOR > 8)
     case DataType::kINT64:
+#endif
         ASSERT(false && "Unsupported data type");
     }
 }
