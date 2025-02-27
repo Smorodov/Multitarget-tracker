@@ -37,7 +37,7 @@ RuCLIPProcessor :: RuCLIPProcessor(
 }
 
 ///!!!Локали-юникоды
-torch::Tensor RuCLIPProcessor :: EncodeText(const/*std::vector<*/std::string &text)
+torch::Tensor RuCLIPProcessor :: EncodeText(const/*std::vector<*/std::string &text) const
 {
 	std::vector<std::vector<int32_t>> ret_ids;
 	vkcom::Status status;
@@ -45,8 +45,7 @@ torch::Tensor RuCLIPProcessor :: EncodeText(const/*std::vector<*/std::string &te
 	////	it = lowercase(it);
 	//text = lowercase(text);
 	//output_type = vkcom::OutputType::ID, bos = false, eos = false, reverse = false, dropout_prob = 0.0
-	std::vector <std::string> texts;
-	texts.push_back(text);
+	std::vector <std::string> texts{ text };
 	status = Tokenizer->encode_as_ids(texts, &ret_ids);
 	if (status.code != 0)
 		throw std::runtime_error("RuCLIPProcessor::EncodeText error : " + status.message);
@@ -61,14 +60,51 @@ torch::Tensor RuCLIPProcessor :: EncodeText(const/*std::vector<*/std::string &te
 	return PrepareTokens(it);
 }
 
-torch::Tensor RuCLIPProcessor::EncodeImage(const cv::Mat& img)
+///
+cv::Mat RuCLIPProcessor::ResizeToInput(const cv::Mat& img, bool saveAspectRatio) const
 {
-	torch::Tensor img_tensor = CVMatToTorchTensor(img, true);
+	cv::Mat newImg(cv::Size(ImageSize, ImageSize), img.type(), cv::Scalar(0, 0, 0));
+
+	if (saveAspectRatio)
+	{
+		// resize the image with aspect ratio
+		float r = std::min(static_cast<float>(ImageSize) / static_cast<float>(img.rows), static_cast<float>(ImageSize) / static_cast<float>(img.cols));
+		int newHeight = cvRound(img.rows * r);
+		int newWidth = cvRound(img.cols * r);
+
+		// Additional checks for images with non even dims
+		if ((ImageSize - newWidth) % 2)
+			newWidth--;
+		if ((ImageSize - newHeight) % 2)
+			newHeight--;
+		assert((ImageSize - newWidth) % 2 == 0);
+		assert((ImageSize - newHeight) % 2 == 0);
+
+		int xOffset = (ImageSize - newWidth) / 2;
+		int yOffset = (ImageSize - newHeight) / 2;
+
+		assert(2 * m_XOffset + newWidth == ImageSize);
+		assert(2 * m_YOffset + newHeight == ImageSize);
+
+		cv::resize(img, newImg(cv::Rect(xOffset, yOffset, newWidth, newHeight)), cv::Size(newWidth, newHeight), 0, 0, cv::INTER_CUBIC);
+	}
+	else
+	{
+		cv::resize(img, newImg, newImg.size(), 0, 0, cv::INTER_CUBIC);
+	}
+	return newImg;
+}
+
+///
+torch::Tensor RuCLIPProcessor::EncodeImage(const cv::Mat& img) const
+{
+	torch::Tensor img_tensor = CVMatToTorchTensor(ResizeToInput(img), true);
 	img_tensor = torch::data::transforms::Normalize<>(NormMean, NormStd)(img_tensor);
 	return img_tensor;
 }
 
-torch::Tensor RuCLIPProcessor :: PrepareTokens(/*std::vector<*/std::vector<int32_t> tokens)		//Передаю по значению чтобы внутри иметь дело с копией
+///
+torch::Tensor RuCLIPProcessor::PrepareTokens(/*std::vector<*/std::vector<int32_t> tokens) const //Передаю по значению чтобы внутри иметь дело с копией
 {
 	torch::Tensor result;
 	if (tokens.size() > TextSeqLength)
@@ -96,7 +132,13 @@ void RuCLIPProcessor::CacheText(const std::vector <std::string>& texts)
 }
 
 ///
-std::pair<torch::Tensor, torch::Tensor> RuCLIPProcessor::operator()(const std::vector <std::string> &texts, const std::vector <cv::Mat> &images)
+const std::vector<torch::Tensor>& RuCLIPProcessor::GetTextTensors() const
+{
+	return m_textsTensors;
+}
+
+///
+std::pair<torch::Tensor, torch::Tensor> RuCLIPProcessor::operator()(const std::vector <std::string> &texts, const std::vector <cv::Mat> &images) const
 {
 	std::vector <torch::Tensor> texts_tensors;
 	for (auto& it : texts)
@@ -109,7 +151,7 @@ std::pair<torch::Tensor, torch::Tensor> RuCLIPProcessor::operator()(const std::v
 	std::vector <torch::Tensor> images_tensors;
 	for (auto &it : images)
 	{
-		torch::Tensor img_tensor = CVMatToTorchTensor(it, true);
+		torch::Tensor img_tensor = CVMatToTorchTensor(ResizeToInput(it), true);
 		img_tensor = torch::data::transforms::Normalize<>(NormMean, NormStd)(img_tensor);
 		//img_tensor.clone();
 		images_tensors.push_back(img_tensor);
@@ -118,12 +160,12 @@ std::pair<torch::Tensor, torch::Tensor> RuCLIPProcessor::operator()(const std::v
 }
 
 ///
-std::pair<torch::Tensor, torch::Tensor> RuCLIPProcessor::operator()(const std::vector <cv::Mat>& images)
+std::pair<torch::Tensor, torch::Tensor> RuCLIPProcessor::operator()(const std::vector <cv::Mat>& images) const
 {
 	std::vector <torch::Tensor> images_tensors;
 	for (auto& it : images)
 	{
-		torch::Tensor img_tensor = CVMatToTorchTensor(it, true);
+		torch::Tensor img_tensor = CVMatToTorchTensor(ResizeToInput(it), true);
 		img_tensor = torch::data::transforms::Normalize<>(NormMean, NormStd)(img_tensor);
 		//img_tensor.clone();
 		images_tensors.push_back(img_tensor);
