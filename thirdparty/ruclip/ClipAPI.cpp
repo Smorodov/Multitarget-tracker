@@ -19,8 +19,6 @@ public:
 		bool res = true;
 
 		m_pathToClip = pathToClip;
-		m_pathToBPE = pathToBPE;
-		m_inputImgSize = inputImgSize;
 		m_indGPU = indGPU;
 		m_labels = labels;
 
@@ -42,11 +40,9 @@ public:
 		m_clip->to(m_device);
 
 		std::cout << "Load processor from: " << pathToBPE << std::endl;
-		std::vector<double> normMean{ 0.48145466, 0.4578275, 0.40821073 };
-		std::vector<double> normStd{ 0.26862954, 0.26130258, 0.27577711 };
-		m_processor = std::make_unique<RuCLIPProcessor>(m_pathToBPE, m_inputImgSize, 77, normMean, normStd);
+		m_processor = RuCLIPProcessor::FromPretrained(m_pathToClip);
 
-		m_processor->CacheText(m_labels);
+		m_processor.CacheText(m_labels);
 
 		return res;
 	}
@@ -69,12 +65,10 @@ public:
 		for (size_t i = 0; i < rois.size(); ++i)
 		{
 			cv::Rect r = Clamp(rois[i], frame.size());
-			if (r.width > m_inputImgSize / 10 && r.height > m_inputImgSize / 10)
+			if (r.width > m_processor.GetImageSize() / 10 && r.height > m_processor.GetImageSize() / 10)
 			{
 				img2roi[images.size()] = i;
-				cv::Mat tmp;
-				cv::resize(cv::Mat(frame, r), tmp, cv::Size(m_inputImgSize, m_inputImgSize), cv::INTER_CUBIC);
-				images.emplace_back(tmp);
+				images.emplace_back(cv::Mat(frame, r));
 			}
 		}
 		if (images.empty())
@@ -84,7 +78,7 @@ public:
 		}
 
 		std::cout << "Running on " << images.size() << "..." << std::endl;
-		auto dummy_input = m_processor->operator()(images);
+		auto dummy_input = m_processor.operator()(images);
 		try
 		{
 			torch::Tensor logits_per_image = m_clip->forward(dummy_input.first.to(m_device), dummy_input.second.to(m_device));
@@ -123,13 +117,11 @@ public:
 
 private:
 	std::string m_pathToClip = "";
-	std::string m_pathToBPE = "";
-	int m_inputImgSize = 336;
 	int m_indGPU = -1; // -1 - use CPU
 
 	torch::Device m_device{ torch::kCPU };
 	CLIP m_clip = nullptr;
-	std::unique_ptr<RuCLIPProcessor> m_processor;
+	RuCLIPProcessor m_processor;
 
 	std::vector<std::string> m_labels{ "human", "pedestrian", "car", "vehicle", "truck", "bus" };
 };
