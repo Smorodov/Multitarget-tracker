@@ -165,31 +165,30 @@ inline CLIP FromPretrained(const std::filesystem::path &folder)
 
 	// Создание модели
 	auto clip = CLIP("ruclip",
-		int(config["embed_dim"]),
-		int(config["image_resolution"]),
-		int(config["vision_layers"]),
-		int(config["vision_width"]),
-		int(config["vision_patch_size"]),
-		int(config["context_length"]),
-		int(config["vocab_size"]),
-		int(config["transformer_width"]),
-		int(config["transformer_heads"]),
-		int(config["transformer_layers"]));
+		             int(config["embed_dim"]),
+		             int(config["image_resolution"]),
+		             int(config["vision_layers"]),
+		             int(config["vision_width"]),
+		             int(config["vision_patch_size"]),
+		             int(config["context_length"]),
+		             int(config["vocab_size"]),
+		             int(config["transformer_width"]),
+		             int(config["transformer_heads"]),
+		             int(config["transformer_layers"]));
 
-	for (auto &k : clip->named_parameters())
-		std::cout << k.key() << std::endl;
+	//for (auto &k : clip->named_parameters())
+	//	std::cout << k.key() << std::endl;
 	//std::cout << "Model params count: " << Trainable::ParamsCount(clip) << std::endl;
 
 	// Загрузка состояния модели из файла
-	try {
+	try
+	{
 		torch::load(clip, (folder / "jit_model.zip").string());
 	}
-	catch (std::exception& e) {
+	catch (std::exception& e)
+	{
 		std::cout << e.what() << std::endl;
 	}
-
-	//		"mean" : [0.48145466, 0.4578275, 0.40821073] ,
-	//		"std" : [0.26862954, 0.26130258, 0.27577711]
 
 	return clip;
 }
