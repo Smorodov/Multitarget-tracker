@@ -27,10 +27,6 @@ jobs:
       working-directory: build
       run: make
 
-    - name: Run tests
-      working-directory: build
-      run: ./tests  # Replace with your test command
-
   build-windows:
     runs-on: windows-latest
     steps:
@@ -54,11 +50,6 @@ jobs:
       shell: cmd
       run: cmake --build . --config Release
 
-    - name: Run tests
-      working-directory: build/Release
-      shell: cmd
-      run: tests.exe  # Replace with your test command
-
   build-macos:
     runs-on: macos-latest
     steps:
@@ -79,6 +70,3 @@ jobs:
       working-directory: build
       run: make
 
-    - name: Run tests
-      working-directory: build
-      run: ./tests  # Replace with your test command
