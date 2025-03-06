@@ -79,7 +79,12 @@ void LDESTracker::getSubWindow(const cv::Mat& image, const char* type)
 		}
 		//cv::imshow("rot_patch", patchL);
 		cv::resize(patchL, patchL, cv::Size(scale_sz0, scale_sz0), cv::INTER_LINEAR);
+
+#if (CV_VERSION_MAJOR < 5)
 		cv::logPolar(patchL, patchL, cv::Point2f(0.5f*patchL.cols, 0.5f*patchL.rows), mag, cv::INTER_LINEAR);
+#else
+		cv::warpPolar(patchL, patchL, patchL.size(), cv::Point2f(0.5f * patchL.cols, 0.5f * patchL.rows), mag, cv::INTER_LINEAR);
+#endif
 	}
 	else
 		assert(0);
