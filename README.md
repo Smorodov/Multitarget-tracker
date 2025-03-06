@@ -1,6 +1,6 @@
-[![Ubuntu](https://github.com/Smorodov/Multitarget-tracker/blob/master/.github/workflows/ubuntu.yml/badge.svg)](https://github.com/Smorodov/Multitarget-tracker/blob/master/.github/workflows/ubuntu.yml)
-[![MacOS](https://github.com/Smorodov/Multitarget-tracker/blob/master/.github/workflows/macos.yml/badge.svg)](https://github.com/Smorodov/Multitarget-tracker/blob/master/.github/workflows/macos.yml)
-[![CodeQL](https://github.com/Smorodov/Multitarget-tracker/blob/master/.github/workflows/codeql-analysis.yml/badge.svg)](https://github.com/Smorodov/Multitarget-tracker/blob/master/.github/workflows/codeql-analysis.yml)
+[![Ubuntu](https://github.com/Smorodov/Multitarget-tracker/actions/workflows/ubuntu.yml/badge.svg)](https://github.com/Smorodov/Multitarget-tracker/actions/workflows/ubuntu.yml)
+[![MacOS](https://github.com/Smorodov/Multitarget-tracker/actions/workflows/macos.yml/badge.svg)](https://github.com/Smorodov/Multitarget-tracker/actions/workflows/macos.yml)
+[![CodeQL](https://github.com/Smorodov/Multitarget-tracker/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/Smorodov/Multitarget-tracker/actions/workflows/codeql-analysis.yml)
 
 # Last changes
 
