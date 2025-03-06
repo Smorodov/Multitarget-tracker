@@ -1,4 +1,5 @@
-[![Status](https://github.com/Smorodov/Multitarget-tracker/blob/master/.github/workflows/c-cpp.yml/badge.svg)](https://github.com/Smorodov/Multitarget-tracker/blob/master/.github/workflows/c-cpp.yml)
+[![Ubuntu](https://github.com/Smorodov/Multitarget-tracker/blob/master/.github/workflows/ubuntu.yml/badge.svg)](https://github.com/Smorodov/Multitarget-tracker/blob/master/.github/workflows/ubuntu.yml)
+[![MacOS](https://github.com/Smorodov/Multitarget-tracker/blob/master/.github/workflows/macos.yml/badge.svg)](https://github.com/Smorodov/Multitarget-tracker/blob/master/.github/workflows/macos.yml)
 [![CodeQL](https://github.com/Smorodov/Multitarget-tracker/blob/master/.github/workflows/codeql-analysis.yml/badge.svg)](https://github.com/Smorodov/Multitarget-tracker/blob/master/.github/workflows/codeql-analysis.yml)
 
 # Last changes
