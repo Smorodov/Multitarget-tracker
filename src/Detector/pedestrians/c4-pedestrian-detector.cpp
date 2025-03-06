@@ -157,18 +157,22 @@ void NodeDetector::Load(const NodeType _type,const int _featurelength,const int 
 
 void CascadeDetector::AddNode(const NodeDetector::NodeType _type,const int _featurelength,const int _upper_bound,const char* _filename)
 {
-    if(length==size)
+    NodeDetector** tmp = nullptr;
+    if (length == size)
     {
         int newsize = size * 2;
         NodeDetector** p = new NodeDetector*[newsize];
         assert(p!=NULL);
         std::copy(nodes,nodes+size,p);
         size = newsize;
-        delete[] nodes;
+        tmp = nodes;
         nodes = p;
     }
     nodes[length] = new NodeDetector(_type,_featurelength,_upper_bound,length,_filename);
     length++;
+
+    if (tmp != nullptr)
+        delete[] nodes;
 }
 
 // End of functions that load the two classifiers
