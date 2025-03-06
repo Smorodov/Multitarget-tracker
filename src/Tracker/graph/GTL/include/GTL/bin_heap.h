@@ -279,24 +279,25 @@ void bin_heap<T, Pred>::push(const T& ins)
 
 
 template <class T, class Pred>
-void bin_heap<T, Pred>::pop() 
+void bin_heap<T, Pred>::pop()
 {
-    assert(size > 0);
-    // save smallest element for return (ensured by heap condition)
-    heap_node_map.erase(container[0]->data);
-    delete container[0];
-    // replace by last element in array and decrease heap "size"
-    if (size > 1)
-    {
-	container[0] = container[--size];
-	container[0]->pos = 0;
-	// reorder heap to ensure heap conditions
-	bubble_down(container[0]);
-    }
-    else
-    {
-	size = 0;
-    }
+	assert(size > 0);
+	// save smallest element for return (ensured by heap condition)
+	heap_node_map.erase(container[0]->data);
+	auto tmp = container[0];
+	// replace by last element in array and decrease heap "size"
+	if (size > 1)
+	{
+		container[0] = container[--size];
+		container[0]->pos = 0;
+		// reorder heap to ensure heap conditions
+		bubble_down(container[0]);
+	}
+	else
+	{
+		size = 0;
+	}
+    delete tmp;
 }
 
 
