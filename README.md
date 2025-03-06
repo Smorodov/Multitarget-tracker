@@ -1,5 +1,5 @@
-[![Status](https://github.com/Nuzhny007/Multitarget-tracker/actions/workflows/cmake.yml/badge.svg?branch=master)](https://github.com/Nuzhny007/Multitarget-tracker/actions?query=workflow%3Abuild-Ubuntu)
-[![CodeQL](https://github.com/Smorodov/Multitarget-tracker/workflows/CodeQL/badge.svg?branch=master)](https://github.com/Smorodov/Multitarget-tracker/actions?query=workflow%3ACodeQL)
+[![Status](https://github.com/Smorodov/Multitarget-tracker/blob/master/.github/workflows/c-cpp.yml/badge.svg)](https://github.com/Smorodov/Multitarget-tracker/blob/master/.github/workflows/c-cpp.yml)
+[![CodeQL](https://github.com/Smorodov/Multitarget-tracker/blob/master/.github/workflows/codeql-analysis.yml/badge.svg)](https://github.com/Smorodov/Multitarget-tracker/blob/master/.github/workflows/codeql-analysis.yml)
 
 # Last changes
 
