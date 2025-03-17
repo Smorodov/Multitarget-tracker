@@ -281,3 +281,4 @@ Apache 2.0: [LICENSE text](https://github.com/Smorodov/Multitarget-tracker/blob/
 11. Tiago Miguel, Rodrigues de Almeida "Multi-Camera and Multi-Algorithm Architecture for VisualPerception onboard the ATLASCAR2", 2019 ( http://lars.mec.ua.pt/public/LAR%20Projects/Vision/2019_TiagoAlmeida/Thesis_Tiago_AlmeidaVF_26Jul2019.pdf )
 12. ROS, http://docs.ros.org/lunar/api/costmap_converter/html/Ctracker_8cpp_source.html
 13. Sangeeth Kochanthara, Yanja Dajsuren, Loek Cleophas, Mark van den Brand "Painting the Landscape of Automotive Software in GitHub", 2022 ( https://arxiv.org/abs/2203.08936 )
+14. Fesus, A., Kovari, B., Becsi, T., Leginusz, L. "Dynamic Prompt-Based Approach for Open Vocabulary Multi-Object Tracking", 2025 ( https://link.springer.com/chapter/10.1007/978-3-031-81799-1_25 )
