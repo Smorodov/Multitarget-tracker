@@ -4,6 +4,8 @@
 
 # Last changes
 
+* RF-DETR detector worked with TensorRT! Export pretrained Pytorch models [here (roboflow/rf-detr)](https://github.com/roboflow/rf-detr) to onnx format and run Multitarget-tracker with -e=6 example
+
 * YOLOv12 detector worked with TensorRT! Export pretrained Pytorch models [here (sunsmarterjie/yolov12)](https://github.com/sunsmarterjie/yolov12) to onnx format and run Multitarget-tracker with -e=6 example
 
 * TensorRT 10 is supported
