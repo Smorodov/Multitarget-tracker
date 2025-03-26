@@ -168,10 +168,16 @@ bool OCVDNNDetector::Init(const config_t& config)
         dictNetType["YOLOV11_OBB"] = ModelType::YOLOV11_OBB;
         dictNetType["YOLOV11Mask"] = ModelType::YOLOV11Mask;
         dictNetType["YOLOV12"] = ModelType::YOLOV12;
+        dictNetType["RFDETR"] = ModelType::RFDETR;
 
         auto netType = dictNetType.find(net_type->second);
         if (netType != dictNetType.end())
             m_netType = netType->second;
+        else
+        {
+            assert(netType == dictNetType.end());
+            std::cerr << "net_type = " << net_type->second << ", " << (int)m_netType << std::endl;
+        }
 
         //std::cout << "net_type = " << net_type->second << ", " << (int)m_netType << std::endl;
     }
@@ -348,6 +354,10 @@ void OCVDNNDetector::DetectInCrop(const cv::UMat& colorFrame, const cv::Rect& cr
     case ModelType::YOLOV8Mask:
     case ModelType::YOLOV11Mask:
         ParseYOLOv5_8_11_seg(crop, detections, tmpRegions);
+        break;
+
+    case ModelType::RFDETR:
+        ParseRFDETR(crop, detections, tmpRegions);
         break;
 
 	default:
@@ -797,6 +807,61 @@ void OCVDNNDetector::ParseYOLOv5_8_11_seg(const cv::Rect& crop, std::vector<cv::
 
             if (m_classesWhiteList.empty() || m_classesWhiteList.find(T2T(class_id.x)) != std::end(m_classesWhiteList))
                 tmpRegions.emplace_back(cv::RotatedRect(cv::Point2f(x, y), cv::Size2f(w, h), 0), T2T(class_id.x), static_cast<float>(maxClassScore));
+        }
+        data += dimensions;
+    }
+}
+
+///
+/// \brief OCVDNNDetector::ParseRFDETR
+/// \param crop
+/// \param detections
+/// \param tmpRegions
+///
+void OCVDNNDetector::ParseRFDETR(const cv::Rect& crop, std::vector<cv::Mat>& detections, regions_t& tmpRegions)
+{
+    int rows = detections[0].size[1];
+    int dimensions = detections[0].size[2];
+
+    // yolov5 has an output of shape (batchSize, 25200, 85) (Num classes + box[x,y,w,h] + confidence[c])
+    // yolov8 has an output of shape (batchSize, 84,  8400) (Num classes + box[x,y,w,h])
+    if (dimensions > rows) // Check if the shape[2] is more than shape[1] (yolov8)
+    {
+        rows = detections[0].size[2];
+        dimensions = detections[0].size[1];
+
+        detections[0] = detections[0].reshape(1, dimensions);
+        cv::transpose(detections[0], detections[0]);
+    }
+    float* data = (float*)detections[0].data;
+
+    float x_factor = crop.width / static_cast<float>(m_inWidth);
+    float y_factor = crop.height / static_cast<float>(m_inHeight);
+
+    for (int i = 0; i < rows; ++i)
+    {
+        float* classes_scores = data + 4;
+
+        cv::Mat scores(1, static_cast<int>(m_classNames.size()), CV_32FC1, classes_scores);
+        cv::Point class_id;
+        double maxClassScore = 0;
+        cv::minMaxLoc(scores, 0, &maxClassScore, 0, &class_id);
+
+        if (maxClassScore > m_confidenceThreshold)
+        {
+            float x = data[0];
+            float y = data[1];
+            float w = data[2];
+            float h = data[3];
+
+            int left = int((x - 0.5f * w) * x_factor);
+            int top = int((y - 0.5f * h) * y_factor);
+
+            int width = int(w * x_factor);
+            int height = int(h * y_factor);
+
+            if (m_classesWhiteList.empty() || m_classesWhiteList.find(T2T(class_id.x)) != std::end(m_classesWhiteList))
+                tmpRegions.emplace_back(cv::Rect(left + crop.x, top + crop.y, width, height), T2T(class_id.x), static_cast<float>(maxClassScore));
         }
         data += dimensions;
     }

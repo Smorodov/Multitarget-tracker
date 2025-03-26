@@ -110,10 +110,17 @@ bool YoloTensorRTDetector::Init(const config_t& config)
 		dictNetType["YOLOV11"] = tensor_rt::YOLOV11;
 		dictNetType["YOLOV11_OBB"] = tensor_rt::YOLOV11_OBB;
 		dictNetType["YOLOV11Mask"] = tensor_rt::YOLOV11Mask;
+		dictNetType["YOLOV12"] = tensor_rt::YOLOV12;
+		dictNetType["RFDETR"] = tensor_rt::RFDETR;
 
 		auto netType = dictNetType.find(net_type->second);
 		if (netType != dictNetType.end())
 			m_localConfig.net_type = netType->second;
+		else
+		{
+			assert(netType == dictNetType.end());
+			std::cerr << "net_type = " << net_type->second << ", " << (int)m_localConfig.net_type << std::endl;
+		}
 	}
 
 	auto classNames = config.find("classNames");
@@ -153,9 +160,13 @@ bool YoloTensorRTDetector::Init(const config_t& config)
 	if (maxCropRatio != config.end())
 		m_maxCropRatio = std::stof(maxCropRatio->second);
 
+
+	std::cout << "YoloTensorRTDetector::Init: tensor_rt::Detector" << std::endl;
 	m_detector = std::make_unique<tensor_rt::Detector>();
 	if (m_detector)
         m_detector->Init(m_localConfig);
+
+	std::cout << "YoloTensorRTDetector::Init: Detector created - " << (m_detector.get() != nullptr) << std::endl;
 
 	return m_detector.get() != nullptr;
 }
