@@ -229,7 +229,7 @@ private:
     bool m_isDetectorInitialized = false;
     std::string m_inFile;
     std::string m_outFile;
-    int m_fourcc = cv::VideoWriter::fourcc('h', '2', '6', '5'); //cv::VideoWriter::fourcc('M', 'J', 'P', 'G');
+    int m_fourcc = cv::VideoWriter::fourcc('h', '2', '6', '4'); //cv::VideoWriter::fourcc('M', 'J', 'P', 'G');
     int m_startFrame = 0;
     int m_endFrame = 0;
     int m_finishDelay = 0;

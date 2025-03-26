@@ -333,8 +333,8 @@ bool YoloONNX::ProcessInputAspectRatio(const std::vector<cv::Mat>& sampleImages)
     const float imgHeight = static_cast<float>(sampleImages[0].rows);
     const float imgWidth = static_cast<float>(sampleImages[0].cols);
     float dim = std::max(imgHeight, imgWidth);
-    int resizeH = ((imgHeight / dim) * inputH);
-    int resizeW = ((imgWidth / dim) * inputW);
+    int resizeH = (imgHeight * inputH) / dim;
+    int resizeW = (imgWidth * inputW) / dim;
     float scalingFactor = static_cast<float>(resizeH) / static_cast<float>(imgHeight);
 
     // Additional checks for images with non even dims
@@ -353,6 +353,8 @@ bool YoloONNX::ProcessInputAspectRatio(const std::vector<cv::Mat>& sampleImages)
 
     cv::Size scaleSize(inputW, inputH);
     m_resizedROI = cv::Rect(xOffset, yOffset, resizeW, resizeH);
+
+    //std::cout << "m_resizedROI: " << m_resizedROI << ", frameSize: " << sampleImages[0].size() << ", resizeW_H: " << cv::Size2f(resizeW, resizeH) << std::endl;
 
     if (m_resizedBatch.size() < sampleImages.size())
         m_resizedBatch.resize(sampleImages.size());

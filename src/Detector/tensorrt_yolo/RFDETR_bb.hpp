@@ -32,13 +32,15 @@ protected:
 		const float fw = static_cast<float>(frameSize.width) / static_cast<float>(m_resizedROI.width);
 		const float fh = static_cast<float>(frameSize.height) / static_cast<float>(m_resizedROI.height);
 
+        //std::cout << "m_resizedROI: " << m_resizedROI << ", frameSize: " << frameSize << ", fw_h: " << cv::Size2f(fw, fh) << ", m_inputDims: " << cv::Point3i(m_inputDims.d[1], m_inputDims.d[2], m_inputDims.d[3]) << std::endl;
+
 		auto dets = outputs[0];
 		auto labels = outputs[1];
 
 		size_t ncInd = 2;
 		size_t lenInd = 1;
 
-		int nc = m_outpuDims[1].d[ncInd] - 11;
+        int nc = m_outpuDims[1].d[ncInd];
 		size_t len = static_cast<size_t>(m_outpuDims[0].d[lenInd]) / m_params.explicitBatchSize;
 		auto volume0 = len * m_outpuDims[0].d[ncInd]; // Volume(m_outpuDims[0]);
 		dets += volume0 * imgIdx;
@@ -46,7 +48,7 @@ protected:
 		labels += volume1 * imgIdx;
 
 
-		std::cout << "len = " << len << ", nc = " << nc << ", m_params.confThreshold = " << m_params.confThreshold << ", volume0 = " << volume0 << ", volume1 = " << volume1 << std::endl;
+        //std::cout << "len = " << len << ", nc = " << nc << ", m_params.confThreshold = " << m_params.confThreshold << ", volume0 = " << volume0 << ", volume1 = " << volume1 << std::endl;
 
 		//for (size_t i = 0; i < len; ++i)
 		//{
@@ -73,9 +75,9 @@ protected:
 
 		for (size_t i = 0; i < len; ++i)
 		{
-			float classConf = L2Conf(labels[0]);
-			size_t classId = 0;
-			for (size_t cli = 1; cli < nc; ++cli)
+            float classConf = L2Conf(labels[0]);
+            size_t classId = 0;
+            for (size_t cli = 1; cli < nc; ++cli)
 			{
 				auto conf = L2Conf(labels[cli]);
 				if (classConf < conf)
@@ -84,19 +86,21 @@ protected:
 					classId = cli;
 				}
 			}
+            if (classId > 0)
+                --classId;
 
 			if (classConf >= m_params.confThreshold)
 			{
-				float x = fw * (m_resizedROI.width * dets[0] - 0/*m_resizedROI.x*/);
-				float y = fh * (m_resizedROI.height * dets[1] - 0/*m_resizedROI.y*/);
-				float width = fw * m_resizedROI.width * dets[2];
-				float height = fh * m_resizedROI.height * dets[3];
+                float x = fw * (m_inputDims.d[2] * (dets[0] - dets[2] / 2.f) - m_resizedROI.x);
+                float y = fh * (m_inputDims.d[3] * (dets[1] - dets[3] / 2.f) - m_resizedROI.y);
+                float width = fw * m_inputDims.d[2] * dets[2];
+                float height = fh * m_inputDims.d[3] * dets[3];
 
-				if (i == 0)
-				{
-				    std::cout << i << ": classConf = " << classConf << ", classId = " << classId << " (" << labels[classId] << "), rect = " << cv::Rect(cvRound(x), cvRound(y), cvRound(width), cvRound(height)) << std::endl;
-				    std::cout << "dets = " << dets[0] << ", " << dets[1] << ", " << dets[2] << ", " << dets[3] << std::endl;
-				}
+                //if (i == 0)
+                //{
+                //    std::cout << i << ": classConf = " << classConf << ", classId = " << classId << " (" << labels[classId] << "), rect = " << cv::Rect(cvRound(x), cvRound(y), cvRound(width), cvRound(height)) << std::endl;
+                //    std::cout << "dets = " << dets[0] << ", " << dets[1] << ", " << dets[2] << ", " << dets[3] << std::endl;
+                //}
 				resBoxes.emplace_back(classId, classConf, cv::Rect(cvRound(x), cvRound(y), cvRound(width), cvRound(height)));
 			}
 
