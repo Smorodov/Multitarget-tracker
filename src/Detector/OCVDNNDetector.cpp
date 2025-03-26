@@ -821,38 +821,46 @@ void OCVDNNDetector::ParseYOLOv5_8_11_seg(const cv::Rect& crop, std::vector<cv::
 void OCVDNNDetector::ParseRFDETR(const cv::Rect& crop, std::vector<cv::Mat>& detections, regions_t& tmpRegions)
 {
     int rows = detections[0].size[1];
-    int dimensions = detections[0].size[2];
+    int dimensionsDets = detections[0].size[2];
+    int dimensionsLabels = detections[1].size[2];
 
-    // yolov5 has an output of shape (batchSize, 25200, 85) (Num classes + box[x,y,w,h] + confidence[c])
-    // yolov8 has an output of shape (batchSize, 84,  8400) (Num classes + box[x,y,w,h])
-    if (dimensions > rows) // Check if the shape[2] is more than shape[1] (yolov8)
-    {
-        rows = detections[0].size[2];
-        dimensions = detections[0].size[1];
+    //0: name: input, size : 1x3x560x560
+    //1: name: dets, size : 1x300x4
+    //2: name: labels, size : 1x300x91
 
-        detections[0] = detections[0].reshape(1, dimensions);
-        cv::transpose(detections[0], detections[0]);
-    }
-    float* data = (float*)detections[0].data;
+    float* dets = (float*)detections[0].data;
+    float* labels = (float*)detections[1].data;
 
     float x_factor = crop.width / static_cast<float>(m_inWidth);
     float y_factor = crop.height / static_cast<float>(m_inHeight);
 
+    auto L2Conf = [](float v)
+    {
+        return 1.f / (1.f + std::exp(-v));
+    };
+
     for (int i = 0; i < rows; ++i)
     {
-        float* classes_scores = data + 4;
-
-        cv::Mat scores(1, static_cast<int>(m_classNames.size()), CV_32FC1, classes_scores);
-        cv::Point class_id;
-        double maxClassScore = 0;
-        cv::minMaxLoc(scores, 0, &maxClassScore, 0, &class_id);
+        float maxClassScore = L2Conf(labels[0]);
+        size_t classId = 0;
+        for (size_t cli = 1; cli < static_cast<size_t>(dimensionsLabels); ++cli)
+        {
+            auto conf = L2Conf(labels[cli]);
+            if (maxClassScore < conf)
+            {
+                maxClassScore = conf;
+                classId = cli;
+            }
+        }
+        if (classId > 0)
+            --classId;
 
         if (maxClassScore > m_confidenceThreshold)
         {
-            float x = data[0];
-            float y = data[1];
-            float w = data[2];
-            float h = data[3];
+            float x = dets[0];
+            float y = dets[1];
+            float w = dets[2];
+            float h = dets[3];
 
             int left = int((x - 0.5f * w) * x_factor);
             int top = int((y - 0.5f * h) * y_factor);
@@ -860,9 +868,10 @@ void OCVDNNDetector::ParseRFDETR(const cv::Rect& crop, std::vector<cv::Mat>& det
             int width = int(w * x_factor);
             int height = int(h * y_factor);
 
-            if (m_classesWhiteList.empty() || m_classesWhiteList.find(T2T(class_id.x)) != std::end(m_classesWhiteList))
-                tmpRegions.emplace_back(cv::Rect(left + crop.x, top + crop.y, width, height), T2T(class_id.x), static_cast<float>(maxClassScore));
+            if (m_classesWhiteList.empty() || m_classesWhiteList.find(T2T(classId)) != std::end(m_classesWhiteList))
+                tmpRegions.emplace_back(cv::Rect(left + crop.x, top + crop.y, width, height), T2T(classId), static_cast<float>(maxClassScore));
         }
-        data += dimensions;
+        dets += dimensionsDets;
+        labels += dimensionsLabels;
     }
 }
