@@ -58,7 +58,8 @@ namespace tensor_rt
         YOLOV11,
         YOLOV11_OBB,
         YOLOV11Mask,
-        YOLOV12
+        YOLOV12,
+        RFDETR
 	};
 
     ///

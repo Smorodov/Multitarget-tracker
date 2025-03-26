@@ -14,6 +14,7 @@
 #include "YoloONNXv11_obb.hpp"
 #include "YoloONNXv11_instance.hpp"
 #include "YoloONNXv12_bb.hpp"
+#include "RFDETR_bb.hpp"
 
 namespace tensor_rt
 {
@@ -104,6 +105,9 @@ namespace tensor_rt
             case ModelType::YOLOV12:
                 m_detector = std::make_unique<YOLOv12_bb_onnx>(m_params.inputTensorNames, m_params.outputTensorNames);
                 break;
+            case ModelType::RFDETR:
+                m_detector = std::make_unique<RFDETR_bb_onnx>(m_params.inputTensorNames, m_params.outputTensorNames);
+                break;
             }                
 
             // Threshold values
@@ -175,11 +179,13 @@ namespace tensor_rt
         if (m_impl)
             delete m_impl;
 
-        if (config.net_type == ModelType::YOLOV6 ||
-            config.net_type == ModelType::YOLOV7 || config.net_type == ModelType::YOLOV7Mask ||
-            config.net_type == ModelType::YOLOV8 || config.net_type == ModelType::YOLOV8_OBB || config.net_type == ModelType::YOLOV8Mask ||
-            config.net_type == ModelType::YOLOV9 || config.net_type == ModelType::YOLOV10 ||
-            config.net_type == ModelType::YOLOV11 || config.net_type == ModelType::YOLOV11_OBB || config.net_type == ModelType::YOLOV11Mask)
+        if (fs::path(config.file_model_cfg).extension() == ".onnx")
+            //config.net_type == ModelType::YOLOV6 ||
+            //config.net_type == ModelType::YOLOV7 || config.net_type == ModelType::YOLOV7Mask ||
+            //config.net_type == ModelType::YOLOV8 || config.net_type == ModelType::YOLOV8_OBB || config.net_type == ModelType::YOLOV8Mask ||
+            //config.net_type == ModelType::YOLOV9 || config.net_type == ModelType::YOLOV10 ||
+            //config.net_type == ModelType::YOLOV11 || config.net_type == ModelType::YOLOV11_OBB || config.net_type == ModelType::YOLOV11Mask ||
+            //config.net_type == ModelType::YOLOV12 || config.net_type == ModelType::RFDETR)
             m_impl = new YoloONNXImpl();
         else
             m_impl = new YoloDectectorImpl();
