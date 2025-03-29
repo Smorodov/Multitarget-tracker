@@ -18,13 +18,14 @@ static void Help()
 
 const char* keys =
 {
-    "{ @1             |../data/atrium.avi  | movie file | }"
-    "{ sf start_frame |0                   | Start a video from this position | }"
-    "{ ef end_frame   |0                   | Play a video to this position (if 0 then played to the end of file) | }"
-    "{ ed end_delay   |0                   | Delay in milliseconds after video ending | }"
-    "{ o  out         |                    | Name of result video file | }"
-    "{ sl show_logs   |1                   | Show Trackers logs | }"
-    "{ g gpu          |0                   | Use OpenCL acceleration | }"
+    "{ @1                  |../data/atrium.avi  | movie file | }"
+    "{ sf start_frame      |0                   | Start a video from this position | }"
+    "{ ef end_frame        |0                   | Play a video to this position (if 0 then played to the end of file) | }"
+    "{ ed end_delay        |0                   | Delay in milliseconds after video ending | }"
+    "{ o  out              |                    | Name of result video file | }"
+    "{ sl show_logs        |1                   | Show Trackers logs | }"
+    "{ g gpu               |0                   | Use OpenCL acceleration | }"
+    "{ contrast_adjustment |0                   | Use contrast adjustment for frames before detection | }"
 };
 
 // ----------------------------------------------------------------------

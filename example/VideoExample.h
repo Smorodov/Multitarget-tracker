@@ -20,19 +20,38 @@ class Frame
 {
 public:
     Frame() = default;
-    Frame(cv::Mat imgBGR)
+    Frame(cv::Mat imgBGR, bool useCLAHE)
     {
         m_mBGR = imgBGR;
+        if (useCLAHE)
+        {
+            m_clahe = cv::createCLAHE(1.2, cv::Size(4, 4));
+            AdjustMatBGR();
+        }
     }
 
     ///
-    bool empty() const
+    void SetUseAdjust(bool useCLAHE)
+    {
+        if (useCLAHE)
+        {
+            m_clahe = cv::createCLAHE(1.2, cv::Size(4, 4));
+            AdjustMatBGR();
+        }
+        else
+        {
+            m_clahe.reset();
+        }
+    }
+
+    ///
+    bool empty() const noexcept
     {
         return m_mBGR.empty();
     }
 
     ///
-    const cv::Mat& GetMatBGR()
+    const cv::Mat& GetMatBGR() const noexcept
     {
         return m_mBGR;
     }
@@ -43,6 +62,22 @@ public:
         m_mGrayGenerated = false;
         m_umGrayGenerated = false;
         return m_mBGR;
+    }
+    ///
+    bool AdjustMatBGR()
+    {
+        if (m_mBGR.empty() || m_clahe.empty())
+            return false;
+
+        cv::cvtColor(m_mBGR, m_mHSV, cv::COLOR_BGR2HSV);
+        cv::split(m_mHSV, m_chansHSV);
+        m_clahe->apply(m_chansHSV[2], m_chansHSV[2]);
+        cv::merge(m_chansHSV, m_mHSV);
+        cv::cvtColor(m_mHSV, m_mBGR, cv::COLOR_HSV2BGR);
+
+        //std::cout << "AdjustMatBGR()" << std::endl;
+
+        return true;
     }
     ///
     const cv::Mat& GetMatGray()
@@ -104,6 +139,10 @@ private:
     bool m_umGrayGenerated = false;
     std::thread::id m_umBGRThreadID;
     std::thread::id m_umGrayThreadID;
+
+    cv::Ptr<cv::CLAHE> m_clahe;
+    cv::Mat m_mHSV;
+    std::vector<cv::Mat> m_chansHSV;
 };
 
 ///
@@ -197,6 +236,8 @@ protected:
     float m_fps = 25;
 	cv::Size m_frameSize;
 	int m_framesCount = 0;
+
+    bool m_useContrastAdjustment = false;
 
 	size_t m_batchSize = 1;
 

@@ -47,6 +47,7 @@ VideoExample::VideoExample(const cv::CommandLineParser& parser)
     m_endFrame = parser.get<int>("end_frame");
     m_finishDelay = parser.get<int>("end_delay");
 	m_batchSize = std::max(1, parser.get<int>("batch_size"));
+    m_useContrastAdjustment = parser.get<int>("contrast_adjustment") != 0;
 
     m_colors.emplace_back(255, 0, 0);
     m_colors.emplace_back(0, 255, 0);
@@ -68,6 +69,14 @@ VideoExample::VideoExample(const cv::CommandLineParser& parser)
 		m_frameInfo[0].SetBatchSize(m_batchSize);
 		m_frameInfo[1].SetBatchSize(m_batchSize);
 	}
+    for (auto& fr : m_frameInfo[0].m_frames)
+    {
+        fr.SetUseAdjust(m_useContrastAdjustment);
+    }
+    for (auto& fr : m_frameInfo[1].m_frames)
+    {
+        fr.SetUseAdjust(m_useContrastAdjustment);
+    }
 }
 
 ///
@@ -136,6 +145,11 @@ void VideoExample::SyncProcess()
 	frameInfo.m_frames.resize(frameInfo.m_batchSize);
 	frameInfo.m_frameInds.resize(frameInfo.m_batchSize);
 
+    for (auto& fr : frameInfo.m_frames)
+    {
+        fr.SetUseAdjust(m_useContrastAdjustment);
+    }
+
     int64 startLoopTime = cv::getTickCount();
 
     for (;;)
@@ -147,6 +161,7 @@ void VideoExample::SyncProcess()
 			if (frameInfo.m_frames[i].empty())
 				break;
 			frameInfo.m_frameInds[i] = framesCounter;
+            frameInfo.m_frames[i].AdjustMatBGR();
 
 			++framesCounter;
 			if (m_endFrame && framesCounter > m_endFrame)
@@ -400,7 +415,8 @@ void VideoExample::CaptureAndDetect(VideoExample* thisPtr, std::atomic<bool>& st
 				break;
 			}
             frameInfo.m_frames[i].GetMatBGRWrite() = frame;
-			frameInfo.m_frameInds[i] = framesCounter;
+            frameInfo.m_frames[i].AdjustMatBGR();
+            frameInfo.m_frameInds[i] = framesCounter;
 			++framesCounter;
 
             if (localEndFrame && framesCounter > localEndFrame)
