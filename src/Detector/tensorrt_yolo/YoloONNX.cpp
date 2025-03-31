@@ -113,7 +113,6 @@ bool YoloONNX::Init(const SampleYoloParams& params)
         if (!constructed)
             return false;
 
-        assert(network->getNbInputs() == 1);
         m_inputDims = network->getInput(0)->getDimensions();
         std::cout << m_inputDims.nbDims << std::endl;
         assert(m_inputDims.nbDims == 4);
@@ -250,8 +249,6 @@ bool YoloONNX::ConstructNetwork(YoloONNXUniquePtr<nvinfer1::IBuilder>& builder,
 bool YoloONNX::Detect(const std::vector<cv::Mat>& frames, std::vector<tensor_rt::BatchResult>& bboxes)
 {
     // Read the input data into the managed buffers
-    assert(m_params.inputTensorNames.size() == 1);
-
     if (!ProcessInputAspectRatio(frames))
         return false;
 
@@ -400,6 +397,14 @@ bool YoloONNX::ProcessInputAspectRatio(const std::vector<cv::Mat>& sampleImages)
         d_batch_pos += volBatch;
     }
 
+
+    // For D-FINE
+    if (m_params.inputTensorNames.size() > 0)
+    {
+        int64_t* hostInput2 = static_cast<int64_t*>(m_buffers->getHostBuffer(m_params.inputTensorNames[1]));
+        hostInput2[0] = inputW;
+        hostInput2[1] = inputH;
+    }
     return true;
 }
 

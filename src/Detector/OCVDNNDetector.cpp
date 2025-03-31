@@ -169,6 +169,7 @@ bool OCVDNNDetector::Init(const config_t& config)
         dictNetType["YOLOV11Mask"] = ModelType::YOLOV11Mask;
         dictNetType["YOLOV12"] = ModelType::YOLOV12;
         dictNetType["RFDETR"] = ModelType::RFDETR;
+        dictNetType["DFINE"] = ModelType::DFINE;
 
         auto netType = dictNetType.find(net_type->second);
         if (netType != dictNetType.end())
@@ -358,6 +359,10 @@ void OCVDNNDetector::DetectInCrop(const cv::UMat& colorFrame, const cv::Rect& cr
 
     case ModelType::RFDETR:
         ParseRFDETR(crop, detections, tmpRegions);
+        break;
+
+    case ModelType::DFINE:
+        ParseDFINE(crop, detections, tmpRegions);
         break;
 
 	default:
@@ -875,3 +880,68 @@ void OCVDNNDetector::ParseRFDETR(const cv::Rect& crop, std::vector<cv::Mat>& det
         labels += dimensionsLabels;
     }
 }
+
+///
+/// \brief OCVDNNDetector::ParseDFINE
+/// \param crop
+/// \param detections
+/// \param tmpRegions
+///
+void OCVDNNDetector::ParseDFINE(const cv::Rect& crop, std::vector<cv::Mat>& detections, regions_t& tmpRegions)
+{
+    int rows = detections[0].size[1];
+    int dimensionsDets = detections[0].size[2];
+    int dimensionsLabels = detections[1].size[2];
+
+    //0: name: input, size : 1x3x560x560
+    //1: name: dets, size : 1x300x4
+    //2: name: labels, size : 1x300x91
+
+    float* dets = (float*)detections[0].data;
+    float* labels = (float*)detections[1].data;
+
+    float x_factor = crop.width / static_cast<float>(m_inWidth);
+    float y_factor = crop.height / static_cast<float>(m_inHeight);
+
+    auto L2Conf = [](float v)
+    {
+        return 1.f / (1.f + std::exp(-v));
+    };
+
+    for (int i = 0; i < rows; ++i)
+    {
+        float maxClassScore = L2Conf(labels[0]);
+        size_t classId = 0;
+        for (size_t cli = 1; cli < static_cast<size_t>(dimensionsLabels); ++cli)
+        {
+            auto conf = L2Conf(labels[cli]);
+            if (maxClassScore < conf)
+            {
+                maxClassScore = conf;
+                classId = cli;
+            }
+        }
+        if (classId > 0)
+            --classId;
+
+        if (maxClassScore > m_confidenceThreshold)
+        {
+            float x = dets[0];
+            float y = dets[1];
+            float w = dets[2];
+            float h = dets[3];
+
+            int left = int((x - 0.5f * w) * x_factor);
+            int top = int((y - 0.5f * h) * y_factor);
+
+            int width = int(w * x_factor);
+            int height = int(h * y_factor);
+
+            if (m_classesWhiteList.empty() || m_classesWhiteList.find(T2T(classId)) != std::end(m_classesWhiteList))
+                tmpRegions.emplace_back(cv::Rect(left + crop.x, top + crop.y, width, height), T2T(classId), static_cast<float>(maxClassScore));
+        }
+        dets += dimensionsDets;
+        labels += dimensionsLabels;
+    }
+}
+
