@@ -47,6 +47,7 @@ VideoExample::VideoExample(const cv::CommandLineParser& parser)
     m_endFrame = parser.get<int>("end_frame");
     m_finishDelay = parser.get<int>("end_delay");
 	m_batchSize = std::max(1, parser.get<int>("batch_size"));
+    m_useContrastAdjustment = parser.get<int>("contrast_adjustment") != 0;
 
     m_colors.emplace_back(255, 0, 0);
     m_colors.emplace_back(0, 255, 0);
@@ -68,6 +69,14 @@ VideoExample::VideoExample(const cv::CommandLineParser& parser)
 		m_frameInfo[0].SetBatchSize(m_batchSize);
 		m_frameInfo[1].SetBatchSize(m_batchSize);
 	}
+    for (auto& fr : m_frameInfo[0].m_frames)
+    {
+        fr.SetUseAdjust(m_useContrastAdjustment);
+    }
+    for (auto& fr : m_frameInfo[1].m_frames)
+    {
+        fr.SetUseAdjust(m_useContrastAdjustment);
+    }
 }
 
 ///
@@ -136,6 +145,11 @@ void VideoExample::SyncProcess()
 	frameInfo.m_frames.resize(frameInfo.m_batchSize);
 	frameInfo.m_frameInds.resize(frameInfo.m_batchSize);
 
+    for (auto& fr : frameInfo.m_frames)
+    {
+        fr.SetUseAdjust(m_useContrastAdjustment);
+    }
+
     int64 startLoopTime = cv::getTickCount();
 
     for (;;)
@@ -147,6 +161,7 @@ void VideoExample::SyncProcess()
 			if (frameInfo.m_frames[i].empty())
 				break;
 			frameInfo.m_frameInds[i] = framesCounter;
+            frameInfo.m_frames[i].AdjustMatBGR();
 
 			++framesCounter;
 			if (m_endFrame && framesCounter > m_endFrame)
@@ -400,7 +415,8 @@ void VideoExample::CaptureAndDetect(VideoExample* thisPtr, std::atomic<bool>& st
 				break;
 			}
             frameInfo.m_frames[i].GetMatBGRWrite() = frame;
-			frameInfo.m_frameInds[i] = framesCounter;
+            frameInfo.m_frames[i].AdjustMatBGR();
+            frameInfo.m_frameInds[i] = framesCounter;
 			++framesCounter;
 
             if (localEndFrame && framesCounter > localEndFrame)
@@ -585,13 +601,14 @@ void VideoExample::DrawTrack(cv::Mat frame,
     }
 
     cv::Rect brect = track.m_rrect.boundingRect();
-    std::string label = track.m_ID.ID2Str();
+    std::stringstream label;
+    label << track.m_ID.ID2Str();
     if (track.m_type != bad_type)
-        label += ": " + TypeConverter::Type2Str(track.m_type);
+        label << ": " << TypeConverter::Type2Str(track.m_type);
     else if (!userLabel.empty())
-        label += ": " + userLabel;
+        label << ": " << userLabel;
     if (track.m_confidence > 0)
-        label += ", " + std::to_string(track.m_confidence);
+        label << ", " << std::fixed << std::setw(2) << std::setprecision(2) << track.m_confidence;
 #if 0
     track_t mean = 0;
     track_t stddev = 0;
@@ -619,7 +636,7 @@ void VideoExample::DrawTrack(cv::Mat frame,
 #endif
     int baseLine = 0;
     double fontScale = (frame.cols < 1920) ? 0.5 : 0.7;
-    cv::Size labelSize = cv::getTextSize(label, cv::FONT_HERSHEY_TRIPLEX, fontScale, 1, &baseLine);
+    cv::Size labelSize = cv::getTextSize(label.str(), cv::FONT_HERSHEY_TRIPLEX, fontScale, 1, &baseLine);
     if (brect.x < 0)
     {
         brect.width = std::min(brect.width, frame.cols - 1);
@@ -641,7 +658,7 @@ void VideoExample::DrawTrack(cv::Mat frame,
         brect.height = std::min(brect.height, frame.rows - 1);
     }
     DrawFilledRect(frame, cv::Rect(cv::Point(brect.x, brect.y - labelSize.height), cv::Size(labelSize.width, labelSize.height + baseLine)), cv::Scalar(200, 200, 200), 150);
-    cv::putText(frame, label, brect.tl(), cv::FONT_HERSHEY_TRIPLEX, fontScale, cv::Scalar(0, 0, 0));
+    cv::putText(frame, label.str(), brect.tl(), cv::FONT_HERSHEY_TRIPLEX, fontScale, cv::Scalar(0, 0, 0));
 
 	m_resultsLog.AddTrack(framesCounter, track.m_ID, brect, track.m_type, track.m_confidence);
 	m_resultsLog.AddRobustTrack(track.m_ID);
