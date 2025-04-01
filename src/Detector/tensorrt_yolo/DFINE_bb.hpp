@@ -27,11 +27,11 @@ protected:
 	{
 		std::vector<tensor_rt::Result> resBoxes;
 
-		//0: name: images, size : 32x3x640x640
+		//0: name: images, size : 1x3x640x640
 		//1: name: orig_target_sizes, size : 1x2
-		//2: name: labels, size : 32x300
-		//3: name: boxes, size : 32x300x4
-		//4: name: scores, size : 32x300
+		//2: name: labels, size : 1x300
+		//3: name: boxes, size : 1x300x4
+		//4: name: scores, size : 1x300
 
 		const float fw = static_cast<float>(frameSize.width) / static_cast<float>(m_resizedROI.width);
 		const float fh = static_cast<float>(frameSize.height) / static_cast<float>(m_resizedROI.height);

@@ -400,10 +400,10 @@ void OCVDNNDetector::ParseOldYOLO(const cv::Rect& crop, const std::vector<cv::Ma
                     int height = bottom - top + 1;
                     if (width <= 2 || height <= 2)
                     {
-                        left = (int)(data[i + 3] * crop.width);
-                        top = (int)(data[i + 4] * crop.height);
-                        right = (int)(data[i + 5] * crop.width);
-                        bottom = (int)(data[i + 6] * crop.height);
+                        left = cvRound(data[i + 3] * crop.width);
+                        top = cvRound(data[i + 4] * crop.height);
+                        right = cvRound(data[i + 5] * crop.width);
+                        bottom = cvRound(data[i + 6] * crop.height);
                         width = right - left + 1;
                         height = bottom - top + 1;
                     }
@@ -429,10 +429,10 @@ void OCVDNNDetector::ParseOldYOLO(const cv::Rect& crop, const std::vector<cv::Ma
                 cv::minMaxLoc(scores, 0, &confidence, 0, &classIdPoint);
                 if (confidence > m_confidenceThreshold)
                 {
-                    int centerX = (int)(data[0] * crop.width);
-                    int centerY = (int)(data[1] * crop.height);
-                    int width = (int)(data[2] * crop.width);
-                    int height = (int)(data[3] * crop.height);
+                    int centerX = cvRound(data[0] * crop.width);
+                    int centerY = cvRound(data[1] * crop.height);
+                    int width = cvRound(data[2] * crop.width);
+                    int height = cvRound(data[3] * crop.height);
                     int left = centerX - width / 2;
                     int top = centerY - height / 2;
 
@@ -494,11 +494,11 @@ void OCVDNNDetector::ParseYOLOv5(const cv::Rect& crop, std::vector<cv::Mat>& det
 				float w = data[2];
 				float h = data[3];
 
-				int left = int((x - 0.5f * w) * x_factor);
-				int top = int((y - 0.5f * h) * y_factor);
+				int left = cvRound((x - 0.5f * w) * x_factor);
+				int top = cvRound((y - 0.5f * h) * y_factor);
 
-				int width = int(w * x_factor);
-				int height = int(h * y_factor);
+				int width = cvRound(w * x_factor);
+				int height = cvRound(h * y_factor);
 
 				if (m_classesWhiteList.empty() || m_classesWhiteList.find(T2T(class_id.x)) != std::end(m_classesWhiteList))
 					tmpRegions.emplace_back(cv::Rect(left + crop.x, top + crop.y, width, height), T2T(class_id.x), static_cast<float>(maxClassScore));
@@ -550,11 +550,11 @@ void OCVDNNDetector::ParseYOLOv8(const cv::Rect& crop, std::vector<cv::Mat>& det
 			float w = data[2];
 			float h = data[3];
 
-			int left = int((x - 0.5f * w) * x_factor);
-			int top = int((y - 0.5f * h) * y_factor);
+			int left = cvRound((x - 0.5f * w) * x_factor);
+			int top = cvRound((y - 0.5f * h) * y_factor);
 
-			int width = int(w * x_factor);
-			int height = int(h * y_factor);
+			int width = cvRound(w * x_factor);
+			int height = cvRound(h * y_factor);
 
 			if (m_classesWhiteList.empty() || m_classesWhiteList.find(T2T(class_id.x)) != std::end(m_classesWhiteList))
 				tmpRegions.emplace_back(cv::Rect(left + crop.x, top + crop.y, width, height), T2T(class_id.x), static_cast<float>(maxClassScore));
@@ -605,11 +605,11 @@ void OCVDNNDetector::ParseYOLOv9(const cv::Rect& crop, std::vector<cv::Mat>& det
 			float w = data[2];
 			float h = data[3];
 
-			int left = int((x - 0.5f * w) * x_factor);
-			int top = int((y - 0.5f * h) * y_factor);
+			int left = cvRound((x - 0.5f * w) * x_factor);
+			int top = cvRound((y - 0.5f * h) * y_factor);
 
-			int width = int(w * x_factor);
-			int height = int(h * y_factor);
+			int width = cvRound(w * x_factor);
+			int height = cvRound(h * y_factor);
 
 			if (m_classesWhiteList.empty() || m_classesWhiteList.find(T2T(class_id.x)) != std::end(m_classesWhiteList))
 				tmpRegions.emplace_back(cv::Rect(left + crop.x, top + crop.y, width, height), T2T(class_id.x), static_cast<float>(maxClassScore));
@@ -704,11 +704,11 @@ void OCVDNNDetector::ParseYOLOv11(const cv::Rect& crop, std::vector<cv::Mat>& de
 			float w = data[2];
 			float h = data[3];
 
-			int left = int((x - 0.5f * w) * x_factor);
-			int top = int((y - 0.5f * h) * y_factor);
+			int left = cvRound((x - 0.5f * w) * x_factor);
+			int top = cvRound((y - 0.5f * h) * y_factor);
 
-			int width = int(w * x_factor);
-			int height = int(h * y_factor);
+			int width = cvRound(w * x_factor);
+			int height = cvRound(h * y_factor);
 
 			if (m_classesWhiteList.empty() || m_classesWhiteList.find(T2T(class_id.x)) != std::end(m_classesWhiteList))
 				tmpRegions.emplace_back(cv::Rect(left + crop.x, top + crop.y, width, height), T2T(class_id.x), static_cast<float>(maxClassScore));
@@ -867,11 +867,11 @@ void OCVDNNDetector::ParseRFDETR(const cv::Rect& crop, std::vector<cv::Mat>& det
             float w = dets[2];
             float h = dets[3];
 
-            int left = int((x - 0.5f * w) * x_factor);
-            int top = int((y - 0.5f * h) * y_factor);
+            int left = cvRound((x - 0.5f * w) * x_factor);
+            int top = cvRound((y - 0.5f * h) * y_factor);
 
-            int width = int(w * x_factor);
-            int height = int(h * y_factor);
+            int width = cvRound(w * x_factor);
+            int height = cvRound(h * y_factor);
 
             if (m_classesWhiteList.empty() || m_classesWhiteList.find(T2T(classId)) != std::end(m_classesWhiteList))
                 tmpRegions.emplace_back(cv::Rect(left + crop.x, top + crop.y, width, height), T2T(classId), static_cast<float>(maxClassScore));
@@ -890,58 +890,41 @@ void OCVDNNDetector::ParseRFDETR(const cv::Rect& crop, std::vector<cv::Mat>& det
 void OCVDNNDetector::ParseDFINE(const cv::Rect& crop, std::vector<cv::Mat>& detections, regions_t& tmpRegions)
 {
     int rows = detections[0].size[1];
-    int dimensionsDets = detections[0].size[2];
-    int dimensionsLabels = detections[1].size[2];
 
-    //0: name: input, size : 1x3x560x560
-    //1: name: dets, size : 1x300x4
-    //2: name: labels, size : 1x300x91
+    //0: name: images, size : 1x3x640x640
+    //1: name: orig_target_sizes, size : 1x2
+    //2: name: labels, size : 1x300
+    //3: name: boxes, size : 1x300x4
+    //4: name: scores, size : 1x300
 
-    float* dets = (float*)detections[0].data;
-    float* labels = (float*)detections[1].data;
+    int64_t* labels = (int64_t*)detections[0].data;
+    float* dets = (float*)detections[1].data;
+    float* scores = (float*)detections[2].data;
 
     float x_factor = crop.width / static_cast<float>(m_inWidth);
     float y_factor = crop.height / static_cast<float>(m_inHeight);
 
-    auto L2Conf = [](float v)
-    {
-        return 1.f / (1.f + std::exp(-v));
-    };
-
     for (int i = 0; i < rows; ++i)
     {
-        float maxClassScore = L2Conf(labels[0]);
-        size_t classId = 0;
-        for (size_t cli = 1; cli < static_cast<size_t>(dimensionsLabels); ++cli)
-        {
-            auto conf = L2Conf(labels[cli]);
-            if (maxClassScore < conf)
-            {
-                maxClassScore = conf;
-                classId = cli;
-            }
-        }
-        if (classId > 0)
-            --classId;
+        float maxClassScore = scores[i];
+        size_t classId = labels[i];
 
         if (maxClassScore > m_confidenceThreshold)
         {
-            float x = dets[0];
-            float y = dets[1];
-            float w = dets[2];
-            float h = dets[3];
+            float x = dets[4 * i + 0];
+            float y = dets[4 * i + 1];
+            float w = dets[4 * i + 2] - x;
+            float h = dets[4 * i + 3] - y;
 
-            int left = int((x - 0.5f * w) * x_factor);
-            int top = int((y - 0.5f * h) * y_factor);
+            int left = cvRound(x * x_factor);
+            int top = cvRound(y * y_factor);
 
-            int width = int(w * x_factor);
-            int height = int(h * y_factor);
+            int width = cvRound(w * x_factor);
+            int height = cvRound(h * y_factor);
 
             if (m_classesWhiteList.empty() || m_classesWhiteList.find(T2T(classId)) != std::end(m_classesWhiteList))
                 tmpRegions.emplace_back(cv::Rect(left + crop.x, top + crop.y, width, height), T2T(classId), static_cast<float>(maxClassScore));
         }
-        dets += dimensionsDets;
-        labels += dimensionsLabels;
     }
 }
 
