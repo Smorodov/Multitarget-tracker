@@ -888,6 +888,13 @@ protected:
 		if (m_showLogs)
 			std::cout << "Frame " << framesCounter << " (" << m_framesCount << "): tracks = " << tracks.size() << ", time = " << currTime << std::endl;
 
+		static float averFps = 0;
+		if (averFps == 0)
+			averFps = 1000.f / currTime;
+		else
+			averFps = 0.9f * averFps + 0.1f * (1000.f / currTime);
+		cv::putText(frame, std::to_string(cvRound(averFps)) + " fps", cv::Point(10, 20), cv::FONT_HERSHEY_TRIPLEX, 0.8, cv::Scalar(255, 0, 255));
+
 		for (const auto& track : tracks)
 		{
 			if (track.IsRobust(2,                           // Minimal trajectory size
