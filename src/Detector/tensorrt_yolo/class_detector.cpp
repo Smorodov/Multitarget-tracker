@@ -2,6 +2,7 @@
 #include "class_yolo_detector.hpp"
 #include "YoloONNX.hpp"
 
+#include "YoloONNXv5_bb.hpp"
 #include "YoloONNXv6_bb.hpp"
 #include "YoloONNXv7_bb.hpp"
 #include "YoloONNXv7_instance.hpp"
@@ -70,6 +71,9 @@ namespace tensor_rt
 
             switch (config.net_type)
             {
+            case ModelType::YOLOV5:
+                m_detector = std::make_unique<YOLOv5_bb_onnx>(m_params.inputTensorNames, m_params.outputTensorNames);
+                break;
             case ModelType::YOLOV6:
                 m_detector = std::make_unique<YOLOv6_bb_onnx>(m_params.inputTensorNames, m_params.outputTensorNames);
                 break;

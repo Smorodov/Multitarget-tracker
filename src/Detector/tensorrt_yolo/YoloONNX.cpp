@@ -399,7 +399,7 @@ bool YoloONNX::ProcessInputAspectRatio(const std::vector<cv::Mat>& sampleImages)
 
 
     // For D-FINE
-    if (m_params.inputTensorNames.size() > 0)
+    if (m_params.inputTensorNames.size() > 1)
     {
         int64_t* hostInput2 = static_cast<int64_t*>(m_buffers->getHostBuffer(m_params.inputTensorNames[1]));
         hostInput2[0] = inputW;
