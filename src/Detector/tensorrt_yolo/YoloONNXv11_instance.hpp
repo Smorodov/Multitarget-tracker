@@ -1,6 +1,7 @@
 #pragma once
 
 #include "YoloONNX.hpp"
+#include "../../common/defines.h"
 
 ///
 /// \brief The YOLOv11_instance_onnx class
@@ -163,10 +164,10 @@ protected:
 			if (objectConf >= m_params.confThreshold)
 			{
 				// (center x, center y, width, height) to (x, y, w, h)
-				float x = fw * (output[k] - output[k + 2] / 2 - m_resizedROI.x);
-				float y = fh * (output[k + 1] - output[k + 3] / 2 - m_resizedROI.y);
-				float width = fw * output[k + 2];
-				float height = fh * output[k + 3];
+                float x = output[k] - output[k + 2] / 2;
+                float y = output[k + 1] - output[k + 3] / 2;
+                float width = output[k + 2];
+                float height = output[k + 3];
 
 				//auto ClampToFrame = [](float& v, float& size, int hi) -> int
 				//{
@@ -254,7 +255,7 @@ protected:
 				cv::Rect roi(int((float)padw / INPUT_W * segWidth), int((float)padh / INPUT_H * segHeight), int(segWidth - padw / 2), int(segHeight - padh / 2));
 				dest = dest(roi);
 
-				cv::resize(dest, mask, frameSize, cv::INTER_NEAREST);
+				cv::resize(dest, mask, cv::Size(INPUT_W, INPUT_H), cv::INTER_NEAREST);
 
 				resBoxes[i].m_boxMask = mask(resBoxes[i].m_brect) > MASK_THRESHOLD;
 
@@ -277,27 +278,24 @@ protected:
 					if (br.width >= 4 &&
 						br.height >= 4)
 					{
+						int dx = resBoxes[i].m_brect.x;
+						int dy = resBoxes[i].m_brect.y;
+
 						cv::RotatedRect rr = (contour.size() < 5) ? cv::minAreaRect(contour) : cv::fitEllipse(contour);
+						rr.center.x = (rr.center.x + dx - m_resizedROI.x) * fw;
+						rr.center.y = (rr.center.y + dy - m_resizedROI.y) * fw;
+						rr.size.width *= fw;
+						rr.size.height *= fh;
 
-						br.x += resBoxes[i].m_brect.x;
-						br.y += resBoxes[i].m_brect.y;
-						rr.center.x += resBoxes[i].m_brect.x;
-						rr.center.y += resBoxes[i].m_brect.y;
-
-						//std::cout << "rr: " << rr.center << ", " << rr.angle << ", " << rr.size << std::endl;
-
-						if (resBoxes[i].m_boxMask.size() != br.size())
-						{
-							br.width = resBoxes[i].m_boxMask.cols;
-							br.height = resBoxes[i].m_boxMask.rows;
-							if (br.x + br.width >= frameSize.width)
-								br.x = frameSize.width - br.width;
-							if (br.y + br.height >= frameSize.height)
-								br.y = frameSize.height - br.height;
-						}
+						br.x = cvRound((dx + br.x - m_resizedROI.x) * fw);
+						br.y = cvRound((dy + br.y - m_resizedROI.y) * fh);
+						br.width = cvRound(br.width * fw);
+						br.height = cvRound(br.height * fh);
 
 						resBoxes[i].m_brect = br;
 						resBoxes[i].m_rrect = rr;
+
+						//std::cout << "resBoxes[" << i << "] br: " << br << ", rr: (" << rr.size << " from " << rr.center << ", " << rr.angle << ")" << std::endl;
 
 						break;
 					}

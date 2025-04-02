@@ -40,7 +40,7 @@ protected:
 		size_t ncInd = 2;
 		size_t lenInd = 1;
 
-        int nc = m_outpuDims[1].d[ncInd];
+        size_t nc = m_outpuDims[1].d[ncInd];
 		size_t len = static_cast<size_t>(m_outpuDims[0].d[lenInd]) / m_params.explicitBatchSize;
 		auto volume0 = len * m_outpuDims[0].d[ncInd]; // Volume(m_outpuDims[0]);
 		dets += volume0 * imgIdx;
