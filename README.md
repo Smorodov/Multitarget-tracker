@@ -26,6 +26,10 @@
 
 # New videos!
 
+* 4-in-1 latest SOTA detectors in one video: YOLOv11, YOLOv12, RF-DETR, D-FINE
+
+[![4-in-1 latest SOTA detectors:](https://img.youtube.com/vi/Pb_HnejRpY4/0.jpg)](https://youtu.be/Pb_HnejRpY4)
+
 * YOLOv8-obb detection with rotated boxes (DOTA v1.0 trained)
 
 [![YOLOv8-obb detection:](https://img.youtube.com/vi/1e6ur57Fhzs/0.jpg)](https://youtu.be/1e6ur57Fhzs)
