@@ -29,8 +29,8 @@ protected:
 		const float fw = static_cast<float>(frameSize.width) / static_cast<float>(m_resizedROI.width);
 		const float fh = static_cast<float>(frameSize.height) / static_cast<float>(m_resizedROI.height);
 
-		size_t outInd = (outputs.size() == 0) ? 0 : 1;
-		size_t segInd = (outputs.size() == 0) ? 1 : 0;
+		size_t outInd = 0;
+		size_t segInd = 1;
 
 		auto output = outputs[0];
 
@@ -48,15 +48,15 @@ protected:
 		//std::cout << ";" << std::endl;
 
 		//0: name: images, size: 1x3x640x640
-		//1: name: output1, size: 1x32x160x160
-		//2: name: output0, size: 1x116x8400
+		//1: name: output0, size: 1x116x8400
+		//2: name: output1, size: 1x32x160x160
 		// 25200 = 3x80x80 + 3x40x40 + 3x20x20
 		// 116 = x, y, w, h, 80 classes, 32 seg ancors
 		// 80 * 8 = 640, 40 * 16 = 640, 20 * 32 = 640
 
 		size_t ncInd = 1;
 		size_t lenInd = 2;
-		int nc = m_outpuDims[outInd].d[ncInd] - 4 - 32;
+		int nc = static_cast<int>(m_outpuDims[outInd].d[ncInd] - 4 - 32);
 		int dimensions = nc + 32 + 4;
 		size_t len = static_cast<size_t>(m_outpuDims[outInd].d[lenInd]) / m_params.explicitBatchSize;
 		//auto Volume = [](const nvinfer1::Dims& d)
@@ -108,9 +108,9 @@ protected:
 			//}
 			//std::cout << std::endl;
 
-			segChannels = m_outpuDims[segInd].d[1];
-			segWidth = m_outpuDims[segInd].d[2];
-			segHeight = m_outpuDims[segInd].d[3];
+			segChannels = static_cast<int>(m_outpuDims[segInd].d[1]);
+			segWidth = static_cast<int>(m_outpuDims[segInd].d[2]);
+			segHeight = static_cast<int>(m_outpuDims[segInd].d[3]);
 		}
 		cv::Mat maskProposals;
 		std::vector<std::vector<float>> picked_proposals;
@@ -233,8 +233,8 @@ protected:
 			const float* pdata = outputs[1];
 			std::vector<float> maskFloat(pdata, pdata + segChannels * segWidth * segHeight);
 
-			int INPUT_W = m_inputDims.d[3];
-			int INPUT_H = m_inputDims.d[2];
+			int INPUT_W = static_cast<int>(m_inputDims.d[3]);
+			int INPUT_H = static_cast<int>(m_inputDims.d[2]);
 			static constexpr float MASK_THRESHOLD = 0.5;
 
 			cv::Mat mask_protos = cv::Mat(maskFloat);

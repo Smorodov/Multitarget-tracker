@@ -797,17 +797,17 @@ inline std::vector<std::string> splitString(std::string str, char delimiter = ',
 
 inline int getC(nvinfer1::Dims const& d)
 {
-    return d.nbDims >= 3 ? d.d[d.nbDims - 3] : 1;
+    return d.nbDims >= 3 ? static_cast<int>(d.d[d.nbDims - 3]) : 1;
 }
 
 inline int getH(const nvinfer1::Dims& d)
 {
-    return d.nbDims >= 2 ? d.d[d.nbDims - 2] : 1;
+    return d.nbDims >= 2 ? static_cast<int>(d.d[d.nbDims - 2]) : 1;
 }
 
 inline int getW(const nvinfer1::Dims& d)
 {
-    return d.nbDims >= 1 ? d.d[d.nbDims - 1] : 1;
+    return d.nbDims >= 1 ? static_cast<int>(d.d[d.nbDims - 1]) : 1;
 }
 
 //! Platform-agnostic wrapper around dynamic libraries.

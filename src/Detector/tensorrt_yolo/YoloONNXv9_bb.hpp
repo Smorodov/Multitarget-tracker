@@ -36,7 +36,7 @@ protected:
 
 		size_t ncInd = 1;
 		size_t lenInd = 2;
-		int nc = m_outpuDims[0].d[ncInd] - shapeDataSize;
+		int nc = static_cast<int>(m_outpuDims[0].d[ncInd] - shapeDataSize);
 		int dimensions = nc + shapeDataSize;
 		size_t len = static_cast<size_t>(m_outpuDims[0].d[lenInd]) / m_params.explicitBatchSize;
 		//auto Volume = [](const nvinfer1::Dims& d)
