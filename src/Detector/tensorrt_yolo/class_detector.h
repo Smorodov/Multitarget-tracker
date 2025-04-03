@@ -108,7 +108,9 @@ namespace tensor_rt
 
 	private:
 		Detector(const Detector &);
-		const Detector &operator =(const Detector &);
+        const Detector& operator =(const Detector&)
+        {
+        }
 
         Impl* m_impl = nullptr;
 	};

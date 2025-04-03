@@ -38,7 +38,7 @@ protected:
 			auto scores = outputs[2];
 			auto classes = reinterpret_cast<int*>(outputs[3]);
 
-			int objectsCount = m_outpuDims[1].d[1];
+			int objectsCount = static_cast<int>(m_outpuDims[1].d[1]);
 
 			//std::cout << "Dets[" << imgIdx << "] = " << dets[imgIdx] << ", objectsCount = " << objectsCount << std::endl;
 
@@ -77,7 +77,7 @@ protected:
 				ncInd = 1;
 				lenInd = 0;
 			}
-			int nc = m_outpuDims[0].d[ncInd] - 5;
+			int nc = static_cast<int>(m_outpuDims[0].d[ncInd] - 5);
 			size_t len = static_cast<size_t>(m_outpuDims[0].d[lenInd]) / m_params.explicitBatchSize;
 			//auto Volume = [](const nvinfer1::Dims& d)
 			//{

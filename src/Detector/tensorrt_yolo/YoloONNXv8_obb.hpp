@@ -36,7 +36,7 @@ protected:
 
 		size_t ncInd = 1;
 		size_t lenInd = 2;
-		int nc = m_outpuDims[0].d[ncInd] - shapeDataSize;
+		int nc = static_cast<int>(m_outpuDims[0].d[ncInd] - shapeDataSize);
 		int dimensions = nc + shapeDataSize;
 		size_t len = static_cast<size_t>(m_outpuDims[0].d[lenInd]) / m_params.explicitBatchSize;
 		//auto Volume = [](const nvinfer1::Dims& d)
@@ -107,7 +107,7 @@ protected:
 				float cy = fh * (output[k + 1] - m_resizedROI.y);
 				float width = fw * output[k + 2];
 				float height = fh * output[k + 3];
-				float angle = 180.f * output[k + nc + shapeDataSize - 1] / M_PI;
+				float angle = 180.f * output[k + nc + shapeDataSize - 1] / static_cast<float>(M_PI);
 				rectBoxes.emplace_back(cv::Point2f(cx, cy), cv::Size2f(width, height), angle);
 
 				//if (rectBoxes.size() == 1)

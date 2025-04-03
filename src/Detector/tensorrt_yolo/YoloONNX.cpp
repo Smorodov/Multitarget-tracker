@@ -278,7 +278,7 @@ bool YoloONNX::Detect(const std::vector<cv::Mat>& frames, std::vector<tensor_rt:
 ///
 cv::Size YoloONNX::GetInputSize() const
 {
-    return cv::Size(m_inputDims.d[3], m_inputDims.d[2]);
+    return cv::Size(static_cast<int>(m_inputDims.d[3]), static_cast<int>(m_inputDims.d[2]));
 }
 
 ///
@@ -294,7 +294,7 @@ size_t YoloONNX::GetNumClasses() const
     else
     {
         size_t ncInd = 2;
-        int nc = m_outpuDims[0].d[ncInd] - 5;
+        int nc = static_cast<int>(m_outpuDims[0].d[ncInd] - 5);
         return (size_t)nc;
     }
 }
@@ -304,10 +304,10 @@ size_t YoloONNX::GetNumClasses() const
 //!
 bool YoloONNX::ProcessInputAspectRatio(const std::vector<cv::Mat>& sampleImages)
 {
-    const int inputB = m_inputDims.d[0];
-    const int inputC = m_inputDims.d[1];
-    const int inputH = m_inputDims.d[2];
-    const int inputW = m_inputDims.d[3];
+    const int inputB = static_cast<int>(m_inputDims.d[0]);
+    const int inputC = static_cast<int>(m_inputDims.d[1]);
+    const int inputH = static_cast<int>(m_inputDims.d[2]);
+    const int inputW = static_cast<int>(m_inputDims.d[3]);
 
     float* hostInputBuffer = nullptr;
     if (m_params.inputTensorNames[0].empty())
@@ -330,9 +330,9 @@ bool YoloONNX::ProcessInputAspectRatio(const std::vector<cv::Mat>& sampleImages)
     const float imgHeight = static_cast<float>(sampleImages[0].rows);
     const float imgWidth = static_cast<float>(sampleImages[0].cols);
     float dim = std::max(imgHeight, imgWidth);
-    int resizeH = (imgHeight * inputH) / dim;
-    int resizeW = (imgWidth * inputW) / dim;
-    float scalingFactor = static_cast<float>(resizeH) / static_cast<float>(imgHeight);
+    int resizeH = cvRound((imgHeight * inputH) / dim);
+    int resizeW = cvRound((imgWidth * inputW) / dim);
+    //float scalingFactor = static_cast<float>(resizeH) / imgHeight;
 
     // Additional checks for images with non even dims
     if ((inputW - resizeW) % 2)
@@ -342,14 +342,14 @@ bool YoloONNX::ProcessInputAspectRatio(const std::vector<cv::Mat>& sampleImages)
     assert((inputW - resizeW) % 2 == 0);
     assert((inputH - resizeH) % 2 == 0);
 
-    float xOffset = (inputW - resizeW) / 2;
-    float yOffset = (inputH - resizeH) / 2;
+    float xOffset = (inputW - resizeW) / 2.f;
+    float yOffset = (inputH - resizeH) / 2.f;
 
     assert(2 * xOffset + resizeW == inputW);
     assert(2 * yOffset + resizeH == inputH);
 
     cv::Size scaleSize(inputW, inputH);
-    m_resizedROI = cv::Rect(xOffset, yOffset, resizeW, resizeH);
+    m_resizedROI = cv::Rect(cvRound(xOffset), cvRound(yOffset), resizeW, resizeH);
 
     //std::cout << "m_resizedROI: " << m_resizedROI << ", frameSize: " << sampleImages[0].size() << ", resizeW_H: " << cv::Size2f(resizeW, resizeH) << std::endl;
 

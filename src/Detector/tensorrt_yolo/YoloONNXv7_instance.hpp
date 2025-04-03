@@ -51,7 +51,7 @@ protected:
 			ncInd = 1;
 			lenInd = 0;
 		}
-		int nc = m_outpuDims[outInd].d[ncInd] - 5 - 32;
+		int nc = static_cast<int>(m_outpuDims[outInd].d[ncInd] - 5 - 32);
 		size_t len = static_cast<size_t>(m_outpuDims[outInd].d[lenInd]) / m_params.explicitBatchSize;
 		//auto Volume = [](const nvinfer1::Dims& d)
 		//{
@@ -86,9 +86,9 @@ protected:
 			//}
 			//std::cout << std::endl;
 
-			segChannels = m_outpuDims[segInd].d[1];
-			segWidth = m_outpuDims[segInd].d[2];
-			segHeight = m_outpuDims[segInd].d[3];
+			segChannels = static_cast<int>(m_outpuDims[segInd].d[1]);
+			segWidth = static_cast<int>(m_outpuDims[segInd].d[2]);
+			segHeight = static_cast<int>(m_outpuDims[segInd].d[3]);
 		}
 		cv::Mat maskProposals;
 		std::vector<std::vector<float>> picked_proposals;
@@ -183,8 +183,8 @@ protected:
 			const float* pdata = outputs[1];
 			std::vector<float> maskFloat(pdata, pdata + segChannels * segWidth * segHeight);
 
-			int INPUT_W = m_inputDims.d[3];
-			int INPUT_H = m_inputDims.d[2];
+			int INPUT_W = static_cast<int>(m_inputDims.d[3]);
+			int INPUT_H = static_cast<int>(m_inputDims.d[2]);
 			static constexpr float MASK_THRESHOLD = 0.5;
 
 			cv::Mat mask_protos = cv::Mat(maskFloat);

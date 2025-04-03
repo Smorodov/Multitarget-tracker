@@ -42,7 +42,7 @@ protected:
 		auto boxes = outputs[1];
 		auto scores = outputs[2];
 
-		for (size_t i = 0; i < m_outpuDims[0].d[1]; ++i)
+		for (size_t i = 0; i < static_cast<int>(m_outpuDims[0].d[1]); ++i)
 		{
             float classConf = scores[i];
 			int64_t classId = labels[i];

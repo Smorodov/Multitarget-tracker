@@ -186,8 +186,8 @@ protected:
 		int &xOffset,int &yOffset) const
 	{
         float r = std::min(static_cast<float>(m_InputH) / static_cast<float>(imageH), static_cast<float>(m_InputW) / static_cast<float>(imageW));
-        int resizeH = (std::round(imageH*r));
-        int resizeW = (std::round(imageW*r));
+        int resizeH = cvRound(imageH*r);
+        int resizeW = cvRound(imageW*r);
 
 		sh = r;
 		sw = r;

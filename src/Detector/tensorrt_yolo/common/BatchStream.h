@@ -172,7 +172,7 @@ public:
         mDims.d[3] = d[3]; // Width
         ASSERT(mDims.d[0] > 0 && mDims.d[1] > 0 && mDims.d[2] > 0 && mDims.d[3] > 0);
 
-        mImageSize = mDims.d[1] * mDims.d[2] * mDims.d[3];
+        mImageSize = static_cast<int>(mDims.d[1] * mDims.d[2] * mDims.d[3]);
         mBatch.resize(mBatchSize * mImageSize, 0);
         mLabels.resize(mBatchSize, 0);
         mFileBatch.resize(mDims.d[0] * mImageSize, 0);
@@ -192,7 +192,7 @@ public:
         , mListFile(listFile)
         , mDataDir(directories)
     {
-        mImageSize = mDims.d[1] * mDims.d[2] * mDims.d[3];
+        mImageSize = static_cast<int>(mDims.d[1] * mDims.d[2] * mDims.d[3]);
         mBatch.resize(mBatchSize * mImageSize, 0);
         mLabels.resize(mBatchSize, 0);
         mFileBatch.resize(mDims.d[0] * mImageSize, 0);
@@ -204,7 +204,7 @@ public:
     {
         mBatchCount = 0;
         mFileCount = 0;
-        mFileBatchPos = mDims.d[0];
+        mFileBatchPos = static_cast<int>(mDims.d[0]);
         skip(firstBatch);
     }
 
@@ -268,7 +268,7 @@ public:
 
     int getBatchSize() const override
     {
-        return mBatchSize;
+        return static_cast<int>(mBatchSize);
     }
 
     nvinfer1::Dims getDims() const override
@@ -338,10 +338,11 @@ private:
             std::vector<float> data(samplesCommon::volume(mDims));
             const float scale = 2.0 / 255.0;
             const float bias = 1.0;
-            long int volChl = mDims.d[2] * mDims.d[3];
+            long int volChl = static_cast<int>(mDims.d[2] * mDims.d[3]);
 
             // Normalize input data
-            for (int i = 0, volImg = mDims.d[1] * mDims.d[2] * mDims.d[3]; i < mBatchSize; ++i)
+            int64_t volImg = mDims.d[1] * mDims.d[2] * mDims.d[3];
+            for (int i = 0; i < mBatchSize; ++i)
             {
                 for (int c = 0; c < mDims.d[1]; ++c)
                 {
