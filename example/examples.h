@@ -810,6 +810,24 @@ protected:
 			{
 				config.emplace("white_list", wname);
 			}
+
+            std::cout << "YoloTensorRTExample:" << std::endl;
+            std::cout << "modelConfiguration" << m_trackerSettings.m_nnConfig << std::endl;
+            std::cout << "modelBinary" << m_trackerSettings.m_nnWeights << std::endl;
+            std::cout << "confidenceThreshold" << std::to_string(m_trackerSettings.m_confidenceThreshold) << std::endl;
+            std::cout << "classNames" << m_trackerSettings.m_classNames << std::endl;
+            std::cout << "maxCropRatio" << std::to_string(m_trackerSettings.m_maxCropRatio) << std::endl;
+            std::cout << "maxBatch" << std::to_string(m_trackerSettings.m_maxBatch) << std::endl;
+            std::cout << "gpuId" << std::to_string(m_trackerSettings.m_gpuId) << std::endl;
+            std::cout << "net_type" << m_trackerSettings.m_netType << std::endl;
+            std::cout << "inference_precision" << m_trackerSettings.m_inferencePrecision << std::endl;
+            std::cout << "video_memory" << std::to_string(m_trackerSettings.m_maxVideoMemory) << std::endl;
+            std::cout << "white names :" << std::endl;
+            for (auto wname : m_trackerSettings.m_whiteList)
+            {
+                std::cout << wname << " | ";
+            }
+            std::cout << std::endl;
         }
 
 		m_detector = BaseDetector::CreateDetector(tracking::Detectors::Yolo_TensorRT, config, frame);
