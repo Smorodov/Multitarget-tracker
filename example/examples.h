@@ -812,17 +812,17 @@ protected:
 			}
 
             std::cout << "YoloTensorRTExample:" << std::endl;
-            std::cout << "modelConfiguration" << m_trackerSettings.m_nnConfig << std::endl;
-            std::cout << "modelBinary" << m_trackerSettings.m_nnWeights << std::endl;
-            std::cout << "confidenceThreshold" << std::to_string(m_trackerSettings.m_confidenceThreshold) << std::endl;
-            std::cout << "classNames" << m_trackerSettings.m_classNames << std::endl;
-            std::cout << "maxCropRatio" << std::to_string(m_trackerSettings.m_maxCropRatio) << std::endl;
-            std::cout << "maxBatch" << std::to_string(m_trackerSettings.m_maxBatch) << std::endl;
-            std::cout << "gpuId" << std::to_string(m_trackerSettings.m_gpuId) << std::endl;
-            std::cout << "net_type" << m_trackerSettings.m_netType << std::endl;
-            std::cout << "inference_precision" << m_trackerSettings.m_inferencePrecision << std::endl;
-            std::cout << "video_memory" << std::to_string(m_trackerSettings.m_maxVideoMemory) << std::endl;
-            std::cout << "white names :" << std::endl;
+            std::cout << "modelConfiguration: " << m_trackerSettings.m_nnConfig << std::endl;
+            std::cout << "modelBinary: " << m_trackerSettings.m_nnWeights << std::endl;
+            std::cout << "confidenceThreshold: " << std::to_string(m_trackerSettings.m_confidenceThreshold) << std::endl;
+            std::cout << "classNames: " << m_trackerSettings.m_classNames << std::endl;
+            std::cout << "maxCropRatio: " << std::to_string(m_trackerSettings.m_maxCropRatio) << std::endl;
+            std::cout << "maxBatch: " << std::to_string(m_trackerSettings.m_maxBatch) << std::endl;
+            std::cout << "gpuId: " << std::to_string(m_trackerSettings.m_gpuId) << std::endl;
+            std::cout << "net_type: " << m_trackerSettings.m_netType << std::endl;
+            std::cout << "inference_precision: " << m_trackerSettings.m_inferencePrecision << std::endl;
+            std::cout << "video_memory: " << std::to_string(m_trackerSettings.m_maxVideoMemory) << std::endl;
+            std::cout << "white names: " << std::endl;
             for (auto wname : m_trackerSettings.m_whiteList)
             {
                 std::cout << wname << " | ";
@@ -884,10 +884,10 @@ protected:
 			m_trackerSettings.m_maximumAllowedSkippedFrames = cvRound(2 * m_fps); // Maximum allowed skipped frames
 			m_trackerSettings.m_maxTraceLength = cvRound(5 * m_fps);      // Maximum trace length
 		}
-        m_trackerSettings.AddNearTypes(TypeConverter::Str2Type("car"), TypeConverter::Str2Type("bus"), false);
-        m_trackerSettings.AddNearTypes(TypeConverter::Str2Type("car"), TypeConverter::Str2Type("truck"), false);
-        m_trackerSettings.AddNearTypes(TypeConverter::Str2Type("person"), TypeConverter::Str2Type("bicycle"), true);
-        m_trackerSettings.AddNearTypes(TypeConverter::Str2Type("person"), TypeConverter::Str2Type("motorbike"), true);
+        //m_trackerSettings.AddNearTypes(TypeConverter::Str2Type("car"), TypeConverter::Str2Type("bus"), false);
+        //m_trackerSettings.AddNearTypes(TypeConverter::Str2Type("car"), TypeConverter::Str2Type("truck"), false);
+        //m_trackerSettings.AddNearTypes(TypeConverter::Str2Type("person"), TypeConverter::Str2Type("bicycle"), true);
+        //m_trackerSettings.AddNearTypes(TypeConverter::Str2Type("person"), TypeConverter::Str2Type("motorbike"), true);
 
 		m_tracker = BaseTracker::CreateTracker(m_trackerSettings);
 
@@ -915,9 +915,9 @@ protected:
 
 		for (const auto& track : tracks)
 		{
-			if (track.IsRobust(2,                           // Minimal trajectory size
-				0.5f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
-				cv::Size2f(0.1f, 8.0f), 2))      // Min and max ratio: width / height
+            if (track.IsRobust(2,                           // Minimal trajectory size
+                0.5f,                        // Minimal ratio raw_trajectory_points / trajectory_lenght
+                cv::Size2f(0.1f, 8.0f), 2))      // Min and max ratio: width / height
 			{
 				DrawTrack(frame, track, true, framesCounter);
 
@@ -947,8 +947,8 @@ protected:
 					brect.y = std::max(0, frame.rows - brect.height - 1);
 					brect.height = std::min(brect.height, frame.rows - 1);
 				}
-				//DrawFilledRect(frame, cv::Rect(cv::Point(brect.x, brect.y - labelSize.height), cv::Size(labelSize.width, labelSize.height + baseLine)), cv::Scalar(200, 200, 200), 150);
-				//cv::putText(frame, label.str(), brect.tl(), cv::FONT_HERSHEY_TRIPLEX, 0.5, cv::Scalar(0, 0, 0));
+                //DrawFilledRect(frame, cv::Rect(cv::Point(brect.x, brect.y - labelSize.height), cv::Size(labelSize.width, labelSize.height + baseLine)), cv::Scalar(200, 200, 200), 150);
+                //cv::putText(frame, label.str(), brect.tl(), cv::FONT_HERSHEY_TRIPLEX, 0.5, cv::Scalar(0, 0, 0));
 			}
 		}
 
