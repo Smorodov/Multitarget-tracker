@@ -893,7 +893,7 @@ protected:
 			averFps = 1000.f / currTime;
 		else
 			averFps = 0.9f * averFps + 0.1f * (1000.f / currTime);
-		cv::putText(frame, std::to_string(cvRound(averFps)) + " fps", cv::Point(10, 40), cv::FONT_HERSHEY_TRIPLEX, 1.5, cv::Scalar(255, 0, 255));
+		cv::putText(frame, std::to_string(cvRound(averFps)) + " fps", cv::Point(10, 40), cv::FONT_HERSHEY_TRIPLEX, (frame.cols > 1000) ? 1.5 : 1.0, cv::Scalar(255, 0, 255));
 
 		for (const auto& track : tracks)
 		{
