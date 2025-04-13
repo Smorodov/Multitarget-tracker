@@ -48,7 +48,7 @@ bool OCVDNNDetector::Init(const config_t& config)
     dictTargets[cv::dnn::DNN_TARGET_MYRIAD] = "DNN_TARGET_MYRIAD";
     dictTargets[cv::dnn::DNN_TARGET_CUDA] = "DNN_TARGET_CUDA";
     dictTargets[cv::dnn::DNN_TARGET_CUDA_FP16] = "DNN_TARGET_CUDA_FP16";
-#if (CV_VERSION_MAJOR > 4)
+#if (((CV_VERSION_MAJOR == 4) && (CV_VERSION_MINOR >= 10)) || (CV_VERSION_MAJOR > 4))
     dictTargets[cv::dnn::DNN_TARGET_HDDL] = "DNN_TARGET_HDDL";
     dictTargets[cv::dnn::DNN_TARGET_NPU] = "DNN_TARGET_NPU";
     dictTargets[cv::dnn::DNN_TARGET_CPU_FP16] = "DNN_TARGET_CPU_FP16";
@@ -60,7 +60,7 @@ bool OCVDNNDetector::Init(const config_t& config)
     dictBackends[cv::dnn::DNN_BACKEND_OPENCV] = "DNN_BACKEND_OPENCV";
     dictBackends[cv::dnn::DNN_BACKEND_VKCOM] = "DNN_BACKEND_VKCOM";
     dictBackends[cv::dnn::DNN_BACKEND_CUDA] = "DNN_BACKEND_CUDA";
-#if (CV_VERSION_MAJOR > 4)
+#if (((CV_VERSION_MAJOR == 4) && (CV_VERSION_MINOR >= 10)) || (CV_VERSION_MAJOR > 4))
     dictBackends[cv::dnn::DNN_BACKEND_WEBNN] = "DNN_BACKEND_WEBNN";
     dictBackends[cv::dnn::DNN_BACKEND_TIMVX] = "DNN_BACKEND_TIMVX";
     dictBackends[cv::dnn::DNN_BACKEND_CANN] = "DNN_BACKEND_CANN";
