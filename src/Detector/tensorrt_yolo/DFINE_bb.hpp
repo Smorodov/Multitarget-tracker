@@ -12,10 +12,10 @@ public:
 	{
 		inputTensorNames.push_back("images");
 		inputTensorNames.push_back("orig_target_sizes");
-		outputTensorNames.push_back("labels");
+        outputTensorNames.push_back("scores");
+        outputTensorNames.push_back("labels");
 		outputTensorNames.push_back("boxes");
-		outputTensorNames.push_back("scores");
-	}
+    }
 
 protected:
 	///
@@ -38,14 +38,54 @@ protected:
 
         //std::cout << "m_resizedROI: " << m_resizedROI << ", frameSize: " << frameSize << ", fw_h: " << cv::Size2f(fw, fh) << ", m_inputDims: " << cv::Point3i(m_inputDims.d[1], m_inputDims.d[2], m_inputDims.d[3]) << std::endl;
 
-		auto labels = (const int64_t*)outputs[0];
-		auto boxes = outputs[1];
-		auto scores = outputs[2];
+        auto labels = (const int64_t*)outputs[1];
+        auto boxes = outputs[2];
+        auto scores = outputs[0];
+
+
+        //std::cout << "scores mem:\n";
+        //for (size_t ii = 0; ii < 15; ++ii)
+        //{
+        //    std::cout << ii << ": ";
+        //    for (size_t jj = 0; jj < 20; ++jj)
+        //    {
+        //        std::cout << scores[ii * 20 + jj] << " ";
+        //    }
+        //    std::cout << ";" << std::endl;
+        //}
+        //std::cout << std::endl;
+
+        //std::cout << "labels mem:\n";
+        //for (size_t ii = 0; ii < 15; ++ii)
+        //{
+        //    std::cout << ii << ": ";
+        //    for (size_t jj = 0; jj < 20; ++jj)
+        //    {
+        //        std::cout << labels[ii * 20 + jj] << " ";
+        //    }
+        //    std::cout << ";" << std::endl;
+        //}
+        //std::cout << std::endl;
+
+        //std::cout << "boxes mem:\n";
+        //for (size_t ii = 0; ii < 15; ++ii)
+        //{
+        //    std::cout << ii << ": ";
+        //    for (size_t jj = 0; jj < 20; ++jj)
+        //    {
+        //        std::cout << boxes[ii * 20 + jj] << " ";
+        //    }
+        //    std::cout << ";" << std::endl;
+        //}
+        //std::cout << std::endl;
 
 		for (size_t i = 0; i < static_cast<int>(m_outpuDims[0].d[1]); ++i)
 		{
             float classConf = scores[i];
 			int64_t classId = labels[i];
+
+            if (classId > 0)
+                --classId;
 
 			if (classConf >= m_params.confThreshold)
 			{
@@ -54,6 +94,9 @@ protected:
                 float y = fh * (boxes[ind + 1] - m_resizedROI.y);
                 float width = fw * (boxes[ind + 2] - boxes[ind + 0]);
                 float height = fh * (boxes[ind + 3] - boxes[ind + 1]);
+
+                //std::cout << "ind = " << ind << ", boxes[0] = " << boxes[ind + 0] << ", boxes[1] = " << boxes[ind + 1] << ", boxes[2] = " << boxes[ind + 2] << ", boxes[3] = " << boxes[ind + 3] << std::endl;
+                //std::cout << "ind = " << ind << ", x = " << x << ", y = " << y << ", width = " << width << ", height = " << height << std::endl;
 
 				resBoxes.emplace_back(classId, classConf, cv::Rect(cvRound(x), cvRound(y), cvRound(width), cvRound(height)));
 			}
