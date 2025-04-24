@@ -28,7 +28,7 @@
 
 *  Satellite planes detection and tracking with YOLOv11-obb
 
-[![Satellite planes detection and tracking with YOLOv11-obb:]](https://youtu.be/gTpWnkMF7Lg)
+[![Satellite planes detection and tracking with YOLOv11-obb:](https://img.youtube.com/vi/gTpWnkMF7Lg/0.jpg)](https://youtu.be/gTpWnkMF7Lg)
 
 * 4-in-1 latest SOTA detectors in one video: YOLOv11, YOLOv12, RF-DETR, D-FINE
 
