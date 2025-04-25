@@ -38,11 +38,9 @@
 
 [![YOLOv8-obb detection:](https://img.youtube.com/vi/1e6ur57Fhzs/0.jpg)](https://youtu.be/1e6ur57Fhzs)
 
-
 * YOLOv7 instance segmentation
 
 [![YOLOv7 instance segmentation:](https://img.youtube.com/vi/gZxuYyFz1dU/0.jpg)](https://youtu.be/gZxuYyFz1dU)
-
 
 * Very fast and small objects tracking [Thnx Scianand](https://github.com/Smorodov/Multitarget-tracker/issues/367)
 
@@ -51,11 +49,6 @@
 * Vehicles speed calculation with YOLO v4
 
 [![Vehicles speed:](https://img.youtube.com/vi/qOHYvDwpsO0/0.jpg)](https://youtu.be/qOHYvDwpsO0)
-
-
-* First step to ADAS with YOLO v4
-
-[![Simple ADAS:](https://img.youtube.com/vi/5cgg5fy90Xg/0.jpg)](https://youtu.be/5cgg5fy90Xg)
 
 # Multitarget (multiple objects) tracker
 
@@ -139,10 +132,6 @@ Also you can read [Wiki in Russian](https://github.com/Smorodov/Multitarget-trac
 * Motion Detection and tracking:
 
 [![Motion Detection and tracking:](https://img.youtube.com/vi/GjN8jOy4kVw/0.jpg)](https://www.youtube.com/watch?v=GjN8jOy4kVw)
-
-* Multiple Faces tracking:
-
-[![Multiple Faces tracking:](https://img.youtube.com/vi/j67CFwFtciU/0.jpg)](https://www.youtube.com/watch?v=j67CFwFtciU)
 
 * Simple Abandoned detector:
 
