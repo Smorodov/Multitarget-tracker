@@ -61,17 +61,18 @@ private:
     int m_inHeight = 608;
 
     float m_WHRatio = 1.f;
-    float m_inScaleFactor = 0.003921f;
-    float m_meanVal = 0.f;
+    double m_inScaleFactor = 0.003921; // 1 / 255
+    //double m_inScaleFactor = 1.0;
+    cv::Scalar m_meanVal = {0, 0, 0};
     float m_confidenceThreshold = 0.24f;
     track_t m_nmsThreshold = static_cast<track_t>(0.4);
-    bool m_swapRB = false;
+    bool m_swapRB = true;
     float m_maxCropRatio = 2.0f;
     ModelType m_netType = ModelType::Unknown;
     std::vector<std::string> m_classNames;
     std::vector<cv::String> m_outNames;
     std::vector<int> m_outLayers;
-    std::string m_outLayerType;
+    std::vector<std::string> m_outLayerTypes;
     cv::UMat m_inputBlob;
 
     void ParseOldYOLO(const cv::Rect& crop, const std::vector<cv::Mat>& detections, regions_t& tmpRegions);
