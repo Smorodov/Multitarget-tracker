@@ -180,7 +180,7 @@ bool OCVDNNDetector::Init(const config_t& config)
             std::cerr << "net_type = " << net_type->second << ", " << (int)m_netType << std::endl;
         }
 
-        //std::cout << "net_type = " << net_type->second << ", " << (int)m_netType << std::endl;
+        std::cout << "net_type = " << net_type->second << ", " << (int)m_netType << std::endl;
     }
 
     auto classNames = config.find("classNames");
@@ -239,7 +239,27 @@ bool OCVDNNDetector::Init(const config_t& config)
     {
         m_outNames = m_net.getUnconnectedOutLayersNames();
         m_outLayers = m_net.getUnconnectedOutLayers();
-        m_outLayerType = m_net.getLayer(m_outLayers[0])->type;
+        assert(!m_outLayers.empty());
+
+        m_outLayerTypes.clear();
+        for (auto it : m_outLayers)
+        {
+            m_outLayerTypes.push_back(m_net.getLayer(it)->type);
+        }
+
+        std::cout << "outNames: ";
+        for (auto it : m_outNames)
+        {
+            std::cout << it << " | ";
+        }
+        std::cout << std::endl;
+
+        std::cout << "outLayerType: ";
+        for (auto it : m_outLayerTypes)
+        {
+            std::cout << it << " | ";
+        }
+        std::cout << std::endl;
 
 #if (CV_VERSION_MAJOR < 5)
         std::vector<cv::dnn::MatShape> outputs;
@@ -253,7 +273,38 @@ bool OCVDNNDetector::Init(const config_t& config)
         std::cout << "getLayerShapes: outputs (" << outputs.size() << ") = " << (outputs.size() > 0 ? outputs[0].size() : 0) << ", internals (" << internals.size() << ") = " << (internals.size() > 0 ? internals[0].size() : 0) << std::endl;
         if (outputs.size() && outputs[0].size() > 3)
         {
-            std::cout << "outputs = [" << outputs[0][0] << ", " << outputs[0][1] << ", " << outputs[0][2]  << ", " << outputs[0][3] << "], internals = [" << internals[0][0] << ", " << internals[0][1] << ", " << internals[0][2]  << ", " << internals[0][3] << "]" << std::endl;
+            std::cout << "outputs: ";
+            for (size_t i = 0; i < outputs.size(); ++i)
+            {
+#if (CV_VERSION_MAJOR < 5)
+                std::cout << i << ": [";
+                for (size_t j = 0; j < outputs[i].size(); ++j)
+                {
+                    std::cout << outputs[i][j] << " ";
+                }
+                std::cout << "]";
+#else
+                std::cout << i << ": " << outputs[i].str();
+#endif
+            }
+            std::cout << std::endl;
+
+            std::cout << "internals: ";
+            for (size_t i = 0; i < internals.size(); ++i)
+            {
+#if (CV_VERSION_MAJOR < 5)
+                std::cout << i << ": [";
+                for (size_t j = 0; j < internals[i].size(); ++j)
+                {
+                    std::cout << internals[i][j] << " ";
+                }
+                std::cout << "]";
+#else
+                std::cout << i << ": " << internals[i].str();
+#endif
+            }
+            std::cout << std::endl;
+
             if (!m_inWidth || !m_inHeight)
             {
                 m_inWidth = outputs[0][2];
@@ -267,6 +318,8 @@ bool OCVDNNDetector::Init(const config_t& config)
         m_inHeight = 608;
     }
     m_WHRatio = static_cast<float>(m_inWidth) / static_cast<float>(m_inHeight);
+
+    std::cout << "input size: " << cv::Size(m_inWidth, m_inHeight) << ", m_WHRatio = " << m_WHRatio << std::endl;
 
     return !m_net.empty();
 }
@@ -379,7 +432,7 @@ void OCVDNNDetector::DetectInCrop(const cv::UMat& colorFrame, const cv::Rect& cr
 ///
 void OCVDNNDetector::ParseOldYOLO(const cv::Rect& crop, const std::vector<cv::Mat>& detections, regions_t& tmpRegions)
 {
-    if (m_outLayerType == "DetectionOutput")
+    if (m_outLayerTypes[0] == "DetectionOutput")
     {
         // Network produces output blob with a shape 1x1xNx7 where N is a number of detections and an every detection is a vector of values
         // [batchId, classId, confidence, left, top, right, bottom]
@@ -414,7 +467,7 @@ void OCVDNNDetector::ParseOldYOLO(const cv::Rect& crop, const std::vector<cv::Ma
             }
         }
     }
-    else if (m_outLayerType == "Region")
+    else if (m_outLayerTypes[0] == "Region")
     {
         for (size_t i = 0; i < detections.size(); ++i)
         {
@@ -444,7 +497,7 @@ void OCVDNNDetector::ParseOldYOLO(const cv::Rect& crop, const std::vector<cv::Ma
     }
     else
     {
-        CV_Error(cv::Error::StsNotImplemented, "OCVDNNDetector::ParseOldYOLO: Unknown output layer type: " + m_outLayerType + ", net type " + std::to_string((int)m_netType));
+        CV_Error(cv::Error::StsNotImplemented, "OCVDNNDetector::ParseOldYOLO: Unknown output layer type: " + m_outLayerTypes[0] + ", net type " + std::to_string((int)m_netType));
     }
 }
 
