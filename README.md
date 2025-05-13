@@ -19,7 +19,7 @@
 ## Demo Videos
 
 ### Detection & Tracking
-[![Satellite planes detection and tracking with YOLOv11-obb](https://img.youtube.com/vi/gTpWnejRpY4/0.jpg)](https://youtu.be/gTpWnejRpY4)
+[![Satellite planes detection and tracking with YOLOv11-obb](https://img.youtube.com/vi/gTpWnkMF7Lg/0.jpg)](https://youtu.be/gTpWnkMF7Lg)
 [![4-in-1 latest SOTA detectors](https://img.youtube.com/vi/Pb_HnejRpY4/0.jpg)](https://youtu.be/Pb_HnejRpY4)
 [![YOLOv8-obb detection with rotated boxes](https://img.youtube.com/vi/1e6ur57Fhzs/0.jpg)](https://youtu.be/1e6ur57Fhzs)
 [![Very fast and small objects tracking](https://img.youtube.com/vi/PalIIAfgX88/0.jpg)](https://youtu.be/PalIIAfgX88)
