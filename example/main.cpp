@@ -30,7 +30,7 @@ const char* keys =
     "{ ef end_frame        |0                   | Play a video to this position (if 0 then played to the end of file) | }"
     "{ ed end_delay        |0                   | Delay in milliseconds after video ending | }"
     "{ o  out              |                    | Name of result video file | }"
-    "{ sl show_logs        |1                   | Show Trackers logs | }"
+    "{ show_logs           |info                | Show Trackers logs: trace, debug, info, warning, error, critical, off | }"
     "{ g gpu               |0                   | Use OpenCL acceleration | }"
     "{ a async             |1                   | Use 2 theads for processing pipeline | }"
     "{ r log_res           |                    | Path to the csv file with tracking result | }"

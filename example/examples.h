@@ -74,8 +74,7 @@ protected:
 	///
 	void DrawData(cv::Mat frame, const std::vector<TrackingObject>& tracks, int framesCounter, int currTime) override
 	{
-        if (m_showLogs)
-			std::cout << "Frame " << framesCounter << " (" << m_framesCount << "): tracks = " << tracks.size() << ", time = " << currTime << std::endl;
+		m_logger->info("Frame {0} ({1}): tracks = {2}, time = {3}", framesCounter, m_framesCount, tracks.size(), currTime);
 
         for (const auto& track : tracks)
         {
@@ -159,8 +158,7 @@ protected:
 	///
 	void DrawData(cv::Mat frame, const std::vector<TrackingObject>& tracks, int framesCounter, int currTime) override
 	{
-        if (m_showLogs)
-			std::cout << "Frame " << framesCounter << " (" << m_framesCount << "): tracks = " << tracks.size() << ", time = " << currTime << std::endl;
+		m_logger->info("Frame {0} ({1}): tracks = {2}, time = {3}", framesCounter, m_framesCount, tracks.size(), currTime);
 
         for (const auto& track : tracks)
         {
@@ -319,8 +317,7 @@ protected:
 	///
 	void DrawData(cv::Mat frame, const std::vector<TrackingObject>& tracks, int framesCounter, int currTime) override
 	{
-		if (m_showLogs)
-			std::cout << "Frame " << framesCounter << " (" << m_framesCount << "): tracks = " << tracks.size() << ", time = " << currTime << std::endl;
+		m_logger->info("Frame {0} ({1}): tracks = {2}, time = {3}", framesCounter, m_framesCount, tracks.size(), currTime);
 
 		for (const auto& track : tracks)
 		{
@@ -510,7 +507,7 @@ protected:
 					0.f    // DistMahalanobis
 				};
 				if (!m_trackerSettings.SetDistances(distType))
-					std::cerr << "SetDistances failed! Absolutly summ must be equal 1" << std::endl;
+					m_logger->error("SetDistances failed! Absolutly summ must be equal 1");
 			}
 			else
 			{
@@ -554,8 +551,7 @@ protected:
 	///
 	void DrawData(cv::Mat frame, const std::vector<TrackingObject>& tracks, int framesCounter, int currTime) override
 	{
-		if (m_showLogs)
-			std::cout << "Frame " << framesCounter << " (" << m_framesCount << "): tracks = " << tracks.size() << ", time = " << currTime << std::endl;
+		m_logger->info("Frame {0} ({1}): tracks = {2}, time = {3}", framesCounter, m_framesCount, tracks.size(), currTime);
 
 		for (const auto& track : tracks)
 		{
@@ -811,23 +807,21 @@ protected:
 				config.emplace("white_list", wname);
 			}
 
-            std::cout << "YoloTensorRTExample:" << std::endl;
-            std::cout << "modelConfiguration: " << m_trackerSettings.m_nnConfig << std::endl;
-            std::cout << "modelBinary: " << m_trackerSettings.m_nnWeights << std::endl;
-            std::cout << "confidenceThreshold: " << std::to_string(m_trackerSettings.m_confidenceThreshold) << std::endl;
-            std::cout << "classNames: " << m_trackerSettings.m_classNames << std::endl;
-            std::cout << "maxCropRatio: " << std::to_string(m_trackerSettings.m_maxCropRatio) << std::endl;
-            std::cout << "maxBatch: " << std::to_string(m_trackerSettings.m_maxBatch) << std::endl;
-            std::cout << "gpuId: " << std::to_string(m_trackerSettings.m_gpuId) << std::endl;
-            std::cout << "net_type: " << m_trackerSettings.m_netType << std::endl;
-            std::cout << "inference_precision: " << m_trackerSettings.m_inferencePrecision << std::endl;
-            std::cout << "video_memory: " << std::to_string(m_trackerSettings.m_maxVideoMemory) << std::endl;
-            std::cout << "white names: " << std::endl;
+            m_logger->info("YoloTensorRTExample:");
+            m_logger->info("modelConfiguration: {}", m_trackerSettings.m_nnConfig);
+            m_logger->info("modelBinary: {}", m_trackerSettings.m_nnWeights);
+            m_logger->info("confidenceThreshold: {}", m_trackerSettings.m_confidenceThreshold);
+            m_logger->info("classNames: {}", m_trackerSettings.m_classNames);
+            m_logger->info("maxCropRatio: {}", m_trackerSettings.m_maxCropRatio);
+            m_logger->info("maxBatch: {}", m_trackerSettings.m_maxBatch);
+            m_logger->info("gpuId: {}", m_trackerSettings.m_gpuId);
+            m_logger->info("net_type: {}", m_trackerSettings.m_netType);
+            m_logger->info("inference_precision: {}", m_trackerSettings.m_inferencePrecision);
+            m_logger->info("video_memory: {}", m_trackerSettings.m_maxVideoMemory);
             for (auto wname : m_trackerSettings.m_whiteList)
             {
-                std::cout << wname << " | ";
+				m_logger->info("white name: {}", wname);
             }
-            std::cout << std::endl;
         }
 
 		m_detector = BaseDetector::CreateDetector(tracking::Detectors::Yolo_TensorRT, config, frame);
@@ -865,7 +859,7 @@ protected:
 					0.f    // DistMahalanobis
 				};
 				if (!m_trackerSettings.SetDistances(distType))
-					std::cerr << "SetDistances failed! Absolutly summ must be equal 1" << std::endl;
+					m_logger->error("SetDistances failed! Absolutly summ must be equal 1");
 			}
 			else
 			{
@@ -903,8 +897,7 @@ protected:
 	///
 	void DrawData(cv::Mat frame, const std::vector<TrackingObject>& tracks, int framesCounter, int currTime) override
 	{
-		if (m_showLogs)
-			std::cout << "Frame " << framesCounter << " (" << m_framesCount << "): tracks = " << tracks.size() << ", time = " << currTime << std::endl;
+		m_logger->info("Frame {0} ({1}): tracks = {2}, time = {3}", framesCounter, m_framesCount, tracks.size(), currTime);
 
 		static float averFps = 0;
 		if (averFps == 0)

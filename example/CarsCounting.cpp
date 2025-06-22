@@ -19,7 +19,8 @@ CarsCounting::CarsCounting(const cv::CommandLineParser& parser)
     std::string settingsFile = parser.get<std::string>("settings");
     m_trackerSettingsLoaded = ParseTrackerSettings(settingsFile, m_trackerSettings);
 
-    std::cout << "Inference loaded (" << m_trackerSettingsLoaded << ") from " << settingsFile << ": used " << m_trackerSettings.m_detectorBackend << " backend, weights: " << m_trackerSettings.m_nnWeights << ", config: " << m_trackerSettings.m_nnConfig << ", names: " << m_trackerSettings.m_classNames << std::endl;
+    m_logger->info("Inference loaded ({0}) from {1}: used {2} backend, weights: {3}, config: {4}, names: {5}",
+        m_trackerSettingsLoaded, settingsFile, m_trackerSettings.m_detectorBackend, m_trackerSettings.m_nnWeights, m_trackerSettings.m_nnConfig, m_trackerSettings.m_classNames);
 
     m_geoBindFile = parser.get<std::string>("geo_bind");
 }
@@ -229,8 +230,7 @@ bool CarsCounting::InitTracker(cv::UMat frame)
 ///
 void CarsCounting::DrawData(cv::Mat frame, const std::vector<TrackingObject>& tracks, int framesCounter, int currTime)
 {
-    if (m_showLogs)
-        std::cout << "Frame " << framesCounter << ": tracks = " << tracks.size() << ", time = " << currTime << std::endl;
+    m_logger->info("Frame ({1}): tracks = {2}, time = {3}", framesCounter, tracks.size(), currTime);
 
 #if 1 // Debug output
     if (!m_geoParams.Empty())
@@ -404,12 +404,12 @@ bool CarsCounting::ReadGeobindings(cv::Size frameSize)
     int parseError = reader.ParseError();
     if (parseError < 0)
     {
-        std::cerr << "GeoBindFile file " << m_geoBindFile << " does not exist!" << std::endl;
+        m_logger->critical("GeoBindFile file {} does not exist!", m_geoBindFile);
         res = false;
     }
     else if (parseError > 0)
     {
-        std::cerr << "GeoBindFile file " << m_geoBindFile << " parse error in line: " << parseError << std::endl;
+        m_logger->critical("GeoBindFile file {0} parse error in line: {1}", m_geoBindFile, parseError);
         res = false;
     }
     if (!res)
@@ -447,7 +447,7 @@ bool CarsCounting::ReadGeobindings(cv::Size frameSize)
     m_geoParams.SetMapParams(mapFile, mapGeoCorners);
 
     // Read lines
-    std::cout <<"Read lines:" << std::endl;
+    m_logger->info("Read lines:");
     for (size_t i = 0;; ++i)
     {
         std::string line = "line" + std::to_string(i);
@@ -459,7 +459,7 @@ bool CarsCounting::ReadGeobindings(cv::Size frameSize)
         {
             cv::Point2f p0(static_cast<float>(reader.GetReal("lines", x0, 0)), static_cast<float>(reader.GetReal("lines", y0, 0)));
             cv::Point2f p1(static_cast<float>(reader.GetReal("lines", x1, 0)), static_cast<float>(reader.GetReal("lines", y1, 0)));
-            std::cout << "Line" << i << ": " << p0 << " - " << p1 << std::endl;
+            m_logger->info("Line {0}: ({1}, {2}) - ({3}, 4)", i, p0.x, p0.y, p1.x, p1.y);
             AddLine(RoadLine(p0, p1, static_cast<unsigned int>(i)));
         }
         else

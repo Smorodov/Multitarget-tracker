@@ -5,35 +5,6 @@
 #include "combined.h"
 
 ///
-/// \brief DrawFilledRect
-///
-void DrawFilledRect(cv::Mat& frame, const cv::Rect& rect, cv::Scalar cl, int alpha)
-{
-	if (alpha)
-	{
-		const int alpha_1 = 255 - alpha;
-		const int nchans = frame.channels();
-		int color[3] = { cv::saturate_cast<int>(cl[0]), cv::saturate_cast<int>(cl[1]), cv::saturate_cast<int>(cl[2]) };
-		for (int y = rect.y; y < rect.y + rect.height; ++y)
-		{
-			uchar* ptr = frame.ptr(y) + nchans * rect.x;
-			for (int x = rect.x; x < rect.x + rect.width; ++x)
-			{
-				for (int i = 0; i < nchans; ++i)
-				{
-					ptr[i] = cv::saturate_cast<uchar>((alpha_1 * ptr[i] + alpha * color[i]) / 255);
-				}
-				ptr += nchans;
-			}
-		}
-	}
-	else
-	{
-		cv::rectangle(frame, rect, cl, cv::FILLED);
-	}
-}
-
-///
 /// \brief CombinedDetector::CombinedDetector
 /// \param parser
 ///
@@ -41,7 +12,7 @@ CombinedDetector::CombinedDetector(const cv::CommandLineParser& parser)
 {
     m_inFile = parser.get<std::string>(0);
     m_outFile = parser.get<std::string>("out");
-    m_showLogs = parser.get<int>("show_logs") != 0;
+    m_showLogsLevel = parser.get<std::string>("show_logs");
     m_startFrame = parser.get<int>("start_frame");
     m_endFrame = parser.get<int>("end_frame");
     m_finishDelay = parser.get<int>("end_delay");
@@ -56,6 +27,33 @@ CombinedDetector::CombinedDetector(const cv::CommandLineParser& parser)
     m_colors.push_back(cv::Scalar(255, 127, 255));
     m_colors.push_back(cv::Scalar(127, 0, 255));
     m_colors.push_back(cv::Scalar(127, 0, 127));
+
+	// Create loggers
+	m_consoleSink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+	m_consoleSink->set_level(spdlog::level::from_str(m_showLogsLevel));
+	m_consoleSink->set_pattern("[%^%l%$] %v");
+
+	auto currentTime = std::chrono::system_clock::now();
+	auto transformed = currentTime.time_since_epoch().count() / 1000000;
+	std::time_t tt = std::chrono::system_clock::to_time_t(currentTime);
+	char buffer[80];
+#ifdef WIN32
+	tm timeInfo;
+	localtime_s(&timeInfo, &tt);
+	strftime(buffer, 80, "%G%m%d_%H%M%S", &timeInfo);
+#else
+	auto timeInfo = localtime(&tt);
+	strftime(buffer, 80, "%G%m%d_%H%M%S", timeInfo);
+#endif
+
+	size_t max_size = 1024 * 1024 * 5;
+	size_t max_files = 3;
+	m_fileSink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>("logs/" + std::string(buffer) + std::to_string(transformed % 1000) + ".txt", max_size, max_files);
+	m_fileSink->set_level(spdlog::level::from_str(m_showLogsLevel));
+
+	m_logger = std::shared_ptr<spdlog::logger>(new spdlog::logger("traffic", { m_consoleSink, m_fileSink }));
+	m_logger->set_level(spdlog::level::from_str(m_showLogsLevel));
+	m_logger->info("Start service");
 }
 
 ///
@@ -146,14 +144,14 @@ void CombinedDetector::SyncProcess()
         ++framesCounter;
         if (m_endFrame && framesCounter > m_endFrame)
         {
-            std::cout << "Process: riched last " << m_endFrame << " frame" << std::endl;
+			m_logger->info("Process: riched last {} frame", m_endFrame);
             break;
         }
     }
 
     int64 stopLoopTime = cv::getTickCount();
 
-    std::cout << "algorithms time = " << (allTime / freq) << ", work time = " << ((stopLoopTime - startLoopTime) / freq) << std::endl;
+	m_logger->info("algorithms time = {0}, work time = {1}", allTime / freq, (stopLoopTime - startLoopTime) / freq);
 #ifndef SILENT_WORK
     cv::waitKey(m_finishDelay);
 #endif
@@ -566,8 +564,7 @@ bool CombinedDetector::InitTracker(cv::UMat frame)
 ///
 void CombinedDetector::DrawData(cv::Mat frame, int framesCounter, int currTime)
 {
-	if (m_showLogs)
-		std::cout << "Frame " << framesCounter << ": tracks = " << (m_tracksBGFG.size() + m_tracksDNN.size()) << ", time = " << currTime << std::endl;
+	m_logger->info("Frame {0} ({1}): tracks = {2}, time = {3}", framesCounter, m_framesCount, m_tracksBGFG.size() + m_tracksDNN.size(), currTime);
 
 	for (const auto& track : m_tracksBGFG)
 	{
@@ -753,11 +750,12 @@ bool CombinedDetector::OpenCapture(cv::VideoCapture& capture)
 
     if (capture.isOpened())
     {
+		m_framesCount = cvRound(capture.get(cv::CAP_PROP_FRAME_COUNT));
         capture.set(cv::CAP_PROP_POS_FRAMES, m_startFrame);
 
         m_fps = std::max(30.f, (float)capture.get(cv::CAP_PROP_FPS));
 
-		std::cout << "Video " << m_inFile << " was started from " << m_startFrame << " frame with " << m_fps << " fps" << std::endl;
+		m_logger->info("Video {0} was started from {1} frame with {2} fps", m_inFile, m_startFrame, m_fps);
 
         return true;
     }

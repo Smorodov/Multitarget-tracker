@@ -12,6 +12,12 @@
 #include "BaseDetector.h"
 #include "Ctracker.h"
 
+#include "spdlog/spdlog.h"
+#include "spdlog/async.h"
+#include "spdlog/sinks/stdout_color_sinks.h"
+#include "spdlog/sinks/basic_file_sink.h"
+#include "spdlog/sinks/rotating_file_sink.h"
+
 ///
 /// \brief The CombinedDetector class
 ///
@@ -54,9 +60,10 @@ protected:
 	bool AddBbox(const cv::Rect& rect);
 	void CleanBboxes();
 
-    bool m_showLogs = true;
+    std::string m_showLogsLevel = "info";
     float m_fps = 25;
 	bool m_flipV = false;
+    int m_framesCount = 0;
 
 	bool InitDetector(cv::UMat frame);
     bool InitTracker(cv::UMat frame);
@@ -82,4 +89,8 @@ private:
 
     bool OpenCapture(cv::VideoCapture& capture);
     bool WriteFrame(cv::VideoWriter& writer, const cv::Mat& frame);
+
+    std::shared_ptr<spdlog::sinks::stdout_color_sink_mt> m_consoleSink;
+    std::shared_ptr<spdlog::sinks::rotating_file_sink_mt> m_fileSink;
+    std::shared_ptr<spdlog::logger> m_logger;
 };

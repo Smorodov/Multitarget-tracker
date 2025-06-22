@@ -13,6 +13,12 @@
 #include "FileLogger.h"
 #include "cvatAnnotationsGenerator.h"
 
+#include "spdlog/spdlog.h"
+#include "spdlog/async.h"
+#include "spdlog/sinks/stdout_color_sinks.h"
+#include "spdlog/sinks/basic_file_sink.h"
+#include "spdlog/sinks/rotating_file_sink.h"
+
 ///
 /// \brief The Frame struct
 ///
@@ -232,7 +238,7 @@ protected:
     std::unique_ptr<BaseDetector> m_detector;
     std::unique_ptr<BaseTracker> m_tracker;
 
-    bool m_showLogs = true;
+    std::string m_showLogsLevel = "info";
     float m_fps = 25;
 	cv::Size m_frameSize;
 	int m_framesCount = 0;
@@ -263,6 +269,10 @@ protected:
 
     std::vector<cv::Scalar> m_colors;
 
+    std::shared_ptr<spdlog::sinks::stdout_color_sink_mt> m_consoleSink;
+    std::shared_ptr<spdlog::sinks::rotating_file_sink_mt> m_fileSink;
+    std::shared_ptr<spdlog::logger> m_logger;
+
 private:
 	std::vector<TrackingObject> m_tracks;
 
@@ -280,6 +290,3 @@ private:
     bool OpenCapture(cv::VideoCapture& capture);
     bool WriteFrame(cv::VideoWriter& writer, const cv::Mat& frame);
 };
-
-///
-void DrawFilledRect(cv::Mat& frame, const cv::Rect& rect, cv::Scalar cl, int alpha);

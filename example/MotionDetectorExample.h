@@ -138,8 +138,7 @@ protected:
     ///
     void DrawData(cv::Mat frame, const std::vector<TrackingObject>& tracks, int framesCounter, int currTime) override
     {
-        if (m_showLogs)
-			std::cout << "Frame " << framesCounter << " (" << m_framesCount << "): tracks = " << tracks.size() << ", time = " << currTime << std::endl;
+		m_logger->info("Frame ({1}): tracks = {2}, time = {3}", framesCounter, tracks.size(), currTime);
 
 #ifdef USE_CLIP
 		std::vector<CLIPResult> clipResult;
