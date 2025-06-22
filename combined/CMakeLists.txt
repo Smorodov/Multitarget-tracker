@@ -12,7 +12,8 @@ INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/../src
                     ${PROJECT_SOURCE_DIR}/../src/Detector/vibe_src
                     ${PROJECT_SOURCE_DIR}/../src/Detector/Subsense
                     ${PROJECT_SOURCE_DIR}/../src/Tracker
-                    ${PROJECT_SOURCE_DIR}/../src/Tracker/HungarianAlg)
+                    ${PROJECT_SOURCE_DIR}/../src/Tracker/HungarianAlg
+                    ${PROJECT_SOURCE_DIR}/../thirdparty/spdlog/include)
 
 set(LIBS ${OpenCV_LIBS}
          mtracking

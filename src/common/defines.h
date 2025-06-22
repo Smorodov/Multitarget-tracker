@@ -340,6 +340,35 @@ inline bool SaveMat(const cv::Mat& m, std::string prefix, const std::string& ext
 }
 
 ///
+/// \brief DrawFilledRect
+///
+inline void DrawFilledRect(cv::Mat& frame, const cv::Rect& rect, cv::Scalar cl, int alpha)
+{
+    if (alpha)
+    {
+        const int alpha_1 = 255 - alpha;
+        const int nchans = frame.channels();
+        int color[3] = { cv::saturate_cast<int>(cl[0]), cv::saturate_cast<int>(cl[1]), cv::saturate_cast<int>(cl[2]) };
+        for (int y = rect.y; y < rect.y + rect.height; ++y)
+        {
+            uchar* ptr = frame.ptr(y) + nchans * rect.x;
+            for (int x = rect.x; x < rect.x + rect.width; ++x)
+            {
+                for (int i = 0; i < nchans; ++i)
+                {
+                    ptr[i] = cv::saturate_cast<uchar>((alpha_1 * ptr[i] + alpha * color[i]) / 255);
+                }
+                ptr += nchans;
+            }
+        }
+    }
+    else
+    {
+        cv::rectangle(frame, rect, cl, cv::FILLED);
+    }
+}
+
+///
 ///
 ///
 namespace tracking
