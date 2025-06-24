@@ -437,6 +437,7 @@ enum MatchType
 {
     MatchHungrian,
     MatchBipart,
+    MatchLAPJV,
     MatchCount
 };
 

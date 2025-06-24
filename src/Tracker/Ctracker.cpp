@@ -1,3 +1,4 @@
+#include <fstream>
 #include "Ctracker.h"
 #include "ShortPathCalculator.h"
 #include "EmbeddingsCalculator.hpp"
@@ -63,6 +64,9 @@ CTracker::CTracker(const TrackerSettings& settings)
         break;
     case tracking::MatchBipart:
         m_SPCalculator = std::make_unique<SPBipart>(spSettings);
+        break;
+    case tracking::MatchLAPJV:
+        m_SPCalculator = std::make_unique<SPLAPJV>(spSettings);
         break;
     }
     assert(m_SPCalculator);
@@ -167,16 +171,16 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
                                    cv::UMat currFrame,
                                    float fps)
 {
-    const size_t N = m_tracks.size();	// Tracking objects
-    const size_t M = regions.size();	// Detections or regions
+    const size_t colsTracks = m_tracks.size();	// Tracking objects
+    const size_t rowsRegions = regions.size();	// Detections or regions
 
-    assignments_t assignment(N, -1); // Assignments regions -> tracks
+    assignments_t assignmentT2R(colsTracks, -1); // Assignments: index - track, value - region
 
     std::vector<RegionEmbedding> regionEmbeddings;
     CalcEmbeddins(regionEmbeddings, regions, currFrame);
 
 #if DRAW_DBG_ASSIGNMENT
-    std::cout << "CTracker::UpdateTrackingState: m_tracks = " << N << ", regions = " << M << std::endl;
+    std::cout << "CTracker::UpdateTrackingState: m_tracks = " << colsTracks << ", regions = " << rowsRegions << std::endl;
 
     int fontType = cv::FONT_HERSHEY_TRIPLEX;
     double fontSize = 0.6;
@@ -241,7 +245,7 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
 #if DRAW_DBG_ASSIGNMENT
         std::cout << "CTracker::UpdateTrackingState: Distance matrix between all tracks to all regions" << std::endl;
 #endif
-        distMatrix_t costMatrix(N * M);
+        distMatrix_t costMatrix(colsTracks * rowsRegions);
         const track_t maxPossibleCost = std::max(static_cast<track_t>(1.), static_cast<track_t>(currFrame.cols * currFrame.rows));
         track_t maxCost = 0;
         CreateDistaceMatrix(regions, regionEmbeddings, costMatrix, maxPossibleCost, maxCost);
@@ -259,39 +263,63 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
 #if DRAW_DBG_ASSIGNMENT
         std::cout << "CTracker::UpdateTrackingState: Solving assignment problem (shortest paths)" << std::endl;
 #endif
-        m_SPCalculator->Solve(costMatrix, N, M, assignment, maxCost);
+        m_SPCalculator->Solve(costMatrix, colsTracks, rowsRegions, assignmentT2R, maxCost);
+
+#if 0
+        {
+            static size_t saveSolveNum = 0;
+            std::ofstream resCSV("mt_example" + std::to_string(saveSolveNum) + ".csv");
+            for (size_t r = 0; r < rowsRegions; ++r)
+            {
+                for (size_t c = 0; c < colsTracks; ++c)
+                {
+                    if (c == colsTracks - 1)
+                        resCSV << std::fixed << std::setw(2) << std::setprecision(2) << costMatrix[c + r * colsTracks] << std::endl;
+                    else
+                        resCSV << std::fixed << std::setw(2) << std::setprecision(2) << costMatrix[c + r * colsTracks] << ", ";
+                }
+            }
+            std::ofstream resSol("mt_example" + std::to_string(saveSolveNum) + ".sol");
+            resSol << maxCost << std::endl;
+            for (size_t r = 0; r < assignmentT2R.size(); ++r)
+			{
+				resSol << assignmentT2R[r] << std::endl;
+			}
+            ++saveSolveNum;
+        }
+#endif
 
         // Clean assignment from pairs with large distance
 #if DRAW_DBG_ASSIGNMENT
         std::cout << "CTracker::UpdateTrackingState: Clean assignment from pairs with large distance" << std::endl;
 #endif
-        for (size_t i = 0; i < assignment.size(); ++i)
+        for (size_t i = 0; i < assignmentT2R.size(); ++i)
         {
 #if DRAW_DBG_ASSIGNMENT
             std::stringstream ss;
-            if (assignment[i] != -1)
+            if (assignmentT2R[i] != -1)
             {
-                ss << m_tracks[i]->GetID().ID2Str() << "-" << assignment[i] << ": " << std::fixed << std::setprecision(2) << costMatrix[i + assignment[i] * N];
+                ss << m_tracks[i]->GetID().ID2Str() << "-" << assignmentT2R[i] << ": " << std::fixed << std::setprecision(2) << costMatrix[i + assignmentT2R[i] * colsTracks];
 
-				if (costMatrix[i + assignment[i] * N] > m_settings.m_distThres)
+				if (costMatrix[i + assignmentT2R[i] * colsTracks] > m_settings.m_distThres)
                 {
                     ss << ">" << m_settings.m_distThres;
-                    cv::line(dbgAssignment, m_tracks[i]->GetLastRect().center, regions[assignment[i]].m_rrect.center, colorMatchedAboveThreshRed, 2);
+                    cv::line(dbgAssignment, m_tracks[i]->GetLastRect().center, regions[assignmentT2R[i]].m_rrect.center, colorMatchedAboveThreshRed, 2);
 					DrawRRect(dbgAssignment, m_tracks[i]->LastRegion().m_rrect, colorMatchedAboveThreshRed, 1);
                 }
                 else
                 {
                     ss << "<" << m_settings.m_distThres;
-                    cv::line(dbgAssignment, m_tracks[i]->GetLastRect().center, regions[assignment[i]].m_rrect.center, colorMatchedGreen, 1);
+                    cv::line(dbgAssignment, m_tracks[i]->GetLastRect().center, regions[assignmentT2R[i]].m_rrect.center, colorMatchedGreen, 1);
 					DrawRRect(dbgAssignment, m_tracks[i]->LastRegion().m_rrect, colorMatchedGreen, 1);
                 }
 
                 for (size_t ri = 0; ri < regions.size(); ++ri)
                 {
-                    if (static_cast<int>(ri) != assignment[i] && costMatrix[i + ri * N] < 1)
+                    if (static_cast<int>(ri) != assignmentT2R[i] && costMatrix[i + ri * colsTracks] < 1)
                     {
                         std::stringstream liness;
-                        liness << std::fixed << std::setprecision(2) << costMatrix[i + ri * N];
+                        liness << std::fixed << std::setprecision(2) << costMatrix[i + ri * colsTracks];
                         auto p1 = m_tracks[i]->GetLastRect().center;
                         auto p2 = regions[ri].m_rrect.center;
                         cv::line(dbgAssignment, p1, p2, colorMatchedNearMargenta, 1);
@@ -305,10 +333,10 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
 				DrawRRect(dbgAssignment, m_tracks[i]->LastRegion().m_rrect, colorNotMatchedNearWhite, 1);
                 for (size_t ri = 0; ri < regions.size(); ++ri)
                 {
-                    if (costMatrix[i + ri * N] < 1)
+                    if (costMatrix[i + ri * colsTracks] < 1)
                     {
                         std::stringstream liness;
-                        liness << std::fixed << std::setprecision(2) << costMatrix[i + ri * N];
+                        liness << std::fixed << std::setprecision(2) << costMatrix[i + ri * colsTracks];
                         auto p1 = m_tracks[i]->GetLastRect().center;
                         auto p2 = regions[ri].m_rrect.center;
                         cv::line(dbgAssignment, p1, p2, colorNotMatchedNearWhite, 1);
@@ -323,11 +351,11 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
             }
 #endif
 
-            if (assignment[i] != -1)
+            if (assignmentT2R[i] != -1)
             {
-				if (costMatrix[i + assignment[i] * N] > m_settings.m_distThres)
+				if (costMatrix[i + assignmentT2R[i] * colsTracks] > m_settings.m_distThres)
                 {
-                    assignment[i] = -1;
+                    assignmentT2R[i] = -1;
                     m_tracks[i]->SkippedFrames()++;
                 }
             }
@@ -351,7 +379,7 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
                 m_removedObjects.push_back(m_tracks[i]->GetID());
                 //std::cout << "Remove: " << m_tracks[i]->GetID().ID2Str() << ": skipped = " << m_tracks[i]->SkippedFrames() << ", out of frame " << m_tracks[i]->IsOutOfTheFrame() << std::endl;
                 m_tracks.erase(m_tracks.begin() + i);
-                assignment.erase(assignment.begin() + i);
+                assignmentT2R.erase(assignmentT2R.begin() + i);
             }
             else
             {
@@ -368,7 +396,7 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
     {
 		//std::cout << "CTracker::update: regions[" << i << "].m_rrect: " << regions[i].m_rrect.center << ", " << regions[i].m_rrect.angle << ", " << regions[i].m_rrect.size << std::endl;
 
-        if (find(assignment.begin(), assignment.end(), i) == assignment.end())
+        if (std::find(assignmentT2R.begin(), assignmentT2R.end(), i) == assignmentT2R.end())
         {
             if (regionEmbeddings.empty())
                 m_tracks.push_back(std::make_unique<CTrack>(regions[i],
@@ -398,22 +426,22 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
     std::cout << "CTracker::UpdateTrackingState: Update Kalman Filters state" << std::endl;
 #endif
 
-    const ptrdiff_t stop_i = static_cast<ptrdiff_t>(assignment.size());
+    const ptrdiff_t stop_i = static_cast<ptrdiff_t>(assignmentT2R.size());
 #pragma omp parallel for
     for (ptrdiff_t i = 0; i < stop_i; ++i)
     {
         // If track updated less than one time, than filter state is not correct.
-        if (assignment[i] != -1) // If we have assigned detect, then update using its coordinates,
+        if (assignmentT2R[i] != -1) // If we have assigned detect, then update using its coordinates,
         {
             m_tracks[i]->SkippedFrames() = 0;
             // std::cout << "Update track " << i << " for " << assignment[i] << " region, regionEmbeddings.size = " << regionEmbeddings.size() << std::endl;
             if (regionEmbeddings.empty())
-                m_tracks[i]->Update(regions[assignment[i]],
+                m_tracks[i]->Update(regions[assignmentT2R[i]],
                         true, m_settings.m_maxTraceLength,
                         m_prevFrame, currFrame,
                         m_settings.m_useAbandonedDetection ? cvRound(m_settings.m_minStaticTime * fps) : 0, m_settings.m_maxSpeedForStatic);
             else
-                m_tracks[i]->Update(regions[assignment[i]], regionEmbeddings[assignment[i]],
+                m_tracks[i]->Update(regions[assignmentT2R[i]], regionEmbeddings[assignmentT2R[i]],
                         true, m_settings.m_maxTraceLength,
                         m_prevFrame, currFrame,
                         m_settings.m_useAbandonedDetection ? cvRound(m_settings.m_minStaticTime * fps) : 0, m_settings.m_maxSpeedForStatic);
@@ -448,10 +476,10 @@ void CTracker::CreateDistaceMatrix(const regions_t& regions,
                                    track_t maxPossibleCost,
                                    track_t& maxCost)
 {
-    const size_t N = m_tracks.size();	// Tracking objects
+    const size_t colsTracks = m_tracks.size();	// Tracking objects
     maxCost = 0;
 
-    for (size_t i = 0; i < N; ++i)
+    for (size_t i = 0; i < colsTracks; ++i)
     {
         const auto& track = m_tracks[i];
 
@@ -574,9 +602,9 @@ void CTracker::CreateDistaceMatrix(const regions_t& regions,
 				assert(ind == tracking::DistsCount);
 			}
 
-			costMatrix[i + j * N] = dist;
+			costMatrix[i + j * colsTracks] = dist;
             if constexpr (DIST_LOGS)
-                    std::cout << "costMatrix[" << j << "][" << i << "] (or " << (i + j * N) << ") = " << dist << std::endl;
+                    std::cout << "costMatrix[" << j << "][" << i << "] (or " << (i + j * colsTracks) << ") = " << dist << std::endl;
 
             if (dist < 0 || dist > maxPossibleCost)
             {
