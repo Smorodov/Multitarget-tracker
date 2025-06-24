@@ -5,6 +5,7 @@
 [![CodeQL](https://github.com/Smorodov/Multitarget-tracker/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/Smorodov/Multitarget-tracker/actions/workflows/codeql-analysis.yml)
 
 ## Latest Features
+- New linear assignment algorithm - [Jonker-Volgenant / LAPJV algorithm](https://github.com/yongyanghz/LAPJV-algorithm-c) used in [scipy](https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.linear_sum_assignment.html) as alternative for Hungarian allgorithm
 - D-FINE detector works with TensorRT! Export pre-trained PyTorch models [here (Peterande/D-FINE)](https://github.com/Peterande/D-FINE) to ONNX format and run Multitarget-tracker with `-e=6` example
 - RF-DETR detector works with TensorRT! Export pre-trained PyTorch models [here (roboflow/rf-detr)](https://github.com/roboflow/rf-detr) to ONNX format and run Multitarget-tracker with `-e=6` example
 - YOLOv12 detector works with TensorRT! Export pre-trained PyTorch models [here (sunsmarterjie/yolov12)](https://github.com/sunsmarterjie/yolov12) to ONNX format and run Multitarget-tracker with `-e=6` example

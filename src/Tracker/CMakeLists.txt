@@ -16,10 +16,11 @@ set(tracker_sources
              TrackerSettings.cpp
 
              HungarianAlg/HungarianAlg.cpp
+             LAPJV_algorithm/lap.cpp
 
              VOTTracker.hpp
-             dat/dat_tracker.cpp
-             )
+             dat/dat_tracker.cpp)
+
 set(tracker_headers
              Ctracker.h
              ShortPathCalculator.h
@@ -28,9 +29,10 @@ set(tracker_headers
              Kalman.h
              TrackerSettings.h
              HungarianAlg/HungarianAlg.h
+             LAPJV_algorithm/lap.h
              EmbeddingsCalculator.hpp
-             dat/dat_tracker.hpp
-)
+             dat/dat_tracker.hpp)
+
 if (${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm|ARM|aarch64|AARCH64")
 
 else()
