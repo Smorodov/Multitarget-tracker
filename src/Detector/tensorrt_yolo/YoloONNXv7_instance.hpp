@@ -52,7 +52,7 @@ protected:
 			lenInd = 0;
 		}
 		int nc = static_cast<int>(m_outpuDims[outInd].d[ncInd] - 5 - 32);
-		size_t len = static_cast<size_t>(m_outpuDims[outInd].d[lenInd]) / m_params.explicitBatchSize;
+		size_t len = static_cast<size_t>(m_outpuDims[outInd].d[lenInd]);// / m_params.explicitBatchSize;
 		//auto Volume = [](const nvinfer1::Dims& d)
 		//{
 		//    return std::accumulate(d.d, d.d + d.nbDims, 1, std::multiplies<int>());

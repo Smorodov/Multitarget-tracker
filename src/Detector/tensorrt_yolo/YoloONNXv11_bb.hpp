@@ -36,7 +36,7 @@ protected:
 		size_t lenInd = 2;
 		int nc = static_cast<int>(m_outpuDims[0].d[ncInd] - 4);
 		int dimensions = nc + 4;
-		size_t len = static_cast<size_t>(m_outpuDims[0].d[lenInd]) / m_params.explicitBatchSize;
+		size_t len = static_cast<size_t>(m_outpuDims[0].d[lenInd]);// / m_params.explicitBatchSize;
 		//auto Volume = [](const nvinfer1::Dims& d)
 		//{
 		//    return std::accumulate(d.d, d.d + d.nbDims, 1, std::multiplies<int>());
