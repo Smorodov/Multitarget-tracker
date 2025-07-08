@@ -197,7 +197,7 @@ struct TrackingObject
 	objtype_t m_type = bad_type;       // Objects type name or empty value
 	float m_confidence = -1;           // From Detector with score (YOLO or SSD)
 	bool m_isStatic = false;           // Object is abandoned
-	int m_staticTime = 0;              // Object is abandoned, frames
+	int m_staticTime = 0;              // Object is abandoned, seconds
 	bool m_outOfTheFrame = false;      // Is object out of the frame
 	mutable bool m_lastRobust = false; // saved latest robust value
 

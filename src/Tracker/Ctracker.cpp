@@ -18,7 +18,7 @@ public:
 
 	~CTracker(void) = default;
 
-    void Update(const regions_t& regions, cv::UMat currFrame, float fps) override;
+    void Update(const regions_t& regions, cv::UMat currFrame, time_point_t frameTime) override;
 
     bool CanGrayFrameToTrack() const override;
     bool CanColorFrameToTrack() const override;
@@ -30,6 +30,7 @@ private:
     TrackerSettings m_settings;
 
 	tracks_t m_tracks;
+    time_point_t m_lastFrameTime;
 
     track_id_t m_nextTrackID;
     std::vector<track_id_t> m_removedObjects;
@@ -40,7 +41,7 @@ private:
     std::map<objtype_t, std::shared_ptr<EmbeddingsCalculator>> m_embCalculators;
 
     void CreateDistaceMatrix(const regions_t& regions, const std::vector<RegionEmbedding>& regionEmbeddings, distMatrix_t& costMatrix, track_t maxPossibleCost, track_t& maxCost);
-    void UpdateTrackingState(const regions_t& regions, cv::UMat currFrame, float fps);
+    void UpdateTrackingState(const regions_t& regions, cv::UMat currFrame, time_point_t frameTime);
     void CalcEmbeddins(std::vector<RegionEmbedding>& regionEmbeddings, const regions_t& regions, cv::UMat currFrame) const;
 
     track_t GetEllipseDist(const CTrack& trackRef, const CRegion& reg);
@@ -131,7 +132,7 @@ void CTracker::GetTracks(std::vector<TrackingObject>& tracks) const
         tracks.reserve(m_tracks.size());
     for (const auto& track : m_tracks)
     {
-        tracks.emplace_back(track->ConstructObject());
+        tracks.emplace_back(track->ConstructObject(m_lastFrameTime));
     }
 }
 
@@ -150,11 +151,12 @@ void CTracker::GetRemovedTracks(std::vector<track_id_t>& trackIDs) const
 /// \param currFrame
 /// \param fps
 ///
-void CTracker::Update(const regions_t& regions, cv::UMat currFrame, float fps)
+void CTracker::Update(const regions_t& regions, cv::UMat currFrame, time_point_t frameTime)
 {
+    m_lastFrameTime = frameTime;
     m_removedObjects.clear();
 
-    UpdateTrackingState(regions, currFrame, fps);
+    UpdateTrackingState(regions, currFrame, frameTime);
 
     currFrame.copyTo(m_prevFrame);
 }
@@ -169,7 +171,7 @@ void CTracker::Update(const regions_t& regions, cv::UMat currFrame, float fps)
 ///
 void CTracker::UpdateTrackingState(const regions_t& regions,
                                    cv::UMat currFrame,
-                                   float fps)
+                                   time_point_t frameTime)
 {
     const size_t colsTracks = m_tracks.size();	// Tracking objects
     const size_t rowsRegions = regions.size();	// Detections or regions
@@ -351,19 +353,8 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
             }
 #endif
 
-            if (assignmentT2R[i] != -1)
-            {
-				if (costMatrix[i + assignmentT2R[i] * colsTracks] > m_settings.m_distThres)
-                {
-                    assignmentT2R[i] = -1;
-                    m_tracks[i]->SkippedFrames()++;
-                }
-            }
-            else
-            {
-                // If track have no assigned detect, then increment skipped frames counter.
-                m_tracks[i]->SkippedFrames()++;
-            }
+            if (assignmentT2R[i] != -1 && costMatrix[i + assignmentT2R[i] * colsTracks] > m_settings.m_distThres)
+                assignmentT2R[i] = -1;
         }
 
         // If track didn't get detects long time, remove it
@@ -372,9 +363,9 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
 #endif
         for (size_t i = 0; i < m_tracks.size();)
         {
-            if (m_tracks[i]->SkippedFrames() > m_settings.m_maximumAllowedSkippedFrames ||
+            if (m_tracks[i]->GetLostPeriod(frameTime) > m_settings.m_maximumAllowedLostTime ||
                     m_tracks[i]->IsOutOfTheFrame() ||
-                    m_tracks[i]->IsStaticTimeout(cvRound(fps * (m_settings.m_maxStaticTime - m_settings.m_minStaticTime))))
+                    m_tracks[i]->IsStaticTimeout(frameTime, m_settings.m_maxStaticTime - m_settings.m_minStaticTime))
             {
                 m_removedObjects.push_back(m_tracks[i]->GetID());
                 //std::cout << "Remove: " << m_tracks[i]->GetID().ID2Str() << ": skipped = " << m_tracks[i]->SkippedFrames() << ", out of frame " << m_tracks[i]->IsOutOfTheFrame() << std::endl;
@@ -433,22 +424,24 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
         // If track updated less than one time, than filter state is not correct.
         if (assignmentT2R[i] != -1) // If we have assigned detect, then update using its coordinates,
         {
-            m_tracks[i]->SkippedFrames() = 0;
+            m_tracks[i]->ResetLostTime(frameTime);
             // std::cout << "Update track " << i << " for " << assignment[i] << " region, regionEmbeddings.size = " << regionEmbeddings.size() << std::endl;
             if (regionEmbeddings.empty())
                 m_tracks[i]->Update(regions[assignmentT2R[i]],
                         true, m_settings.m_maxTraceLength,
                         m_prevFrame, currFrame,
-                        m_settings.m_useAbandonedDetection ? cvRound(m_settings.m_minStaticTime * fps) : 0, m_settings.m_maxSpeedForStatic);
+                        m_settings.m_useAbandonedDetection ? m_settings.m_minStaticTime : 0, m_settings.m_maxSpeedForStatic,
+                        frameTime);
             else
                 m_tracks[i]->Update(regions[assignmentT2R[i]], regionEmbeddings[assignmentT2R[i]],
                         true, m_settings.m_maxTraceLength,
                         m_prevFrame, currFrame,
-                        m_settings.m_useAbandonedDetection ? cvRound(m_settings.m_minStaticTime * fps) : 0, m_settings.m_maxSpeedForStatic);
+                        m_settings.m_useAbandonedDetection ? m_settings.m_minStaticTime : 0, m_settings.m_maxSpeedForStatic,
+                        frameTime);
         }
         else				     // if not continue using predictions
         {
-            m_tracks[i]->Update(CRegion(), false, m_settings.m_maxTraceLength, m_prevFrame, currFrame, 0, m_settings.m_maxSpeedForStatic);
+            m_tracks[i]->Update(CRegion(), false, m_settings.m_maxTraceLength, m_prevFrame, currFrame, 0, m_settings.m_maxSpeedForStatic, frameTime);
         }
     }
 

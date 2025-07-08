@@ -504,13 +504,13 @@ bool CombinedDetector::InitTracker(cv::UMat frame)
 	{
 		settingsBGFG.m_minStaticTime = m_minStaticTime;
 		settingsBGFG.m_maxStaticTime = 30;
-		settingsBGFG.m_maximumAllowedSkippedFrames = cvRound(settingsBGFG.m_minStaticTime * m_fps); // Maximum allowed skipped frames
-		settingsBGFG.m_maxTraceLength = 2 * settingsBGFG.m_maximumAllowedSkippedFrames;        // Maximum trace length
+		settingsBGFG.m_maximumAllowedLostTime = settingsBGFG.m_minStaticTime;      // Maximum allowed lost time
+		settingsBGFG.m_maxTraceLength = 2 * settingsBGFG.m_maximumAllowedLostTime; // Maximum trace length
 	}
 	else
 	{
-		settingsBGFG.m_maximumAllowedSkippedFrames = cvRound(2 * m_fps); // Maximum allowed skipped frames
-		settingsBGFG.m_maxTraceLength = cvRound(4 * m_fps);              // Maximum trace length
+		settingsBGFG.m_maximumAllowedLostTime = 2.; // Maximum allowed skipped frames
+		settingsBGFG.m_maxTraceLength = 4.;         // Maximum trace length
 	}
 
 	m_trackerBGFG = BaseTracker::CreateTracker(settingsBGFG);
@@ -538,13 +538,13 @@ bool CombinedDetector::InitTracker(cv::UMat frame)
 	{
 		settingsDNN.m_minStaticTime = m_minStaticTime;
 		settingsDNN.m_maxStaticTime = 30;
-		settingsDNN.m_maximumAllowedSkippedFrames = cvRound(settingsDNN.m_minStaticTime * m_fps); // Maximum allowed skipped frames
-		settingsDNN.m_maxTraceLength = 2 * settingsDNN.m_maximumAllowedSkippedFrames;        // Maximum trace length
+		settingsDNN.m_maximumAllowedLostTime = settingsDNN.m_minStaticTime;      // Maximum allowed lost time
+		settingsDNN.m_maxTraceLength = 2 * settingsDNN.m_maximumAllowedLostTime; // Maximum trace length
 	}
 	else
 	{
-		settingsDNN.m_maximumAllowedSkippedFrames = cvRound(2 * m_fps); // Maximum allowed skipped frames
-		settingsDNN.m_maxTraceLength = cvRound(4 * m_fps);              // Maximum trace length
+		settingsDNN.m_maximumAllowedLostTime = 2.; // Maximum allowed lost time
+		settingsDNN.m_maxTraceLength = 4.;         // Maximum trace length
 	}
 
 	settingsDNN.AddNearTypes(TypeConverter::Str2Type("backpack"), TypeConverter::Str2Type("handbag"), true);

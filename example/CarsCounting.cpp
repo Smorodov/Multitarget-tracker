@@ -197,7 +197,7 @@ bool CarsCounting::InitTracker(cv::UMat frame)
     settings.m_accelNoiseMag = 0.2f;                // Accel noise magnitude for Kalman filter
     settings.m_distThres = 0.7f;                    // Distance threshold between region and object on two frames
     settings.m_minAreaRadiusPix = frame.rows / 20.f;
-    settings.m_maximumAllowedSkippedFrames = cvRound(2 * m_fps); // Maximum allowed skipped frames
+    settings.m_maximumAllowedLostTime = 2.;         // Maximum allowed lost time
 
     settings.AddNearTypes(TypeConverter::Str2Type("car"), TypeConverter::Str2Type("bus"), false);
     settings.AddNearTypes(TypeConverter::Str2Type("car"), TypeConverter::Str2Type("truck"), false);
@@ -209,13 +209,13 @@ bool CarsCounting::InitTracker(cv::UMat frame)
     {
         settings.m_minStaticTime = minStaticTime;
         settings.m_maxStaticTime = 60;
-        settings.m_maximumAllowedSkippedFrames = cvRound(settings.m_minStaticTime * m_fps); // Maximum allowed skipped frames
-        settings.m_maxTraceLength = 2 * settings.m_maximumAllowedSkippedFrames;        // Maximum trace length
+        settings.m_maximumAllowedLostTime = settings.m_minStaticTime;      // Maximum allowed lost time
+        settings.m_maxTraceLength = 2 * settings.m_maximumAllowedLostTime; // Maximum trace length
     }
     else
     {
-        settings.m_maximumAllowedSkippedFrames = cvRound(10 * m_fps); // Maximum allowed skipped frames
-        settings.m_maxTraceLength = cvRound(4 * m_fps);              // Maximum trace length
+        settings.m_maximumAllowedLostTime = 10.; // Maximum allowed lost time
+        settings.m_maxTraceLength = 4.;          // Maximum trace length
     }
 
     m_tracker = BaseTracker::CreateTracker(settings);

@@ -318,13 +318,13 @@ void AsyncDetector::CaptureThread(std::string fileName, int startFrame, int* fra
     {
         trackerSettings.m_minStaticTime = minStaticTime;
         trackerSettings.m_maxStaticTime = 60;
-        trackerSettings.m_maximumAllowedSkippedFrames = cvRound(trackerSettings.m_minStaticTime * (*fps)); // Maximum allowed skipped frames
-        trackerSettings.m_maxTraceLength = 2 * trackerSettings.m_maximumAllowedSkippedFrames;        // Maximum trace length
+        trackerSettings.m_maximumAllowedLostTime = trackerSettings.m_minStaticTime;      // Maximum allowed lost time
+        trackerSettings.m_maxTraceLength = 2 * trackerSettings.m_maximumAllowedLostTime; // Maximum trace length
     }
     else
     {
-        trackerSettings.m_maximumAllowedSkippedFrames = cvRound(2 * (*fps)); // Maximum allowed skipped frames
-        trackerSettings.m_maxTraceLength = cvRound(4 * (*fps));              // Maximum trace length
+        trackerSettings.m_maximumAllowedLostTime = 2.; // Maximum allowed lost time
+        trackerSettings.m_maxTraceLength = 4.;         // Maximum trace length
     }
 
     // Capture the first frame

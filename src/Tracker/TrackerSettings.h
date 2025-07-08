@@ -58,16 +58,16 @@ struct TrackerSettings
     track_t m_minAreaRadiusK = 0.5f;
 
     ///
-    /// \brief m_maximumAllowedSkippedFrames
-    /// If the object don't assignment more than this frames then it will be removed
+    /// \brief m_maximumAllowedLostTime
+    /// If the object don't assignment more than this time in seconds then it will be removed
     ///
-    size_t m_maximumAllowedSkippedFrames = 25;
+    double m_maximumAllowedLostTime = 1.;
 
     ///
     /// \brief m_maxTraceLength
-    /// The maximum trajectory length
+    /// The maximum trajectory length in seconds
     ///
-    size_t m_maxTraceLength = 50;
+    track_t m_maxTraceLength = 2.f;
 
     ///
     /// \brief m_useAbandonedDetection
@@ -87,10 +87,10 @@ struct TrackerSettings
     int m_maxStaticTime = 25;
     ///
     /// \brief m_maxSpeedForStatic
-    /// Speed in pixels
+    /// Speed in meters
     /// If speed of object is more that this value than object is non static
     ///
-    int m_maxSpeedForStatic = 10;
+    track_t m_maxSpeedForStatic = 0.5f;
 
     ///
     /// \brief m_nearTypes

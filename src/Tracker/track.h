@@ -104,11 +104,11 @@ public:
     track_t WidthDist(const CRegion& reg) const;
     track_t HeightDist(const CRegion& reg) const;
 
-    void Update(const CRegion& region, bool dataCorrect, size_t max_trace_length, cv::UMat prevFrame, cv::UMat currFrame, int trajLen, int maxSpeedForStatic);
-    void Update(const CRegion& region, const RegionEmbedding& regionEmbedding, bool dataCorrect, size_t max_trace_length, cv::UMat prevFrame, cv::UMat currFrame, int trajLen, int maxSpeedForStatic);
+    void Update(const CRegion& region, bool dataCorrect, size_t max_trace_length, cv::UMat prevFrame, cv::UMat currFrame, int trajLen, int maxSpeedForStatic, time_point_t currTime);
+    void Update(const CRegion& region, const RegionEmbedding& regionEmbedding, bool dataCorrect, size_t max_trace_length, cv::UMat prevFrame, cv::UMat currFrame, int trajLen, int maxSpeedForStatic, time_point_t currTime);
 
     bool IsStatic() const;
-    bool IsStaticTimeout(int framesTime) const;
+    bool IsStaticTimeout(time_point_t currTime, double staticPeriod) const;
     bool IsOutOfTheFrame() const;
 
     cv::RotatedRect GetLastRect() const;
@@ -117,10 +117,10 @@ public:
     Point_t& AveragePoint();
     const CRegion& LastRegion() const;
     objtype_t GetCurrType() const;
-    size_t SkippedFrames() const;
-    size_t& SkippedFrames();
+    double GetLostPeriod(time_point_t currTime) const;
+    void ResetLostTime(time_point_t currTime);
 
-    TrackingObject ConstructObject() const;
+    TrackingObject ConstructObject(time_point_t frameTime) const;
     track_id_t GetID() const;
 
 	tracking::FilterGoal GetFilterGoal() const;
@@ -135,7 +135,7 @@ private:
     Point_t m_predictionPoint;
 
     track_id_t m_trackID;
-    size_t m_skippedFrames = 0;
+    time_point_t m_lastDetectionTime;
 
     objtype_t m_currType = bad_type;
     objtype_t m_lastType = bad_type;
@@ -160,10 +160,10 @@ private:
     RegionEmbedding m_regionEmbedding;
 
     ///
-    bool CheckStatic(int trajLen, cv::UMat currFrame, const CRegion& region, int maxSpeedForStatic);
+    bool CheckStatic(int trajLen, cv::UMat currFrame, const CRegion& region, int maxSpeedForStatic, time_point_t currTime);
     cv::UMat m_staticFrame;
     cv::Rect m_staticRect;
-    int m_staticFrames = 0;
+    time_point_t m_staticStartTime;
     bool m_isStatic = false;
 
 	tracking::FilterGoal m_filterGoal = tracking::FilterGoal::FilterCenter;
