@@ -207,6 +207,7 @@ struct FrameInfo
     std::vector<regions_t> m_regions;
     std::vector<std::vector<TrackingObject>> m_tracks;
     std::vector<int> m_frameInds;
+    std::vector<time_point_t> m_frameTimeStamps;
 
     size_t m_batchSize = 1;
 
@@ -284,8 +285,13 @@ private:
     int m_startFrame = 0;
     int m_endFrame = 0;
     int m_finishDelay = 0;
+    
+    time_point_t m_startTimeStamp;
+    bool m_useArchieveTime = true;
 
     FrameInfo m_frameInfo[2];
+    
+    time_point_t GetNextTimeStamp(int framesCounter) const;
 
     bool OpenCapture(cv::VideoCapture& capture);
     bool WriteFrame(cv::VideoWriter& writer, const cv::Mat& frame);

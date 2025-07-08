@@ -67,7 +67,7 @@ struct TrackerSettings
     /// \brief m_maxTraceLength
     /// The maximum trajectory length in seconds
     ///
-    track_t m_maxTraceLength = 2.f;
+    double m_maxTraceLength = 2.f;
 
     ///
     /// \brief m_useAbandonedDetection

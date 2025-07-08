@@ -267,6 +267,8 @@ void AsyncDetector::CaptureThread(std::string fileName, int startFrame, int* fra
     *framesCount = cvRound(capture.get(cv::CAP_PROP_FRAME_COUNT));
     capture.set(cv::CAP_PROP_POS_FRAMES, startFrame);
 
+    time_point_t startTimeStamp = std::chrono::system_clock::now();
+
     *fps = std::max(1.f, (float)capture.get(cv::CAP_PROP_FPS));
 	int frameHeight = cvRound(capture.get(cv::CAP_PROP_FRAME_HEIGHT));
 
@@ -341,6 +343,7 @@ void AsyncDetector::CaptureThread(std::string fileName, int startFrame, int* fra
     {
         frame_ptr frameInfo(new FrameInfo(frameInd));
         frameInfo->m_dt = cv::getTickCount();
+        frameInfo->m_frameTimeStamp = startTimeStamp + std::chrono::milliseconds(cvRound(frameInd * (1000.f / (*fps))));
         capture >> frameInfo->m_frame;
         if (frameInfo->m_frame.empty())
         {
@@ -412,7 +415,7 @@ void AsyncDetector::TrackingThread(const TrackerSettings& settings, FramesQueue*
         frame_ptr frameInfo = framesQue->GetFirstDetectedFrame();
         if (frameInfo)
         {
-            tracker->Update(frameInfo->m_regions, frameInfo->m_clFrame, frameInfo->m_fps);
+            tracker->Update(frameInfo->m_regions, frameInfo->m_clFrame, frameInfo->m_frameTimeStamp);
 
             tracker->GetTracks(frameInfo->m_tracks);
             frameInfo->m_inTracker.store(FrameInfo::StateCompleted);

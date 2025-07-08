@@ -75,6 +75,8 @@ VideoExample::VideoExample(const cv::CommandLineParser& parser)
     {
         fr.SetUseAdjust(m_useContrastAdjustment);
     }
+
+    m_startTimeStamp = currentTime;
 }
 
 ///
@@ -142,6 +144,7 @@ void VideoExample::SyncProcess()
 	FrameInfo frameInfo(m_batchSize);
 	frameInfo.m_frames.resize(frameInfo.m_batchSize);
 	frameInfo.m_frameInds.resize(frameInfo.m_batchSize);
+    frameInfo.m_frameTimeStamps.resize(frameInfo.m_batchSize);
 
     for (auto& fr : frameInfo.m_frames)
     {
@@ -159,6 +162,7 @@ void VideoExample::SyncProcess()
 			if (frameInfo.m_frames[i].empty())
 				break;
 			frameInfo.m_frameInds[i] = framesCounter;
+            frameInfo.m_frameTimeStamps[i] = GetNextTimeStamp(framesCounter);
             frameInfo.m_frames[i].AdjustMatBGR();
 
 			++framesCounter;
@@ -385,6 +389,7 @@ void VideoExample::CaptureAndDetect(VideoExample* thisPtr, std::atomic<bool>& st
 		{
 			frameInfo.m_frames.resize(frameInfo.m_batchSize);
 			frameInfo.m_frameInds.resize(frameInfo.m_batchSize);
+            frameInfo.m_frameTimeStamps.resize(frameInfo.m_batchSize);
 		}
 
         cv::Mat frame;
@@ -401,6 +406,7 @@ void VideoExample::CaptureAndDetect(VideoExample* thisPtr, std::atomic<bool>& st
             frameInfo.m_frames[i].GetMatBGRWrite() = frame;
             frameInfo.m_frames[i].AdjustMatBGR();
             frameInfo.m_frameInds[i] = framesCounter;
+            frameInfo.m_frameTimeStamps[i] = thisPtr->GetNextTimeStamp(framesCounter);
 			++framesCounter;
 
             if (localEndFrame && framesCounter > localEndFrame)
@@ -440,6 +446,19 @@ void VideoExample::CaptureAndDetect(VideoExample* thisPtr, std::atomic<bool>& st
 		++processCounter;
     }
     stopCapture = true;
+}
+
+///
+/// \brief VideoExample::GetNextTimeStamp
+/// \param framesCounter
+/// \return
+///
+time_point_t VideoExample::GetNextTimeStamp(int framesCounter) const
+{
+    if (m_useArchieveTime)
+        return m_startTimeStamp + std::chrono::milliseconds(cvRound(framesCounter * (1000.f / m_fps)));
+    else
+        return std::chrono::system_clock::now();
 }
 
 ///
@@ -483,9 +502,9 @@ void VideoExample::Tracking(FrameInfo& frame)
 	for (size_t i = 0; i < frame.m_frames.size(); ++i)
 	{
 		if (m_tracker->CanColorFrameToTrack())
-			m_tracker->Update(frame.m_regions[i], frame.m_frames[i].GetUMatBGR(), m_fps);
+			m_tracker->Update(frame.m_regions[i], frame.m_frames[i].GetUMatBGR(), frame.m_frameTimeStamps[i]);
 		else
-			m_tracker->Update(frame.m_regions[i], frame.m_frames[i].GetUMatGray(), m_fps);
+			m_tracker->Update(frame.m_regions[i], frame.m_frames[i].GetUMatGray(), frame.m_frameTimeStamps[i]);
 		m_tracker->GetTracks(frame.m_tracks[i]);
 
 		m_cvatAnnotationsGenerator.NewDetects(frame.m_frameInds[i], frame.m_tracks[i], 0);
