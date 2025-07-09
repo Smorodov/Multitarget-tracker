@@ -368,7 +368,7 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
                     m_tracks[i]->IsStaticTimeout(frameTime, m_settings.m_maxStaticTime - m_settings.m_minStaticTime))
             {
                 m_removedObjects.push_back(m_tracks[i]->GetID());
-                //std::cout << "Remove: " << m_tracks[i]->GetID().ID2Str() << ": skipped = " << m_tracks[i]->SkippedFrames() << ", out of frame " << m_tracks[i]->IsOutOfTheFrame() << std::endl;
+                //std::cout << "Remove: " << m_tracks[i]->GetID().ID2Str() << ": lost = " << m_tracks[i]->GetLostPeriod(frameTime) << ", maximumAllowedLostTime = " << m_settings.m_maximumAllowedLostTime << ", out of frame " << m_tracks[i]->IsOutOfTheFrame() << std::endl;
                 m_tracks.erase(m_tracks.begin() + i);
                 assignmentT2R.erase(assignmentT2R.begin() + i);
             }
@@ -397,7 +397,8 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
                                                             m_settings.m_useAcceleration,
                                                             m_nextTrackID,
                                                             m_settings.m_filterGoal,
-                                                            m_settings.m_lostTrackType));
+                                                            m_settings.m_lostTrackType,
+                                                            frameTime));
             else
                 m_tracks.push_back(std::make_unique<CTrack>(regions[i],
                                                             regionEmbeddings[i],
@@ -407,7 +408,8 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
                                                             m_settings.m_useAcceleration,
                                                             m_nextTrackID,
                                                             m_settings.m_filterGoal,
-                                                            m_settings.m_lostTrackType));
+                                                            m_settings.m_lostTrackType,
+                                                            frameTime));
             m_nextTrackID = m_nextTrackID.NextID();
         }
     }

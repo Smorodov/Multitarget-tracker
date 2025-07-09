@@ -239,7 +239,7 @@ protected:
     std::unique_ptr<BaseDetector> m_detector;
     std::unique_ptr<BaseTracker> m_tracker;
 
-    std::string m_showLogsLevel = "info";
+    std::string m_showLogsLevel = "debug";
     float m_fps = 25;
 	cv::Size m_frameSize;
 	int m_framesCount = 0;

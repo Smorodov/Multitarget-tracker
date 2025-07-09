@@ -37,7 +37,8 @@ public:
            bool useAcceleration,
            track_id_t trackID,
            tracking::FilterGoal filterGoal,
-           tracking::LostTrackType externalTrackerForLost);
+           tracking::LostTrackType externalTrackerForLost,
+           time_point_t currTime);
 
     CTrack(const CRegion& region,
            const RegionEmbedding& regionEmbedding,
@@ -47,7 +48,8 @@ public:
            bool useAcceleration,
            track_id_t trackID,
            tracking::FilterGoal filterGoal,
-           tracking::LostTrackType externalTrackerForLost);
+           tracking::LostTrackType externalTrackerForLost,
+           time_point_t currTime);
 
     ///
     /// \brief CalcDistCenter
@@ -104,8 +106,8 @@ public:
     track_t WidthDist(const CRegion& reg) const;
     track_t HeightDist(const CRegion& reg) const;
 
-    void Update(const CRegion& region, bool dataCorrect, size_t max_trace_length, cv::UMat prevFrame, cv::UMat currFrame, int trajLen, int maxSpeedForStatic, time_point_t currTime);
-    void Update(const CRegion& region, const RegionEmbedding& regionEmbedding, bool dataCorrect, size_t max_trace_length, cv::UMat prevFrame, cv::UMat currFrame, int trajLen, int maxSpeedForStatic, time_point_t currTime);
+    void Update(const CRegion& region, bool dataCorrect, double maxTraceLength, cv::UMat prevFrame, cv::UMat currFrame, int trajLen, int maxSpeedForStatic, time_point_t currTime);
+    void Update(const CRegion& region, const RegionEmbedding& regionEmbedding, bool dataCorrect, double maxTraceLength, cv::UMat prevFrame, cv::UMat currFrame, int trajLen, int maxSpeedForStatic, time_point_t currTime);
 
     bool IsStatic() const;
     bool IsStaticTimeout(time_point_t currTime, double staticPeriod) const;

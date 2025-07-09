@@ -26,13 +26,15 @@ CTrack::CTrack(const CRegion& region,
                bool useAcceleration,
                track_id_t trackID,
                tracking::FilterGoal filterGoal,
-               tracking::LostTrackType externalTrackerForLost)
+               tracking::LostTrackType externalTrackerForLost,
+               time_point_t currTime)
     :
       m_kalman(kalmanType, useAcceleration, deltaTime, accelNoiseMag),
       m_lastRegion(region),
       m_predictionRect(region.m_rrect),
       m_predictionPoint(region.m_rrect.center),
       m_trackID(trackID),
+      m_lastDetectionTime(currTime),
       m_currType(region.m_type),
       m_lastType(region.m_type),
       m_externalTrackerForLost(externalTrackerForLost),
@@ -54,7 +56,8 @@ CTrack::CTrack(const CRegion& region,
 	};
 
     Point_t pt(m_predictionPoint.x, m_predictionPoint.y + region.m_brect.height / 2);
-    m_trace.push_back(pt, pt);
+    m_trace.push_back(pt, pt, currTime);
+    ResetLostTime(currTime);
 }
 
 ///
@@ -77,13 +80,15 @@ CTrack::CTrack(const CRegion& region,
                bool useAcceleration,
                track_id_t trackID,
                tracking::FilterGoal filterGoal,
-               tracking::LostTrackType externalTrackerForLost)
+               tracking::LostTrackType externalTrackerForLost,
+               time_point_t currTime)
     :
       m_kalman(kalmanType, useAcceleration, deltaTime, accelNoiseMag),
       m_lastRegion(region),
       m_predictionRect(region.m_rrect),
       m_predictionPoint(region.m_rrect.center),
       m_trackID(trackID),
+      m_lastDetectionTime(currTime),
       m_currType(region.m_type),
       m_lastType(region.m_type),
       m_externalTrackerForLost(externalTrackerForLost),
@@ -104,7 +109,7 @@ CTrack::CTrack(const CRegion& region,
 		m_kalman.Update(region.m_rrect, true);
 		break;
 	};
-    m_trace.push_back(m_predictionPoint, m_predictionPoint);
+    m_trace.push_back(m_predictionPoint, m_predictionPoint, currTime);
 }
 
 ///
@@ -244,14 +249,14 @@ std::pair<track_t, bool> CTrack::CalcCosine(const RegionEmbedding& embedding) co
 /// \brief CTrack::Update
 /// \param region
 /// \param dataCorrect
-/// \param max_trace_length
+/// \param maxTraceLength
 /// \param prevFrame
 /// \param currFrame
 /// \param trajLen
 ///
 void CTrack::Update(const CRegion& region,
                     bool dataCorrect,
-                    size_t max_trace_length,
+                    double maxTraceLength,
                     cv::UMat prevFrame,
                     cv::UMat currFrame,
                     int trajLen, int maxSpeedForStatic,
@@ -303,17 +308,23 @@ void CTrack::Update(const CRegion& region,
         //std::cout << m_lastRegion.m_brect << " - " << region.m_brect << std::endl;
 
         m_lastRegion = region;
-        m_trace.push_back(m_predictionPoint, region.m_rrect.center);
+        m_trace.push_back(m_predictionPoint, region.m_rrect.center, currTime);
 
         CheckStatic(trajLen, currFrame, region, maxSpeedForStatic, currTime);
     }
     else
     {
-        m_trace.push_back(m_predictionPoint);
+        m_trace.push_back(m_predictionPoint, currTime);
     }
 
-    if (m_trace.size() > max_trace_length)
-        m_trace.pop_front(m_trace.size() - max_trace_length);
+    for (;;)
+    {
+        std::chrono::duration<double> period = currTime - m_trace.at(0).m_frameTime;
+        if (period.count() > maxTraceLength)
+            m_trace.pop_front(1);
+        else
+            break;
+    }
 }
 
 ///
@@ -321,7 +332,7 @@ void CTrack::Update(const CRegion& region,
 /// \param region
 /// \param regionEmbedding
 /// \param dataCorrect
-/// \param max_trace_length
+/// \param maxTraceLength
 /// \param prevFrame
 /// \param currFrame
 /// \param trajLen
@@ -329,7 +340,7 @@ void CTrack::Update(const CRegion& region,
 void CTrack::Update(const CRegion& region,
                     const RegionEmbedding& regionEmbedding,
                     bool dataCorrect,
-                    size_t max_trace_length,
+                    double maxTraceLength,
                     cv::UMat prevFrame,
                     cv::UMat currFrame,
                     int trajLen, int maxSpeedForStatic,
@@ -355,17 +366,23 @@ void CTrack::Update(const CRegion& region,
         //std::cout << m_lastRegion.m_brect << " - " << region.m_brect << std::endl;
 
         m_lastRegion = region;
-        m_trace.push_back(m_predictionPoint, m_lastRegion.m_rrect.center);
+        m_trace.push_back(m_predictionPoint, m_lastRegion.m_rrect.center, currTime);
 
         CheckStatic(trajLen, currFrame, region, maxSpeedForStatic, currTime);
     }
     else
     {
-        m_trace.push_back(m_predictionPoint);
+        m_trace.push_back(m_predictionPoint, currTime);
     }
 
-    if (m_trace.size() > max_trace_length)
-        m_trace.pop_front(m_trace.size() - max_trace_length);
+    for (;;)
+    {
+        std::chrono::duration<double> period = currTime - m_trace.at(0).m_frameTime;
+        if (period.count() > maxTraceLength)
+            m_trace.pop_front(1);
+        else
+            break;
+    }
 }
 
 ///
@@ -384,8 +401,15 @@ bool CTrack::IsStatic() const
 ///
 bool CTrack::IsStaticTimeout(time_point_t currTime, double staticPeriod) const
 {
-    std::chrono::duration<double> period = currTime - m_staticStartTime;
-    return period.count() > staticPeriod;
+    if (m_isStatic)
+    {
+        std::chrono::duration<double> period = currTime - m_staticStartTime;
+        return period.count() > staticPeriod;
+    }
+    else
+    {
+        return false;
+    }
 }
 
 ///

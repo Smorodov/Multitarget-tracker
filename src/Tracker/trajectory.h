@@ -16,8 +16,8 @@ struct TrajectoryPoint
     /// \brief TrajectoryPoint
     /// \param prediction
     ///
-    TrajectoryPoint(const Point_t& prediction)
-        : m_prediction(prediction)
+    TrajectoryPoint(const Point_t& prediction, time_point_t frameTime)
+        : m_prediction(prediction), m_frameTime(frameTime)
     {
     }
 
@@ -26,17 +26,18 @@ struct TrajectoryPoint
     /// \param prediction
     /// \param raw
     ///
-    TrajectoryPoint(const Point_t& prediction, const Point_t& raw)
+    TrajectoryPoint(const Point_t& prediction, const Point_t& raw, time_point_t frameTime)
         :
           m_prediction(prediction),
           m_raw(raw),
+          m_frameTime(frameTime),
           m_hasRaw(true)
     {
     }
 
 	///
 	TrajectoryPoint(const TrajectoryPoint& tp) noexcept
-		: m_prediction(tp.m_prediction), m_raw(tp.m_raw), m_hasRaw(tp.m_hasRaw)
+		: m_prediction(tp.m_prediction), m_raw(tp.m_raw), m_frameTime(tp.m_frameTime), m_hasRaw(tp.m_hasRaw)
 	{
 	}
 
@@ -45,6 +46,7 @@ struct TrajectoryPoint
 	{
 		m_prediction = tp.m_prediction;
 		m_raw = tp.m_raw;
+        m_frameTime = tp.m_frameTime;
 		m_hasRaw = tp.m_hasRaw;
 		return *this;
 	}
@@ -54,6 +56,7 @@ struct TrajectoryPoint
 
     Point_t m_prediction;
     Point_t m_raw;
+    time_point_t m_frameTime;
     bool m_hasRaw = false;
 };
 
@@ -128,13 +131,13 @@ public:
     /// \brief push_back
     /// \param prediction
     ///
-    void push_back(const Point_t& prediction)
+    void push_back(const Point_t& prediction, time_point_t currTime)
     {
-        m_trace.emplace_back(prediction);
+        m_trace.emplace_back(prediction, currTime);
     }
-    void push_back(const Point_t& prediction, const Point_t& raw)
+    void push_back(const Point_t& prediction, const Point_t& raw, time_point_t currTime)
     {
-        m_trace.emplace_back(prediction, raw);
+        m_trace.emplace_back(prediction, raw, currTime);
     }
 
     ///
@@ -264,6 +267,9 @@ struct TrackingObject
 		}
 		if (m_outOfTheFrame)
 			m_lastRobust = false;
+
+        //std::cout << "lastRobust = " << m_lastRobust << ", outOfTheFrame = " << m_outOfTheFrame << ", raw count = " << m_trace.GetRawCount(m_trace.size() - 1) << ", trace = " << m_trace.size() << std::endl;
+
 		return m_lastRobust;
 	}
 
