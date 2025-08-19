@@ -26,6 +26,8 @@ typedef cv::Point_<track_t> Point_t;
 typedef std::vector<int> assignments_t;
 typedef std::vector<track_t> distMatrix_t;
 
+typedef std::chrono::time_point<std::chrono::system_clock> time_point_t;
+
 ///
 template<typename T>
 class TrackID

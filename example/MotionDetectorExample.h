@@ -115,13 +115,13 @@ protected:
 			{
 				m_trackerSettings.m_minStaticTime = m_minStaticTime;
 				m_trackerSettings.m_maxStaticTime = 10;
-				m_trackerSettings.m_maximumAllowedSkippedFrames = cvRound(m_trackerSettings.m_minStaticTime * m_fps); // Maximum allowed skipped frames
-				m_trackerSettings.m_maxTraceLength = 2 * m_trackerSettings.m_maximumAllowedSkippedFrames;        // Maximum trace length
+				m_trackerSettings.m_maximumAllowedLostTime = m_trackerSettings.m_minStaticTime;      // Maximum allowed lost time
+				m_trackerSettings.m_maxTraceLength = 2 * m_trackerSettings.m_maximumAllowedLostTime; // Maximum trace length
 			}
 			else
 			{
-				m_trackerSettings.m_maximumAllowedSkippedFrames = cvRound(2 * m_fps); // Maximum allowed skipped frames
-                m_trackerSettings.m_maxTraceLength = cvRound(2 * m_fps);              // Maximum trace length
+				m_trackerSettings.m_maximumAllowedLostTime = 2.;       // Maximum allowed lost time
+                m_trackerSettings.m_maxTraceLength = 2.;               // Maximum trace length
 			}
 		}
 

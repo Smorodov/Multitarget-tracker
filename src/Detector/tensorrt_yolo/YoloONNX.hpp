@@ -80,7 +80,7 @@ public:
 
 protected:
     SampleYoloParams m_params;               //!< The parameters for the sample
-    nvinfer1::Dims m_inputDims{0};           //!< The dimensions of the input to the network
+    std::vector<nvinfer1::Dims> m_inputDims; //!< The dimensions of the input to the network
     std::vector<nvinfer1::Dims> m_outpuDims; //!< The dimensions of the input to the network
     cv::Rect m_resizedROI;                   //!< Input frame resized into input dimensions with the frame aspect ratio
 

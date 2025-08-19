@@ -46,8 +46,8 @@ bool ParseTrackerSettings(const std::string& settingsFile, TrackerSettings& trac
         trackerSettings.m_distThres = static_cast<track_t>(reader.GetReal("tracking", "dist_thresh", 0.8));     // Distance threshold between region and object on two frames
         trackerSettings.m_minAreaRadiusPix = static_cast<track_t>(reader.GetReal("tracking", "min_area_radius_pix", -1.));
         trackerSettings.m_minAreaRadiusK = static_cast<track_t>(reader.GetReal("tracking", "min_area_radius_k", 0.8));
-        trackerSettings.m_maximumAllowedSkippedFrames = reader.GetInteger("tracking", "max_skip_frames", 50); // Maximum allowed skipped frames
-        trackerSettings.m_maxTraceLength = reader.GetInteger("tracking", "max_trace_len", 50);                 // Maximum trace length
+        trackerSettings.m_maximumAllowedLostTime = reader.GetReal("tracking", "max_lost_time", 1.);         // Maximum lost time in seconds
+        trackerSettings.m_maxTraceLength = reader.GetReal("tracking", "max_trace_len", 2.);                 // Maximum trace length in seconds
         trackerSettings.m_useAbandonedDetection = reader.GetInteger("tracking", "detect_abandoned", 0) != 0;
         trackerSettings.m_minStaticTime = reader.GetInteger("tracking", "min_static_time", 5);
         trackerSettings.m_maxStaticTime = reader.GetInteger("tracking", "max_static_time", 25);

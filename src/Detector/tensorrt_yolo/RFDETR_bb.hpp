@@ -91,10 +91,10 @@ protected:
 
 			if (classConf >= m_params.confThreshold)
 			{
-                float x = fw * (m_inputDims.d[2] * (dets[0] - dets[2] / 2.f) - m_resizedROI.x);
-                float y = fh * (m_inputDims.d[3] * (dets[1] - dets[3] / 2.f) - m_resizedROI.y);
-                float width = fw * m_inputDims.d[2] * dets[2];
-                float height = fh * m_inputDims.d[3] * dets[3];
+                float x = fw * (m_inputDims[0].d[2] * (dets[0] - dets[2] / 2.f) - m_resizedROI.x);
+                float y = fh * (m_inputDims[0].d[3] * (dets[1] - dets[3] / 2.f) - m_resizedROI.y);
+                float width = fw * m_inputDims[0].d[2] * dets[2];
+                float height = fh * m_inputDims[0].d[3] * dets[3];
 
                 //if (i == 0)
                 //{

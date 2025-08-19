@@ -29,8 +29,8 @@ struct FrameInfo
     cv::UMat m_clFrame;
 	regions_t m_regions;
 	std::vector<TrackingObject> m_tracks;
+    time_point_t m_frameTimeStamp;
 	int64 m_dt = 0;
-	float m_fps = 0;
 	size_t m_frameInd = 0;
 
 	static constexpr int StateNotProcessed = 0;

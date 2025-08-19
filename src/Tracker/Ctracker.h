@@ -21,11 +21,11 @@ public:
 
     virtual ~BaseTracker(void) = default;
 
-    virtual void Update(const regions_t& regions, cv::UMat currFrame, float fps) = 0;
-    virtual void UpdateMat(const regions_t& regions, cv::Mat currFrame, float fps)
+    virtual void Update(const regions_t& regions, cv::UMat currFrame, time_point_t frameTime) = 0;
+    virtual void UpdateMat(const regions_t& regions, cv::Mat currFrame, time_point_t frameTime)
     {
         cv::UMat frame = currFrame.getUMat(cv::ACCESS_READ);
-        Update(regions, frame, fps);
+        Update(regions, frame, frameTime);
     }
     virtual bool CanGrayFrameToTrack() const = 0;
     virtual bool CanColorFrameToTrack() const = 0;
