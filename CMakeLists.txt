@@ -50,12 +50,6 @@ else(HAVE_FILESYSTEM)
     message("Do not found filesystem header")
 endif(HAVE_FILESYSTEM)
 
-option(BUILD_ABANDONED_DETECTOR "Should compiled abandoned detector example?" OFF)
-if (BUILD_ABANDONED_DETECTOR)
-    add_definitions(-DBUILD_ABANDONED_DETECTOR)
-    add_subdirectory(combined)
-endif(BUILD_ABANDONED_DETECTOR)
-
 option(BUILD_EXAMPLES "Should compiled examples (motion detection, pedestrians, faces, DNNs etc)?" ON)
 if (BUILD_EXAMPLES)
     add_subdirectory(example)
