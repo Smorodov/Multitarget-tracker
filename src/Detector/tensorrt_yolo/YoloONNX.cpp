@@ -26,11 +26,24 @@ bool YoloONNX::Init(const SampleYoloParams& params)
     {
         auto numBindings = m_engine->getNbIOTensors();
 
+        m_inputDims.clear();
+        m_outpuDims.clear();
+
         std::cout << "** Bindings: " << numBindings << " **" << std::endl;
         for (int32_t i = 0; i < numBindings; ++i)
         {
             std::string bindName = m_engine->getIOTensorName(i);
             nvinfer1::Dims dim = m_engine->getTensorShape(bindName.c_str());
+            
+            for (const auto& inName : m_params.inputTensorNames)
+            {
+                if (bindName == inName)
+                {
+                    m_inputDims.emplace_back(dim);
+                    break;
+                }
+            }
+            
             for (const auto& outName : m_params.outputTensorNames)
             {
                 if (bindName == outName)
@@ -75,13 +88,12 @@ bool YoloONNX::Init(const SampleYoloParams& params)
 #if (NV_TENSORRT_MAJOR < 8)
 		infer->destroy();
 #else
-        delete infer;
+        //delete infer;
 #endif
 
         if (m_engine)
         {
             GetBindings();
-            m_inputDims = m_engine->getTensorShape(m_engine->getIOTensorName(0));
             res = true;
         }
         else
@@ -101,34 +113,37 @@ bool YoloONNX::Init(const SampleYoloParams& params)
         if (!network)
             return false;
 
-        auto config = YoloONNXUniquePtr<nvinfer1::IBuilderConfig>(builder->createBuilderConfig());
-        if (!config)
-            return false;
-
         auto parser = YoloONNXUniquePtr<nvonnxparser::IParser>(nvonnxparser::createParser(*network, sample::gLogger.getTRTLogger()));
         if (!parser)
+            return false;
+
+        auto config = YoloONNXUniquePtr<nvinfer1::IBuilderConfig>(builder->createBuilderConfig());
+        if (!config)
             return false;
 
         auto constructed = ConstructNetwork(builder, network, config, parser);
         if (!constructed)
             return false;
 
-        m_inputDims = network->getInput(0)->getDimensions();
-        std::cout << m_inputDims.nbDims << std::endl;
-        assert(m_inputDims.nbDims == 4);
-
         GetBindings();
+        assert(m_inputDims[0].nbDims == 4);        
 
         res = true;
     }
 
+    std::cout << "YoloONNX::Init: loaded = " << res << std::endl;
+
     if (res)
     {
         m_buffers = std::make_unique<samplesCommon::BufferManager>(m_engine, 0/*m_params.batchSize*/);
+        std::cout << "YoloONNX::Init: m_buffers = " << (m_buffers != nullptr) << std::endl;
         m_context = YoloONNXUniquePtr<nvinfer1::IExecutionContext>(m_engine->createExecutionContext());
+        std::cout << "YoloONNX::Init: m_context = " << (m_context != nullptr) << std::endl;
         if (!m_context)
             res = false;
     }
+
+    std::cout << "YoloONNX::Init: res = " << res << std::endl;
 
     return res;
 }
@@ -142,7 +157,8 @@ bool YoloONNX::Init(const SampleYoloParams& params)
 //! \param builder Pointer to the engine builder
 //!
 bool YoloONNX::ConstructNetwork(YoloONNXUniquePtr<nvinfer1::IBuilder>& builder,
-                                YoloONNXUniquePtr<nvinfer1::INetworkDefinition>& network, YoloONNXUniquePtr<nvinfer1::IBuilderConfig>& config,
+                                YoloONNXUniquePtr<nvinfer1::INetworkDefinition>& network,
+                                YoloONNXUniquePtr<nvinfer1::IBuilderConfig>& config,
                                 YoloONNXUniquePtr<nvonnxparser::IParser>& parser)
 {
     bool res = false;
@@ -157,6 +173,46 @@ bool YoloONNX::ConstructNetwork(YoloONNXUniquePtr<nvinfer1::IBuilder>& builder,
     {
         sample::gLogError << "Unable to parse ONNX model file: " << m_params.onnxFileName << std::endl;
         return res;
+    }
+
+    {
+        nvinfer1::IOptimizationProfile* profile = builder->createOptimizationProfile();
+
+        //std::cout << "m_params.inputTensorNames.size = " << m_params.inputTensorNames.size() << ", m_inputDims.size = " << m_inputDims.size() << std::endl;
+        if (m_params.inputTensorNames.size() > 0)
+        {
+            nvinfer1::Dims dim = network->getInput(0)->getDimensions();
+            //std::cout << "dim[0] = " << dim.nbDims << ": [" << dim.d[0] << ", " << dim.d[1] << ", " << dim.d[2] << ", " << dim.d[3] << "]" << std::endl;
+            if (dim.d[0] < 1)
+                dim.d[0] = 1;   // batch size
+            if (dim.d[1] < 1)
+                dim.d[1] = 3;   // Channels
+            if (dim.d[2] < 1)
+                dim.d[2] = 640; // Width
+            if (dim.d[3] < 1)
+                dim.d[3] = 640; // Height
+
+            profile->setDimensions(m_params.inputTensorNames[0].c_str(), nvinfer1::OptProfileSelector::kMIN, dim);
+            profile->setDimensions(m_params.inputTensorNames[0].c_str(), nvinfer1::OptProfileSelector::kOPT, dim);
+            profile->setDimensions(m_params.inputTensorNames[0].c_str(), nvinfer1::OptProfileSelector::kMAX, dim);
+        }
+
+        // For D-FINE
+        if (m_params.inputTensorNames.size() > 1)
+        {
+            nvinfer1::Dims dim = network->getInput(1)->getDimensions();
+            //std::cout << "dim[1] = " << dim.nbDims << ": [" << dim.d[0] << ", " << dim.d[1] << "]" << std::endl;
+            if (dim.d[0] < 1)
+                dim.d[0] = 1;   // batch size
+            if (dim.d[1] < 1)
+                dim.d[1] = 2;   // Input size
+
+            profile->setDimensions(m_params.inputTensorNames[1].c_str(), nvinfer1::OptProfileSelector::kMIN, dim);
+            profile->setDimensions(m_params.inputTensorNames[1].c_str(), nvinfer1::OptProfileSelector::kOPT, dim);
+            profile->setDimensions(m_params.inputTensorNames[1].c_str(), nvinfer1::OptProfileSelector::kMAX, dim);
+        }
+
+        config->addOptimizationProfile(profile);
     }
 
 #if (NV_TENSORRT_MAJOR < 8)
@@ -278,7 +334,7 @@ bool YoloONNX::Detect(const std::vector<cv::Mat>& frames, std::vector<tensor_rt:
 ///
 cv::Size YoloONNX::GetInputSize() const
 {
-    return cv::Size(static_cast<int>(m_inputDims.d[3]), static_cast<int>(m_inputDims.d[2]));
+    return cv::Size(static_cast<int>(m_inputDims[0].d[3]), static_cast<int>(m_inputDims[0].d[2]));
 }
 
 ///
@@ -304,10 +360,10 @@ size_t YoloONNX::GetNumClasses() const
 //!
 bool YoloONNX::ProcessInputAspectRatio(const std::vector<cv::Mat>& sampleImages)
 {
-    const int inputB = static_cast<int>(m_inputDims.d[0]);
-    const int inputC = static_cast<int>(m_inputDims.d[1]);
-    const int inputH = static_cast<int>(m_inputDims.d[2]);
-    const int inputW = static_cast<int>(m_inputDims.d[3]);
+    const int inputB = static_cast<int>(m_inputDims[0].d[0]);
+    const int inputC = static_cast<int>(m_inputDims[0].d[1]);
+    const int inputH = static_cast<int>(m_inputDims[0].d[2]);
+    const int inputW = static_cast<int>(m_inputDims[0].d[3]);
 
     float* hostInputBuffer = nullptr;
     if (m_params.inputTensorNames[0].empty())
@@ -396,7 +452,6 @@ bool YoloONNX::ProcessInputAspectRatio(const std::vector<cv::Mat>& sampleImages)
         }
         d_batch_pos += volBatch;
     }
-
 
     // For D-FINE
     if (m_params.inputTensorNames.size() > 1)

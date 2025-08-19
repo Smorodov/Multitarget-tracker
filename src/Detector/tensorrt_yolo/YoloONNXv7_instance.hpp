@@ -183,8 +183,8 @@ protected:
 			const float* pdata = outputs[1];
 			std::vector<float> maskFloat(pdata, pdata + segChannels * segWidth * segHeight);
 
-			int INPUT_W = static_cast<int>(m_inputDims.d[3]);
-			int INPUT_H = static_cast<int>(m_inputDims.d[2]);
+			int INPUT_W = static_cast<int>(m_inputDims[0].d[3]);
+			int INPUT_H = static_cast<int>(m_inputDims[0].d[2]);
 			static constexpr float MASK_THRESHOLD = 0.5;
 
 			cv::Mat mask_protos = cv::Mat(maskFloat);

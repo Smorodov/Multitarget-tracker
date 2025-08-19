@@ -42,42 +42,45 @@ protected:
         auto boxes = outputs[2];
         auto scores = outputs[0];
 
+#if 0
+        std::cout << "scores mem:\n";
+        for (size_t ii = 0; ii < 15; ++ii)
+        {
+            std::cout << ii << ": ";
+            for (size_t jj = 0; jj < 20; ++jj)
+            {
+                std::cout << scores[ii * 20 + jj] << " ";
+            }
+            std::cout << ";" << std::endl;
+        }
+        std::cout << std::endl;
 
-        //std::cout << "scores mem:\n";
-        //for (size_t ii = 0; ii < 15; ++ii)
-        //{
-        //    std::cout << ii << ": ";
-        //    for (size_t jj = 0; jj < 20; ++jj)
-        //    {
-        //        std::cout << scores[ii * 20 + jj] << " ";
-        //    }
-        //    std::cout << ";" << std::endl;
-        //}
-        //std::cout << std::endl;
+        std::cout << "labels mem:\n";
+        for (size_t ii = 0; ii < 15; ++ii)
+        {
+            std::cout << ii << ": ";
+            for (size_t jj = 0; jj < 20; ++jj)
+            {
+                std::cout << labels[ii * 20 + jj] << " ";
+            }
+            std::cout << ";" << std::endl;
+        }
+        std::cout << std::endl;
 
-        //std::cout << "labels mem:\n";
-        //for (size_t ii = 0; ii < 15; ++ii)
-        //{
-        //    std::cout << ii << ": ";
-        //    for (size_t jj = 0; jj < 20; ++jj)
-        //    {
-        //        std::cout << labels[ii * 20 + jj] << " ";
-        //    }
-        //    std::cout << ";" << std::endl;
-        //}
-        //std::cout << std::endl;
+        std::cout << "boxes mem:\n";
+        for (size_t ii = 0; ii < 15; ++ii)
+        {
+            std::cout << ii << ": ";
+            for (size_t jj = 0; jj < 20; ++jj)
+            {
+                std::cout << boxes[ii * 20 + jj] << " ";
+            }
+            std::cout << ";" << std::endl;
+        }
+        std::cout << std::endl;
 
-        //std::cout << "boxes mem:\n";
-        //for (size_t ii = 0; ii < 15; ++ii)
-        //{
-        //    std::cout << ii << ": ";
-        //    for (size_t jj = 0; jj < 20; ++jj)
-        //    {
-        //        std::cout << boxes[ii * 20 + jj] << " ";
-        //    }
-        //    std::cout << ";" << std::endl;
-        //}
-        //std::cout << std::endl;
+        std::cout << "m_outpuDims[0].d[1] = " << m_outpuDims[0].d[1] << std::endl;
+#endif
 
 		for (size_t i = 0; i < static_cast<int>(m_outpuDims[0].d[1]); ++i)
 		{

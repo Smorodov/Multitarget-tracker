@@ -167,7 +167,7 @@ bool YoloTensorRTDetector::Init(const config_t& config)
 	if (m_detector)
         m_detector->Init(m_localConfig);
 
-	std::cout << "YoloTensorRTDetector::Init: Detector created - " << (m_detector.get() != nullptr) << std::endl;
+	std::cout << "YoloTensorRTDetector::Init: Detector created = " << (m_detector.get() != nullptr) << std::endl;
 
 	return m_detector.get() != nullptr;
 }
