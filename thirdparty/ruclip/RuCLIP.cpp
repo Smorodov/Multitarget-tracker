@@ -207,8 +207,12 @@ torch::Tensor CLIPImpl :: EncodeText(torch::Tensor input_ids)
 
 torch::Tensor CLIPImpl :: forward(torch::Tensor input_ids, torch::Tensor pixel_values)
 {
+	//std::cout << "pixel_values: " << pixel_values.sizes() << ", input_ids: " << input_ids.sizes() << std::endl;
+
 	auto image_features = EncodeImage(pixel_values);
 	auto text_features = EncodeText(input_ids);
+
+	//std::cout << "image_features: " << image_features.sizes() << ", text_features: " << text_features.sizes() << std::endl;
 
 	//normalize features
 	image_features = image_features / image_features.norm(2/*L2*/, -1, true);

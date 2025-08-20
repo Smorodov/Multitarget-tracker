@@ -108,26 +108,42 @@ private:
 ///image_features = image_features / image_features.norm(2/*L2*/, -1, true);
 ///torch::Tensor rel = Relevancy(image_features, text_features, canon_features);
 ///float lv = rel.index({0,0}).item<float>();
+
 inline torch::Tensor Relevancy(torch::Tensor embeds, torch::Tensor positives, torch::Tensor negatives)
 {
+#if 0
 	std::cout << "Relevancy: 0" << std::endl;
-	auto embeds2 = torch::cat({positives, negatives});
+	auto embeds2 = torch::cat({ positives, negatives });
 	std::cout << "Relevancy: 1" << std::endl;
 	auto logits = /*scale * */torch::mm(embeds, embeds2.t());  //[batch_size x phrases]
-	std::cout << "Relevancy: 2" << std::endl; 
-	auto positive_vals = logits.index({"...", torch::indexing::Slice(0, positives.sizes()[0])});  // [batch_size x 1]
+	std::cout << "Relevancy: 2" << std::endl;
+	auto positive_vals = logits.index({ "...", torch::indexing::Slice(0, positives.sizes()[0]) });  // [batch_size x 1]
 	std::cout << "Relevancy: 3" << std::endl;
-	auto negative_vals = logits.index({"...", torch::indexing::Slice(positives.sizes()[0], torch::indexing::None)});		// [batch_size x negative_phrase_n]
+	auto negative_vals = logits.index({ "...", torch::indexing::Slice(positives.sizes()[0], torch::indexing::None) });		// [batch_size x negative_phrase_n]
 	std::cout << "Relevancy: 4" << std::endl;
-	auto repeated_pos = positive_vals.repeat({1, negatives.sizes()[0]});  //[batch_size x negative_phrase_n]
+	auto repeated_pos = positive_vals.repeat({ 1, negatives.sizes()[0] });  //[batch_size x negative_phrase_n]
 	std::cout << "Relevancy: 5: repeated_pos: " << repeated_pos.sizes() << ", negative_vals: " << negative_vals.sizes() << std::endl;
-	auto sims = torch::stack({repeated_pos, negative_vals}, -1);   //[batch_size x negative_phrase_n x 2]
+	auto sims = torch::stack({ repeated_pos, negative_vals }, -1);   //[batch_size x negative_phrase_n x 2]
 	std::cout << "Relevancy: 6" << std::endl;
 	auto smx = torch::softmax(10 * sims, -1);                      // [batch_size x negative_phrase_n x 2]
 	std::cout << "Relevancy: 7" << std::endl;
-	auto best_id = smx.index({"...", 0}).argmin(1);                // [batch_size x 2]
+	auto best_id = smx.index({ "...", 0 }).argmin(1);                // [batch_size x 2]
 	std::cout << "Relevancy: 8" << std::endl;
-	auto result = torch::gather(smx, 1, best_id.index({"...", torch::indexing::None, torch::indexing::None}).expand({best_id.sizes()[0], negatives.sizes()[0], 2})
-		).index({torch::indexing::Slice(), 0, torch::indexing::Slice()});// [batch_size x 2]
+	auto result = torch::gather(smx, 1, best_id.index({ "...", torch::indexing::None, torch::indexing::None }).expand({ best_id.sizes()[0], negatives.sizes()[0], 2 })
+		).index({ torch::indexing::Slice(), 0, torch::indexing::Slice() });// [batch_size x 2]
 	return result;
+#else
+	auto embeds2 = torch::cat({ positives, negatives }, 0);
+	auto logits = torch::mm(embeds, embeds2.t());  // [batch_size, 1 + negatives_len]
+	auto positive_vals = logits.index({ "...", torch::indexing::Slice(0, 1) });  // [batch_size, 1]
+	auto negative_vals = logits.index({ "...", torch::indexing::Slice(1, torch::indexing::None) });  // [batch_size, negatives_len]
+	auto repeated_pos = positive_vals.repeat({ 1, negatives.sizes()[0] });  // [batch_size, negatives_len]
+	auto sims = torch::stack({ repeated_pos, negative_vals }, -1);  // [batch_size, negatives_len, 2]
+	auto smx = torch::softmax(10 * sims, -1);  // [batch_size, negatives_len, 2]
+	//Находим индекс самого сложного негатива (с минимальной вероятностью позитивного класса)
+	auto best_id = smx.index({ "...", 0 }).argmin(1, /*keepdim=*/true);  // [batch_size, 1]
+	//Собираем результаты для выбранных негативов
+	auto result = torch::gather(smx, 1, best_id.unsqueeze(-1).expand({ -1, -1, 2 }));
+	return result.squeeze(1);  // [batch_size, 2]
+#endif
 }
