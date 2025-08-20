@@ -87,8 +87,8 @@ protected:
             float classConf = scores[i];
 			int64_t classId = labels[i];
 
-            if (classId > 0)
-                --classId;
+            //if (classId > 0)
+            //    --classId;
 
 			if (classConf >= m_params.confThreshold)
 			{

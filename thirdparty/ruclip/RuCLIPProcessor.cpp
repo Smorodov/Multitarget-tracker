@@ -18,6 +18,7 @@ inline cv::Mat TorchTensorToCVMat(const torch::Tensor tensor_image, const bool p
 	if (perm)
 		t = t.permute({ 1, 2, 0 });
 	t = t.mul(255).clamp(0, 255).to(torch::kU8);
+	t = t.contiguous();
 	cv::Mat result_img;
 	cv::Mat(static_cast<int>(t.size(0)), static_cast<int>(t.size(1)), CV_MAKETYPE(CV_8U, t.sizes().size() >= 3 ? static_cast<int>(t.size(2)) : 1), t.data_ptr()).copyTo(result_img);
 	return result_img;
