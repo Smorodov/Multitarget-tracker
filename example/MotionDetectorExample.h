@@ -24,6 +24,8 @@ public:
 		std::string bpeModel = "C:/work/clip/ruclip_/CLIP/data/ruclip-vit-large-patch14-336/bpe.model";
 		m_clip.Init(clipModel, bpeModel, 336, 0, { "pedestrian", "person", "suv", "pickup", "car", "truck", "bus" });
 #endif // USE_CLIP
+
+		m_logger->info("MotionDetectorExample");
 	}
 
 protected:
@@ -34,7 +36,10 @@ protected:
     ///
     bool InitDetector(cv::UMat frame) override
     {
-        m_minObjWidth = frame.cols / 20;
+		m_logger->info("MotionDetectorExample::InitDetector");
+
+        //m_minObjWidth = frame.cols / 20;
+		m_minObjWidth = 2;
 
         config_t config;
 		config.emplace("useRotatedRect", "0");
@@ -92,15 +97,17 @@ protected:
     ///
     bool InitTracker(cv::UMat frame) override
     {
+		m_logger->info("MotionDetectorExample::InitTracker");
+
 		if (!m_trackerSettingsLoaded)
 		{
-            m_trackerSettings.SetDistance(tracking::DistRects);
+            m_trackerSettings.SetDistance(tracking::DistCenters);
 			m_trackerSettings.m_kalmanType = tracking::KalmanLinear;
 			m_trackerSettings.m_filterGoal = tracking::FilterCenter;
             m_trackerSettings.m_lostTrackType = tracking::TrackNone; // Use visual objects tracker for collisions resolving. Used if m_filterGoal == tracking::FilterRect
 			m_trackerSettings.m_matchType = tracking::MatchHungrian;
 			m_trackerSettings.m_useAcceleration = false;             // Use constant acceleration motion model
-            m_trackerSettings.m_dt = m_trackerSettings.m_useAcceleration ? 0.05f : 0.5f; // Delta time for Kalman filter
+            m_trackerSettings.m_dt = m_trackerSettings.m_useAcceleration ? 0.05f : 0.3f; // Delta time for Kalman filter
             m_trackerSettings.m_accelNoiseMag = 0.1f;                // Accel noise magnitude for Kalman filter
             m_trackerSettings.m_distThres = 0.95f;                   // Distance threshold between region and object on two frames
 #if 1
@@ -138,7 +145,7 @@ protected:
     ///
     void DrawData(cv::Mat frame, const std::vector<TrackingObject>& tracks, int framesCounter, int currTime) override
     {
-		m_logger->info("Frame ({1}): tracks = {2}, time = {3}", framesCounter, tracks.size(), currTime);
+		m_logger->info("Frame ({0}): tracks = {1}, time = {2}", framesCounter, tracks.size(), currTime);
 
 #ifdef USE_CLIP
 		std::vector<CLIPResult> clipResult;

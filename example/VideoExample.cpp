@@ -171,6 +171,8 @@ void VideoExample::SyncProcess()
                 m_logger->info("Process: riched last {} frame", m_endFrame);
 				break;
 			}
+
+            m_logger->debug("VideoExample::SyncProcess: Capture {0} frame", framesCounter);
 		}
 		if (i < m_batchSize)
 			break;
