@@ -5,6 +5,7 @@
 [![CodeQL](https://github.com/Smorodov/Multitarget-tracker/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/Smorodov/Multitarget-tracker/actions/workflows/codeql-analysis.yml)
 
 ## Latest Features
+- Instance segmentation model from RF-DETR detector works with TensorRT! Export pre-trained PyTorch models [here (roboflow/rf-detr)](https://github.com/roboflow/rf-detr) to ONNX format and run Multitarget-tracker with `-e=6` example
 - New linear assignment algorithm - [Jonker-Volgenant / LAPJV algorithm](https://github.com/yongyanghz/LAPJV-algorithm-c) used in [scipy](https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.linear_sum_assignment.html) as alternative for Hungarian allgorithm
 - D-FINE detector works with TensorRT! Export pre-trained PyTorch models [here (Peterande/D-FINE)](https://github.com/Peterande/D-FINE) to ONNX format and run Multitarget-tracker with `-e=6` example
 - RF-DETR detector works with TensorRT! Export pre-trained PyTorch models [here (roboflow/rf-detr)](https://github.com/roboflow/rf-detr) to ONNX format and run Multitarget-tracker with `-e=6` example
@@ -20,6 +21,8 @@
 ## Demo Videos
 
 ### Detection & Tracking
+
+[![RF-DETR: detection vs instance segmentation](https://img.youtube.com/vi/oKy7jEKT83c/0.jpg)](https://youtu.be/oKy7jEKT83c)
 [![Satellite planes detection and tracking with YOLOv11-obb](https://img.youtube.com/vi/gTpWnkMF7Lg/0.jpg)](https://youtu.be/gTpWnkMF7Lg)
 [![4-in-1 latest SOTA detectors](https://img.youtube.com/vi/Pb_HnejRpY4/0.jpg)](https://youtu.be/Pb_HnejRpY4)
 [![YOLOv8-obb detection with rotated boxes](https://img.youtube.com/vi/1e6ur57Fhzs/0.jpg)](https://youtu.be/1e6ur57Fhzs)

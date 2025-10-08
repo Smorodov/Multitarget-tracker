@@ -50,6 +50,7 @@ private:
         YOLOV11Mask,
         YOLOV12,
         RFDETR,
+        RFDETR_IS,
         DFINE
     };
 
@@ -85,6 +86,7 @@ private:
     void ParseYOLOv5_8_11_obb(const cv::Rect& crop, std::vector<cv::Mat>& detections, regions_t& tmpRegions);
     void ParseYOLOv5_8_11_seg(const cv::Rect& crop, std::vector<cv::Mat>& detections, regions_t& tmpRegions);
     void ParseRFDETR(const cv::Rect& crop, std::vector<cv::Mat>& detections, regions_t& tmpRegions);
+    void ParseRFDETR_IS(const cv::Rect& crop, std::vector<cv::Mat>& detections, regions_t& tmpRegions);
     void ParseDFINE(const cv::Rect& crop, std::vector<cv::Mat>& detections, regions_t& tmpRegions);
 };
 
