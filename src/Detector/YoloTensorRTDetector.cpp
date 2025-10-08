@@ -112,6 +112,7 @@ bool YoloTensorRTDetector::Init(const config_t& config)
 		dictNetType["YOLOV11Mask"] = tensor_rt::YOLOV11Mask;
 		dictNetType["YOLOV12"] = tensor_rt::YOLOV12;
 		dictNetType["RFDETR"] = tensor_rt::RFDETR;
+		dictNetType["RFDETR_IS"] = tensor_rt::RFDETR_IS;
 		dictNetType["DFINE"] = tensor_rt::DFINE;
 
 		auto netType = dictNetType.find(net_type->second);

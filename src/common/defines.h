@@ -351,10 +351,10 @@ inline void DrawFilledRect(cv::Mat& frame, const cv::Rect& rect, cv::Scalar cl, 
         const int alpha_1 = 255 - alpha;
         const int nchans = frame.channels();
         int color[3] = { cv::saturate_cast<int>(cl[0]), cv::saturate_cast<int>(cl[1]), cv::saturate_cast<int>(cl[2]) };
-        for (int y = rect.y; y < rect.y + rect.height; ++y)
+        for (int y = std::max(0, rect.y); y < std::min(rect.y + rect.height, frame.rows - 1); ++y)
         {
             uchar* ptr = frame.ptr(y) + nchans * rect.x;
-            for (int x = rect.x; x < rect.x + rect.width; ++x)
+            for (int x = std::max(0, rect.x); x < std::min(rect.x + rect.width, frame.cols - 1); ++x)
             {
                 for (int i = 0; i < nchans; ++i)
                 {

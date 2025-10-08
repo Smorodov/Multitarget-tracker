@@ -32,7 +32,7 @@ protected:
 		size_t outInd = 0;
 		size_t segInd = 1;
 
-		auto output = outputs[0];
+		auto output = outputs[outInd];
 
 		//std::cout << "output[1] mem:\n";
 		//auto output1 = outputs[1];
@@ -228,7 +228,7 @@ protected:
 		if (!maskProposals.empty())
 		{
 			// Mask processing
-			const float* pdata = outputs[1];
+			const float* pdata = outputs[segInd];
 			std::vector<float> maskFloat(pdata, pdata + segChannels * segWidth * segHeight);
 
 			int INPUT_W = static_cast<int>(m_inputDims[0].d[3]);

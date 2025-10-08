@@ -167,17 +167,25 @@ public:
         cv::Mat foreground(m_motionMap.size(), CV_8UC1, cv::Scalar(0, 0, 0));
         for (const auto& region : m_regions)
         {
+            if (region.m_boxMask.empty())
+            {
 #if (CV_VERSION_MAJOR < 4)
-            cv::ellipse(foreground, region.m_rrect, cv::Scalar(255, 255, 255), CV_FILLED);
+                cv::ellipse(foreground, region.m_rrect, cv::Scalar(255, 255, 255), CV_FILLED);
 #else
-            cv::ellipse(foreground, region.m_rrect, cv::Scalar(255, 255, 255), cv::FILLED);
+                cv::ellipse(foreground, region.m_rrect, cv::Scalar(255, 255, 255), cv::FILLED);
 #endif
+            }
+            else
+            {
+                cv::Rect brect = Clamp(cv::Rect(region.m_brect.x, region.m_brect.y, region.m_boxMask.cols, region.m_boxMask.rows), foreground.size());
+                region.m_boxMask.copyTo(foreground(brect));
+            }
         }
         if (!m_ignoreMask.empty())
             cv::bitwise_and(foreground, m_ignoreMask, foreground);
         cv::normalize(foreground, m_normFor, 255, 0, cv::NORM_MINMAX, m_motionMap.type());
 
-        double alpha = 0.95;
+        double alpha = 0.9;
         cv::addWeighted(m_motionMap, alpha, m_normFor, 1 - alpha, 0, m_motionMap);
 
         const int chans = frame.channels();

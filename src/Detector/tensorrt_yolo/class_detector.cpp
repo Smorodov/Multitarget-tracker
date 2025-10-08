@@ -16,6 +16,7 @@
 #include "YoloONNXv11_instance.hpp"
 #include "YoloONNXv12_bb.hpp"
 #include "RFDETR_bb.hpp"
+#include "RFDETR_is.hpp"
 #include "DFINE_bb.hpp"
 
 namespace tensor_rt
@@ -112,6 +113,9 @@ namespace tensor_rt
                 break;
             case ModelType::RFDETR:
                 m_detector = std::make_unique<RFDETR_bb_onnx>(m_params.inputTensorNames, m_params.outputTensorNames);
+                break;
+            case ModelType::RFDETR_IS:
+                m_detector = std::make_unique<RFDETR_is_onnx>(m_params.inputTensorNames, m_params.outputTensorNames);
                 break;
             case ModelType::DFINE:
                 m_detector = std::make_unique<DFINE_bb_onnx>(m_params.inputTensorNames, m_params.outputTensorNames);
