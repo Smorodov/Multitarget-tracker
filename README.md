@@ -5,18 +5,13 @@
 [![CodeQL](https://github.com/Smorodov/Multitarget-tracker/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/Smorodov/Multitarget-tracker/actions/workflows/codeql-analysis.yml)
 
 ## Latest Features
-- Instance segmentation model from RF-DETR detector works with TensorRT! Export pre-trained PyTorch models [here (roboflow/rf-detr)](https://github.com/roboflow/rf-detr) to ONNX format and run Multitarget-tracker with `-e=6` example
+- Big code cleanup from old style algorithms and detectors: some bgfg detectors, some VOT trackes, Face and Pedestrin detectors, Darknet based backend for old YOLO etc
+- YOLOv13 detector works with TensorRT! Export pre-trained PyTorch models [here (iMoonLab/yolov13)](https://github.com/iMoonLab/yolov13) to ONNX format and run Multitarget-tracker with `-e=3` example
+- Instance segmentation model from RF-DETR detector works with TensorRT! Export pre-trained PyTorch models [here (roboflow/rf-detr)](https://github.com/roboflow/rf-detr) to ONNX format and run Multitarget-tracker with `-e=3` example
 - New linear assignment algorithm - [Jonker-Volgenant / LAPJV algorithm](https://github.com/yongyanghz/LAPJV-algorithm-c) used in [scipy](https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.linear_sum_assignment.html) as alternative for Hungarian allgorithm
-- D-FINE detector works with TensorRT! Export pre-trained PyTorch models [here (Peterande/D-FINE)](https://github.com/Peterande/D-FINE) to ONNX format and run Multitarget-tracker with `-e=6` example
-- RF-DETR detector works with TensorRT! Export pre-trained PyTorch models [here (roboflow/rf-detr)](https://github.com/roboflow/rf-detr) to ONNX format and run Multitarget-tracker with `-e=6` example
-- YOLOv12 detector works with TensorRT! Export pre-trained PyTorch models [here (sunsmarterjie/yolov12)](https://github.com/sunsmarterjie/yolov12) to ONNX format and run Multitarget-tracker with `-e=6` example
-- TensorRT 10 supported
-- YOLOv11, YOLOv11-obb and YOLOv11-seg detectors work with TensorRT! Export pre-trained PyTorch models [here (ultralytics/ultralytics)](https://github.com/ultralytics/ultralytics) to ONNX format and run Multitarget-tracker with `-e=6` example
-- YOLOv8-obb detector works with TensorRT! Export pre-trained PyTorch models [here (ultralytics/ultralytics)](https://github.com/ultralytics/ultralytics) to ONNX format and run Multitarget-tracker with `-e=6` example
-- YOLOv10 detector works with TensorRT! Export pre-trained PyTorch models [here (THU-MIG/yolov10)](https://github.com/THU-MIG/yolov10) to ONNX format and run Multitarget-tracker with `-e=6` example
-- YOLOv9 detector works with TensorRT! Export pre-trained PyTorch models [here (WongKinYiu/yolov9)](https://github.com/WongKinYiu/yolov9) to ONNX format and run Multitarget-tracker with `-e=6` example
-- YOLOv8 instance segmentation models work with TensorRT! Export pre-trained PyTorch models [here (ultralytics/ultralytics)](https://github.com/ultralytics/ultralytics) to ONNX format and run Multitarget-tracker with `-e=6` example
-- Re-identification model `osnet_x0_25_msmt17` from [mikel-brostrom/yolo_tracking](https://github.com/mikel-brostrom/yolo_tracking)
+- D-FINE detector works with TensorRT! Export pre-trained PyTorch models [here (Peterande/D-FINE)](https://github.com/Peterande/D-FINE) to ONNX format and run Multitarget-tracker with `-e=3` example
+- RF-DETR detector works with TensorRT! Export pre-trained PyTorch models [here (roboflow/rf-detr)](https://github.com/roboflow/rf-detr) to ONNX format and run Multitarget-tracker with `-e=3` example
+- YOLOv12 detector works with TensorRT! Export pre-trained PyTorch models [here (sunsmarterjie/yolov12)](https://github.com/sunsmarterjie/yolov12) to ONNX format and run Multitarget-tracker with `-e=3` example
 
 ## Demo Videos
 
@@ -27,11 +22,6 @@
 [![4-in-1 latest SOTA detectors](https://img.youtube.com/vi/Pb_HnejRpY4/0.jpg)](https://youtu.be/Pb_HnejRpY4)
 [![YOLOv8-obb detection with rotated boxes](https://img.youtube.com/vi/1e6ur57Fhzs/0.jpg)](https://youtu.be/1e6ur57Fhzs)
 [![Very fast and small objects tracking](https://img.youtube.com/vi/PalIIAfgX88/0.jpg)](https://youtu.be/PalIIAfgX88)
-
-### Other Demos
-[![Mouse tracking](https://img.youtube.com/vi/2fW5TmAtAXM/0.jpg)](https://youtu.be/2fW5TmAtAXM)
-[![Motion Detection and tracking](https://img.youtube.com/vi/GjN8jOy4kVw/0.jpg)](https://youtu.be/GjN8jOy4kVw)
-[![Simple Abandoned detector](https://img.youtube.com/vi/fpkHRsFzspA/0.jpg)](https://youtu.be/fpkHRsFzspA)
 
 ## Documentation
 
@@ -44,19 +34,14 @@ Available through `CreateDetector` function with different `detectorType`:
    - OpenCV: MOG2 (`tracking::Motion_MOG2`)
    - OpenCV Contrib: MOG (`tracking::Motion_MOG`), GMG (`tracking::Motion_GMG`), CNT (`tracking::Motion_CNT`)
    - Foreground segmentation uses OpenCV contours producing `cv::RotatedRect`
-2. **Face Detection**: Haar cascade from OpenCV (`tracking::Face_HAAR`)
-3. **Pedestrian Detection**:
-   - HOG descriptor (`tracking::Pedestrian_HOG`)
-   - C4 algorithm from sturkmen72 ([C4-Real-time-pedestrian-detection](https://github.com/sturkmen72/C4-Real-time-pedestrian-detection)) (`tracking::Pedestrian_C4`)
-4. **Deep Learning Models**:
-   - OpenCV DNN module (`tracking::DNN_OCV`) with models from [chuanqi305](https://github.com/chuanqi305/MobileNet-SSD) and [pjreddie](https://pjreddie.com/darknet/yolo/)
-   - Darknet/YOLO (`tracking::Yolo_Darknet`) with AlexeyAB's implementation
+2. **Deep Learning Models**:
+   - OpenCV DNN module (`tracking::DNN_OCV`)
    - TensorRT-accelerated YOLO (`tracking::Yolo_TensorRT`)
 
 #### 2. Matching Algorithms
 For solving assignment problems:
 - **Hungarian Algorithm** (`tracking::MatchHungrian`) - O(N³) complexity
-- **Weighted Bipartite Graph Matching** (`tracking::MatchBipart`) - O(M*N²) complexity
+- **LAPJV** (`tracking::MatchBipart`) - O(M*N²) complexity
 - **Distance Metrics**:
   - Center distance (`tracking::DistCenters`)
   - Bounding box distance (`tracking::DistRects`)
@@ -70,9 +55,11 @@ For solving assignment problems:
 
 #### 4. Visual Search
 When targets disappear:
-- DAT (`tracking::TrackDAT`), STAPLE (`tracking::TrackSTAPLE`), LDES (`tracking::TrackLDES`)
-- KCF (`tracking::TrackKCF`), MIL (`tracking::TrackMIL`), MedianFlow (`tracking::TrackMedianFlow`)
-- GOTURN (`tracking::TrackGOTURN`), MOSSE (`tracking::TrackMOSSE`), CSRT (`tracking::TrackCSRT`) etc
+- KCF (`tracking::TrackKCF`)
+- CSRT (`tracking::TrackCSRT`)
+- DaSiamRPN (`tracking::TrackDaSiamRPN`)
+- Vit (`tracking::TrackVit`)
+- Nano (`tracking::TrackNano`)
 
 ### Processing Pipelines
 1. **Synchronous** (`SyncProcess`): Single-threaded processing
@@ -88,8 +75,7 @@ cmake . .. \
   -DUSE_OCV_BGFG=ON \
   -DUSE_OCV_KCF=ON \
   -DUSE_OCV_UKF=ON \
-  -DBUILD_YOLO_LIB=ON \
-  -DBUILD_YOLO_TENSORRT=ON \
+  -DBUILD_ONNX_TENSORRT=ON \
   -DBUILD_ASYNC_DETECTOR=ON \
   -DBUILD_CARS_COUNTING=ON
 make -j
@@ -128,21 +114,7 @@ m_tracker = BaseTracker::CreateTracker(settings);
 
 - [OpenCV (and contrib)](https://github.com/opencv/opencv)
 - [Vibe](https://github.com/BelBES/VIBE)
-- [SuBSENSE and LOBSTER](https://github.com/ethereon/subsense)
-- [GTL](https://github.com/rdmpage/graph-template-library)
-- [MWBM](https://github.com/rdmpage/maximum-weighted-bipartite-matching)
-- [Pedestrians detector](https://github.com/sturkmen72/C4-Real-time-pedestrian-detection)
 - [Non Maximum Suppression](https://github.com/Nuzhny007/Non-Maximum-Suppression)
-- [MobileNet SSD models](https://github.com/chuanqi305/MobileNet-SSD)
-- [YOLO v3 models](https://pjreddie.com/darknet/yolo/)
-- [Darknet inference and YOLO v4 models](https://github.com/AlexeyAB/darknet)
-- [NVidia TensorRT inference and YOLO v5 models](https://github.com/enazoe/yolo-tensorrt)
-- [YOLOv6 models](https://github.com/meituan/YOLOv6/releases)
-- [YOLOv7 models](https://github.com/WongKinYiu/yolov7)
-- [GOTURN models](https://github.com/opencv/opencv_extra/tree/c4219d5eb3105ed8e634278fad312a1a8d2c182d/testdata/tracking)
-- [DAT tracker](https://github.com/foolwood/DAT)
-- [STAPLE tracker](https://github.com/xuduo35/STAPLE)
-- [LDES tracker](https://github.com/yfji/LDESCpp)
 - [Ini file parser](https://github.com/benhoyt/inih)
 - [Circular Code](https://github.com/LiorKogan/Circular)
 

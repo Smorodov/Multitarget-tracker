@@ -6,40 +6,17 @@ set(detector_sources
              BaseDetector.cpp
              MotionDetector.cpp
              BackgroundSubtract.cpp
-             vibe_src/vibe.cpp
-             Subsense/BackgroundSubtractorLBSP.cpp
-             Subsense/BackgroundSubtractorLOBSTER.cpp
-             Subsense/BackgroundSubtractorSuBSENSE.cpp
-             Subsense/LBSP.cpp
-             FaceDetector.cpp
-             PedestrianDetector.cpp
-             pedestrians/c4-pedestrian-detector.cpp
-)
+             vibe_src/vibe.cpp)
 
 set(detector_headers
              BaseDetector.h
              MotionDetector.h
              BackgroundSubtract.h
-             vibe_src/vibe.hpp
-             Subsense/BackgroundSubtractorLBSP.h
-             Subsense/BackgroundSubtractorLOBSTER.h
-             Subsense/BackgroundSubtractorSuBSENSE.h
-             Subsense/DistanceUtils.h
-             Subsense/LBSP.h
-             Subsense/RandUtils.h
-             FaceDetector.h
-             PedestrianDetector.h
-             pedestrians/c4-pedestrian-detector.h
-)
+             vibe_src/vibe.hpp)
 
-if (BUILD_YOLO_LIB)
-    set(detector_sources ${detector_sources} YoloDarknetDetector.cpp)
-    set(detector_headers ${detector_headers} YoloDarknetDetector.h)
-endif()
-
-if (BUILD_YOLO_TENSORRT)
-    set(detector_sources ${detector_sources} YoloTensorRTDetector.cpp)
-    set(detector_headers ${detector_headers} YoloTensorRTDetector.h)
+if (BUILD_ONNX_TENSORRT)
+    set(detector_sources ${detector_sources} ONNXTensorRTDetector.cpp)
+    set(detector_headers ${detector_headers} ONNXTensorRTDetector.h)
 endif()
 
 option(USE_OCV_DNN "Use OpenCV DNN module?" ON)
@@ -49,7 +26,7 @@ if (USE_OCV_DNN)
     add_definitions(-DUSE_OCV_DNN)
 endif()
 
-  SOURCE_GROUP("Detector" FILES ${detector_sources} ${detector_headers})
+SOURCE_GROUP("Detector" FILES ${detector_sources} ${detector_headers})
 
 include(CheckIncludeFileCXX)
 check_include_file_cxx(opencv2/bgsegm.hpp HAVE_OPENCV_CONTRIB)
@@ -84,28 +61,18 @@ else(CMAKE_COMPILER_IS_GNUCXX)
 endif()
 
 if (CMAKE_COMPILER_IS_GNUCXX)
-set(LIBS
-    ${OpenCV_LIBS}
-#    iconv
-)
+    set(LIBS ${OpenCV_LIBS})
 else(CMAKE_COMPILER_IS_GNUCXX)
-set(LIBS
-    ${OpenCV_LIBS}
-)
+    set(LIBS ${OpenCV_LIBS})
 endif()
 
-if (BUILD_YOLO_LIB)
-    set(LIBS ${LIBS} yolo_lib)
-endif(BUILD_YOLO_LIB)
-
-if (BUILD_YOLO_TENSORRT)
+if (BUILD_ONNX_TENSORRT)
     set(LIBS ${LIBS} yolo_rt_lib)
-endif(BUILD_YOLO_TENSORRT)
+endif(BUILD_ONNX_TENSORRT)
 
 
 target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBS})
 
-#set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${detector_headers};../common/defines.h;../common/object_types.h")
 set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${detector_headers}")
 install(TARGETS ${PROJECT_NAME}
         EXPORT MTTrackingExports

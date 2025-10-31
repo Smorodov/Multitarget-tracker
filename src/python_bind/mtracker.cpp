@@ -258,16 +258,6 @@ public:
         PYBIND11_OVERLOAD_PURE(void, BaseTracker, Update, regions, currFrame, fps);
     }
 
-    bool CanGrayFrameToTrack() const override
-    {
-        PYBIND11_OVERLOAD_PURE(bool, BaseTracker, CanGrayFrameToTrack, );
-    }
-
-    bool CanColorFrameToTrack() const override
-    {
-        PYBIND11_OVERLOAD_PURE(bool, BaseTracker, CanColorFrameToTrack, );
-    }
-
     size_t GetTracksCount() const override
     {
         PYBIND11_OVERLOAD_PURE(size_t, BaseTracker, GetTracksCount, );
@@ -321,7 +311,7 @@ PYBIND11_MODULE(pymtracking, m)
             .def_readwrite("distThres", &TrackerSettings::m_distThres)
             .def_readwrite("minAreaRadiusPix", &TrackerSettings::m_minAreaRadiusPix)
             .def_readwrite("minAreaRadiusK", &TrackerSettings::m_minAreaRadiusK)
-            .def_readwrite("maximumAllowedSkippedFrames", &TrackerSettings::m_maximumAllowedSkippedFrames)
+            .def_readwrite("maximumAllowedLostTime", &TrackerSettings::m_maximumAllowedLostTime)
             .def_readwrite("maxTraceLength", &TrackerSettings::m_maxTraceLength)
             .def_readwrite("useAbandonedDetection", &TrackerSettings::m_useAbandonedDetection)
             .def_readwrite("minStaticTime", &TrackerSettings::m_minStaticTime)
@@ -360,8 +350,6 @@ PYBIND11_MODULE(pymtracking, m)
     py::class_<BaseTracker, PyBaseTracker> mtracker(m, "MTracker");
     mtracker.def(py::init(&BaseTracker::CreateTracker));
     mtracker.def("Update", &BaseTracker::UpdateMat);
-    mtracker.def("CanGrayFrameToTrack", &BaseTracker::CanGrayFrameToTrack);
-    mtracker.def("CanColorFrameToTrack", &BaseTracker::CanColorFrameToTrack);
     mtracker.def("GetTracksCount", &BaseTracker::GetTracksCount);
     mtracker.def("GetTracks", &BaseTracker::GetTracksCopy);
 
@@ -384,20 +372,13 @@ PYBIND11_MODULE(pymtracking, m)
 
     py::enum_<tracking::MatchType>(mtracker, "MatchType")
             .value("MatchHungrian", tracking::MatchType::MatchHungrian)
-            .value("MatchBipart", tracking::MatchType::MatchBipart)
+            .value("MatchLAPJV", tracking::MatchType::MatchLAPJV)
             .export_values();
 
     py::enum_<tracking::LostTrackType>(mtracker, "LostTrackType")
             .value("TrackNone", tracking::LostTrackType::TrackNone)
             .value("TrackKCF", tracking::LostTrackType::TrackKCF)
-            .value("TrackMIL", tracking::LostTrackType::TrackMIL)
-            .value("TrackMedianFlow", tracking::LostTrackType::TrackMedianFlow)
-            .value("TrackGOTURN", tracking::LostTrackType::TrackGOTURN)
-            .value("TrackMOSSE", tracking::LostTrackType::TrackMOSSE)
             .value("TrackCSRT", tracking::LostTrackType::TrackCSRT)
-            .value("TrackDAT", tracking::LostTrackType::TrackDAT)
-            .value("TrackSTAPLE", tracking::LostTrackType::TrackSTAPLE)
-            .value("TrackLDES", tracking::LostTrackType::TrackLDES)
             .export_values();
 
 	py::class_<BaseDetector, PyDetector> base_detector(m, "BaseDetector");
@@ -425,8 +406,6 @@ PYBIND11_MODULE(pymtracking, m)
             .value("MOG", BackgroundSubtract::BGFG_ALGS::ALG_MOG)
             .value("GMG", BackgroundSubtract::BGFG_ALGS::ALG_GMG)
             .value("CNT", BackgroundSubtract::BGFG_ALGS::ALG_CNT)
-            .value("SuBSENSE", BackgroundSubtract::BGFG_ALGS::ALG_SuBSENSE)
-            .value("LOBSTER", BackgroundSubtract::BGFG_ALGS::ALG_LOBSTER)
             .value("MOG2", BackgroundSubtract::BGFG_ALGS::ALG_MOG2)
             .export_values();
 
@@ -435,14 +414,8 @@ PYBIND11_MODULE(pymtracking, m)
         .value("MOG", tracking::Detectors::Motion_MOG)
         .value("GMG", tracking::Detectors::Motion_GMG)
         .value("CNT", tracking::Detectors::Motion_CNT)
-        .value("SuBSENSE", tracking::Detectors::Motion_SuBSENSE)
-        .value("LOBSTER", tracking::Detectors::Motion_LOBSTER)
         .value("MOG2", tracking::Detectors::Motion_MOG2)
-        .value("Face_HAAR", tracking::Detectors::Face_HAAR)
-        .value("Pedestrian_HOG", tracking::Detectors::Pedestrian_HOG)
-        .value("Pedestrian_C4", tracking::Detectors::Pedestrian_C4)
-        .value("Yolo_Darknet", tracking::Detectors::Yolo_Darknet)
-        .value("Yolo_TensorRT", tracking::Detectors::Yolo_TensorRT)
+        .value("Yolo_TensorRT", tracking::Detectors::ONNX_TensorRT)
         .value("DNN_OCV", tracking::Detectors::DNN_OCV)
         .export_values();
 

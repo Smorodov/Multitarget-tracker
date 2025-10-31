@@ -150,14 +150,6 @@ bool BackgroundSubtract::Init(const config_t& config)
             break;
 #endif
 
-        case ALG_SuBSENSE:
-            m_modelSuBSENSE = std::make_unique<BackgroundSubtractorSuBSENSE>(); // default params
-            break;
-
-        case ALG_LOBSTER:
-            m_modelSuBSENSE = std::make_unique<BackgroundSubtractorLOBSTER>();  // default params
-            break;
-
         case ALG_MOG2:
         {
 			auto params = std::make_tuple(500, 16, 1);
@@ -257,19 +249,6 @@ void BackgroundSubtract::Subtract(const cv::UMat& image, cv::UMat& foreground)
         std::cerr << "OpenCV bgfg algorithms are not implemented!" << std::endl;
         break;
 #endif
-
-    case ALG_SuBSENSE:
-    case ALG_LOBSTER:
-        if (m_rawForeground.size() != image.size() || m_rawForeground.type() != CV_8UC1)
-        {
-            m_modelSuBSENSE->initialize(GetImg(image).getMat(cv::ACCESS_READ), cv::Mat());
-			m_rawForeground.create(image.size(), CV_8UC1);
-        }
-        else
-        {
-            m_modelSuBSENSE->apply(GetImg(image), m_rawForeground);
-        }
-        break;
 
     case ALG_MOG2:
         m_modelOCV->apply(GetImg(image), m_rawForeground);

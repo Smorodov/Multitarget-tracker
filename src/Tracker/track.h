@@ -13,7 +13,6 @@
 #include "trajectory.h"
 #include "object_types.h"
 #include "Kalman.h"
-#include "VOTTracker.hpp"
 
 ///
 /// \brief The RegionEmbedding struct
@@ -115,8 +114,6 @@ public:
 
     cv::RotatedRect GetLastRect() const;
 
-    const Point_t& AveragePoint() const;
-    Point_t& AveragePoint();
     const CRegion& LastRegion() const;
     objtype_t GetCurrType() const;
     double GetLostPeriod(time_point_t currTime) const;
@@ -148,7 +145,6 @@ private:
 #ifdef USE_OCV_KCF
     cv::Ptr<cv::Tracker> m_tracker;
 #endif
-    std::unique_ptr<VOTTracker> m_VOTTracker;
 
     ///
     void RectUpdate(const CRegion& region, bool dataCorrect, cv::UMat prevFrame, cv::UMat currFrame);

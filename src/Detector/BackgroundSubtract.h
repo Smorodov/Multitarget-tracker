@@ -2,8 +2,6 @@
 
 #include "defines.h"
 #include "vibe_src/vibe.hpp"
-#include "Subsense/BackgroundSubtractorSuBSENSE.h"
-#include "Subsense/BackgroundSubtractorLOBSTER.h"
 
 #ifdef USE_OCV_BGFG
 #include <opencv2/bgsegm.hpp>
@@ -21,8 +19,6 @@ public:
         ALG_MOG,
         ALG_GMG,
         ALG_CNT,
-        ALG_SuBSENSE,
-        ALG_LOBSTER,
         ALG_MOG2
 	};
 
@@ -41,7 +37,6 @@ public:
 private:
 	std::unique_ptr<vibe::VIBE> m_modelVibe;
 	cv::Ptr<cv::BackgroundSubtractor> m_modelOCV;
-    std::unique_ptr<BackgroundSubtractorLBSP> m_modelSuBSENSE;
 
 	cv::UMat m_rawForeground;
 

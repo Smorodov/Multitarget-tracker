@@ -11,6 +11,7 @@
 
 #include "pybind11.h"
 #include "complex.h"
+#include "detail/common.h"
 #include <numeric>
 #include <algorithm>
 #include <array>

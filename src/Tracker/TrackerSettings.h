@@ -145,10 +145,9 @@ struct TrackerSettings
     /// FP32
     std::string m_inferencePrecision = "FP16";
 
-    // opencv_dnn = 12
-    // darknet_cudnn = 10
-    // tensorrt = 11
-    int m_detectorBackend = 11;
+    // opencv_dnn = 6
+    // tensorrt = 5
+    int m_detectorBackend = 5;
 
     // DNN_TARGET_CPU
     // DNN_TARGET_OPENCL

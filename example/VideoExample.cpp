@@ -503,10 +503,7 @@ void VideoExample::Tracking(FrameInfo& frame)
 	frame.CleanTracks();
 	for (size_t i = 0; i < frame.m_frames.size(); ++i)
 	{
-		if (m_tracker->CanColorFrameToTrack())
-			m_tracker->Update(frame.m_regions[i], frame.m_frames[i].GetUMatBGR(), frame.m_frameTimeStamps[i]);
-		else
-			m_tracker->Update(frame.m_regions[i], frame.m_frames[i].GetUMatGray(), frame.m_frameTimeStamps[i]);
+		m_tracker->Update(frame.m_regions[i], frame.m_frames[i].GetUMatBGR(), frame.m_frameTimeStamps[i]);
 		m_tracker->GetTracks(frame.m_tracks[i]);
 
 		m_cvatAnnotationsGenerator.NewDetects(frame.m_frameInds[i], frame.m_tracks[i], 0);

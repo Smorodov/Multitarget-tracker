@@ -171,6 +171,7 @@ bool OCVDNNDetector::Init(const config_t& config)
         dictNetType["RFDETR"] = ModelType::RFDETR;
         dictNetType["RFDETR_IS"] = ModelType::RFDETR_IS;
         dictNetType["DFINE"] = ModelType::DFINE;
+        dictNetType["YOLOV13"] = ModelType::YOLOV13;
 
         auto netType = dictNetType.find(net_type->second);
         if (netType != dictNetType.end())
@@ -421,6 +422,10 @@ void OCVDNNDetector::DetectInCrop(const cv::UMat& colorFrame, const cv::Rect& cr
 
     case ModelType::DFINE:
         ParseDFINE(crop, detections, tmpRegions);
+        break;
+
+    case ModelType::YOLOV13:
+        ParseYOLOv11(crop, detections, tmpRegions);
         break;
 
 	default:
