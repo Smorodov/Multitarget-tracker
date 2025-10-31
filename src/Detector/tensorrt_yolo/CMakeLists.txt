@@ -49,6 +49,7 @@ include_directories(${OpenCV_INCLUDE_DIRS})
 include_directories(${CUDA_INCLUDE_DIRS})
 include_directories(${CUDNN_INCLUDE_DIR})
 include_directories(${TensorRT_INCLUDE_DIRS})
+include_directories(${PROJECT_SOURCE_DIR}/../../common)
 
 file(GLOB TENSORRT_SOURCE_FILES *.cpp common/*.cpp)
 file(GLOB TENSORRT_HEADER_FILES *.h* common/*.h*)

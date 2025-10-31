@@ -115,8 +115,6 @@ public:
 
     cv::RotatedRect GetLastRect() const;
 
-    const Point_t& AveragePoint() const;
-    Point_t& AveragePoint();
     const CRegion& LastRegion() const;
     objtype_t GetCurrType() const;
     double GetLostPeriod(time_point_t currTime) const;

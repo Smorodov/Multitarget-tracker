@@ -2,6 +2,8 @@
 
 #include "YoloONNX.hpp"
 
+#include "nms.h"
+
 ///
 /// \brief The DFINE_bb_onnx class
 ///
@@ -25,7 +27,7 @@ protected:
 	///
 	std::vector<tensor_rt::Result> GetResult(size_t imgIdx, int /*keep_topk*/, const std::vector<float*>& outputs, cv::Size frameSize)
 	{
-		std::vector<tensor_rt::Result> resBoxes;
+		std::vector<tensor_rt::Result> tmpBoxes;
 
 		//0: name: images, size : 1x3x640x640
 		//1: name: orig_target_sizes, size : 1x2
@@ -101,9 +103,18 @@ protected:
                 //std::cout << "ind = " << ind << ", boxes[0] = " << boxes[ind + 0] << ", boxes[1] = " << boxes[ind + 1] << ", boxes[2] = " << boxes[ind + 2] << ", boxes[3] = " << boxes[ind + 3] << std::endl;
                 //std::cout << "ind = " << ind << ", x = " << x << ", y = " << y << ", width = " << width << ", height = " << height << std::endl;
 
-				resBoxes.emplace_back(classId, classConf, cv::Rect(cvRound(x), cvRound(y), cvRound(width), cvRound(height)));
+				tmpBoxes.emplace_back(classId, classConf, cv::Rect(cvRound(x), cvRound(y), cvRound(width), cvRound(height)));
 			}
 		}
+
+        std::vector<tensor_rt::Result> resBoxes;
+        resBoxes.reserve(tmpBoxes.size());
+
+        nms3<tensor_rt::Result>(tmpBoxes, resBoxes, static_cast<track_t>(0.3),
+            [](const tensor_rt::Result& reg) { return reg.m_brect; },
+            [](const tensor_rt::Result& reg) { return reg.m_prob; },
+            [](const tensor_rt::Result& reg) { return reg.m_id; },
+            0, static_cast<track_t>(0));
 
 		return resBoxes;
 	}
