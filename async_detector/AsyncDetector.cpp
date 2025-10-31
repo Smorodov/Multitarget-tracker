@@ -384,7 +384,7 @@ void AsyncDetector::CaptureThread(std::string fileName, int startFrame, int* fra
 void AsyncDetector::DetectThread(const config_t& config, cv::Mat firstFrame, FramesQueue* framesQue, bool* stopFlag)
 {
 	cv::UMat ufirst = firstFrame.getUMat(cv::ACCESS_READ);
-    std::unique_ptr<BaseDetector> detector = BaseDetector::CreateDetector(tracking::Detectors::Yolo_Darknet, config, ufirst);
+    std::unique_ptr<BaseDetector> detector = BaseDetector::CreateDetector(tracking::Detectors::ONNX_TensorRT, config, ufirst);
 
     for (; !(*stopFlag);)
     {

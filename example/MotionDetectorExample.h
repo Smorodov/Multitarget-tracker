@@ -71,10 +71,6 @@ protected:
 			config.emplace("useHistory", "1");
 			config.emplace("isParallel", "1");
 			break;
-		case tracking::Detectors::Motion_SuBSENSE:
-			break;
-		case tracking::Detectors::Motion_LOBSTER:
-			break;
 		case tracking::Detectors::Motion_MOG2:
 			config.emplace("history", std::to_string(cvRound(20 * m_minStaticTime * m_fps)));
 			config.emplace("varThreshold", "10");

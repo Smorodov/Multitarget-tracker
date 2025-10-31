@@ -384,15 +384,9 @@ enum Detectors
     Motion_MOG = 1,
     Motion_GMG = 2,
     Motion_CNT = 3,
-    Motion_SuBSENSE = 4,
-    Motion_LOBSTER = 5,
-    Motion_MOG2 = 6,
-    Face_HAAR = 7,
-    Pedestrian_HOG = 8,
-    Pedestrian_C4 = 9,
-    Yolo_Darknet = 10,
-    Yolo_TensorRT = 11,
-    DNN_OCV = 12,
+    Motion_MOG2 = 4,
+    ONNX_TensorRT = 5,
+    DNN_OCV = 6,
     DetectorsCount
 };
 
