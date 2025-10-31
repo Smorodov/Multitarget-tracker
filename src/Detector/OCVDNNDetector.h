@@ -51,7 +51,8 @@ private:
         YOLOV12,
         RFDETR,
         RFDETR_IS,
-        DFINE
+        DFINE,
+        YOLOV13
     };
 
     cv::dnn::Net m_net;
