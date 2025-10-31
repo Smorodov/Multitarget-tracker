@@ -438,7 +438,6 @@ enum KalmanType
 enum MatchType
 {
     MatchHungrian,
-    MatchBipart,
     MatchLAPJV,
     MatchCount
 };
@@ -450,14 +449,7 @@ enum LostTrackType
 {
     TrackNone,
     TrackKCF,
-    TrackMIL,
-    TrackMedianFlow,
-    TrackGOTURN,
-    TrackMOSSE,
     TrackCSRT,
-    TrackDAT,
-    TrackSTAPLE,
-    TrackLDES,
     TrackDaSiamRPN,
     TrackNano,
     TrackVit,

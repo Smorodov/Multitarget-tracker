@@ -13,7 +13,6 @@
 #include "trajectory.h"
 #include "object_types.h"
 #include "Kalman.h"
-#include "VOTTracker.hpp"
 
 ///
 /// \brief The RegionEmbedding struct
@@ -146,7 +145,6 @@ private:
 #ifdef USE_OCV_KCF
     cv::Ptr<cv::Tracker> m_tracker;
 #endif
-    std::unique_ptr<VOTTracker> m_VOTTracker;
 
     ///
     void RectUpdate(const CRegion& region, bool dataCorrect, cv::UMat prevFrame, cv::UMat currFrame);

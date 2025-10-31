@@ -20,8 +20,6 @@ public:
 
     void Update(const regions_t& regions, cv::UMat currFrame, time_point_t frameTime) override;
 
-    bool CanGrayFrameToTrack() const override;
-    bool CanColorFrameToTrack() const override;
     size_t GetTracksCount() const override;
     void GetTracks(std::vector<TrackingObject>& tracks) const override;
     void GetRemovedTracks(std::vector<track_id_t>& trackIDs) const override;
@@ -63,9 +61,6 @@ CTracker::CTracker(const TrackerSettings& settings)
     case tracking::MatchHungrian:
         m_SPCalculator = std::make_unique<SPHungrian>(spSettings);
         break;
-    case tracking::MatchBipart:
-        m_SPCalculator = std::make_unique<SPBipart>(spSettings);
-        break;
     case tracking::MatchLAPJV:
         m_SPCalculator = std::make_unique<SPLAPJV>(spSettings);
         break;
@@ -87,28 +82,6 @@ CTracker::CTracker(const TrackerSettings& settings)
             }
         }
     }
-}
-
-///
-/// \brief CanGrayFrameToTrack
-/// \return
-///
-bool CTracker::CanGrayFrameToTrack() const
-{
-    bool needColor = (m_settings.m_lostTrackType == tracking::LostTrackType::TrackGOTURN) ||
-        (m_settings.m_lostTrackType == tracking::LostTrackType::TrackDAT) ||
-        (m_settings.m_lostTrackType == tracking::LostTrackType::TrackSTAPLE) ||
-        (m_settings.m_lostTrackType == tracking::LostTrackType::TrackLDES);
-    return !needColor;
-}
-
-///
-/// \brief CanColorFrameToTrack
-/// \return
-///
-bool CTracker::CanColorFrameToTrack() const
-{
-    return true;
 }
 
 ///

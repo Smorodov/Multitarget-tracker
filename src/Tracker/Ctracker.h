@@ -27,8 +27,6 @@ public:
         cv::UMat frame = currFrame.getUMat(cv::ACCESS_READ);
         Update(regions, frame, frameTime);
     }
-    virtual bool CanGrayFrameToTrack() const = 0;
-    virtual bool CanColorFrameToTrack() const = 0;
     virtual size_t GetTracksCount() const = 0;
     virtual void GetTracks(std::vector<TrackingObject>& tracks) const = 0;
     virtual std::vector<TrackingObject> GetTracksCopy() const
