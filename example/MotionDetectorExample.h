@@ -128,7 +128,7 @@ protected:
 			}
 		}
 
-        m_tracker = BaseTracker::CreateTracker(m_trackerSettings);
+        m_tracker = BaseTracker::CreateTracker(m_trackerSettings, m_fps);
         return true;
     }
 

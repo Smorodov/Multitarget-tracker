@@ -20,6 +20,12 @@ bool ParseTrackerSettings(const std::string& settingsFile, TrackerSettings& trac
         trackerSettings = TrackerSettings();
 
         // Read tracking settings
+        auto trackerType = reader.GetInteger("tracking", "tracker_type", -1);
+        if (trackerType == (int)tracking::ByteTrack)
+            trackerSettings.m_tracker = tracking::ByteTrack;
+        else
+            trackerSettings.m_tracker = tracking::UniversalTracker;
+
         auto distType = reader.GetInteger("tracking", "distance_type", -1);
         if (distType >= 0 && distType < (int)tracking::DistsCount)
             trackerSettings.SetDistance((tracking::DistType)distType);
@@ -53,6 +59,10 @@ bool ParseTrackerSettings(const std::string& settingsFile, TrackerSettings& trac
         trackerSettings.m_maxStaticTime = reader.GetInteger("tracking", "max_static_time", 25);
         trackerSettings.m_maxSpeedForStatic = reader.GetInteger("tracking", "max_speed_for_static", 10);
 
+        trackerSettings.m_byteTrackSettings.m_trackBuffer = reader.GetInteger("tracking", "bytetrack_track_buffer", 30);
+        trackerSettings.m_byteTrackSettings.m_trackThresh = reader.GetReal("tracking", "bytetrack_track_thresh", 0.5);
+        trackerSettings.m_byteTrackSettings.m_highThresh = reader.GetReal("tracking", "bytetrack_high_thresh", 0.5);
+        trackerSettings.m_byteTrackSettings.m_matchThresh = reader.GetReal("tracking", "bytetrack_match_thresh", 0.8);
 
         // Read detection settings
         trackerSettings.m_nnWeights = reader.GetString("detection", "nn_weights", "data/yolov4-tiny_best.weights");

@@ -13,6 +13,9 @@ struct TrackerSettings
     ///
     /// Tracker settings
     ///
+    /// 
+
+    tracking::TrackerTemplate m_tracker = tracking::UniversalTracker;
 
     tracking::KalmanType m_kalmanType = tracking::KalmanLinear;
     tracking::FilterGoal m_filterGoal = tracking::FilterCenter;
@@ -97,6 +100,19 @@ struct TrackerSettings
     /// Object types that can be matched while tracking
     ///
     std::map<objtype_t, std::set<objtype_t>> m_nearTypes;
+
+	///
+    /// \brief struct ByteTrackSettings
+    /// Settings only for m_tracker = tracking::ByteTrack
+    ///
+	struct ByteTrackSettings
+	{
+		int m_trackBuffer = 30;
+		float m_trackThresh = 0.5f;
+		float m_highThresh = 0.5f;
+		float m_matchThresh = 0.8f;
+	};
+    ByteTrackSettings m_byteTrackSettings;
 
 
     ///

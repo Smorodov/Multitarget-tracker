@@ -140,7 +140,7 @@ protected:
 			m_trackerSettings.m_maximumAllowedLostTime = 2.; // Maximum allowed skipped frames
 			m_trackerSettings.m_maxTraceLength = 2.;         // Maximum trace length
 		}
-		m_tracker = BaseTracker::CreateTracker(m_trackerSettings);
+		m_tracker = BaseTracker::CreateTracker(m_trackerSettings, m_fps);
 		return true;
 	}
 
@@ -481,7 +481,7 @@ protected:
         //m_trackerSettings.AddNearTypes(TypeConverter::Str2Type("person"), TypeConverter::Str2Type("bicycle"), true);
         //m_trackerSettings.AddNearTypes(TypeConverter::Str2Type("person"), TypeConverter::Str2Type("motorbike"), true);
 
-		m_tracker = BaseTracker::CreateTracker(m_trackerSettings);
+		m_tracker = BaseTracker::CreateTracker(m_trackerSettings, m_fps);
 
 		return true;
 	}

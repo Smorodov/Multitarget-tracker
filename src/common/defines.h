@@ -391,6 +391,15 @@ enum Detectors
 };
 
 ///
+/// \brief The TrackerTemplate enum
+///
+enum TrackerTemplate
+{
+    UniversalTracker = 0,
+    ByteTrack = 1
+};
+
+///
 /// \brief The DistType enum
 ///
 enum DistType

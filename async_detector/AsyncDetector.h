@@ -10,7 +10,7 @@
 #include <condition_variable>
 
 #include "BaseDetector.h"
-#include "Ctracker.h"
+#include "BaseTracker.h"
 
 #include "spdlog/spdlog.h"
 #include "spdlog/async.h"
@@ -81,7 +81,7 @@ private:
 
     static void CaptureThread(std::string fileName, int startFrame, int* framesCount, float* fps, FramesQueue* framesQue, bool* stopFlag);
     static void DetectThread(const config_t& config, cv::Mat firstFrame, FramesQueue* framesQue, bool* stopFlag);
-	static void TrackingThread(const TrackerSettings& settings, FramesQueue* framesQue, bool* stopFlag);
+	static void TrackingThread(const TrackerSettings& settings, FramesQueue* framesQue, float fps, bool* stopFlag);
 
     std::shared_ptr<spdlog::sinks::stdout_color_sink_mt> m_consoleSink;
     std::shared_ptr<spdlog::sinks::rotating_file_sink_mt> m_fileSink;

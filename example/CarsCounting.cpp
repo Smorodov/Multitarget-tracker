@@ -218,7 +218,7 @@ bool CarsCounting::InitTracker(cv::UMat frame)
         settings.m_maxTraceLength = 4.;          // Maximum trace length
     }
 
-    m_tracker = BaseTracker::CreateTracker(settings);
+    m_tracker = BaseTracker::CreateTracker(settings, m_fps);
 
     ReadGeobindings(frame.size());
     return true;

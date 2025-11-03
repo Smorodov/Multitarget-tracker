@@ -336,7 +336,7 @@ void AsyncDetector::CaptureThread(std::string fileName, int startFrame, int* fra
 	++frameInd;
 
     std::thread thDetection(DetectThread, detectorConfig, firstFrame, framesQue, stopFlag);
-    std::thread thTracking(TrackingThread, trackerSettings, framesQue, stopFlag);
+    std::thread thTracking(TrackingThread, trackerSettings, framesQue, *fps, stopFlag);
 
     // Capture frame
     for (; !(*stopFlag);)
@@ -406,9 +406,9 @@ void AsyncDetector::DetectThread(const config_t& config, cv::Mat firstFrame, Fra
 /// \brief AsyncDetector::TrackingThread
 /// \param
 ///
-void AsyncDetector::TrackingThread(const TrackerSettings& settings, FramesQueue* framesQue, bool* stopFlag)
+void AsyncDetector::TrackingThread(const TrackerSettings& settings, FramesQueue* framesQue, float fps, bool* stopFlag)
 {
-    std::unique_ptr<BaseTracker> tracker = BaseTracker::CreateTracker(settings);
+    std::unique_ptr<BaseTracker> tracker = BaseTracker::CreateTracker(settings, fps);
 
     for (; !(*stopFlag);)
     {

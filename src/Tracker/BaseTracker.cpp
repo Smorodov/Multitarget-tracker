@@ -1,5 +1,6 @@
 #include <fstream>
-#include "Ctracker.h"
+#include "BaseTracker.h"
+#include "byte_track/BYTETracker.h"
 #include "ShortPathCalculator.h"
 #include "EmbeddingsCalculator.hpp"
 #include "track.h"
@@ -20,7 +21,6 @@ public:
 
     void Update(const regions_t& regions, cv::UMat currFrame, time_point_t frameTime) override;
 
-    size_t GetTracksCount() const override;
     void GetTracks(std::vector<TrackingObject>& tracks) const override;
     void GetRemovedTracks(std::vector<track_id_t>& trackIDs) const override;
 
@@ -82,15 +82,6 @@ CTracker::CTracker(const TrackerSettings& settings)
             }
         }
     }
-}
-
-///
-/// \brief GetTracksCount
-/// \return
-///
-size_t CTracker::GetTracksCount() const
-{
-    return m_tracks.size();
 }
 
 ///
@@ -676,7 +667,18 @@ track_t CTracker::GetEllipseDist(const CTrack& trackRef, const CRegion& reg)
 ///
 /// BaseTracker::CreateTracker
 ///
-std::unique_ptr<BaseTracker> BaseTracker::CreateTracker(const TrackerSettings& settings)
+std::unique_ptr<BaseTracker> BaseTracker::CreateTracker(const TrackerSettings& settings, float fps)
 {
-    return std::make_unique<CTracker>(settings);
+    switch (settings.m_tracker)
+    {
+    case tracking::UniversalTracker:
+        return std::make_unique<CTracker>(settings);
+
+    case tracking::ByteTrack:
+        return std::make_unique<byte_track::BYTETracker>((fps > 1.f) ? cvRound(fps) : 30, settings.m_byteTrackSettings.m_trackBuffer,
+            settings.m_byteTrackSettings.m_trackThresh, settings.m_byteTrackSettings.m_highThresh, settings.m_byteTrackSettings.m_matchThresh);
+
+    default:
+        return std::make_unique<CTracker>(settings);
+    }
 }

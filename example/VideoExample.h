@@ -9,7 +9,7 @@
 #include <atomic>
 
 #include "BaseDetector.h"
-#include "Ctracker.h"
+#include "BaseTracker.h"
 #include "FileLogger.h"
 #include "cvatAnnotationsGenerator.h"
 
