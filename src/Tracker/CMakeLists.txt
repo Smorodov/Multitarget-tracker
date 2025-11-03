@@ -9,16 +9,20 @@ set(main_sources
              ../common/object_types.cpp)
 
 set(tracker_sources
-             Ctracker.cpp
+             BaseTracker.cpp
              track.cpp
              Kalman.cpp
              TrackerSettings.cpp
              ShortPathCalculator.cpp
              HungarianAlg/HungarianAlg.cpp
-             LAPJV_algorithm/lap.cpp)
+             LAPJV_algorithm/lap.cpp
+             byte_track/BYTETracker.cpp
+             byte_track/KalmanFilter.cpp
+             byte_track/lapjv.cpp
+             byte_track/STrack.cpp)
 
 set(tracker_headers
-             Ctracker.h
+             BaseTracker.h
              ShortPathCalculator.h
              track.h
              trajectory.h
@@ -26,7 +30,11 @@ set(tracker_headers
              TrackerSettings.h
              HungarianAlg/HungarianAlg.h
              LAPJV_algorithm/lap.h
-             EmbeddingsCalculator.hpp)
+             EmbeddingsCalculator.hpp
+             byte_track/BYTETracker.h
+             byte_track/KalmanFilter.h
+             byte_track/lapjv.h
+             byte_track/STrack.h)
 
 SOURCE_GROUP("Src" FILES ${main_sources})
 SOURCE_GROUP("Tracker" FILES ${tracker_sources} ${tracker_headers})

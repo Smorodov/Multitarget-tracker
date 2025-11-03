@@ -258,11 +258,6 @@ public:
         PYBIND11_OVERLOAD_PURE(void, BaseTracker, Update, regions, currFrame, fps);
     }
 
-    size_t GetTracksCount() const override
-    {
-        PYBIND11_OVERLOAD_PURE(size_t, BaseTracker, GetTracksCount, );
-    }
-
     std::vector<TrackingObject> GetTracksCopy() const override
     {
         PYBIND11_OVERLOAD(std::vector<TrackingObject>, BaseTracker, GetTracksCopy);
@@ -350,7 +345,6 @@ PYBIND11_MODULE(pymtracking, m)
     py::class_<BaseTracker, PyBaseTracker> mtracker(m, "MTracker");
     mtracker.def(py::init(&BaseTracker::CreateTracker));
     mtracker.def("Update", &BaseTracker::UpdateMat);
-    mtracker.def("GetTracksCount", &BaseTracker::GetTracksCount);
     mtracker.def("GetTracks", &BaseTracker::GetTracksCopy);
 
     py::enum_<tracking::DistType>(mtracker, "DistType")

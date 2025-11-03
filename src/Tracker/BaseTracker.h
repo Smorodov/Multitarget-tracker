@@ -27,7 +27,7 @@ public:
         cv::UMat frame = currFrame.getUMat(cv::ACCESS_READ);
         Update(regions, frame, frameTime);
     }
-    virtual size_t GetTracksCount() const = 0;
+
     virtual void GetTracks(std::vector<TrackingObject>& tracks) const = 0;
     virtual std::vector<TrackingObject> GetTracksCopy() const
     {
@@ -37,5 +37,5 @@ public:
     }
     virtual void GetRemovedTracks(std::vector<track_id_t>& trackIDs) const = 0;
 
-    static std::unique_ptr<BaseTracker> CreateTracker(const TrackerSettings& settings);
+    static std::unique_ptr<BaseTracker> CreateTracker(const TrackerSettings& settings, float fps);
 };

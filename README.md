@@ -5,6 +5,7 @@
 [![CodeQL](https://github.com/Smorodov/Multitarget-tracker/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/Smorodov/Multitarget-tracker/actions/workflows/codeql-analysis.yml)
 
 ## Latest Features
+- Add ByteTrack MOT algorithm based on [Vertical-Beach/ByteTrack-cpp](https://github.com/Vertical-Beach/ByteTrack-cpp)
 - Big code cleanup from old style algorithms and detectors: some bgfg detectors, some VOT trackes, Face and Pedestrin detectors, Darknet based backend for old YOLO etc
 - YOLOv13 detector works with TensorRT! Export pre-trained PyTorch models [here (iMoonLab/yolov13)](https://github.com/iMoonLab/yolov13) to ONNX format and run Multitarget-tracker with `-e=3` example
 - Instance segmentation model from RF-DETR detector works with TensorRT! Export pre-trained PyTorch models [here (roboflow/rf-detr)](https://github.com/roboflow/rf-detr) to ONNX format and run Multitarget-tracker with `-e=3` example
