@@ -18,7 +18,7 @@ enum class STrackState {
 class STrack
 {
 public:
-    STrack(const cv::Rect2f& rect, const float& score, time_point_t currTime);
+    STrack(const cv::Rect2f& rect, const float& score, objtype_t type, time_point_t currTime);
     ~STrack() = default;
 
     const cv::Rect2f& getRect() const;
@@ -30,6 +30,9 @@ public:
     const size_t& getFrameId() const;
     const size_t& getStartFrameId() const;
     const size_t& getTrackletLength() const;
+    objtype_t getType() const;
+    const Trace& getTrace() const;
+    cv::Vec<track_t, 2> getVelocity() const;
 
     void activate(const size_t& frame_id, const size_t& track_id, time_point_t currTime);
     void reActivate(const STrack &new_track, const size_t &frame_id, const int &new_track_id, time_point_t currTime); // new_track_id = -1
@@ -45,6 +48,7 @@ private:
     KalmanFilter::StateMean mean_;
     KalmanFilter::StateCov covariance_;
 
+    objtype_t type_ = bad_type;
     cv::Rect2f rect_;
     STrackState state_{ STrackState::New };
 

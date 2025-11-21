@@ -2,10 +2,11 @@
 
 #include <cstddef>
 
-byte_track::STrack::STrack(const cv::Rect2f& rect, const float& score, time_point_t currTime) :
+byte_track::STrack::STrack(const cv::Rect2f& rect, const float& score, objtype_t type, time_point_t currTime) :
     kalman_filter_(),
     mean_(),
     covariance_(),
+    type_(type),
     rect_(rect),
     state_(STrackState::New),
     is_activated_(false),
@@ -56,6 +57,21 @@ const size_t& byte_track::STrack::getStartFrameId() const
 const size_t& byte_track::STrack::getTrackletLength() const
 {
     return tracklet_len_;
+}
+
+objtype_t byte_track::STrack::getType() const
+{
+    return type_;
+}
+
+const Trace& byte_track::STrack::getTrace() const
+{
+    return trace_;
+}
+
+cv::Vec<track_t, 2> byte_track::STrack::getVelocity() const
+{
+	return cv::Vec<track_t, 2>(mean_(4), mean_(5));
 }
 
 byte_track::KalmanFilter::DetectBox GetXyah(const cv::Rect2f& rect)
