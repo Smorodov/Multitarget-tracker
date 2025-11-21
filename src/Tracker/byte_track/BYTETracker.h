@@ -37,12 +37,12 @@ private:
                                 std::vector<STrackPtr> &b_res) const;
 
     void linearAssignment(const std::vector<std::vector<float>> &cost_matrix,
-                          const int &cost_matrix_size,
-                          const int &cost_matrix_size_size,
+                          const size_t &cost_matrix_size,
+                          const size_t &cost_matrix_size_size,
                           const float &thresh,
                           std::vector<std::vector<int>> &matches,
-                          std::vector<int> &b_unmatched,
-                          std::vector<int> &a_unmatched) const;
+                          std::vector<size_t> &b_unmatched,
+                          std::vector<size_t> &a_unmatched) const;
 
     std::vector<std::vector<float>> calcIouDistance(const std::vector<STrackPtr> &a_tracks,
                                                     const std::vector<STrackPtr> &b_tracks) const;
@@ -63,6 +63,7 @@ private:
     const float match_thresh_ = 0.8f;
     const size_t max_time_lost_ = 30;
 
+    time_point_t m_lastFrameTime;
     size_t frame_id_ = 0;
     size_t track_id_count_ = 0;
 

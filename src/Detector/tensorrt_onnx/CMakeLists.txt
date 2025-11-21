@@ -49,7 +49,7 @@ include_directories(${OpenCV_INCLUDE_DIRS})
 include_directories(${CUDA_INCLUDE_DIRS})
 include_directories(${CUDNN_INCLUDE_DIR})
 include_directories(${TensorRT_INCLUDE_DIRS})
-include_directories(${PROJECT_SOURCE_DIR}/../../common)
+include_directories(${PROJECT_SOURCE_DIR}/../../mtracking)
 
 file(GLOB TENSORRT_SOURCE_FILES *.cpp common/*.cpp)
 file(GLOB TENSORRT_HEADER_FILES *.h* common/*.h*)
@@ -91,9 +91,9 @@ target_link_libraries(${libname_rt} ${TENSORRT_LIBS})
 
 install(TARGETS ${libname_rt}
         EXPORT MTTrackingExports
-        ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
-        LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
-        RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
-        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_PREFIX}/include/${PROJECT_NAME})
+        ARCHIVE DESTINATION lib
+        LIBRARY DESTINATION lib
+        RUNTIME DESTINATION bin
+        PUBLIC_HEADER DESTINATION include/${PROJECT_NAME})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "libs")

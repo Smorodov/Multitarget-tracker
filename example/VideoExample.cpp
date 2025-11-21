@@ -153,8 +153,14 @@ void VideoExample::SyncProcess()
 
     int64 startLoopTime = cv::getTickCount();
 
+    //double fps = capture.get(cv::CAP_PROP_FPS);
+    //double readPeriodSeconds = 2.;
+    //int readPeriodFrames = cvRound(readPeriodSeconds * fps);
+
     for (;;)
     {
+        //int currFramesPos = cvRound(capture.get(cv::CAP_PROP_POS_FRAMES));
+
 		size_t i = 0;
 		for (; i < m_batchSize; ++i)
 		{
@@ -176,6 +182,8 @@ void VideoExample::SyncProcess()
 		}
 		if (i < m_batchSize)
 			break;
+
+        //capture.set(cv::CAP_PROP_POS_FRAMES, currFramesPos + readPeriodFrames);
 
 		if (!m_isDetectorInitialized || !m_isTrackerInitialized)
 		{
@@ -202,7 +210,6 @@ void VideoExample::SyncProcess()
 
         int64 t1 = cv::getTickCount();
 
-        regions_t regions;
         Detection(frameInfo);
         Tracking(frameInfo);
         int64 t2 = cv::getTickCount();

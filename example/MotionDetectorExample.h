@@ -39,7 +39,7 @@ protected:
 		m_logger->info("MotionDetectorExample::InitDetector");
 
         //m_minObjWidth = frame.cols / 20;
-		m_minObjWidth = 2;
+		m_minObjWidth = 4;
 
         config_t config;
 		config.emplace("useRotatedRect", "0");
@@ -56,7 +56,7 @@ protected:
 			config.emplace("updateFactor", "16");
 			break;
 		case tracking::Detectors::Motion_MOG:
-            config.emplace("history", std::to_string(cvRound(50 * m_fps)));
+            config.emplace("history", std::to_string(cvRound(5000 * m_fps)));
 			config.emplace("nmixtures", "3");
 			config.emplace("backgroundRatio", "0.7");
 			config.emplace("noiseSigma", "0");
@@ -97,7 +97,7 @@ protected:
 
 		if (!m_trackerSettingsLoaded)
 		{
-            m_trackerSettings.SetDistance(tracking::DistCenters);
+            m_trackerSettings.SetDistance(tracking::DistJaccard);
 			m_trackerSettings.m_kalmanType = tracking::KalmanLinear;
 			m_trackerSettings.m_filterGoal = tracking::FilterCenter;
             m_trackerSettings.m_lostTrackType = tracking::TrackNone; // Use visual objects tracker for collisions resolving. Used if m_filterGoal == tracking::FilterRect
@@ -197,8 +197,9 @@ protected:
 				auto velocity = sqrt(sqr(track.m_velocity[0]) + sqr(track.m_velocity[1]));
 				if (track.IsRobust(4,             // Minimal trajectory size
 					0.3f,                         // Minimal ratio raw_trajectory_points / trajectory_lenght
-					cv::Size2f(0.2f, 5.0f)))    // Min and max ratio: width / height
-					//velocity > 30                // Velocity more than 30 pixels per second
+					cv::Size2f(0.2f, 5.0f),       // Min and max ratio: width / height
+					2))
+					//velocity > 30               // Velocity more than 30 pixels per second
 				{
 					//track_t mean = 0;
 					//track_t stddev = 0;

@@ -7,7 +7,7 @@
 
 #include <algorithm>
 
-#include "../common/defines.h"
+#include "../mtracking/defines.h"
 #include "../Tracker/Ctracker.h"
 #include "../Detector/BaseDetector.h"
 #include "../Detector/MotionDetector.h"

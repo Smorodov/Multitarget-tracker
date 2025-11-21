@@ -3,10 +3,10 @@ cmake_minimum_required(VERSION 3.9)
 project(mtracking)
 
 set(main_sources
-             ../common/nms.h
-             ../common/defines.h
-             ../common/object_types.h
-             ../common/object_types.cpp)
+             ../mtracking/nms.h
+             ../mtracking/defines.h
+             ../mtracking/object_types.h
+             ../mtracking/object_types.cpp)
 
 set(tracker_sources
              BaseTracker.cpp
@@ -76,7 +76,7 @@ endif(USE_OCV_EMBEDDINGS)
 
 include_directories(${PROJECT_SOURCE_DIR})
 include_directories(${PROJECT_SOURCE_DIR}/../src)
-include_directories(${PROJECT_SOURCE_DIR}/../common)
+include_directories(${PROJECT_SOURCE_DIR}/../mtracking)
 include_directories(${PROJECT_SOURCE_DIR}/../../thirdparty)
 
 if (CMAKE_COMPILER_IS_GNUCXX)
@@ -98,11 +98,11 @@ endif()
 
 target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBS})
 
-set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${tracker_headers};../common/defines.h;../common/object_types.h")
+set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${tracker_headers};../mtracking/defines.h;../mtracking/object_types.h")
 install(TARGETS ${PROJECT_NAME}
         EXPORT MTTrackingExports
-        LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
-        RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
-        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_PREFIX}/include/${PROJECT_NAME})
+        LIBRARY DESTINATION lib
+        RUNTIME DESTINATION bin
+        PUBLIC_HEADER DESTINATION include/${PROJECT_NAME})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "libs")

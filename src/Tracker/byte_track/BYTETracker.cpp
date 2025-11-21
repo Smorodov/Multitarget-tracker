@@ -24,18 +24,37 @@ byte_track::BYTETracker::BYTETracker(const int& frame_rate,
 ///
 void byte_track::BYTETracker::GetTracks(std::vector<TrackingObject>& tracks) const
 {
+    tracks.clear();
 
+    if (output_stracks_.size() > tracks.capacity())
+        tracks.reserve(output_stracks_.size());
+    for (const auto& track : output_stracks_)
+    {
+        std::chrono::duration<double> period = m_lastFrameTime - m_lastFrameTime;
+        cv::RotatedRect rr(track->getRect().tl(), cv::Point2f(static_cast<float>(track->getRect().x + track->getRect().width), static_cast<float>(track->getRect().y)), track->getRect().br());
+        TrackingObject to(rr, track->getTrackId(), track->getTrace(), false, cvRound(period.count()), false,
+            track->getType(), track->getScore(), track->getVelocity());
+
+        tracks.emplace_back(to);
+    }
 }
 
 ///
 void byte_track::BYTETracker::GetRemovedTracks(std::vector<track_id_t>& trackIDs) const
 {
-
+    if (removed_stracks_.size() > trackIDs.capacity())
+        trackIDs.reserve(removed_stracks_.size());
+    for (const auto& remTrack : removed_stracks_)
+    {
+        trackIDs.emplace_back(remTrack->getTrackId());
+    }
 }
 
 ///
-void byte_track::BYTETracker::Update(const regions_t& regions, cv::UMat currFrame, time_point_t frameTime)
+void byte_track::BYTETracker::Update(const regions_t& regions, cv::UMat /*currFrame*/, time_point_t frameTime)
 {
+    m_lastFrameTime = frameTime;
+
     ////////////////// Step 1: Get detections //////////////////
     frame_id_++;
 
@@ -45,7 +64,7 @@ void byte_track::BYTETracker::Update(const regions_t& regions, cv::UMat currFram
 
     for (const auto &region : regions)
     {
-        const auto strack = std::make_shared<STrack>(region.m_brect, region.m_confidence, frameTime);
+        const auto strack = std::make_shared<STrack>(region.m_brect, region.m_confidence, region.m_type, frameTime);
         if (region.m_confidence >= track_thresh_)
             det_stracks.push_back(strack);
         else
@@ -81,7 +100,7 @@ void byte_track::BYTETracker::Update(const regions_t& regions, cv::UMat currFram
 
     {
         std::vector<std::vector<int>> matches_idx;
-        std::vector<int> unmatch_detection_idx, unmatch_track_idx;
+        std::vector<size_t> unmatch_detection_idx, unmatch_track_idx;
 
         const auto dists = calcIouDistance(strack_pool, det_stracks);
         linearAssignment(dists, strack_pool.size(), det_stracks.size(), match_thresh_,
@@ -120,7 +139,7 @@ void byte_track::BYTETracker::Update(const regions_t& regions, cv::UMat currFram
 
     {
         std::vector<std::vector<int>> matches_idx;
-        std::vector<int> unmatch_track_idx, unmatch_detection_idx;
+        std::vector<size_t> unmatch_track_idx, unmatch_detection_idx;
 
         const auto dists = calcIouDistance(remain_tracked_stracks, det_low_stracks);
         linearAssignment(dists, remain_tracked_stracks.size(), det_low_stracks.size(), 0.5,
@@ -157,8 +176,8 @@ void byte_track::BYTETracker::Update(const regions_t& regions, cv::UMat currFram
     std::vector<STrackPtr> current_removed_stracks;
 
     {
-        std::vector<int> unmatch_detection_idx;
-        std::vector<int> unmatch_unconfirmed_idx;
+        std::vector<size_t> unmatch_detection_idx;
+        std::vector<size_t> unmatch_unconfirmed_idx;
         std::vector<std::vector<int>> matches_idx;
 
         // Deal with unconfirmed tracks, usually tracks with only one beginning frame
@@ -224,7 +243,7 @@ void byte_track::BYTETracker::Update(const regions_t& regions, cv::UMat currFram
 std::vector<byte_track::BYTETracker::STrackPtr> byte_track::BYTETracker::jointStracks(const std::vector<STrackPtr> &a_tlist,
                                                                                       const std::vector<STrackPtr> &b_tlist) const
 {
-    std::map<int, int> exists;
+    std::map<size_t, size_t> exists;
     std::vector<STrackPtr> res;
     for (size_t i = 0; i < a_tlist.size(); i++)
     {
@@ -233,7 +252,7 @@ std::vector<byte_track::BYTETracker::STrackPtr> byte_track::BYTETracker::jointSt
     }
     for (size_t i = 0; i < b_tlist.size(); i++)
     {
-        const int &tid = b_tlist[i]->getTrackId();
+        const size_t &tid = b_tlist[i]->getTrackId();
         if (!exists[tid] || exists.count(tid) == 0)
         {
             exists[tid] = 1;
@@ -247,7 +266,7 @@ std::vector<byte_track::BYTETracker::STrackPtr> byte_track::BYTETracker::jointSt
 std::vector<byte_track::BYTETracker::STrackPtr> byte_track::BYTETracker::subStracks(const std::vector<STrackPtr> &a_tlist,
                                                                                     const std::vector<STrackPtr> &b_tlist) const
 {
-    std::map<int, STrackPtr> stracks;
+    std::map<size_t, STrackPtr> stracks;
     for (size_t i = 0; i < a_tlist.size(); i++)
     {
         stracks.emplace(a_tlist[i]->getTrackId(), a_tlist[i]);
@@ -255,13 +274,13 @@ std::vector<byte_track::BYTETracker::STrackPtr> byte_track::BYTETracker::subStra
 
     for (size_t i = 0; i < b_tlist.size(); i++)
     {
-        const int &tid = b_tlist[i]->getTrackId();
+        const size_t&tid = b_tlist[i]->getTrackId();
         if (stracks.count(tid) != 0)
             stracks.erase(tid);
     }
 
     std::vector<STrackPtr> res;
-    std::map<int, STrackPtr>::iterator it;
+    std::map<size_t, STrackPtr>::iterator it;
     for (it = stracks.begin(); it != stracks.end(); ++it)
     {
         res.push_back(it->second);
@@ -314,27 +333,28 @@ void byte_track::BYTETracker::removeDuplicateStracks(const std::vector<STrackPtr
 
 ///
 void byte_track::BYTETracker::linearAssignment(const std::vector<std::vector<float>> &cost_matrix,
-                                               const int &cost_matrix_size,
-                                               const int &cost_matrix_size_size,
+                                               const size_t &cost_matrix_size,
+                                               const size_t &cost_matrix_size_size,
                                                const float &thresh,
                                                std::vector<std::vector<int>> &matches,
-                                               std::vector<int> &a_unmatched,
-                                               std::vector<int> &b_unmatched) const
+                                               std::vector<size_t> &a_unmatched,
+                                               std::vector<size_t> &b_unmatched) const
 {
     if (cost_matrix.size() == 0)
     {
-        for (int i = 0; i < cost_matrix_size; i++)
+        for (size_t i = 0; i < cost_matrix_size; i++)
         {
             a_unmatched.push_back(i);
         }
-        for (int i = 0; i < cost_matrix_size_size; i++)
+        for (size_t i = 0; i < cost_matrix_size_size; i++)
         {
             b_unmatched.push_back(i);
         }
         return;
     }
 
-    std::vector<int> rowsol; std::vector<int> colsol;
+    std::vector<int> rowsol;
+    std::vector<int> colsol;
     execLapjv(cost_matrix, rowsol, colsol, true, thresh);
     for (size_t i = 0; i < rowsol.size(); i++)
     {
@@ -443,12 +463,12 @@ double byte_track::BYTETracker::execLapjv(const std::vector<std::vector<float>> 
 
     std::vector<std::vector<float> > cost_c_extended;
 
-    int n_rows = cost.size();
-    int n_cols = cost[0].size();
+    size_t n_rows = cost.size();
+    size_t n_cols = cost[0].size();
     rowsol.resize(n_rows);
     colsol.resize(n_cols);
 
-    int n = 0;
+    size_t n = 0;
     if (n_rows == n_cols)
     {
         n = n_rows;
@@ -472,7 +492,7 @@ double byte_track::BYTETracker::execLapjv(const std::vector<std::vector<float>> 
             {
                 for (size_t j = 0; j < cost_c_extended[i].size(); j++)
                 {
-                    cost_c_extended[i][j] = cost_limit / 2.0;
+                    cost_c_extended[i][j] = cost_limit / 2.0f;
                 }
             }
         }
@@ -503,9 +523,9 @@ double byte_track::BYTETracker::execLapjv(const std::vector<std::vector<float>> 
                 cost_c_extended[i][j] = 0;
             }
         }
-        for (int i = 0; i < n_rows; i++)
+        for (size_t i = 0; i < n_rows; i++)
         {
-            for (int j = 0; j < n_cols; j++)
+            for (size_t j = 0; j < n_cols; j++)
             {
                 cost_c_extended[i][j] = cost_c[i][j];
             }
@@ -526,18 +546,18 @@ double byte_track::BYTETracker::execLapjv(const std::vector<std::vector<float>> 
 
     if (n != n_rows)
     {
-        for (int i = 0; i < n; i++)
+        for (size_t i = 0; i < n; i++)
         {
             if (x_c[i] >= n_cols)
                 x_c[i] = -1;
             if (y_c[i] >= n_rows)
                 y_c[i] = -1;
         }
-        for (int i = 0; i < n_rows; i++)
+        for (size_t i = 0; i < n_rows; i++)
         {
             rowsol[i] = x_c[i];
         }
-        for (int i = 0; i < n_cols; i++)
+        for (size_t i = 0; i < n_cols; i++)
         {
             colsol[i] = y_c[i];
         }

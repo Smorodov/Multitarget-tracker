@@ -20,7 +20,7 @@ endif(BUILD_CARS_COUNTING)
 # добавляем include директории
 # ----------------------------------------------------------------------------
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/../src
-                    ${PROJECT_SOURCE_DIR}/../src/common
+                    ${PROJECT_SOURCE_DIR}/../src/mtracking
                     ${PROJECT_SOURCE_DIR}/../src/Detector
                     ${PROJECT_SOURCE_DIR}/../src/Detector/vibe_src
                     ${PROJECT_SOURCE_DIR}/../src/Detector/Subsense
