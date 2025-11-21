@@ -327,7 +327,9 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
                     m_tracks[i]->IsStaticTimeout(frameTime, m_settings.m_maxStaticTime - m_settings.m_minStaticTime))
             {
                 m_removedObjects.push_back(m_tracks[i]->GetID());
-                //std::cout << "Remove: " << m_tracks[i]->GetID().ID2Str() << ": lost = " << m_tracks[i]->GetLostPeriod(frameTime) << ", maximumAllowedLostTime = " << m_settings.m_maximumAllowedLostTime << ", out of frame " << m_tracks[i]->IsOutOfTheFrame() << std::endl;
+#if DRAW_DBG_ASSIGNMENT
+                std::cout << "Remove: " << m_tracks[i]->GetID().ID2Str() << ": lost = " << m_tracks[i]->GetLostPeriod(frameTime) << ", maximumAllowedLostTime = " << m_settings.m_maximumAllowedLostTime << ", out of frame " << m_tracks[i]->IsOutOfTheFrame() << std::endl;
+#endif
                 m_tracks.erase(m_tracks.begin() + i);
                 assignmentT2R.erase(assignmentT2R.begin() + i);
             }
@@ -344,8 +346,9 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
 #endif
     for (size_t i = 0; i < regions.size(); ++i)
     {
-		//std::cout << "CTracker::update: regions[" << i << "].m_rrect: " << regions[i].m_rrect.center << ", " << regions[i].m_rrect.angle << ", " << regions[i].m_rrect.size << std::endl;
-
+#if DRAW_DBG_ASSIGNMENT
+		std::cout << "CTracker::update: regions[" << i << "].m_rrect: " << regions[i].m_rrect.center << ", " << regions[i].m_rrect.angle << ", " << regions[i].m_rrect.size << std::endl;
+#endif
         if (std::find(assignmentT2R.begin(), assignmentT2R.end(), i) == assignmentT2R.end())
         {
             if (regionEmbeddings.empty())
@@ -386,7 +389,9 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
         if (assignmentT2R[i] != -1) // If we have assigned detect, then update using its coordinates,
         {
             m_tracks[i]->ResetLostTime(frameTime);
-            // std::cout << "Update track " << i << " for " << assignment[i] << " region, regionEmbeddings.size = " << regionEmbeddings.size() << std::endl;
+#if DRAW_DBG_ASSIGNMENT
+            std::cout << "Update track " << i << " for " << assignmentT2R[i] << " region, regionEmbeddings.size = " << regionEmbeddings.size() << std::endl;
+#endif
             if (regionEmbeddings.empty())
                 m_tracks[i]->Update(regions[assignmentT2R[i]],
                         true, m_settings.m_maxTraceLength,
