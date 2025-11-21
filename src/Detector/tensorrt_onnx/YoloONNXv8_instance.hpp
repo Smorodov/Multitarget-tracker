@@ -1,7 +1,7 @@
 #pragma once
 
 #include "YoloONNX.hpp"
-#include "../../common/defines.h"
+#include "../../mtracking/defines.h"
 
 ///
 /// \brief The YOLOv8_instance_onnx class

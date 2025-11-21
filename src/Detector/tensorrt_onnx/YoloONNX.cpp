@@ -3,7 +3,7 @@
 #define DEFINE_TRT_ENTRYPOINTS 1
 
 #include "YoloONNX.hpp"
-#include "../../common/defines.h"
+#include "../../mtracking/defines.h"
 
 //!
 //! \brief Creates the network, configures the builder and creates the network engine

@@ -202,7 +202,6 @@ void VideoExample::SyncProcess()
 
         int64 t1 = cv::getTickCount();
 
-        regions_t regions;
         Detection(frameInfo);
         Tracking(frameInfo);
         int64 t2 = cv::getTickCount();

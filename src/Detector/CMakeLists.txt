@@ -50,7 +50,7 @@ endif(USE_OCV_BGFG)
 
 include_directories(${PROJECT_SOURCE_DIR})
 include_directories(${PROJECT_SOURCE_DIR}/../src)
-include_directories(${PROJECT_SOURCE_DIR}/../common)
+include_directories(${PROJECT_SOURCE_DIR}/..)
 
 if (CMAKE_COMPILER_IS_GNUCXX)
     add_library(${PROJECT_NAME} SHARED
@@ -76,8 +76,8 @@ target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBS})
 set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${detector_headers}")
 install(TARGETS ${PROJECT_NAME}
         EXPORT MTTrackingExports
-        LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
-        RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
-        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_PREFIX}/include/${PROJECT_NAME})
+        LIBRARY DESTINATION lib
+        RUNTIME DESTINATION bin
+        PUBLIC_HEADER DESTINATION include/${PROJECT_NAME})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "libs")

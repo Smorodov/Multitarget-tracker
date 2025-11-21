@@ -20,7 +20,7 @@ struct TrackerSettings
     tracking::KalmanType m_kalmanType = tracking::KalmanLinear;
     tracking::FilterGoal m_filterGoal = tracking::FilterCenter;
     tracking::LostTrackType m_lostTrackType = tracking::TrackKCF; // Used if m_filterGoal == tracking::FilterRect
-    tracking::MatchType m_matchType = tracking::MatchHungrian;
+    tracking::MatchType m_matchType = tracking::MatchLAPJV;
 
     std::array<track_t, tracking::DistsCount> m_distType;
 

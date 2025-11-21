@@ -149,8 +149,8 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
     std::cout << "CTracker::UpdateTrackingState: m_tracks = " << colsTracks << ", regions = " << rowsRegions << std::endl;
 
     int fontType = cv::FONT_HERSHEY_TRIPLEX;
-    double fontSize = 0.6;
-    cv::Scalar colorRegionEllow(0, 255, 255);
+    double fontSize = (currFrame.cols < 1000) ? 0.4 : 0.6;
+    cv::Scalar colorRegionEllow(100, 100, 100);
     cv::Scalar colorMatchedAboveThreshRed(0, 0, 255);
     cv::Scalar colorMatchedGreen(0, 255, 0);
     cv::Scalar colorMatchedNearMargenta(255, 0, 255);
@@ -217,12 +217,7 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
         CreateDistaceMatrix(regions, regionEmbeddings, costMatrix, maxPossibleCost, maxCost);
 #if DRAW_DBG_ASSIGNMENT
         std::cout << "CTracker::UpdateTrackingState: maxPossibleCost = " << maxPossibleCost << ", maxCost = " << maxCost << std::endl;
-        std::cout << "costMatrix: ";
-        for (auto costv : costMatrix)
-        {
-            std::cout << costv << " ";
-        }
-        std::cout << std::endl;
+        std::cout << "costMatrix: " << cv::Mat_<track_t>(rowsRegions, colsTracks, costMatrix.data()) << std::endl;
 #endif
 
         // Solving assignment problem (shortest paths)
