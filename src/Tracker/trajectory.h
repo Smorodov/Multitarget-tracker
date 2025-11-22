@@ -153,6 +153,14 @@ public:
     }
 
     ///
+    /// \brief pop_back
+    ///
+    void pop_back()
+    {
+        m_trace.pop_back();
+    }
+
+    ///
     /// \brief GetRawCount
     /// \param lastPeriod
     /// \return
