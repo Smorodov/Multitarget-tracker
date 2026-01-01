@@ -173,11 +173,7 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
         cv::Mat foreground(dbgAssignment.size(), CV_8UC1, cv::Scalar(0, 0, 100));
         for (const auto& track : m_tracks)
         {
-#if (CV_VERSION_MAJOR < 4)
-            cv::ellipse(foreground, track->GetLastRect(), cv::Scalar(255, 255, 255), CV_FILLED);
-#else
             cv::ellipse(foreground, track->GetLastRect(), cv::Scalar(255, 255, 255), cv::FILLED);
-#endif
         }
 
         const int chans = dbgAssignment.channels();

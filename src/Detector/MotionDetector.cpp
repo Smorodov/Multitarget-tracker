@@ -45,11 +45,8 @@ void MotionDetector::DetectContour()
 {
 	m_regions.clear();
     std::vector<std::vector<cv::Point>> contours;
-#if (CV_VERSION_MAJOR < 4)
-	cv::findContours(m_fg, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, cv::Point());
-#else
     cv::findContours(m_fg, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE, cv::Point());
-#endif
+
 	for (size_t i = 0; i < contours.size(); ++i)
 	{
 		cv::Rect br = cv::boundingRect(contours[i]);
