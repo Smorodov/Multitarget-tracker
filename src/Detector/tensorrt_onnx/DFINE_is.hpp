@@ -40,7 +40,7 @@ protected:
 		const float fw = static_cast<float>(frameSize.width) / static_cast<float>(m_resizedROI.width);
 		const float fh = static_cast<float>(frameSize.height) / static_cast<float>(m_resizedROI.height);
 
-		cv::Size inputSize(m_inputDims[0].d[3], m_inputDims[0].d[2]);
+		cv::Size inputSize(static_cast<int>(m_inputDims[0].d[3]), static_cast<int>(m_inputDims[0].d[2]));
 		cv::Size2f inputSizef(static_cast<float>(inputSize.width), static_cast<float>(inputSize.height));
 
         //std::cout << "m_resizedROI: " << m_resizedROI << ", frameSize: " << frameSize << ", fw_h: " << cv::Size2f(fw, fh) << ", m_inputDims: " << cv::Point3i(m_inputDims.d[1], m_inputDims.d[2], m_inputDims.d[3]) << std::endl;
@@ -147,8 +147,11 @@ protected:
 #endif
 
 					std::vector<std::vector<cv::Point>> contours;
+#if ((CV_VERSION_MAJOR > 4) || ((CV_VERSION_MAJOR == 4) && (CV_VERSION_MINOR > 9)))
+					cv::findContoursLinkRuns(resObj.m_boxMask, contours);
+#else
 					cv::findContours(resObj.m_boxMask, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE, cv::Point());
-
+#endif				
 					for (const auto& contour : contours)
 					{
 						cv::Rect br = cv::boundingRect(contour);

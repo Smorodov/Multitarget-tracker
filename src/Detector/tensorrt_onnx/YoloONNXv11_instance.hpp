@@ -265,8 +265,11 @@ protected:
 #endif
 
 				std::vector<std::vector<cv::Point>> contours;
+#if ((CV_VERSION_MAJOR > 4) || ((CV_VERSION_MAJOR == 4) && (CV_VERSION_MINOR > 9)))
+				cv::findContoursLinkRuns(resBoxes[i].m_boxMask, contours);
+#else
 				cv::findContours(resBoxes[i].m_boxMask, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE, cv::Point());
-
+#endif
 				for (const auto& contour : contours)
 				{
 					cv::Rect br = cv::boundingRect(contour);
