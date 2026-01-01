@@ -265,11 +265,10 @@ protected:
 #endif
 
 				std::vector<std::vector<cv::Point>> contours;
-				std::vector<cv::Vec4i> hierarchy;
 #if (CV_VERSION_MAJOR < 4)
-				cv::findContours(resBoxes[i].m_boxMask, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, cv::Point());
+				cv::findContours(resBoxes[i].m_boxMask, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, cv::Point());
 #else
-				cv::findContours(resBoxes[i].m_boxMask, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE, cv::Point());
+				cv::findContours(resBoxes[i].m_boxMask, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE, cv::Point());
 #endif
 				for (const auto& contour : contours)
 				{

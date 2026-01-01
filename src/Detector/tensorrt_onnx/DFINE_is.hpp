@@ -147,8 +147,7 @@ protected:
 #endif
 
 					std::vector<std::vector<cv::Point>> contours;
-					std::vector<cv::Vec4i> hierarchy;
-					cv::findContours(resObj.m_boxMask, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE, cv::Point());
+					cv::findContours(resObj.m_boxMask, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE, cv::Point());
 
 					for (const auto& contour : contours)
 					{
