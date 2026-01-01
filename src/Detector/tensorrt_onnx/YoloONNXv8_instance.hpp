@@ -266,6 +266,7 @@ protected:
 				SaveMat(resBoxes[i].m_boxMask, std::to_string(globalObjInd++), ".png", "tmp", true);
 #endif
 
+#if 0
 				std::vector<std::vector<cv::Point>> contours;
 #if ((CV_VERSION_MAJOR > 4) || ((CV_VERSION_MAJOR == 4) && (CV_VERSION_MINOR > 9)))
 				cv::findContoursLinkRuns(resBoxes[i].m_boxMask, contours);
@@ -303,6 +304,7 @@ protected:
 						break;
 					}
 				}
+#endif
 			}
 		}
 		return resBoxes;
