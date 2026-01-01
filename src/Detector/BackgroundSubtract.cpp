@@ -206,21 +206,13 @@ cv::UMat BackgroundSubtract::GetImg(const cv::UMat& image)
 		if (image.channels() == 1)
 		{
 			cv::UMat newImg;
-#if (CV_VERSION_MAJOR < 4)
-			cv::cvtColor(image, newImg, CV_GRAY2BGR);
-#else
 			cv::cvtColor(image, newImg, cv::COLOR_GRAY2BGR);
-#endif
 			return newImg;
 		}
 		else if (image.channels() == 3)
 		{
 			cv::UMat newImg;
-#if (CV_VERSION_MAJOR < 4)
-			cv::cvtColor(image, newImg, CV_BGR2GRAY);
-#else
 			cv::cvtColor(image, newImg, cv::COLOR_BGR2GRAY);
-#endif
 			return newImg;
 		}
 	}

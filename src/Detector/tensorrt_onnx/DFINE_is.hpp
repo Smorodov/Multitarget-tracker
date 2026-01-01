@@ -3,17 +3,17 @@
 #include "YoloONNX.hpp"
 
 ///
-/// \brief The RFDETR_is_onnx class
+/// \brief The DFINE_is_onnx class
 ///
-class RFDETR_is_onnx : public YoloONNX
+class DFINE_is_onnx : public YoloONNX
 {
 public:
-	RFDETR_is_onnx(std::vector<std::string>& inputTensorNames, std::vector<std::string>& outputTensorNames)
+	DFINE_is_onnx(std::vector<std::string>& inputTensorNames, std::vector<std::string>& outputTensorNames)
 	{
 		inputTensorNames.push_back("input");
-		outputTensorNames.push_back("dets");
-		outputTensorNames.push_back("labels");
-		outputTensorNames.push_back("4245");
+		outputTensorNames.push_back("logits");
+		outputTensorNames.push_back("boxes");
+		outputTensorNames.push_back("mask_probs");
 	}
 
 protected:
@@ -25,6 +25,12 @@ protected:
 	std::vector<tensor_rt::Result> GetResult(size_t imgIdx, int /*keep_topk*/, const std::vector<float*>& outputs, cv::Size frameSize)
 	{
 		std::vector<tensor_rt::Result> resBoxes;
+
+		//0: name: input, size: 1x3x640x640
+		//1: name: logits, size: 1x300x80
+		//2: name: boxes, size: 1x300x4
+		//3: name: mask_probs, size: 1x300x160x160
+
 
 		//0: name: input, size: 1x3x432x432
 		//1: name: dets, size: 1x200x4
@@ -39,21 +45,24 @@ protected:
 
         //std::cout << "m_resizedROI: " << m_resizedROI << ", frameSize: " << frameSize << ", fw_h: " << cv::Size2f(fw, fh) << ", m_inputDims: " << cv::Point3i(m_inputDims.d[1], m_inputDims.d[2], m_inputDims.d[3]) << std::endl;
 
-		auto dets = outputs[0];
-		auto labels = outputs[1];
-
+		int labelsInd = 0;
+		int detsInd = 1;
 		int segInd = 2;
+
+		auto dets = outputs[detsInd];
+		auto labels = outputs[labelsInd];
+
 		auto masks = outputs[segInd];
 
 		size_t ncInd = 2;
 		size_t lenInd = 1;
 
 
-        size_t nc = m_outpuDims[1].d[ncInd];
-		size_t len = static_cast<size_t>(m_outpuDims[0].d[lenInd]) / m_params.m_explicitBatchSize;
-		auto volume0 = len * m_outpuDims[0].d[ncInd]; // Volume(m_outpuDims[0]);
+        size_t nc = m_outpuDims[labelsInd].d[ncInd];
+		size_t len = static_cast<size_t>(m_outpuDims[detsInd].d[lenInd]) / m_params.m_explicitBatchSize;
+		auto volume0 = len * m_outpuDims[detsInd].d[ncInd]; // Volume(m_outpuDims[0]);
 		dets += volume0 * imgIdx;
-		auto volume1 = len * m_outpuDims[1].d[ncInd]; // Volume(m_outpuDims[0]);
+		auto volume1 = len * m_outpuDims[labelsInd].d[ncInd]; // Volume(m_outpuDims[0]);
 		labels += volume1 * imgIdx;
 
 		int segChannels = static_cast<int>(m_outpuDims[segInd].d[1]);
@@ -63,7 +72,7 @@ protected:
 
 		cv::Mat binaryMask8U(segHeight, segWidth, CV_8UC1);
 
-        //std::cout << "len = " << len << ", nc = " << nc << ", m_params.confThreshold = " << m_params.confThreshold << ", volume0 = " << volume0 << ", volume1 = " << volume1 << std::endl;
+        //std::cout << "len = " << len << ", nc = " << nc << ", m_params.confThreshold = " << m_params.m_confThreshold << ", volume0 = " << volume0 << ", volume1 = " << volume1 << std::endl;
 
 		auto L2Conf = [](float v)
 		{
@@ -83,20 +92,23 @@ protected:
 					classId = cli;
 				}
 			}
-            if (classId > 0)
-                --classId;
 
 			if (classConf >= m_params.m_confThreshold)
 			{
-				float x = fw * (inputSizef.width * (dets[0] - dets[2] / 2.f) - m_resizedROI.x);
-				float y = fh * (inputSizef.height * (dets[1] - dets[3] / 2.f) - m_resizedROI.y);
-				float width = fw * inputSizef.width * dets[2];
-				float height = fh * inputSizef.height * dets[3];
+				float d0 = dets[0];
+				float d1 = dets[1];
+				float d2 = dets[2];
+				float d3 = dets[3];
+
+				float x = fw * (inputSizef.width * (d0 - d2 / 2.f) - m_resizedROI.x);
+				float y = fh * (inputSizef.height * (d1 - d3 / 2.f) - m_resizedROI.y);
+				float width = fw * inputSizef.width * d2;
+				float height = fh * inputSizef.height * d3;
 
 				//if (i == 0)
 				//{
-				//    std::cout << i << ": classConf = " << classConf << ", classId = " << classId << " (" << labels[classId] << "), rect = " << cv::Rect(cvRound(x), cvRound(y), cvRound(width), cvRound(height)) << std::endl;
-				//    std::cout << "dets = " << dets[0] << ", " << dets[1] << ", " << dets[2] << ", " << dets[3] << std::endl;
+				//    std::cout << i << ": classConf = " << classConf << ", classId = " << classId << " (" << labels[classId] << "), rect = " << cv::Rect2f(x, y, width, height) << std::endl;
+				//    std::cout << "dets = " << d0 << ", " << d1 << ", " << d2 << ", " << d3 << std::endl;
 				//}
 				resBoxes.emplace_back(classId, classConf, cv::Rect(cvRound(x), cvRound(y), cvRound(width), cvRound(height)));
 
@@ -115,10 +127,10 @@ protected:
 				tensor_rt::Result& resObj = resBoxes.back();
 
 				cv::Rect smallRect;
-				smallRect.x = cvRound(segHeight * (dets[0] - dets[2] / 2.f));
-				smallRect.y = cvRound(segHeight * (dets[1] - dets[3] / 2.f));
-				smallRect.width = cvRound(segHeight * dets[2]);
-				smallRect.height = cvRound(segHeight * dets[3]);
+				smallRect.x = cvRound(segHeight * (d0 - d2 / 2.f));
+				smallRect.y = cvRound(segHeight * (d1 - d3 / 2.f));
+				smallRect.width = cvRound(segHeight * d2);
+				smallRect.height = cvRound(segHeight * d3);
 				smallRect = Clamp(smallRect, cv::Size(segWidth, segHeight));
 
 				if (smallRect.area() > 0)
@@ -140,7 +152,7 @@ protected:
 					cv::findContoursLinkRuns(resObj.m_boxMask, contours);
 #else
 					cv::findContours(resObj.m_boxMask, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE, cv::Point());
-#endif
+#endif				
 					for (const auto& contour : contours)
 					{
 						cv::Rect br = cv::boundingRect(contour);
@@ -178,8 +190,8 @@ protected:
 				}
 			}
 
-			dets += m_outpuDims[0].d[ncInd];
-			labels += m_outpuDims[1].d[ncInd];
+			dets += m_outpuDims[detsInd].d[ncInd];
+			labels += m_outpuDims[labelsInd].d[ncInd];
 			masks += segWidth * segHeight;
 		}
 

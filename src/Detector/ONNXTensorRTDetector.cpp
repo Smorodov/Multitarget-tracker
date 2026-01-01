@@ -101,6 +101,7 @@ bool ONNXTensorRTDetector::Init(const config_t& config)
 		dictNetType["RFDETR_IS"] = tensor_rt::RFDETR_IS;
 		dictNetType["DFINE"] = tensor_rt::DFINE;
 		dictNetType["YOLOV13"] = tensor_rt::YOLOV13;
+		dictNetType["DFINE_IS"] = tensor_rt::DFINE_IS;
 
 		auto netType = dictNetType.find(net_type->second);
 		if (netType != dictNetType.end())

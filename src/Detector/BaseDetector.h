@@ -169,11 +169,7 @@ public:
         {
             if (region.m_boxMask.empty())
             {
-#if (CV_VERSION_MAJOR < 4)
-                cv::ellipse(foreground, region.m_rrect, cv::Scalar(255, 255, 255), CV_FILLED);
-#else
                 cv::ellipse(foreground, region.m_rrect, cv::Scalar(255, 255, 255), cv::FILLED);
-#endif
             }
             else
             {

@@ -18,6 +18,7 @@
 #include "RFDETR_is.hpp"
 #include "DFINE_bb.hpp"
 #include "YoloONNXv13_bb.hpp"
+#include "DFINE_is.hpp"
 
 namespace tensor_rt
 {
@@ -98,6 +99,9 @@ namespace tensor_rt
                 break;
             case ModelType::YOLOV13:
                 m_detector = std::make_unique<YOLOv13_bb_onnx>(m_params.m_inputTensorNames, m_params.m_outputTensorNames);
+                break;
+            case ModelType::DFINE_IS:
+                m_detector = std::make_unique<DFINE_is_onnx>(m_params.m_inputTensorNames, m_params.m_outputTensorNames);
                 break;
             }
 
