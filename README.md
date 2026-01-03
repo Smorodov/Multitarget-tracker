@@ -5,6 +5,8 @@
 [![CodeQL](https://github.com/Smorodov/Multitarget-tracker/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/Smorodov/Multitarget-tracker/actions/workflows/codeql-analysis.yml)
 
 ## Latest Features
+
+- Add RT-DETRv4 (API similar D-FINE) detection model [RT-DETRs/RT-DETRv4](https://github.com/RT-DETRs/RT-DETRv4)
 - Add D-FINE seg detection model [ArgoHA/D-FINE-seg](https://github.com/ArgoHA/D-FINE-seg)
 - Add ByteTrack MOT algorithm based on [Vertical-Beach/ByteTrack-cpp](https://github.com/Vertical-Beach/ByteTrack-cpp)
 - Big code cleanup from old style algorithms and detectors: some bgfg detectors, some VOT trackes, Face and Pedestrin detectors, Darknet based backend for old YOLO etc
