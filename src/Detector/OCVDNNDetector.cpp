@@ -403,14 +403,10 @@ void OCVDNNDetector::DetectInCrop(const cv::UMat& colorFrame, const cv::Rect& cr
     case ModelType::YOLOV12:
         ParseYOLOv11(crop, detections, tmpRegions);
         break;
-    case ModelType::YOLOV26:
-        ParseYOLOv26(crop, detections, tmpRegions);
-        break;
 
     case ModelType::YOLOV5_OBB:
     case ModelType::YOLOV8_OBB:
     case ModelType::YOLOV11_OBB:
-    case ModelType::YOLOV26_OBB:
         ParseYOLOv5_8_11_obb(crop, detections, tmpRegions);
         break;
 
@@ -439,6 +435,14 @@ void OCVDNNDetector::DetectInCrop(const cv::UMat& colorFrame, const cv::Rect& cr
 
     case ModelType::DFINE_IS:
         ParseDFINE_IS(crop, detections, tmpRegions);
+        break;
+
+    case ModelType::YOLOV26:
+        ParseYOLOv26(crop, detections, tmpRegions);
+        break;
+
+    case ModelType::YOLOV26_OBB:
+        ParseYOLOv26_obb(crop, detections, tmpRegions);
         break;
 
 	default:
@@ -1123,6 +1127,49 @@ void OCVDNNDetector::ParseYOLOv26(const cv::Rect& crop, std::vector<cv::Mat>& de
 
             if (m_classesWhiteList.empty() || m_classesWhiteList.find(T2T(classId)) != std::end(m_classesWhiteList))
                 tmpRegions.emplace_back(cv::Rect(left + crop.x, top + crop.y, width, height), T2T(classId), static_cast<float>(maxClassScore));
+        }
+    }
+}
+
+///
+/// \brief OCVDNNDetector::ParseYOLOv26_obb
+/// \param crop
+/// \param detections
+/// \param tmpRegions
+///
+void OCVDNNDetector::ParseYOLOv26_obb(const cv::Rect& crop, std::vector<cv::Mat>& detections, regions_t& tmpRegions)
+{
+    int rows = detections[0].size[1];
+
+    //0: name: images, size: 1x3x1024x1024
+    //1: name: output0, size: 1x300x7
+
+    float* dets = (float*)detections[0].data;
+
+    float x_factor = crop.width / static_cast<float>(m_inWidth);
+    float y_factor = crop.height / static_cast<float>(m_inHeight);
+
+    //std::cout << "detections: " << rows << std::endl;
+
+    for (int i = 0; i < rows; ++i)
+    {
+        auto ind = 7 * i;
+
+        float maxClassScore = dets[ind + 4];
+        size_t classId = static_cast<size_t>(dets[ind + 5]);
+
+        if (maxClassScore > m_confidenceThreshold)
+        {
+            float x = dets[ind + 0] * x_factor;
+            float y = dets[ind + 1] * y_factor;
+            float w = dets[ind + 2] * x_factor;
+            float h = dets[ind + 3] * y_factor;
+            float angle = 180.f * dets[ind + 6] / static_cast<float>(M_PI);
+
+            //std::cout << "ind: " << ind << ", score = " << maxClassScore << ", class = " << classId << ", rect = " << cv::Rect(left, top, width, height) << std::endl;
+
+            if (m_classesWhiteList.empty() || m_classesWhiteList.find(T2T(classId)) != std::end(m_classesWhiteList))
+                tmpRegions.emplace_back(cv::RotatedRect(cv::Point2f(x + crop.x, y + crop.y), cv::Size2f(w, h), angle), T2T(classId), static_cast<float>(maxClassScore));
         }
     }
 }
