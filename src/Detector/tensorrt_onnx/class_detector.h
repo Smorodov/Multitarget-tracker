@@ -66,7 +66,7 @@ namespace tensor_rt
         DFINE_IS,
         YOLOV26,
         YOLOV26_OBB,
-        YOLOV26Mask,
+        YOLOV26Mask
 	};
 
     ///

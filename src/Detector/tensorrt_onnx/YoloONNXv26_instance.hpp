@@ -38,177 +38,54 @@ protected:
 		//1: name: output0, size: 1x300x38
 		//2: name: output1, size: 1x32x160x160
 
-		size_t ncInd = 1;
-		size_t lenInd = 2;
-		int nc = static_cast<int>(m_outpuDims[outInd].d[ncInd] - 4 - 32);
-		int dimensions = nc + 32 + 4;
-		size_t len = static_cast<size_t>(m_outpuDims[outInd].d[lenInd]);// / m_params.explicitBatchSize;
-		//auto Volume = [](const nvinfer1::Dims& d)
-		//{
-		//    return std::accumulate(d.d, d.d + d.nbDims, 1, std::multiplies<int>());
-		//};
-		auto volume = len * m_outpuDims[outInd].d[ncInd]; // Volume(m_outpuDims[0]);
+		size_t dimInd = 2;
+		size_t lenInd = 1;
+		int dimensions = static_cast<int>(m_outpuDims[outInd].d[dimInd]);
+		size_t len = static_cast<size_t>(m_outpuDims[outInd].d[lenInd]);
+		auto volume = len * dimensions;
 		output += volume * imgIdx;
 		//std::cout << "len = " << len << ", nc = " << nc << ", m_params.confThreshold = " << m_params.confThreshold << ", volume = " << volume << std::endl;
 
-		cv::Mat rawMemory(1, dimensions * static_cast<int>(len), CV_32FC1, output);
-		rawMemory = rawMemory.reshape(1, dimensions);
-		cv::transpose(rawMemory, rawMemory);
-		output = (float*)rawMemory.data;
-
-		//std::cout << "output[0] mem:\n";
-		//for (size_t ii = 0; ii < 100; ++ii)
-		//{
-		//    std::cout << ii << ": ";
-		//    for (size_t jj = 0; jj < 20; ++jj)
-		//    {
-		//        std::cout << output[ii * 20 + jj] << " ";
-		//    }
-		//    std::cout << ";" << std::endl;
-		//}
-		//std::cout << ";" << std::endl;
-
-#if 1
 		int segWidth = 160;
 		int segHeight = 160;
 		int segChannels = 32;
 
 		if (outputs.size() > 1)
 		{
-			//std::cout << "output1 nbDims: " << m_outpuDims[segInd].nbDims << ", ";
-			//for (size_t i = 0; i < m_outpuDims[segInd].nbDims; ++i)
-			//{
-			//    std::cout << m_outpuDims[segInd].d[i];
-			//    if (i + 1 != m_outpuDims[segInd].nbDims)
-			//        std::cout << "x";
-			//}
-			//std::cout << std::endl;
-			//std::cout << "output nbDims: " << m_outpuDims[outInd].nbDims << ", ";
-			//for (size_t i = 0; i < m_outpuDims[outInd].nbDims; ++i)
-			//{
-			//    std::cout << m_outpuDims[outInd].d[i];
-			//    if (i + 1 != m_outpuDims[outInd].nbDims)
-			//        std::cout << "x";
-			//}
-			//std::cout << std::endl;
-
 			segChannels = static_cast<int>(m_outpuDims[segInd].d[1]);
 			segWidth = static_cast<int>(m_outpuDims[segInd].d[2]);
 			segHeight = static_cast<int>(m_outpuDims[segInd].d[3]);
 		}
 		cv::Mat maskProposals;
-		std::vector<std::vector<float>> picked_proposals;
-		int net_width = nc + 4 + segChannels;
-#endif
-
-		std::vector<int> classIds;
-		std::vector<float> confidences;
-		std::vector<cv::Rect> rectBoxes;
-		classIds.reserve(len);
-		confidences.reserve(len);
-		rectBoxes.reserve(len);
+		int netWidth = 6 + segChannels;
 
 		for (size_t i = 0; i < len; ++i)
 		{
 			// Box
-			size_t k = i * (nc + 4 + 32);
-
-			int classId = -1;
-			float objectConf = 0.f;
-			for (int j = 0; j < nc; ++j)
-			{
-				const float classConf = output[k + 4 + j];
-				if (classConf > objectConf)
-				{
-					classId = j;
-					objectConf = classConf;
-				}
-			}
-
-			//if (i == 0)
-			//{
-			//    std::cout << "without nms: mem" << i << ": ";
-			//    for (size_t ii = 0; ii < 4; ++ii)
-			//    {
-			//        std::cout << output[k + ii] << " ";
-			//    }
-			//    std::cout << ";" << std::endl;
-			//    for (size_t ii = 4; ii < nc + 4; ++ii)
-			//    {
-			//        std::cout << output[k + ii] << " ";
-			//    }
-			//    std::cout << ";" << std::endl;
-			//    for (size_t ii = nc + 4; ii < nc + 4 + 32; ++ii)
-			//    {
-			//        std::cout << output[k + ii] << " ";
-			//    }
-			//    std::cout << ";" << std::endl;
-			//}
+			size_t k = i * dimensions;
+			
+			float objectConf = output[k + 4];
+			int classId = output[k + 5];
 
 			if (objectConf >= m_params.m_confThreshold)
 			{
 				// (center x, center y, width, height) to (x, y, w, h)
-                float x = output[k] - output[k + 2] / 2;
-                float y = output[k + 1] - output[k + 3] / 2;
-                float width = output[k + 2];
-                float height = output[k + 3];
-
-				//auto ClampToFrame = [](float& v, float& size, int hi) -> int
-				//{
-				//    int res = 0;
-//
-				//    if (size < 1)
-				//        size = 0;
-//
-				//    if (v < 0)
-				//    {
-				//        res = v;
-				//        v = 0;
-				//        return res;
-				//    }
-				//    else if (v + size > hi - 1)
-				//    {
-				//        res = v;
-				//        v = hi - 1 - size;
-				//        if (v < 0)
-				//        {
-				//            size += v;
-				//            v = 0;
-				//        }
-				//        res -= v;
-				//        return res;
-				//    }
-				//    return res;
-				//};
-				//ClampToFrame(x, width, frameSize.width);
-				//ClampToFrame(y, height, frameSize.height);
-
-				//if (i == 0)
-				//	std::cout << i << ": object_conf = " << object_conf << ", class_conf = " << class_conf << ", classId = " << classId << ", rect = " << cv::Rect(cvRound(x), cvRound(y), cvRound(width), cvRound(height)) << std::endl;
+                float x = output[k];
+                float y = output[k + 1];
+                float width = output[k + 2] - output[k];
+                float height = output[k + 3] - output[k + 1];
 
 				if (width > 4 && height > 4)
 				{
-					classIds.push_back(classId);
-					confidences.push_back(objectConf);
-					rectBoxes.emplace_back(cvRound(x), cvRound(y), cvRound(width), cvRound(height));
+					resBoxes.emplace_back(classId, objectConf, cv::Rect(cvRound(x), cvRound(y), cvRound(width), cvRound(height)));
 
-					std::vector<float> temp_proto(output + k + 4 + nc, output + k + net_width);
-					picked_proposals.push_back(temp_proto);
+					std::vector<float> tempProto(output + k + 6, output + k + netWidth);
+					maskProposals.push_back(cv::Mat(tempProto).t());
 				}
 			}
 		}
 
-		// Non-maximum suppression to eliminate redudant overlapping boxes
-		std::vector<int> indices;
-		cv::dnn::NMSBoxes(rectBoxes, confidences, m_params.m_confThreshold, m_params.m_nmsThreshold, indices);
-		resBoxes.reserve(indices.size());
-
-		for (size_t bi = 0; bi < indices.size(); ++bi)
-		{
-			resBoxes.emplace_back(classIds[indices[bi]], confidences[indices[bi]], Clamp(rectBoxes[indices[bi]], frameSize));
-			maskProposals.push_back(cv::Mat(picked_proposals[indices[bi]]).t());
-		}
-
+		//std::cout << "maskProposals.size = " << maskProposals.size() << std::endl;
 		if (!maskProposals.empty())
 		{
 			// Mask processing
@@ -241,14 +118,18 @@ protected:
 
 				cv::resize(dest, mask, cv::Size(INPUT_W, INPUT_H), cv::INTER_NEAREST);
 
+				//std::cout << "m_brect = " << resBoxes[i].m_brect << ", dest = " << dest.size() << ", mask = " << mask.size() << std::endl;
+				
 				resBoxes[i].m_boxMask = mask(resBoxes[i].m_brect) > MASK_THRESHOLD;
+
+				//std::cout << "m_boxMask = " << resBoxes[i].m_boxMask.size() << ", m_brect = " << resBoxes[i].m_brect << ", dest = " << dest.size() << ", mask = " << mask.size() << std::endl;
 
 #if 0
 				static int globalObjInd = 0;
 				SaveMat(resBoxes[i].m_boxMask, std::to_string(globalObjInd++), ".png", "tmp", true);
 #endif
 
-#if 0
+#if 1
 				std::vector<std::vector<cv::Point>> contours;
 #if ((CV_VERSION_MAJOR > 4) || ((CV_VERSION_MAJOR == 4) && (CV_VERSION_MINOR > 9)))
 				cv::findContoursLinkRuns(resBoxes[i].m_boxMask, contours);
@@ -278,6 +159,8 @@ protected:
 
 						resBoxes[i].m_brect = br;
 						resBoxes[i].m_rrect = rr;
+
+						cv::resize(resBoxes[i].m_boxMask, resBoxes[i].m_boxMask, resBoxes[i].m_brect.size(), 0, 0, cv::INTER_NEAREST);
 
 						//std::cout << "resBoxes[" << i << "] br: " << br << ", rr: (" << rr.size << " from " << rr.center << ", " << rr.angle << ")" << std::endl;
 

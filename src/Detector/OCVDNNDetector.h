@@ -96,6 +96,7 @@ private:
     void ParseDFINE_IS(const cv::Rect& crop, std::vector<cv::Mat>& detections, regions_t& tmpRegions);
     void ParseYOLOv26(const cv::Rect& crop, std::vector<cv::Mat>& detections, regions_t& tmpRegions);
     void ParseYOLOv26_obb(const cv::Rect& crop, std::vector<cv::Mat>& detections, regions_t& tmpRegions);
+    void ParseYOLOv26_seg(const cv::Rect& crop, std::vector<cv::Mat>& detections, regions_t& tmpRegions);
 };
 
 #endif
