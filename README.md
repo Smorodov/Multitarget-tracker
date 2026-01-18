@@ -6,6 +6,7 @@
 
 ## Latest Features
 
+- Add new SOTA: YOLOv26, YOLOv26-obb and YOLOv26-seg models from [ultralytics/ultralytics](https://github.com/ultralytics/ultralytics)
 - Add RT-DETRv4 (API similar D-FINE) detection model [RT-DETRs/RT-DETRv4](https://github.com/RT-DETRs/RT-DETRv4)
 - Add D-FINE seg detection model [ArgoHA/D-FINE-seg](https://github.com/ArgoHA/D-FINE-seg)
 - Add ByteTrack MOT algorithm based on [Vertical-Beach/ByteTrack-cpp](https://github.com/Vertical-Beach/ByteTrack-cpp)
