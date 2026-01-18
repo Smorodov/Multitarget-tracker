@@ -19,6 +19,9 @@
 #include "DFINE_bb.hpp"
 #include "YoloONNXv13_bb.hpp"
 #include "DFINE_is.hpp"
+#include "YoloONNXv26_bb.hpp"
+#include "YoloONNXv26_obb.hpp"
+#include "YoloONNXv26_instance.hpp"
 
 namespace tensor_rt
 {
@@ -84,6 +87,15 @@ namespace tensor_rt
                 break;
             case ModelType::YOLOV11Mask:
                 m_detector = std::make_unique<YOLOv11_instance_onnx>(m_params.m_inputTensorNames, m_params.m_outputTensorNames);
+                break;
+            case ModelType::YOLOV26:
+                m_detector = std::make_unique<YOLOv26_bb_onnx>(m_params.m_inputTensorNames, m_params.m_outputTensorNames);
+                break;
+            case ModelType::YOLOV26_OBB:
+                m_detector = std::make_unique<YOLOv26_obb_onnx>(m_params.m_inputTensorNames, m_params.m_outputTensorNames);
+                break;
+            case ModelType::YOLOV26Mask:
+                m_detector = std::make_unique<YOLOv26_instance_onnx>(m_params.m_inputTensorNames, m_params.m_outputTensorNames);
                 break;
             case ModelType::YOLOV12:
                 m_detector = std::make_unique<YOLOv12_bb_onnx>(m_params.m_inputTensorNames, m_params.m_outputTensorNames);

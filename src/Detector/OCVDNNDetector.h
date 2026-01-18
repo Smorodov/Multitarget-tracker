@@ -53,7 +53,10 @@ private:
         RFDETR_IS,
         DFINE,
         YOLOV13,
-        DFINE_IS
+        DFINE_IS,
+        YOLOV26,
+        YOLOV26_OBB,
+        YOLOV26Mask
     };
 
     cv::dnn::Net m_net;
@@ -91,6 +94,7 @@ private:
     void ParseRFDETR_IS(const cv::Rect& crop, std::vector<cv::Mat>& detections, regions_t& tmpRegions);
     void ParseDFINE(const cv::Rect& crop, std::vector<cv::Mat>& detections, regions_t& tmpRegions);
     void ParseDFINE_IS(const cv::Rect& crop, std::vector<cv::Mat>& detections, regions_t& tmpRegions);
+    void ParseYOLOv26(const cv::Rect& crop, std::vector<cv::Mat>& detections, regions_t& tmpRegions);
 };
 
 #endif
