@@ -31,12 +31,6 @@ protected:
 		//2: name: boxes, size: 1x300x4
 		//3: name: mask_probs, size: 1x300x160x160
 
-
-		//0: name: input, size: 1x3x432x432
-		//1: name: dets, size: 1x200x4
-		//2: name: labels, size: 1x200x91
-		//3: name: 4245, size: 1x200x108x108
-
 		const float fw = static_cast<float>(frameSize.width) / static_cast<float>(m_resizedROI.width);
 		const float fh = static_cast<float>(frameSize.height) / static_cast<float>(m_resizedROI.height);
 

@@ -15,7 +15,7 @@ int main(int argc, char** argv)
     const char* keys =
     {
         "{ @1                  |../data/atrium.avi  | movie file | }"
-        "{ e  example          |1                   | number of example 0 - MouseTracking, 1 - MotionDetector, 3 - YOLO TensorRT Detector, 4 - Cars counting | }"
+        "{ e  example          |1                   | number of example 0 - MouseTracking, 1 - MotionDetector, 2 - opencv_dnn detector, 3 - YOLO TensorRT Detector, 4 - Cars counting | }"
         "{ sf start_frame      |0                   | Start a video from this position | }"
         "{ ef end_frame        |0                   | Play a video to this position (if 0 then played to the end of file) | }"
         "{ ed end_delay        |0                   | Delay in milliseconds after video ending | }"

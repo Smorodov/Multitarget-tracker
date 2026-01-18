@@ -102,6 +102,9 @@ bool ONNXTensorRTDetector::Init(const config_t& config)
 		dictNetType["DFINE"] = tensor_rt::DFINE;
 		dictNetType["YOLOV13"] = tensor_rt::YOLOV13;
 		dictNetType["DFINE_IS"] = tensor_rt::DFINE_IS;
+		dictNetType["YOLOV26"] = tensor_rt::YOLOV26;
+		dictNetType["YOLOV26_OBB"] = tensor_rt::YOLOV26_OBB;
+		dictNetType["YOLOV26Mask"] = tensor_rt::YOLOV26Mask;
 
 		auto netType = dictNetType.find(net_type->second);
 		if (netType != dictNetType.end())
@@ -304,7 +307,8 @@ void ONNXTensorRTDetector::CalcMotionMap(cv::Mat& frame)
 {
 	if (m_localConfig.m_netType == tensor_rt::YOLOV7Mask
 		|| m_localConfig.m_netType == tensor_rt::YOLOV8Mask
-		|| m_localConfig.m_netType == tensor_rt::YOLOV11Mask)
+		|| m_localConfig.m_netType == tensor_rt::YOLOV11Mask
+		|| m_localConfig.m_netType == tensor_rt::YOLOV26Mask)
 	{
 		static std::vector<cv::Scalar> color;
 		if (color.empty())
