@@ -4,7 +4,7 @@
 #include "RuCLIP.h"
 #include "RuCLIPProcessor.h"
 
-#include "../../src/common/defines.h"
+#include "../../src/mtracking/defines.h"
 
 ///
 class ClassificationCLIP::ClassificationCLIPImpl
