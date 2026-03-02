@@ -84,8 +84,8 @@ cv::Mat RuCLIPProcessor::ResizeToInput(const cv::Mat& img, bool saveAspectRatio)
 		int xOffset = (ImageSize - newWidth) / 2;
 		int yOffset = (ImageSize - newHeight) / 2;
 
-		assert(2 * m_XOffset + newWidth == ImageSize);
-		assert(2 * m_YOffset + newHeight == ImageSize);
+		assert(2 * xOffset + newWidth == ImageSize);
+		assert(2 * yOffset + newHeight == ImageSize);
 
 		cv::resize(img, newImg(cv::Rect(xOffset, yOffset, newWidth, newHeight)), cv::Size(newWidth, newHeight), 0, 0, cv::INTER_CUBIC);
 	}
