@@ -46,6 +46,7 @@
 #include "sampleOptions.h"
 #include "sampleReporting.h"
 #include "sampleUtils.h"
+#include <cuda_fp8.h>
 using namespace nvinfer1;
 namespace sample
 {
@@ -1320,7 +1321,15 @@ void Binding::fill()
         fillBuffer<uint8_t>(buffer->getHostBuffer(), volume, 0, 255);
         break;
     }
-    case nvinfer1::DataType::kFP8: ASSERT(false && "FP8 is not supported");
+    case nvinfer1::DataType::kFP8:
+    {
+#if 0
+        ASSERT(false && "FP8 is not supported");
+#else
+        fillBuffer<__nv_fp8_e4m3>(buffer->getHostBuffer(), volume, __nv_fp8_e4m3(- 1.0f), __nv_fp8_e4m3(1.0f));
+#endif
+        break;
+    }
 #if (NV_TENSORRT_MAJOR > 8)
     case nvinfer1::DataType::kINT4: ASSERT(false && "INT4 is not supported");
 #endif
@@ -1388,7 +1397,15 @@ void Binding::dump(std::ostream& os, Dims dims, Dims strides, int32_t vectorDim,
         break;
     }
 #endif
-    case nvinfer1::DataType::kFP8: ASSERT(false && "FP8 is not supported");
+    case nvinfer1::DataType::kFP8:
+    {
+#if 0
+        ASSERT(false && "FP8 is not supported");
+#else
+        dumpBuffer<__nv_fp8_e4m3>(outputBuffer, separator, os, dims, strides, vectorDim, spv);
+#endif
+        break;
+    }
 #if (NV_TENSORRT_MAJOR > 8)
     case nvinfer1::DataType::kINT4: ASSERT(false && "INT4 is not supported");
 #endif

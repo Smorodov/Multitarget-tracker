@@ -19,6 +19,7 @@ bool YoloONNX::Init(const SampleYoloParams& params)
 
     m_params = params;
 
+    sample::setReportableSeverity(sample::Logger::Severity::kINFO);
     initLibNvInferPlugins(&sample::gLogger.getTRTLogger(), "");
 
     auto GetBindings = [&]()
@@ -79,15 +80,16 @@ bool YoloONNX::Init(const SampleYoloParams& params)
             file.close();
         }
 
-        nvinfer1::IRuntime* infer = nvinfer1::createInferRuntime(sample::gLogger);
+        m_inferRuntime = std::shared_ptr<nvinfer1::IRuntime>(nvinfer1::createInferRuntime(sample::gLogger));
         if (m_params.m_dlaCore >= 0)
-            infer->setDLACore(m_params.m_dlaCore);
+            m_inferRuntime->setDLACore(m_params.m_dlaCore);
 
-        m_engine = std::shared_ptr<nvinfer1::ICudaEngine>(infer->deserializeCudaEngine(trtModelStream.data(), size), samplesCommon::InferDeleter());
+        m_engine = std::shared_ptr<nvinfer1::ICudaEngine>(m_inferRuntime->deserializeCudaEngine(trtModelStream.data(), size), samplesCommon::InferDeleter());
 #if (NV_TENSORRT_MAJOR < 8)
-		infer->destroy();
+        m_inferRuntime->destroy();
+        m_inferRuntime.reset();
 #else
-        //delete infer;
+        //m_inferRuntime.reset();
 #endif
 
         if (m_engine)
@@ -233,6 +235,12 @@ bool YoloONNX::ConstructNetwork(YoloONNXUniquePtr<nvinfer1::IBuilder>& builder,
     {
     case tensor_rt::Precision::FP16:
         config->setFlag(nvinfer1::BuilderFlag::kFP16);
+        sample::gLogInfo << "config->setFlag(nvinfer1::BuilderFlag::kFP16)" << std::endl;
+        break;
+
+    case tensor_rt::Precision::FP8:
+        config->setFlag(nvinfer1::BuilderFlag::kFP8);
+        sample::gLogInfo << "config->setFlag(nvinfer1::BuilderFlag::kFP8)" << std::endl;
         break;
 
     case tensor_rt::Precision::INT8:
@@ -243,6 +251,7 @@ bool YoloONNX::ConstructNetwork(YoloONNXUniquePtr<nvinfer1::IBuilder>& builder,
         BatchStream calibrationStream(m_params.m_explicitBatchSize, m_params.m_nbCalBatches, m_params.m_calibrationBatches, m_params.m_dataDirs);
         calibrator.reset(new Int8EntropyCalibrator2<BatchStream>(calibrationStream, 0, "Yolo", m_params.m_inputTensorNames[0].c_str()));
         config->setFlag(nvinfer1::BuilderFlag::kINT8);
+        sample::gLogInfo << "config->setFlag(nvinfer1::BuilderFlag::kINT8)" << std::endl;
         config->setInt8Calibrator(calibrator.get());
     }
         break;
