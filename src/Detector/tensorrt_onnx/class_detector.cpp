@@ -134,6 +134,8 @@ namespace tensor_rt
             dictprecision[tensor_rt::INT8] = "kINT8";
             dictprecision[tensor_rt::FP16] = "kHALF";
             dictprecision[tensor_rt::FP32] = "kFLOAT";
+            dictprecision[tensor_rt::FP8] = "kFP8";
+
             auto precision = dictprecision.find(m_params.m_precision);
             if (precision != dictprecision.end())
                 precisionStr = precision->second;

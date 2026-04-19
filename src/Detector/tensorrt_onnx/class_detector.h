@@ -76,7 +76,8 @@ namespace tensor_rt
 	{
 		INT8 = 0,
 		FP16,
-		FP32
+		FP32,
+        FP8
 	};
 
     ///

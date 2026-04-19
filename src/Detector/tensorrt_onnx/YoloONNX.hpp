@@ -86,6 +86,7 @@ protected:
 
 private:    
     std::shared_ptr<nvinfer1::ICudaEngine> m_engine; //!< The TensorRT engine used to run the network
+    std::shared_ptr<nvinfer1::IRuntime> m_inferRuntime;
 
     cv::Mat m_resized;
     std::vector<cv::Mat> m_resizedBatch;

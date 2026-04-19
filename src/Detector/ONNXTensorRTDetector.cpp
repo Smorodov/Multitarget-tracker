@@ -72,6 +72,7 @@ bool ONNXTensorRTDetector::Init(const config_t& config)
         dictPrecision["INT8"] = tensor_rt::INT8;
         dictPrecision["FP16"] = tensor_rt::FP16;
         dictPrecision["FP32"] = tensor_rt::FP32;
+		dictPrecision["FP8"] = tensor_rt::FP8;
         auto precision = dictPrecision.find(inference_precision->second);
         if (precision != dictPrecision.end())
             m_localConfig.m_inferencePrecision = precision->second;

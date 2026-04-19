@@ -18,6 +18,7 @@
 #include "sampleUtils.h"
 #include "bfloat16.h"
 #include "half.h"
+#include <cuda_fp8.h>
 
 using namespace nvinfer1;
 
@@ -433,6 +434,11 @@ void print(std::ostream& os, __half v)
     os << static_cast<float>(v);
 }
 
+void print(std::ostream& os, __nv_fp8_e4m3 v)
+{
+    os << static_cast<float>(v);
+}
+
 template <typename T>
 void dumpBuffer(void const* buffer, std::string const& separator, std::ostream& os, Dims const& dims,
     Dims const& strides, int32_t vectorDim, int32_t spv)
@@ -481,6 +487,8 @@ template void dumpBuffer<BFloat16>(void const* buffer, std::string const& separa
 template void dumpBuffer<uint8_t>(void const* buffer, std::string const& separator, std::ostream& os, Dims const& dims,
     Dims const& strides, int32_t vectorDim, int32_t spv);
 template void dumpBuffer<int64_t>(void const* buffer, std::string const& separator, std::ostream& os, Dims const& dims,
+    Dims const& strides, int32_t vectorDim, int32_t spv);
+template void dumpBuffer<__nv_fp8_e4m3>(void const* buffer, std::string const& separator, std::ostream& os, Dims const& dims,
     Dims const& strides, int32_t vectorDim, int32_t spv);
 
 template <typename T>
@@ -566,7 +574,7 @@ void fillBuffer(void* buffer, int64_t volume, T min, T max)
 {
     T* typedBuffer = static_cast<T*>(buffer);
     std::default_random_engine engine;
-    std::uniform_real_distribution<float> distribution(min, max);
+    std::uniform_real_distribution<float> distribution((float)min, (float)max);
     auto generator = [&engine, &distribution]() { return static_cast<T>(distribution(engine)); };
     std::generate(typedBuffer, typedBuffer + volume, generator);
 }
@@ -580,6 +588,7 @@ template void fillBuffer<int8_t>(void* buffer, int64_t volume, int8_t min, int8_
 template void fillBuffer<__half>(void* buffer, int64_t volume, __half min, __half max);
 template void fillBuffer<BFloat16>(void* buffer, int64_t volume, BFloat16 min, BFloat16 max);
 template void fillBuffer<uint8_t>(void* buffer, int64_t volume, uint8_t min, uint8_t max);
+template void fillBuffer<__nv_fp8_e4m3>(void* buffer, int64_t volume, __nv_fp8_e4m3 min, __nv_fp8_e4m3 max);
 
 bool matchStringWithOneWildcard(std::string const& pattern, std::string const& target)
 {
