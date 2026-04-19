@@ -17,7 +17,7 @@ class MotionDetectorExample final : public VideoExample
 {
 public:
     MotionDetectorExample(const cv::CommandLineParser& parser)
-        : VideoExample(parser), m_minObjWidth(10)
+        : VideoExample(parser)
     {
 #ifdef USE_CLIP
 		std::string clipModel = "C:/work/clip/ruclip_/CLIP/data/ruclip-vit-large-patch14-336";
@@ -38,8 +38,7 @@ protected:
     {
 		m_logger->info("MotionDetectorExample::InitDetector");
 
-        //m_minObjWidth = frame.cols / 20;
-		m_minObjWidth = 4;
+		m_minObjWidth = 2;
 
         config_t config;
 		config.emplace("useRotatedRect", "0");
@@ -97,7 +96,7 @@ protected:
 
 		if (!m_trackerSettingsLoaded)
 		{
-            m_trackerSettings.SetDistance(tracking::DistJaccard);
+            m_trackerSettings.SetDistance(tracking::DistCenters);
 			m_trackerSettings.m_kalmanType = tracking::KalmanLinear;
 			m_trackerSettings.m_filterGoal = tracking::FilterCenter;
             m_trackerSettings.m_lostTrackType = tracking::TrackNone; // Use visual objects tracker for collisions resolving. Used if m_filterGoal == tracking::FilterRect
