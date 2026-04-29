@@ -65,7 +65,7 @@ protected:
 			size_t k = i * dimensions;
 			
 			float objectConf = output[k + 4];
-			int classId = output[k + 5];
+			int classId = static_cast<int>(output[k + 5]);
 
 			if (objectConf >= m_params.m_confThreshold)
 			{
