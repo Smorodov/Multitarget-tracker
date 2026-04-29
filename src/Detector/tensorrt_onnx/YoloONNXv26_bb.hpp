@@ -43,7 +43,7 @@ protected:
 			auto ind = i * m_outpuDims[0].d[2];
 
 			float classConf = output[ind + 4];
-			int64_t classId = output[ind + 5];
+			int classId = static_cast<int>(output[ind + 5]);
 
 			if (classConf >= m_params.m_confThreshold)
 			{

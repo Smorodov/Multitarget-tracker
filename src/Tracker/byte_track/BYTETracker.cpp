@@ -310,8 +310,8 @@ void byte_track::BYTETracker::removeDuplicateStracks(const std::vector<STrackPtr
     std::vector<bool> a_overlapping(a_stracks.size(), false), b_overlapping(b_stracks.size(), false);
     for (const auto &[a_idx, b_idx] : overlapping_combinations)
     {
-        const int timep = a_stracks[a_idx]->getFrameId() - a_stracks[a_idx]->getStartFrameId();
-        const int timeq = b_stracks[b_idx]->getFrameId() - b_stracks[b_idx]->getStartFrameId();
+        const size_t timep = a_stracks[a_idx]->getFrameId() - a_stracks[a_idx]->getStartFrameId();
+        const size_t timeq = b_stracks[b_idx]->getFrameId() - b_stracks[b_idx]->getStartFrameId();
         if (timep > timeq)
             b_overlapping[b_idx] = true;
         else
@@ -359,16 +359,9 @@ void byte_track::BYTETracker::linearAssignment(const std::vector<std::vector<flo
     for (size_t i = 0; i < rowsol.size(); i++)
     {
         if (rowsol[i] >= 0)
-        {
-            std::vector<int> match;
-            match.push_back(i);
-            match.push_back(rowsol[i]);
-            matches.push_back(match);
-        }
+            matches.push_back({ (int)i, rowsol[i] });
         else
-        {
             a_unmatched.push_back(i);
-        }
     }
 
     for (size_t i = 0; i < colsol.size(); i++)
