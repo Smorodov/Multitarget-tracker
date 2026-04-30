@@ -230,7 +230,7 @@ bool CarsCounting::InitTracker(cv::UMat frame)
 ///
 void CarsCounting::DrawData(cv::Mat frame, const std::vector<TrackingObject>& tracks, int framesCounter, int currTime)
 {
-    m_logger->info("Frame ({1}): tracks = {2}, time = {3}", framesCounter, tracks.size(), currTime);
+    m_logger->info("Frame {0} ({1}): tracks = {2}, time = {3}", framesCounter, m_framesCount, tracks.size(), currTime);
 
 #if 1 // Debug output
     if (!m_geoParams.Empty())
