@@ -107,8 +107,17 @@ void setCudaDevice(int32_t device, std::ostream& os)
     os << "Shared Memory per SM: " << (properties.sharedMemPerMultiprocessor >> 10) << " KiB"       << std::endl;
     os << "Memory Bus Width: "     << properties.memoryBusWidth << " bits"
                         << " (ECC " << (properties.ECCEnabled != 0 ? "enabled" : "disabled") << ")" << std::endl;
+#if (CUDA_VERSION < 13000)
     os << "Application Compute Clock Rate: "   << properties.clockRate / 1000000.0F << " GHz"       << std::endl;
     os << "Application Memory Clock Rate: "    << properties.memoryClockRate / 1000000.0F << " GHz" << std::endl;
+#else
+    int clockRateKHz = 0;
+    cudaDeviceGetAttribute(&clockRateKHz, cudaDevAttrClockRate, device);
+    int memoryClockRateKHz = 0;
+    cudaDeviceGetAttribute(&memoryClockRateKHz, cudaDevAttrMemoryClockRate, device);
+    os << "Application Compute Clock Rate: " << clockRateKHz / 1000000.0F << " GHz" << std::endl;
+    os << "Application Memory Clock Rate: " << memoryClockRateKHz / 1000000.0F << " GHz" << std::endl;
+#endif
     os << std::endl;
     os << "Note: The application clock rates do not reflect the actual clock rates that the GPU is "
                                                                          << "currently running at." << std::endl;
