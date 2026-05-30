@@ -22,7 +22,7 @@
 
 ### Detection & Tracking
 
-[![RF-DETR: detection vs instance segmentation](https://img.youtube.com/vi/oKy7jEKT83c/0.jpg)](https://youtu.be/oKy7jEKT83c)
+[![WALDO30 YOLOv8l model for UAV Traffic monitoring](https://img.youtube.com/vi/RBou0eFDbrM/0.jpg)](https://youtu.be/RBou0eFDbrM)
 [![Satellite planes detection and tracking with YOLOv11-obb](https://img.youtube.com/vi/gTpWnkMF7Lg/0.jpg)](https://youtu.be/gTpWnkMF7Lg)
 [![4-in-1 latest SOTA detectors](https://img.youtube.com/vi/Pb_HnejRpY4/0.jpg)](https://youtu.be/Pb_HnejRpY4)
 [![YOLOv8-obb detection with rotated boxes](https://img.youtube.com/vi/1e6ur57Fhzs/0.jpg)](https://youtu.be/1e6ur57Fhzs)
