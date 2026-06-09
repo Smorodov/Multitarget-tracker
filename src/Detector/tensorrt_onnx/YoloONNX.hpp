@@ -16,6 +16,10 @@
 #include <map>
 
 #include <opencv2/opencv.hpp>
+#if (CV_VERSION_MAJOR > 4)
+#include <opencv2/geometry.hpp>
+#endif
+
 #include "class_detector.h"
 
 //!

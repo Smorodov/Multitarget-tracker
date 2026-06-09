@@ -1,4 +1,7 @@
 #include "MotionDetector.h"
+#if (CV_VERSION_MAJOR > 4)
+#include <opencv2/geometry.hpp>
+#endif
 
 ///
 /// \brief MotionDetector::MotionDetector
