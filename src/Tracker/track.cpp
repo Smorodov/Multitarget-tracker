@@ -177,9 +177,9 @@ track_t CTrack::CalcMahalanobisDist(const cv::RotatedRect& rrect) const
         cv::invert(res1, icovar_Pn, cv::DECOMP_SVD);
         cv::Mat measurePoint;
         if (predictPoint.rows == 2)			// PointUpdate
-            measurePoint = (cv::Mat_<track_t>(2, 1) << rrect.center.x, rrect.center.y); // detection
+            measurePoint = cv::Mat_<track_t>({ 2, 1 }, { rrect.center.x, rrect.center.y }); // detection
         else
-            measurePoint = (cv::Mat_<track_t>(4, 1) << rrect.center.x, rrect.center.y, rrect.size.width, rrect.size.height); // predict
+            measurePoint = cv::Mat_<track_t>({ 4, 1 }, { rrect.center.x, rrect.center.y, rrect.size.width, rrect.size.height }); // predict
         mahaDist = cv::Mahalanobis(measurePoint, predictPoint, icovar_Pn);
         mahaDist += std::log(cv::determinant(res1));
     }

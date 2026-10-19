@@ -47,11 +47,11 @@ void TKalmanFilter::CreateLinear(Point_t xy0, Point_t xyv0)
     // 4 state variables, 2 measurements
     m_linearKalman.init(4, 2, 0, El_t);
     // Transition cv::Matrix
-    m_linearKalman.transitionMatrix = (cv::Mat_<track_t>(4, 4) <<
-                                        1, 0, m_deltaTime, 0,
+    m_linearKalman.transitionMatrix = cv::Mat_<track_t>({ 4, 4 },
+                                      { 1, 0, m_deltaTime, 0,
                                         0, 1, 0, m_deltaTime,
                                         0, 0, 1, 0,
-                                        0, 0, 0, 1);
+                                        0, 0, 0, 1 });
 
     // init...
     m_lastPointResult = xy0;
@@ -67,11 +67,11 @@ void TKalmanFilter::CreateLinear(Point_t xy0, Point_t xyv0)
 
     cv::setIdentity(m_linearKalman.measurementMatrix);
 
-    m_linearKalman.processNoiseCov = (cv::Mat_<track_t>(4, 4) <<
-                                       pow(m_deltaTime,4.0)/4.0	,0						,pow(m_deltaTime,3.0)/2.0		,0,
-                                       0						,pow(m_deltaTime,4.0)/4.0	,0							,pow(m_deltaTime,3.0)/2.0,
-                                       pow(m_deltaTime,3.0)/2.0	,0						,pow(m_deltaTime,2.0)			,0,
-                                       0						,pow(m_deltaTime,3.0)/2.0	,0							,pow(m_deltaTime,2.0));
+    m_linearKalman.processNoiseCov = cv::Mat_<track_t>({ 4, 4 },
+                                     { pow(m_deltaTime, static_cast<track_t>(4.0)) / static_cast<track_t>(4.0), 0, pow(m_deltaTime, static_cast<track_t>(3.0)) / static_cast<track_t>(2.0), 0,
+                                       0, pow(m_deltaTime, static_cast<track_t>(4.0)) / static_cast<track_t>(4.0), 0, pow(m_deltaTime, static_cast<track_t>(3.0)) / static_cast<track_t>(2.0),
+                                       pow(m_deltaTime, static_cast<track_t>(3.0)) / static_cast<track_t>(2.0), 0, pow(m_deltaTime, static_cast<track_t>(2.0)), 0,
+                                       0, pow(m_deltaTime, static_cast<track_t>(3.0)) / static_cast<track_t>(2.0), 0, pow(m_deltaTime, static_cast<track_t>(2.0)) });
 
 
     m_linearKalman.processNoiseCov *= m_accelNoiseMag;
@@ -100,15 +100,15 @@ void TKalmanFilter::CreateLinear(cv::Rect_<track_t> rect0, Point_t rectv0)
     // 8 state variables (x, y, vx, vy, width, height, vw, vh), 4 measurements (x, y, width, height)
     m_linearKalman.init(8, 4, 0, El_t);
     // Transition cv::Matrix
-    m_linearKalman.transitionMatrix = (cv::Mat_<track_t>(8, 8) <<
-                                        1, 0, 0, 0, m_deltaTime, 0,           0,           0,
+    m_linearKalman.transitionMatrix = cv::Mat_<track_t>({ 8, 8 },
+        { 1, 0, 0, 0, m_deltaTime, 0,           0,           0,
                                         0, 1, 0, 0, 0,           m_deltaTime, 0,           0,
                                         0, 0, 1, 0, 0,           0,           m_deltaTime, 0,
-                                        0, 0, 0, 1, 0,           0,           0,           m_deltaTime / 10.f,
+                                        0, 0, 0, 1, 0,           0,           0,           m_deltaTime / static_cast<track_t>(10.),
                                         0, 0, 0, 0, 1,           0,           0,           0,
                                         0, 0, 0, 0, 0,           1,           0,           0,
                                         0, 0, 0, 0, 0,           0,           1,           0,
-                                        0, 0, 0, 0, 0,           0,           0,           1);
+                                        0, 0, 0, 0, 0,           0,           0,           1 });
 
     // init...
     m_linearKalman.statePre.at<track_t>(0) = rect0.x;      // x
@@ -134,15 +134,15 @@ void TKalmanFilter::CreateLinear(cv::Rect_<track_t> rect0, Point_t rectv0)
     track_t n1 = pow(m_deltaTime, 4.f) / 4.f;
     track_t n2 = pow(m_deltaTime, 3.f) / 2.f;
     track_t n3 = pow(m_deltaTime, 2.f);
-    m_linearKalman.processNoiseCov = (cv::Mat_<track_t>(8, 8) <<
-                                       n1, 0,  0,  0,  n2, 0,  0,  0,
+    m_linearKalman.processNoiseCov = cv::Mat_<track_t>({ 8, 8 },
+                                     { n1, 0,  0,  0,  n2, 0,  0,  0,
                                        0,  n1, 0,  0,  0,  n2, 0,  0,
                                        0,  0,  n1, 0,  0,  0,  n2, 0,
                                        0,  0,  0,  n1, 0,  0,  0,  n2,
                                        n2, 0,  0,  0,  n3, 0,  0,  0,
                                        0,  n2, 0,  0,  0,  n3, 0,  0,
                                        0,  0,  n2, 0,  0,  0,  n3, 0,
-                                       0,  0,  0,  n2, 0,  0,  0,  n3);
+                                       0,  0,  0,  n2, 0,  0,  0,  n3 });
 
     m_linearKalman.processNoiseCov *= m_accelNoiseMag;
 
@@ -170,8 +170,8 @@ void TKalmanFilter::CreateLinear(cv::RotatedRect rrect0, Point_t rrectv0)
 	// 10 state variables (x, y, vx, vy, width, height, vw, vh, angle, vangle), 5 measurements (x, y, width, height, angle)
 	m_linearKalman.init(10, 5, 0, El_t);
 	// Transition cv::Matrix
-	m_linearKalman.transitionMatrix = (cv::Mat_<track_t>(10, 10) <<
-                                       1, 0, 0, 0, 0, m_deltaTime, 0,           0,           0,           0,
+    m_linearKalman.transitionMatrix = cv::Mat_<track_t>({ 10, 10 },
+                                     { 1, 0, 0, 0, 0, m_deltaTime, 0,           0,           0,           0,
                                        0, 1, 0, 0, 0, 0,           m_deltaTime, 0,           0,           0,
                                        0, 0, 1, 0, 0, 0,           0,           m_deltaTime, 0,           0,
                                        0, 0, 0, 1, 0, 0,           0,           0,           m_deltaTime, 0,
@@ -180,7 +180,7 @@ void TKalmanFilter::CreateLinear(cv::RotatedRect rrect0, Point_t rrectv0)
                                        0, 0, 0, 0, 0, 0,           1,           0,           0,           0,
                                        0, 0, 0, 0, 0, 0,           0,           1,           0,           0,
                                        0, 0, 0, 0, 0, 0,           0,           0,           1,           0,
-                                       0, 0, 0, 0, 0, 0,           0,           0,           0,           1);
+                                       0, 0, 0, 0, 0, 0,           0,           0,           0,           1 });
 	// init...
 	m_linearKalman.statePre.at<track_t>(0) = rrect0.center.x;      // x
 	m_linearKalman.statePre.at<track_t>(1) = rrect0.center.y;      // y
@@ -209,17 +209,17 @@ void TKalmanFilter::CreateLinear(cv::RotatedRect rrect0, Point_t rrectv0)
 	track_t n1 = pow(m_deltaTime, 4.f) / 4.f;
 	track_t n2 = pow(m_deltaTime, 3.f) / 2.f;
 	track_t n3 = pow(m_deltaTime, 2.f);
-	m_linearKalman.processNoiseCov = (cv::Mat_<track_t>(10, 10) <<
-		n1, 0,  0,  0,  0,  n2, 0,  0,  0,  0,
-		0,  n1, 0,  0,  0,  0,  n2, 0,  0,  0,
-		0,  0,  n1, 0,  0,  0,  0,  n2, 0,  0,
-		0,  0,  0,  n1, 0,  0,  0,  0,  n2, 0,
-		0,  0,  0,  0,  n1, 0,  0,  0,  0,  n2,
-		n2, 0,  0,  0,  0,  n3, 0,  0,  0,	0,
-		0,  n2, 0,  0,  0,  0,  n3, 0,  0,	0,
-		0,  0,  n2, 0,  0,  0,  0,  n3, 0,	0,
-		0,  0,  0,  n2, 0,  0,  0,  0,  n3, 0,
-		0,  0,  0,  0,  n2, 0,  0,  0,  0,  n3);
+    m_linearKalman.processNoiseCov = cv::Mat_<track_t>({ 10, 10 },
+        { n1, 0,  0,  0,  0,  n2, 0,  0,  0,  0,
+        0,  n1, 0,  0,  0,  0,  n2, 0,  0,  0,
+        0,  0,  n1, 0,  0,  0,  0,  n2, 0,  0,
+        0,  0,  0,  n1, 0,  0,  0,  0,  n2, 0,
+        0,  0,  0,  0,  n1, 0,  0,  0,  0,  n2,
+        n2, 0,  0,  0,  0,  n3, 0,  0,  0,	0,
+        0,  n2, 0,  0,  0,  0,  n3, 0,  0,	0,
+        0,  0,  n2, 0,  0,  0,  0,  n3, 0,	0,
+        0,  0,  0,  n2, 0,  0,  0,  0,  n3, 0,
+        0,  0,  0,  0,  n2, 0,  0,  0,  0,  n3 });
 
 	m_linearKalman.processNoiseCov *= m_accelNoiseMag;
 
@@ -244,13 +244,13 @@ void TKalmanFilter::CreateLinearAcceleration(Point_t xy0, Point_t xyv0)
     // Transition cv::Matrix
     const track_t dt = m_deltaTime;
     const track_t dt2 = 0.5f * m_deltaTime * m_deltaTime;
-    m_linearKalman.transitionMatrix = (cv::Mat_<track_t>(6, 6) <<
-                                       1, 0, dt, 0,  dt2, 0,
+    m_linearKalman.transitionMatrix = cv::Mat_<track_t>({ 6, 6 },
+                                     { 1, 0, dt, 0,  dt2, 0,
                                        0, 1, 0,  dt, 0,   dt2,
                                        0, 0, 1,  0,  dt,  0,
                                        0, 0, 0,  1,  0,   dt,
                                        0, 0, 0,  0,  1,   0,
-                                       0, 0, 0,  0,  0,   1);
+                                       0, 0, 0,  0,  0,   1 });
 
     // init...
     m_lastPointResult = xy0;
@@ -273,13 +273,13 @@ void TKalmanFilter::CreateLinearAcceleration(Point_t xy0, Point_t xyv0)
     track_t n1 = pow(m_deltaTime, 4.f) / 4.f;
     track_t n2 = pow(m_deltaTime, 3.f) / 2.f;
     track_t n3 = pow(m_deltaTime, 2.f);
-    m_linearKalman.processNoiseCov = (cv::Mat_<track_t>(6, 6) <<
-                                      n1, 0,  n2, 0,  n2, 0,
+    m_linearKalman.processNoiseCov = cv::Mat_<track_t>({ 6, 6 },
+                                    { n1, 0,  n2, 0,  n2, 0,
                                       0,  n1, 0,  n2, 0,  n2,
                                       n2, 0,  n3, 0,  n3, 0,
                                       0,  n2, 0,  n3, 0,  n3,
                                       0,  0,  n2, 0,  n3, 0,
-                                      0,  0,  0,  n2, 0,  n3);
+                                      0,  0,  0,  n2, 0,  n3 });
 
     m_linearKalman.processNoiseCov *= m_accelNoiseMag;
 
@@ -304,8 +304,8 @@ void TKalmanFilter::CreateLinearAcceleration(cv::Rect_<track_t> rect0, Point_t r
     // Transition cv::Matrix
     const track_t dt = m_deltaTime;
     const track_t dt2 = 0.5f * m_deltaTime * m_deltaTime;
-    m_linearKalman.transitionMatrix = (cv::Mat_<track_t>(12, 12) <<
-                                       1, 0, 0, 0, dt, 0,  0,  0,  dt2, 0,   dt2, 0,
+    m_linearKalman.transitionMatrix = cv::Mat_<track_t>({ 12, 12 },
+                                     { 1, 0, 0, 0, dt, 0,  0,  0,  dt2, 0,   dt2, 0,
                                        0, 1, 0, 0, 0,  dt, 0,  0,  0,   dt2, 0,   dt2,
                                        0, 0, 1, 0, 0,  0,  dt, 0,  0,   0,   dt2, 0,
                                        0, 0, 0, 1, 0,  0,  0,  dt, 0,   0,   0,   dt2,
@@ -316,7 +316,7 @@ void TKalmanFilter::CreateLinearAcceleration(cv::Rect_<track_t> rect0, Point_t r
                                        0, 0, 0, 0, 0,  0,  0,  0,  1,   0,   0,   0,
                                        0, 0, 0, 0, 0,  0,  0,  0,  0,   1,   0,   0,
                                        0, 0, 0, 0, 0,  0,  0,  0,  0,   0,   1,   0,
-                                       0, 0, 0, 0, 0,  0,  0,  0,  0,   0,   0,   1);
+                                       0, 0, 0, 0, 0,  0,  0,  0,  0,   0,   0,   1 });
 
     // init...
     m_linearKalman.statePre.at<track_t>(0) = rect0.x;      // x
@@ -350,8 +350,8 @@ void TKalmanFilter::CreateLinearAcceleration(cv::Rect_<track_t> rect0, Point_t r
     track_t n1 = pow(m_deltaTime, 4.f) / 4.f;
     track_t n2 = pow(m_deltaTime, 3.f) / 2.f;
     track_t n3 = pow(m_deltaTime, 2.f);
-    m_linearKalman.processNoiseCov = (cv::Mat_<track_t>(12, 12) <<
-                                      n1, 0,  0,  0,  n2, 0,  0,  0,  n2, 0,  n2, 0,
+    m_linearKalman.processNoiseCov = cv::Mat_<track_t>({ 12, 12 },
+                                    { n1, 0,  0,  0,  n2, 0,  0,  0,  n2, 0,  n2, 0,
                                       0,  n1, 0,  0,  0,  n2, 0,  0,  0,  n2, 0,  n2,
                                       0,  0,  n1, 0,  0,  0,  n2, 0,  0,  0,  n2, 0,
                                       0,  0,  0,  n1, 0,  0,  0,  n2, 0,  0,  0,  n2,
@@ -362,7 +362,7 @@ void TKalmanFilter::CreateLinearAcceleration(cv::Rect_<track_t> rect0, Point_t r
                                       n2, 0,  0,  0,  n3, 0,  0,  0,  n3, 0,  0,  0,
                                       0,  n2, 0,  0,  0,  n3, 0,  0,  0,  n3, 0,  0,
                                       0,  0,  n2, 0,  0,  0,  n3, 0,  0,  0,  n3, 0,
-                                      0,  0,  0,  n2, 0,  0,  0,  n3, 0,  0,  0,  n3);
+                                      0,  0,  0,  n2, 0,  0,  0,  n3, 0,  0,  0,  n3 });
 
     m_linearKalman.processNoiseCov *= m_accelNoiseMag;
 
