@@ -378,7 +378,7 @@ void OCVDNNDetector::DetectInCrop(const cv::UMat& colorFrame, const cv::Rect& cr
     if (m_net.getLayer(0)->outputNameToIndex("im_info") != -1)  // Faster-RCNN or R-FCN
     {
         //cv::resize(frame, frame, cv::Size(m_inWidth, m_inHeight));
-        cv::Mat imInfo = (cv::Mat_<float>(1, 3) << m_inHeight, m_inWidth, 1.6f);
+        cv::Mat imInfo = cv::Mat_<float>({ 1, 3 }, { (float)m_inHeight, (float)m_inWidth, 1.6f });
         m_net.setInput(imInfo, "im_info");
     }
 
