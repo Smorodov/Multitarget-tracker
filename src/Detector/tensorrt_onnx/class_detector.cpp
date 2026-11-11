@@ -49,6 +49,9 @@ namespace tensor_rt
     public:
         bool Init(const Config& config) override
         {
+            m_detector.reset();
+            m_params = SampleYoloParams();
+
             // The onnx file to load
             m_params.m_onnxFileName = config.m_fileModelCfg.empty() ? config.m_fileModelWeights : config.m_fileModelCfg; //"yolov6s.onnx"
 
@@ -123,6 +126,24 @@ namespace tensor_rt
             case ModelType::YOLOEMask:
                 m_detector = std::make_unique<YOLOE_instance_onnx>(m_params.m_inputTensorNames, m_params.m_outputTensorNames);
                 break;
+
+            case ModelType::YOLOV3:
+            case ModelType::YOLOV3_TINY:
+            case ModelType::YOLOV4:
+            case ModelType::YOLOV4_TINY:
+                std::cerr << "YoloONNXImpl: legacy YOLOv3/YOLOv4 models are not supported by the ONNX/TensorRT backend. "
+                          << "Use the OpenCV DNN backend or export a supported YOLOv5+ model." << std::endl;
+                return false;
+
+            default:
+                std::cerr << "YoloONNXImpl: unsupported model type " << static_cast<int>(config.m_netType) << std::endl;
+                return false;
+            }
+
+            if (!m_detector)
+            {
+                std::cerr << "YoloONNXImpl: detector instance was not created" << std::endl;
+                return false;
             }
 
             // Threshold values
@@ -149,12 +170,23 @@ namespace tensor_rt
                 precisionStr = precision->second;
             m_params.m_engineFileName = config.m_fileModelCfg + "-" + precisionStr + "-batch" + std::to_string(config.m_batchSize) + ".engine";
 
-            return m_detector->Init(m_params);
+            if (!m_detector->Init(m_params))
+            {
+                std::cerr << "YoloONNXImpl: detector initialization failed for " << m_params.m_onnxFileName << std::endl;
+                m_detector.reset();
+                return false;
+            }
+
+            return true;
         }
 
         void Detect(const std::vector<cv::Mat>& mat_image, std::vector<BatchResult>& vec_batch_result) override
         {
             vec_batch_result.clear();
+
+            if (!m_detector)
+                return;
+
             if (vec_batch_result.capacity() < mat_image.size())
                 vec_batch_result.reserve(mat_image.size());
 
@@ -163,7 +195,7 @@ namespace tensor_rt
 
         cv::Size GetInputSize() const override
         {
-            return m_detector->GetInputSize();
+            return m_detector ? m_detector->GetInputSize() : cv::Size();
         }
 
     private:
@@ -194,13 +226,14 @@ namespace tensor_rt
     bool Detector::Init(const Config& config)
 	{
         if (m_impl)
+        {
             delete m_impl;
+            m_impl = nullptr;
+        }
 
         m_impl = new YoloONNXImpl();
 
-        bool res = m_impl->Init(config);
-        assert(res);
-        return res;
+        return m_impl->Init(config);
 	}
 
     ///
@@ -210,6 +243,11 @@ namespace tensor_rt
     ///
     void Detector::Detect(const std::vector<cv::Mat>& mat_image, std::vector<BatchResult>& vec_batch_result)
 	{
+        vec_batch_result.clear();
+
+        if (!m_impl)
+            return;
+
         m_impl->Detect(mat_image, vec_batch_result);
 	}
 
@@ -219,6 +257,6 @@ namespace tensor_rt
     ///
     cv::Size Detector::GetInputSize() const
 	{
-        return m_impl->GetInputSize();
+        return m_impl ? m_impl->GetInputSize() : cv::Size();
 	}
 }

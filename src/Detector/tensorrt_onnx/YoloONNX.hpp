@@ -41,7 +41,7 @@ struct SampleYoloParams
 
     std::string m_onnxFileName;            //!< Filename of ONNX file of a network
     int32_t m_dlaCore{-1};                 //!< Specify the DLA core to run network on.
-    tensor_rt::ModelType m_netType { tensor_rt::ModelType::YOLOV7 };
+    tensor_rt::ModelType m_netType { tensor_rt::ModelType::YOLOV8 };
     tensor_rt::Precision m_precision { tensor_rt::Precision::FP32 }; //!< Allow runnning the network in Int8 mode.
     std::vector<std::string> m_dataDirs;   //!< Directory paths where sample data files are stored
     std::vector<std::string> m_inputTensorNames;

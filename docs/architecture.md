@@ -287,6 +287,10 @@ class BaseTracker {
 Выход — `GetTracks` конструирует `TrackingObject` из каждого `CTrack`
 (траектория копируется целиком).
 
+Обрезка истории (`max_trace_len`) выполняется в `CTrack::TrimTrace` и никогда
+не оставляет траекторию пустой: при неположительном значении хранится только
+последняя точка, иначе удаляются точки старше заданного окна.
+
 ### 6.3 Метрики расстояния
 
 Веса задаются массивом `m_distType[DistType]`, сумма должна быть равна 1
@@ -297,8 +301,8 @@ class BaseTracker {
 | `DistCenters` | эллипс предсказания (`CalcPredictionEllipse` + `IsInsideArea`) | учитывает скорость |
 | `DistRects` | эллипс + отношение ширины/высоты | |
 | `DistJaccard` | IoU bounding rect | |
-| `DistHist` | `cv::compareHist(BHATTACHARYYA)` | ROI кадра |
-| `DistFeatureCos` | косинус ReID-эмбеддингов | |
+| `DistHist` | `cv::compareHist(BHATTACHARYYA)` | ROI пересекается с кадром; при отсутствии/несовпадении гистограмм расстояние = 1 |
+| `DistFeatureCos` | косинус ReID-эмбеддингов | ROI клэмпится к кадру |
 | `DistMahalanobis` | `cv::Mahalanobis` | |
 | `DistLocalCartesian` | евклид в ENU, метры | порог `m_distThresLocalCartesian` |
 
@@ -309,8 +313,10 @@ class BaseTracker {
 
 * `SPHungrian` — `AssignmentProblemSolver` (Манкерс, O(N³)), матрица
   `cost[track + region * tracks]`.
-* `SPLAPJV` — прямоугольная задача приводится к виду `rows <= cols`,
-  вызывается `lap()` из `LAPJV_algorithm`.
+* `SPLAPJV` — прямоугольная задача приводится к виду `rows <= cols` и
+  передаётся в `lap()`; `lap()` дополняет матрицу нулевыми фиктивными
+  строками/столбцами до квадратной и решает её классическим LAPJV
+  (`lapSquare()`), после чего отбрасывает фиктивные назначения.
 
 Оба получают `maxCost` (для LAPJV игнорируется).
 
@@ -386,6 +392,10 @@ classDiagram
 `CRegion` (обычный или повёрнутый прямоугольник). `CalcMotionMap` рисует
 накопленную карту движения.
 
+VIBE обновляется в OpenMP-цикле и использует thread-local ГПСЧ; параметры
+`samples`, `updateFactor`, `pixelNeighbor` валидируются в конструкторе
+(нулевые/отрицательные значения безопасно ограничиваются).
+
 ### 7.3 OCVDNNDetector
 
 `Init` читает модель (`readNet`), настраивает backend/target, список классов,
@@ -415,6 +425,15 @@ classDiagram
 * `VerifyOutputAspectRatio` копирует выходы на хост и вызывает `GetResult`
   конкретной модели;
 * `Detect` поддерживает батч кадров.
+
+Инициализация считается успешной только если engine загружен или построен,
+найдены все объявленные входные/выходные тензоры, а также созданы
+`BufferManager` и `IExecutionContext`; иначе `Detector::Init` возвращает
+`false`, и `BaseDetector::CreateDetector` отдаёт `nullptr`. Legacy-модели
+YOLOv3/YOLOv4 (`ModelType::YOLOV3`, `YOLOV3_TINY`, `YOLOV4`, `YOLOV4_TINY`)
+ONNX/TensorRT-бэкендом не поддерживаются: `YoloONNXImpl::Init` отклоняет их
+с понятным сообщением (для них остаётся OpenCV DNN). Тип по умолчанию —
+`YOLOV8`.
 
 Для сегментационных моделей заполняется `Result::m_boxMask`, который затем
 попадает в `CRegion::m_boxMask` и используется при отрисовке/карте движения.
@@ -501,6 +520,13 @@ m_captured` на каждом из двух `FrameInfo`; таймауты 60 с.
 необработанный кадр, промежуточные помечает `StateSkipped` (они всё равно
 проходят через трекер без детекций); трекер берёт самый ранний готовый кадр.
 Очередь ограничена 15 кадрами, лишние молча отбрасываются.
+
+Состояние остановки (`stopFlag`) — `std::atomic<bool>`, `m_fps` и
+`m_framesCount` также атомарные. Уведомления `FramesQueue::Signal` и
+`SetBreak` синхронизируются с мьютексом, чтобы исключить потерянные
+пробуждения между проверкой предиката и `wait()`. Логгер сам создаёт
+каталог `logs/`; если файловый sink открыть не удалось, остаётся только
+консольный вывод (без завершения процесса).
 
 ### 9.4 Параллелизм внутри трекера
 

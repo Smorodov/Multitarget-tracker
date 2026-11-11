@@ -601,11 +601,9 @@ void CTracker::CreateDistaceMatrix(const regions_t& regions,
             if constexpr (DIST_LOGS)
                     std::cout << "costMatrix[" << j << "][" << i << "] (or " << (i + j * colsTracks) << ") = " << dist << std::endl;
 
-            if (dist < 0 || dist > maxPossibleCost)
-            {
-                assert(0);
-                exit(-1);
-            }
+            if (!std::isfinite(dist) || dist < 0)
+                dist = maxPossibleCost;
+            dist = std::min(dist, maxPossibleCost);
 
 			if (dist > maxCost)
 				maxCost = dist;
@@ -621,52 +619,60 @@ void CTracker::CreateDistaceMatrix(const regions_t& regions,
 ///
 void CTracker::CalcEmbeddins(std::vector<RegionEmbedding>& regionEmbeddings, const regions_t& regions, cv::UMat currFrame) const
 {
-    if (!regions.empty())
+    if (regions.empty())
+        return;
+
+    regionEmbeddings.resize(regions.size());
+
+    const cv::Rect frameRect(0, 0, currFrame.cols, currFrame.rows);
+    const bool hasFrame = !currFrame.empty() && currFrame.cols > 1 && currFrame.rows > 1;
+
+    // Bhatacharia distance between histograms
+    if (hasFrame && m_settings.m_distType[tracking::DistHist] > 0.0f)
     {
-        regionEmbeddings.resize(regions.size());
-        // Bhatacharia distance between histograms
-        if (m_settings.m_distType[tracking::DistHist] > 0.0f)
+        const int bins = 64;
+        std::vector<int> histSize;
+        std::vector<float> ranges;
+        std::vector<int> channels;
+
+        for (int i = 0, stop = currFrame.channels(); i < stop; ++i)
         {
-            for (size_t j = 0; j < regions.size(); ++j)
-            {
-                    int bins = 64;
-                    std::vector<int> histSize;
-                    std::vector<float> ranges;
-                    std::vector<int> channels;
-
-                    for (int i = 0, stop = currFrame.channels(); i < stop; ++i)
-                    {
-                        histSize.push_back(bins);
-                        ranges.push_back(0);
-                        ranges.push_back(255);
-                        channels.push_back(i);
-                    }
-
-                    std::vector<cv::UMat> regROI = { currFrame(regions[j].m_brect) };
-                    cv::calcHist(regROI, channels, cv::Mat(), regionEmbeddings[j].m_hist, histSize, ranges, false);
-                    cv::normalize(regionEmbeddings[j].m_hist, regionEmbeddings[j].m_hist, 0, 1, cv::NORM_MINMAX, -1, cv::Mat());
-            }
+            histSize.push_back(bins);
+            ranges.push_back(0);
+            ranges.push_back(255);
+            channels.push_back(i);
         }
 
-        // Cosine distance between embeddings
-        if (m_settings.m_distType[tracking::DistFeatureCos] > 0.0f)
+        for (size_t j = 0; j < regions.size(); ++j)
         {
-            for (size_t j = 0; j < regions.size(); ++j)
-            {
-                if (regionEmbeddings[j].m_embedding.empty())
-                {
-                    // std::cout << "Search embCalc for " << TypeConverter::Type2Str(regions[j].m_type) << ": ";
-                    auto embCalc = m_embCalculators.find(regions[j].m_type);
-                    if (embCalc != std::end(m_embCalculators))
-                    {
-                        embCalc->second->Calc(currFrame, regions[j].m_brect, regionEmbeddings[j].m_embedding);
+            // A detector may return a box partially outside the frame (or an
+            // empty/degenerate one). calcHist() must not receive such an ROI.
+            const cv::Rect roi = regions[j].m_brect & frameRect;
+            if (roi.width < 2 || roi.height < 2)
+                continue;
 
-                        //std::cout << "Founded! m_embedding = " << regionEmbeddings[j].m_embedding.size() << std::endl;
-                    }
-                    else
-                    {
-                        //std::cout << "Not found" << std::endl;
-                    }
+            std::vector<cv::UMat> regROI = { currFrame(roi) };
+            cv::calcHist(regROI, channels, cv::Mat(), regionEmbeddings[j].m_hist, histSize, ranges, false);
+            cv::normalize(regionEmbeddings[j].m_hist, regionEmbeddings[j].m_hist, 0, 1, cv::NORM_MINMAX, -1, cv::Mat());
+        }
+    }
+
+    // Cosine distance between embeddings
+    if (hasFrame && m_settings.m_distType[tracking::DistFeatureCos] > 0.0f)
+    {
+        for (size_t j = 0; j < regions.size(); ++j)
+        {
+            if (regionEmbeddings[j].m_embedding.empty())
+            {
+                const cv::Rect roi = regions[j].m_brect & frameRect;
+                if (roi.width < 2 || roi.height < 2)
+                    continue;
+
+                // std::cout << "Search embCalc for " << TypeConverter::Type2Str(regions[j].m_type) << ": ";
+                auto embCalc = m_embCalculators.find(regions[j].m_type);
+                if (embCalc != std::end(m_embCalculators))
+                {
+                    embCalc->second->Calc(currFrame, roi, regionEmbeddings[j].m_embedding);
                 }
             }
         }

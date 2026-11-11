@@ -6,9 +6,6 @@
 
 namespace vibe
 {
-    constexpr int RANDOM_BUFFER_SIZE = 65535;
-
-
 class VIBE
 {
 public:
@@ -33,9 +30,6 @@ private:
     model_t m_model;
 
     cv::Mat m_mask;
-
-    unsigned int m_rng[RANDOM_BUFFER_SIZE];
-    int m_rngIdx = 0;
 
     cv::Vec2i getRndNeighbor(int i, int j);
 	void init(const cv::Mat& img);

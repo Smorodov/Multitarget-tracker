@@ -21,16 +21,20 @@
 *
 *************************************************************************/
 
+#include <algorithm>
+#include <cassert>
 #include <limits>
 #include "lap.h"
 
 
-/*This function is the jv shortest augmenting path algorithm to solve the assignment problem*/
-cost lap(const std::vector<std::vector<cost>>& assigncost,
-         std::vector<col>& rowsol,
-         std::vector<row>& colsol,
-         std::vector<cost>& u,
-         std::vector<cost>& v)
+/*This function is the jv shortest augmenting path algorithm to solve the assignment problem.
+  It expects a square cost matrix (dimRows == dimCols); the public lap() wrapper below
+  reduces a rectangular problem to this form by adding zero-cost dummy rows/columns.*/
+static cost lapSquare(const std::vector<std::vector<cost>>& assigncost,
+                      std::vector<col>& rowsol,
+                      std::vector<row>& colsol,
+                      std::vector<cost>& u,
+                      std::vector<cost>& v)
 
 // input:
 // assigncost - cost matrix
@@ -42,8 +46,27 @@ cost lap(const std::vector<std::vector<cost>>& assigncost,
 // v          - dual variables, column reduction numbers
 
 {
-    int dimRows = assigncost.size();
-    int dimCols = assigncost[0].size();
+    if (assigncost.empty() || assigncost[0].empty())
+    {
+        assert(false);
+        return 0;
+    }
+
+    const int dimRows = static_cast<int>(assigncost.size());
+    const int dimCols = static_cast<int>(assigncost[0].size());
+
+    // lapSquare() implements the classical LAPJV, which requires a square
+    // matrix; the lap() wrapper below guarantees this invariant.
+    assert(dimRows == dimCols);
+    if (dimRows != dimCols ||
+        static_cast<int>(rowsol.size()) < dimRows ||
+        static_cast<int>(colsol.size()) < dimCols ||
+        static_cast<int>(u.size()) < dimRows ||
+        static_cast<int>(v.size()) < dimCols)
+    {
+        return 0;
+    }
+
     bool unassignedfound = false;
     row numfree = 0;
     col j2 = 0, endofpath = 0, last = 0;
@@ -177,10 +200,16 @@ cost lap(const std::vector<std::vector<cost>>& assigncost,
             {
                 last = low - 1;
 
+                // Defensive check: with a finite cost matrix an augmenting
+                // path always exists, but a non-finite cost can break the
+                // search and make `up` reach dimCols.
+                if (up >= dimCols)
+                    break;
+
                 // scan columns for up..dim-1 to find all indices for which new minimum occurs.
                 // store these indices between low..up-1 (increasing up).
                 min = d[collist[up++]];
-                for (row k = up; k < dimRows; k++) {
+                for (row k = up; k < dimCols; k++) {
                     col j = collist[k];
                     cost h = d[j];
                     if (h <= min) {
@@ -212,7 +241,7 @@ cost lap(const std::vector<std::vector<cost>>& assigncost,
                 row i = colsol[j1];
                 cost h = assigncost[i][j1] - v[j1] - min;
 
-                for (row k = up; k < dimRows; k++) {
+                for (row k = up; k < dimCols; k++) {
                     col j = collist[k];
                     cost v2 = assigncost[i][j] - v[j] - h;
                     if (v2 < d[j]) {
@@ -234,6 +263,16 @@ cost lap(const std::vector<std::vector<cost>>& assigncost,
                 }
             }
         } while (!unassignedfound);
+
+        if (!unassignedfound)
+        {
+            // No augmenting path was found (only possible with non-finite
+            // costs). Return a consistent "no assignment" result instead of
+            // reading past the end of collist or leaving stale assignments.
+            std::fill(rowsol.begin(), rowsol.begin() + dimRows, -1);
+            std::fill(colsol.begin(), colsol.begin() + dimCols, -1);
+            return 0;
+        }
 
         // update column prices.
         for (row k = last + 1; k--;) {
@@ -257,9 +296,76 @@ cost lap(const std::vector<std::vector<cost>>& assigncost,
     //  for (i = 0; i < dim; i++)
     for (row i = dimRows; i--;) {
         col j = rowsol[i];
+        if (j < 0)
+        {
+            u[i] = 0;
+            continue;
+        }
         u[i] = assigncost[i][j] - v[j];
         lapcost = lapcost + assigncost[i][j];
     }
 
     return lapcost;
+}
+
+///
+/// \brief lap
+/// Solve the rectangular linear assignment problem (rows may be less, equal
+/// or greater than columns).
+///
+/// lapSquare() implements the classical square LAPJV. A rectangular problem is
+/// reduced to it by padding the cost matrix with zero-cost dummy rows and/or
+/// columns: a dummy row/column never increases the total cost, so the optimum
+/// restricted to the real rows/columns is the optimum of the original problem.
+/// Real rows assigned to a dummy column are reported as unassigned (-1).
+///
+cost lap(const std::vector<std::vector<cost>>& assigncost,
+         std::vector<col>& rowsol,
+         std::vector<row>& colsol,
+         std::vector<cost>& u,
+         std::vector<cost>& v)
+{
+    if (assigncost.empty() || assigncost[0].empty())
+    {
+        assert(false);
+        return 0;
+    }
+
+    const int rows = static_cast<int>(assigncost.size());
+    const int cols = static_cast<int>(assigncost[0].size());
+
+    if (static_cast<int>(rowsol.size()) < rows ||
+        static_cast<int>(colsol.size()) < cols ||
+        static_cast<int>(u.size()) < rows ||
+        static_cast<int>(v.size()) < cols)
+    {
+        assert(false);
+        return 0;
+    }
+
+    if (rows == cols)
+        return lapSquare(assigncost, rowsol, colsol, u, v);
+
+    const int dim = std::max(rows, cols);
+    std::vector<std::vector<cost>> square(dim, std::vector<cost>(dim, 0.0));
+    for (int i = 0; i < rows; ++i)
+        std::copy(assigncost[i].begin(), assigncost[i].end(), square[i].begin());
+
+    std::vector<col> rowsolDim(dim, -1);
+    std::vector<row> colsolDim(dim, -1);
+    std::vector<cost> uDim(dim, 0.0), vDim(dim, 0.0);
+
+    const cost total = lapSquare(square, rowsolDim, colsolDim, uDim, vDim);
+
+    // Copy the real part of the solution back; drop assignments to dummies.
+    for (int i = 0; i < rows; ++i)
+        rowsol[i] = (rowsolDim[i] >= 0 && rowsolDim[i] < cols) ? rowsolDim[i] : -1;
+    for (int j = 0; j < cols; ++j)
+        colsol[j] = (colsolDim[j] >= 0 && colsolDim[j] < rows) ? colsolDim[j] : -1;
+    for (int i = 0; i < rows; ++i)
+        u[i] = uDim[i];
+    for (int j = 0; j < cols; ++j)
+        v[j] = vDim[j];
+
+    return total;
 }

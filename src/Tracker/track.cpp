@@ -215,19 +215,23 @@ track_t CTrack::CalcDistHist(const RegionEmbedding& embedding) const
 
     if (!embedding.m_hist.empty() && !m_regionEmbedding.m_hist.empty())
 	{
+        // Histograms may have different sizes/types if the frame format
+        // (e.g. number of channels) changes between frames.
+        if (embedding.m_hist.dims == m_regionEmbedding.m_hist.dims &&
+            embedding.m_hist.total() == m_regionEmbedding.m_hist.total() &&
+            embedding.m_hist.type() == m_regionEmbedding.m_hist.type())
+        {
 #if (((CV_VERSION_MAJOR == 4) && (CV_VERSION_MINOR < 1)) || (CV_VERSION_MAJOR == 3))
-		res = static_cast<track_t>(cv::compareHist(embedding.m_hist, m_regionEmbedding.m_hist, CV_COMP_BHATTACHARYYA));
-        //res = 1.f - static_cast<track_t>(cv::compareHist(hist, m_regionEmbedding.m_hist, CV_COMP_CORREL));
+            res = static_cast<track_t>(cv::compareHist(embedding.m_hist, m_regionEmbedding.m_hist, CV_COMP_BHATTACHARYYA));
+            //res = 1.f - static_cast<track_t>(cv::compareHist(hist, m_regionEmbedding.m_hist, CV_COMP_CORREL));
 #else
-        res = static_cast<track_t>(cv::compareHist(embedding.m_hist, m_regionEmbedding.m_hist, cv::HISTCMP_BHATTACHARYYA));
+            res = static_cast<track_t>(cv::compareHist(embedding.m_hist, m_regionEmbedding.m_hist, cv::HISTCMP_BHATTACHARYYA));
 #endif
+        }
 	}
-    else
-    {
-        assert(0);
-        CV_Assert(!embedding.m_hist.empty());
-        CV_Assert(!m_regionEmbedding.m_hist.empty());
-    }
+    // If either histogram is unavailable (out-of-frame/degenerate detection,
+    // empty frame, changed frame layout), report the maximum distance instead
+    // of asserting.
 	return res;
 }
 
@@ -330,14 +334,7 @@ void CTrack::Update(const CRegion& region,
         m_trace.push_back(m_predictionPoint, currTime);
     }
 
-    for (;;)
-    {
-        std::chrono::duration<double> period = currTime - m_trace.at(0).m_frameTime;
-        if (period.count() > maxTraceLength)
-            m_trace.pop_front(1);
-        else
-            break;
-    }
+    TrimTrace(maxTraceLength, currTime);
 }
 
 ///
@@ -389,14 +386,45 @@ void CTrack::Update(const CRegion& region,
         m_trace.push_back(m_predictionPoint, currTime);
     }
 
-    for (;;)
+    TrimTrace(maxTraceLength, currTime);
+}
+
+///
+/// \brief CTrack::TrimTrace
+/// \param maxTraceLength
+/// \param currTime
+///
+void CTrack::TrimTrace(double maxTraceLength, time_point_t currTime)
+{
+    if (m_trace.size() == 0)
     {
-        std::chrono::duration<double> period = currTime - m_trace.at(0).m_frameTime;
+        // Never leave consumers with an empty trajectory.
+        m_trace.push_back(m_predictionPoint, currTime);
+        return;
+    }
+
+    if (maxTraceLength <= 0.0)
+    {
+        // No history requested: keep only the latest point. An empty trace is
+        // not allowed because drawing/history consumers assume at least one
+        // point (and use size() - 1 in loops).
+        while (m_trace.size() > 1)
+            m_trace.pop_front(1);
+        return;
+    }
+
+    while (m_trace.size() > 0)
+    {
+        const std::chrono::duration<double> period = currTime - m_trace.at(0).m_frameTime;
         if (period.count() > maxTraceLength)
             m_trace.pop_front(1);
         else
             break;
     }
+
+    // Defensive: keep the latest point if the history was trimmed completely.
+    if (m_trace.size() == 0)
+        m_trace.push_back(m_predictionPoint, currTime);
 }
 
 ///

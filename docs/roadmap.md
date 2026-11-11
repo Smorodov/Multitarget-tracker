@@ -10,6 +10,12 @@
 > это указано в карточках. Оценки «сработает/не сработает» — результат
 > статического анализа, а не воспроизведения.
 
+> **Статус на 2026-11-11:** C1 (фабрика детекторов), C2 (LAPJV), C7
+> (инициализация TensorRT), C8 (`async_detector`), C11 (ROI гистограмм),
+> C12 (обрезка траектории) и C13 (VIBE RNG/`% 0`) исправлены в рабочем
+> дереве; C2, C7, C8, C11, C12 и C13 — в этих правках, см. карточки.
+> Остальные пункты актуальны.
+
 ## 1. Легенда приоритетов
 
 | Приоритет | Значение | Что делать |
@@ -162,41 +168,37 @@ return detector;
 
 ---
 
-### C2. LAPJV: неверные границы и выход за границу `collist`
+### C2. LAPJV: прямоугольная задача и выход за границу `collist`
 
-**Где:** `src/Tracker/LAPJV_algorithm/lap.cpp:182-183, 215`.
+**Где:** `src/Tracker/LAPJV_algorithm/lap.cpp` (`lap()` и `lapSquare()`).
 
-```cpp
-min = d[collist[up++]];                    // 182: up может стать == dimCols
-for (row k = up; k < dimRows; k++) { ... } // 183: должно быть dimCols
-...
-for (row k = up; k < dimRows; k++) { ... } // 215: то же
-```
+**Статус:** ✅ исправлено (2026-11-11).
 
-**Симптом:** при `число треков != число детекций` (типичный случай)
-алгоритм просматривает не все столбцы: `dimRows = min(tracks, regions)`,
-`dimCols = max(...)`, а `collist` содержит `dimCols` элементов. Возможны:
+**Симптом:** при `числе треков != числе детекций` (типичный случай) алгоритм
+просматривал не все столбцы (`dimRows` вместо `dimCols`) и мог прочитать
+`collist[dimCols]` за границей `std::vector`. Однако одной замены границ
+недостаточно: LAPJV — квадратный алгоритм, и на прямоугольной матрице он
+выдаёт субоптимальные назначения. Брутфорс это подтвердил: 7146 расхождений
+из 34154 на матрицах 2×3 и подобных.
 
-* неоптимальные (или неверные) назначения;
-* чтение `collist[dimCols]` за границей `std::vector` (UB);
-* потенциально бесконечный внешний `do { ... } while (!unassignedfound)`,
-  если augmenting path не находится.
-
-**Причина:** код адаптирован из квадратной версии LAPJV, где `dimRows == dimCols`;
-при переходе к прямоугольной матрице заменили не все вхождения.
+**Причина:** код адаптирован из квадратной версии, а прямоугольная задача
+решалась «как есть», без фиктивных строк/столбцов.
 
 **Исправление:**
 
-```cpp
-for (col k = up; k < dimCols; ++k) { ... }   // оба цикла
-...
-if (up >= dimCols) { /* нечего сканировать: защитный break/обработка */ }
-min = d[collist[up++]];
-```
+* `lapSquare()` — прежний алгоритм с корректными границами `dimCols` для
+  квадратной матрицы;
+* `lap()` — обёртка: при `rows != cols` дополняет матрицу нулевыми
+  фиктивными строками/столбцами до `dim = max(rows, cols)`, решает
+  квадратную задачу и отбрасывает фиктивные назначения (`-1`);
+* добавлены проверки размеров входных/выходных векторов, защита
+  `up >= dimCols` (на случай нефинитных cost) и согласованный возврат
+  «нет назначения» (`-1`) вместо чтения за границей.
 
-Дополнительно: добавить `assert(dimRows <= dimCols)` и тест на прямоугольных
-матрицах (3×5, 5×3, 1×N, N×1), сравнивающий суммарную стоимость с
-эталонным Hungarian.
+**Проверка:** брутфорс-тест (перебор всех инъективных назначений) на
+34 154 матрицах размеров 1×1…7×8, включая нулевые и одинаковые стоимости:
+0 расхождений. `mtracking` собирается в конфигурации проекта (MSVC Release).
+Тест: `build/lapjv_check/test.cpp` (каталог `build/` в `.gitignore`).
 
 **Важно:** `TrackerSettings::m_matchType` по умолчанию — `MatchLAPJV`
 (`TrackerSettings.h:23`), т.е. это дефолтный решатель библиотеки.
@@ -341,9 +343,10 @@ if (sz.width < frame.cols && sz.height < frame.rows) { ... }
 
 ### C7. TensorRT-инициализация: «успех» при ошибке, отсутствующие модели, `assert`
 
-**Где:**
-`src/Detector/tensorrt_onnx/YoloONNX.cpp:87-149`,
-`src/Detector/tensorrt_onnx/class_detector.cpp:55-203`.
+**Где:** `src/Detector/tensorrt_onnx/YoloONNX.cpp`,
+`src/Detector/tensorrt_onnx/class_detector.cpp`,
+`src/Detector/ONNXTensorRTDetector.cpp`,
+`async_detector/AsyncDetector.cpp`.
 
 1. **Ложный успех.** Если `deserializeCudaEngine` вернул `nullptr`,
    выставляется `res = true` (строки 95-104). Далее
@@ -362,29 +365,70 @@ if (sz.width < frame.cols && sz.height < frame.rows) { ... }
    игнорирует возврат `Detector::Init` (163) и возвращает `true`, если
    `m_detector` не пуст (167).
 
-**Исправление:** `res=false` при null engine; добавить все обещанные
-`case` (или убрать модели из enum/примеров); проверять `m_detector` перед
-вызовом; возвращать `m_detector && m_detector->Init(...)`; заменить
-`assert` на возврат `false` + лог.
+**Статус:** ✅ исправлено (2026-11-11).
+
+**Что сделано:**
+
+* `YoloONNX::Init`: неудачная десериализация engine (а также пустой/нечитаемый
+  файл, отсутствие runtime/engine/context/buffer) возвращает `false`;
+  добавлена проверка ранга и размеров входного тензора.
+* `GetBindings`: размерности тензоров собираются в порядке биндингов (на
+  этот порядок рассчитаны парсеры моделей с несколькими выходами, например
+  DFINE), при этом проверяется, что все объявленные входы и выходы
+  присутствуют в engine.
+* `YoloONNXImpl::Init`: явные ветки для YOLOV3/YOLOV3_TINY/YOLOV4/YOLOV4_TINY
+  возвращают `false` с понятным сообщением (эти модели не поддерживаются
+  ONNX/TensorRT-бэкендом); неизвестный `ModelType` также отклоняется;
+  `m_detector` проверяется перед `Init`, при ошибке сбрасывается.
+* `Detector::Init` больше не содержит `assert(res)` и возвращает реальный
+  результат; `Detect`/`GetInputSize` безопасны после неудачной инициализации.
+* `ONNXTensorRTDetector::Init` возвращает результат `Detector::Init` и
+  сбрасывает обёртку при ошибке; `Detect` проверяет наличие детектора;
+  `assert(0)` для неизвестного `net_type` и ошибок файла классов заменены на
+  `return false` + лог. Тип по умолчанию изменён на `YOLOV8`.
+* `async_detector`: конфиг переведён на `coco/yolo11s.onnx` с
+  `net_type=YOLOV11`; при `nullptr`-детекторе конвейер останавливается, а не
+  падает.
+
+**Проверка:** собраны `yolo_rt_lib`, `mdetection`, `AsyncDetector` и
+`MultitargetTracker` (MSVC Release). Запуск `-e=3` с `net_type=YOLOV4`
+завершает инициализацию ошибкой `legacy YOLOv3/YOLOv4 models are not
+supported...` без падения; запуск с реальным engine `yolo26m` (FP16)
+печатает `YoloONNX::Init: successfully initialized` и обрабатывает кадры.
 
 ---
 
 ### C8. `async_detector`: гонки и `nullptr`
 
-**Где:** `async_detector/AsyncDetector.cpp`.
+**Где:** `async_detector/AsyncDetector.cpp`, `async_detector/AsyncDetector.h`,
+`async_detector/Queue.h`.
 
-* `bool stopFlag` (62-64) разделяется между 4 потоками и читается/пишется
-  без синхронизации (253-378) → формально UB по модели памяти C++; на
-  практике возможны «залипания»/пропуски остановки. Нужен
-  `std::atomic<bool>` (как в `VideoExample::AsyncProcess`, где уже
-  используется `std::atomic<bool>`).
-* `detector` может быть `nullptr` (C1/инициализация не удалась), но
-  вызывается `detector->Detect(...)` (394). Нужна проверка и корректная
-  остановка конвейера.
-* `rotating_file_sink_mt("logs/...")` (46) бросает `spdlog_ex`, если каталога
-  `logs/` нет; `main` не перехватывает → `std::terminate`. Нужно
-  `std::filesystem::create_directories("logs")` и `try/catch` с fallback на
-  консольный sink.
+**Статус:** ✅ исправлено (2026-11-11).
+
+**Что сделано:**
+
+* `stopFlag` заменён на `std::atomic<bool>` во всех потоках
+  (`CaptureThread`/`DetectThread`/`TrackingThread` и `Process`);
+  `m_fps`/`m_framesCount` также сделаны атомарными, чтобы убрать гонки
+  между потоком захвата и главным потоком.
+* `FramesQueue::Signal` и `SetBreak` синхронизированы с `m_mutex`:
+  раньше возможна была потерянная нотификация (проверка предиката и
+  `wait()` не были упорядочены с изменением состояния), из-за чего
+  потребитель мог заснуть навсегда. При ошибке открытия видео теперь
+  вызывается `SetBreak(true)`.
+* Каталог `logs/` создаётся через `fs::create_directories`; создание
+  `rotating_file_sink_mt` обёрнуто в `try/catch`, при ошибке логгер
+  продолжает работать только с консольным sink (без `std::terminate`).
+* `nullptr`-детектор (ошибка инициализации) останавливает конвейер:
+  выставляется `stopFlag` и `SetBreak`, поток детекции завершается.
+
+**Проверка:** `AsyncDetector` собирается (MSVC Release). Запуск с
+несуществующим видео завершается штатно (`Can't open ...`, `Correct exit`),
+каталог `logs/` и лог-файл создаются. Если `logs` — обычный файл, выводятся
+предупреждения о невозможности создать каталог/sink, приложение продолжает
+работу и завершается. Запуск на `data/atrium.avi` с закэшированным engine
+`yolo11s` обработал 10 кадров и завершился без зависаний (`Signal`/`SetBreak`
+под нагрузкой).
 
 ---
 
@@ -434,12 +478,10 @@ engine собран под батч 4, а пришёл 1 кадр (типичн�
 
 ### C11. Гистограммы по ROI без проверки границ
 
-**Где:** `src/Tracker/BaseTracker.cpp:645-646`.
+**Где:** `src/Tracker/BaseTracker.cpp` (`CTracker::CalcEmbeddins`),
+`src/Tracker/track.cpp` (`CTrack::CalcDistHist`).
 
-```cpp
-std::vector<cv::UMat> regROI = { currFrame(regions[j].m_brect) };
-cv::calcHist(regROI, ...);
-```
+**Статус:** ✅ исправлено (2026-11-11).
 
 **Симптом:** `cv::Exception` (assert в `Mat::Mat(const Mat&, const Rect&)`)
 при детекции, выходящей за кадр или имеющей нулевой/отрицательный размер.
@@ -451,52 +493,62 @@ cv::calcHist(regROI, ...);
 `width/height` — нулевыми (`ParseYOLOv10`, `ParseDFINE`, OBB и т.д.).
 `CRegion` не клэмпит `m_brect` к кадру.
 
-**Исправление:**
+**Что сделано:**
 
-```cpp
-const cv::Rect roi = regions[j].m_brect & cv::Rect(0, 0, currFrame.cols, currFrame.rows);
-if (roi.width < 2 || roi.height < 2) continue;   // историю не считаем
-cv::calcHist(... currFrame(roi) ...);
-```
+* `CalcEmbeddins` проверяет, что кадр непустой, и пересекает `m_brect` с
+  кадром (`roi = m_brect & frameRect`). Если `roi` меньше 2×2 или кадр
+  пуст, гистограмма/эмбеддинг для региона не считаются.
+* То же ограничение применяется к ReID-эмбеддингам, чтобы
+  `EmbeddingsCalculator::Calc` не получил некорректный ROI.
+* `CTrack::CalcDistHist` больше не вызывает `assert(0)`/`CV_Assert`:
+  при отсутствии гистограммы (или несовпадении размера/типа, например
+  при смене числа каналов кадра) возвращается максимальное расстояние `1`.
+  Это позволяет трекеру продолжить работу, а не завершиться исключением.
 
-Плюс нормализовать/клэмпить `m_brect` на входе трекера.
+**Проверка:** отдельный тест (`build/c11_test/test.cpp`) с
+`TrackerSettings()` по умолчанию и кадром 160×120 подаёт боксы:
+полностью вне кадра, частично вне кадра, вырожденный `0×0` и валидный.
+Первый `Update` — 4 трека, второй `Update` с пустым кадром — без исключений,
+`ok`. `mtracking`, `AsyncDetector` и `MultitargetTracker` собираются.
 
 ---
 
 ### C12. `maxTraceLength <= 0` → исключение
 
-**Где:** `src/Tracker/track.cpp:333-340` (аналогично 392-399).
+**Где:** `src/Tracker/track.cpp` (`CTrack::Update`, `CTrack::TrimTrace`).
 
-```cpp
-for (;;)
-{
-    std::chrono::duration<double> period = currTime - m_trace.at(0).m_frameTime;
-    if (period.count() > maxTraceLength)
-        m_trace.pop_front(1);
-    else break;
-}
-```
+**Статус:** ✅ исправлено (2026-11-11).
 
 **Симптом:** при `max_trace_len = 0` (или отрицательном) из INI условие
-истинно всегда → `pop_front` очищает траекторию → следующий `m_trace.at(0)`
-бросает `std::out_of_range`, которое никто не ловит → `std::terminate`.
-`max_trace_len` — публичная настройка (`TrackerSettings.h:80`,
-`data/settings*.ini`), значение 0 выглядит допустимым («не хранить
-траекторию»).
+`period > maxTraceLength` истинно всегда → `pop_front` очищает траекторию →
+следующий `m_trace.at(0)` бросает `std::out_of_range`, которое никто не
+ловит → `std::terminate`. `max_trace_len` — публичная настройка
+(`TrackerSettings.h:80`, `data/settings*.ini`), значение 0 выглядит
+допустимым («не хранить траекторию»).
 
-**Исправление:** `while (!m_trace.empty() && ...)`; либо
+**Что сделано:**
 
-```cpp
-if (maxTraceLength <= 0) { m_trace.pop_front(m_trace.size()); return; }
-```
+* обрезка истории вынесена в `CTrack::TrimTrace`;
+* цикл обрезки проверяет `m_trace.size() > 0` и не вызывает `at(0)` на
+  пустом векторе;
+* при `maxTraceLength <= 0` хранится только последняя точка, а не пустая
+  траектория: потребители (`DrawTrack`, `GetTrajectory`) рассчитывают на
+  `size() >= 1` (в циклах используется `size() - 1`);
+* если история всё же оказалась пустой, последняя точка восстанавливается
+  защитно.
 
-и валидация настроек (`max_trace_len > 0`).
+**Проверка:** тест `build/c12_test/test.cpp` с `maxTraceLength = 0, -1,
+0.001, 2.0`: 10 кадров с детекциями и 5 кадров без детекций; ни одного
+пустого трека и ни одного исключения, `failures=0`. `mtracking` и
+приложения собираются.
 
 ---
 
 ### C13. VIBE: гонка RNG и `% 0`
 
-**Где:** `src/Detector/vibe_src/vibe.cpp:17-27, 84-142`.
+**Где:** `src/Detector/vibe_src/vibe.cpp`, `src/Detector/vibe_src/vibe.hpp`.
+
+**Статус:** ✅ исправлено (2026-11-11).
 
 * `m_rng`/`m_rngIdx` — общие поля, изменяемые в `#pragma omp parallel for`
   (строки 84, 117, 119, 126-127) без синхронизации → гонка данных (UB) и
@@ -506,10 +558,21 @@ if (maxTraceLength <= 0) { m_trace.pop_front(m_trace.size()); return; }
   `% m_updateFactor` (117) при 0 → деление на 0 (SIGFPE/UB). Аналогично
   `% m_samples`, `% neighbor_count` (27) при нулевых значениях.
 
-**Исправление:** потокобезопасный ГПСЧ (thread-local `std::mt19937`,
-`cv::RNG` на поток или `#pragma omp critical` для индекса); валидация
-`samples > 0`, `updateFactor > 0`, `pixelNeighbor >= 0` в
-`BackgroundSubtract::Init`.
+**Что сделано:**
+
+* общий `m_rng`/`m_rngIdx` удалён; используются thread-local
+  `std::mt19937` и функции `RandomIndex`/`RandomHit` — состояние ГПСЧ
+  больше не разделяется потоками OpenMP;
+* конструктор `VIBE` валидирует параметры: `samples >= 1`, `channels >= 1`,
+  `pixelNeighbor >= 0`, `distanceThreshold >= 1`, `matchingThreshold >= 0`,
+  `updateFactor >= 1`; деление по модулю на 0 исключено;
+* `getRndNeighbor` проверяет `neighbor_count` перед выбором соседа;
+* `update` использует `RandomHit`/`RandomIndex` вместо прямого `%`.
+
+**Проверка:** тест `build/c13_test/test.cpp` создаёт VIBE с
+`samples=0, pixelNeighbor=-5, updateFactor=0` (нулевые/отрицательные
+параметры), прогоняет нормальную модель 50 кадров и неконтинуальный ROI:
+маски 64×64, 128×96, 64×64, `ok`; `mdetection` собирается.
 
 ---
 

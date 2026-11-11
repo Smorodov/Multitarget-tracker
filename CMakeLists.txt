@@ -83,16 +83,23 @@ endif(BUILD_ONNX_TENSORRT)
 option(MTRACKER_PYTHON "Build mtracking Python bindings?" OFF)
 if(MTRACKER_PYTHON)
     set(NUMPY_INCLUDE_DIR "" CACHE FILEPATH "Path to numpy header if cmake can't find them.")
-    if (NOT ${NUMPY_INCLUDE_DIR} STREQUAL "")
+    if (NUMPY_INCLUDE_DIR)
       message( " *** NUMPY_INCLUDE_DIR : ${NUMPY_INCLUDE_DIR}" )
-      if(NOT EXISTS ${NUMPY_INCLUDE_DIR}/numpy/ndarrayobject.h)
+      if(NOT EXISTS "${NUMPY_INCLUDE_DIR}/numpy/ndarrayobject.h")
           message(SEND_ERROR "Can't find numpy/ndarrayobject.h in ${NUMPY_INCLUDE_DIR}")
       endif()
-    include_directories(${NUMPY_INCLUDE_DIR})
-endif()
+      include_directories(${NUMPY_INCLUDE_DIR})
+    endif()
 
     set(PYBIND11_LTO_CXX_FLAGS "")
     set(PYBIND11_PYTHON_VERSION 3)
+
+    # The vendored pybind11 2.5 still declares compatibility with CMake < 3.5,
+    # which CMake 4 removed. Allow configuring the old pybind11 scripts.
+    if (CMAKE_VERSION VERSION_GREATER_EQUAL 4.0)
+        set(CMAKE_POLICY_VERSION_MINIMUM 3.5 CACHE STRING "" FORCE)
+    endif()
+
     add_subdirectory(thirdparty/pybind11)
 endif(MTRACKER_PYTHON)
 

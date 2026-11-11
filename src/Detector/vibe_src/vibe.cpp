@@ -1,37 +1,55 @@
 #include "vibe.hpp"
+#include <algorithm>
 #include <opencv2/core/core.hpp>
 #include <random>
 
 namespace vibe
 {
+	namespace
+	{
+	// Thread-local generator: VIBE::update() runs inside an OpenMP parallel
+	// loop, so a shared m_rng/m_rngIdx (as before) was a data race.
+	int RandomIndex(int count)
+	{
+		if (count <= 1)
+			return 0;
+
+		static thread_local std::mt19937 rng{ std::random_device{}() };
+		return static_cast<int>(rng() % static_cast<unsigned int>(count));
+	}
+
+	bool RandomHit(int count)
+	{
+		return RandomIndex(count) == 0;
+	}
+	}
+
 	///
 	VIBE::VIBE(int channels, int samples, int pixel_neighbor, int distance_threshold, int matching_threshold, int update_factor) :
-		m_samples(samples),
-		m_channels(channels),
-		m_pixelNeighbor(pixel_neighbor),
-		m_distanceThreshold(distance_threshold),
-		m_matchingThreshold(matching_threshold),
-		m_updateFactor(update_factor)
+		m_samples(static_cast<size_t>(std::max(1, samples))),
+		m_channels(static_cast<size_t>(std::max(1, channels))),
+		m_pixelNeighbor(std::max(0, pixel_neighbor)),
+		m_distanceThreshold(std::max(1, distance_threshold)),
+		m_matchingThreshold(std::max(0, matching_threshold)),
+		m_updateFactor(std::max(1, update_factor))
 	{
-		//srand(0);
-		for (int i = 0; i < RANDOM_BUFFER_SIZE; i++)
-		{
-			m_rng[i] = rand();
-		}
 	}
 
 	///
 	cv::Vec2i VIBE::getRndNeighbor(int i, int j)
 	{
-		int neighbor_count = (m_pixelNeighbor * 2 + 1) * (m_pixelNeighbor * 2 + 1);
-		int rnd = m_rng[m_rngIdx = (m_rngIdx + 1) % RANDOM_BUFFER_SIZE] % neighbor_count;
-		int start_i = i - m_pixelNeighbor;
-		int start_j = j - m_pixelNeighbor;
-		int area = m_pixelNeighbor * 2 + 1;
-		int position_i = rnd / area;
-		int position_j = rnd % area;
-		int cur_i = std::max(std::min(start_i + position_i, m_size.height - 1), 0);
-		int cur_j = std::max(std::min(start_j + position_j, m_size.width - 1), 0);
+		const int area = m_pixelNeighbor * 2 + 1;
+		const int neighbor_count = area * area;
+		if (neighbor_count <= 0)
+			return cv::Vec2i(i, j);
+
+		const int rnd = RandomIndex(neighbor_count);
+		const int start_i = i - m_pixelNeighbor;
+		const int start_j = j - m_pixelNeighbor;
+		const int position_i = rnd / area;
+		const int position_j = rnd % area;
+		const int cur_i = std::max(std::min(start_i + position_i, m_size.height - 1), 0);
+		const int cur_j = std::max(std::min(start_j + position_j, m_size.width - 1), 0);
 		return cv::Vec2i(cur_i, cur_j);
 	}
 
@@ -114,18 +132,18 @@ namespace vibe
 				if (flag)
 				{
 					mask_ptr[0] = 0;
-					if (0 == m_rng[m_rngIdx = (m_rngIdx + 1) % RANDOM_BUFFER_SIZE] % m_updateFactor)
+					if (RandomHit(m_updateFactor))
 					{
-						int sample = m_rng[m_rngIdx = (m_rngIdx + 1) % RANDOM_BUFFER_SIZE] % m_samples;
-						size_t model_idx = m_channels * m_samples * m_size.width * i + m_channels * m_samples * j + m_channels * sample;
+						const int sample = RandomIndex(static_cast<int>(m_samples));
+						size_t model_idx = m_channels * m_samples * m_size.width * i + m_channels * m_samples * j + m_channels * static_cast<size_t>(sample);
                         for (size_t c = 0; c < m_channels; ++c)
 						{
 							m_model[model_idx + c] = img_ptr[c];
 						}
 
-						cv::Vec2i rnd_pos = getRndNeighbor(i, j);
-						sample = m_rng[m_rngIdx = (m_rngIdx + 1) % RANDOM_BUFFER_SIZE] % m_samples;
-						model_idx = m_channels * m_samples * m_size.width * rnd_pos[0] + m_channels * m_samples * rnd_pos[1] + m_channels * sample;
+						const cv::Vec2i rnd_pos = getRndNeighbor(i, j);
+						const int rndSample = RandomIndex(static_cast<int>(m_samples));
+						model_idx = m_channels * m_samples * m_size.width * rnd_pos[0] + m_channels * m_samples * rnd_pos[1] + m_channels * static_cast<size_t>(rndSample);
                         for (size_t c = 0; c < m_channels; ++c)
 						{
 							m_model[model_idx + c] = img_ptr[c];
