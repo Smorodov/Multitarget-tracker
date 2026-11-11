@@ -58,7 +58,7 @@ std::unique_ptr<BaseDetector> BaseDetector::CreateDetector(tracking::Detectors d
         break;
     }
 
-    if (!detector->Init(config))
+    if (detector && !detector->Init(config))
         detector.reset();
     return detector;
 }
