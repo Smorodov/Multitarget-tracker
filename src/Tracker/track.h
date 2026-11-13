@@ -113,8 +113,8 @@ public:
     track_t WidthDist(const CRegion& reg) const;
     track_t HeightDist(const CRegion& reg) const;
 
-    void Update(const CRegion& region, bool dataCorrect, double maxTraceLength, cv::UMat prevFrame, cv::UMat currFrame, int trajLen, int maxSpeedForStatic, time_point_t currTime);
-    void Update(const CRegion& region, const RegionEmbedding& regionEmbedding, bool dataCorrect, double maxTraceLength, cv::UMat prevFrame, cv::UMat currFrame, int trajLen, int maxSpeedForStatic, time_point_t currTime);
+    void Update(const CRegion& region, bool dataCorrect, double maxTraceLength, cv::UMat prevFrame, cv::UMat currFrame, double minStaticTime, int maxSpeedForStatic, time_point_t currTime);
+    void Update(const CRegion& region, const RegionEmbedding& regionEmbedding, bool dataCorrect, double maxTraceLength, cv::UMat prevFrame, cv::UMat currFrame, double minStaticTime, int maxSpeedForStatic, time_point_t currTime);
 
     bool IsStatic() const;
     bool IsStaticTimeout(time_point_t currTime, double staticPeriod) const;
@@ -190,7 +190,17 @@ private:
     RegionEmbedding m_regionEmbedding;
 
     ///
-    bool CheckStatic(int trajLen, cv::UMat currFrame, const CRegion& region, int maxSpeedForStatic, time_point_t currTime);
+    /// \brief CheckStatic
+    /// \param minStaticTime: window in seconds; the object is static if it
+    /// stayed inside the window-start ROI for the whole window and its metric
+    /// speed (if known) does not exceed maxSpeedForStatic
+    /// \param currFrame
+    /// \param region
+    /// \param maxSpeedForStatic
+    /// \param currTime
+    /// \return
+    ///
+    bool CheckStatic(double minStaticTime, cv::UMat currFrame, const CRegion& region, int maxSpeedForStatic, time_point_t currTime);
 
     ///
     /// \brief TrimTrace
