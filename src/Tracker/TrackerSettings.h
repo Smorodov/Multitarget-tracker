@@ -97,8 +97,10 @@ struct TrackerSettings
     int m_maxStaticTime = 25;
     ///
     /// \brief m_maxSpeedForStatic
-    /// Speed in meters
-    /// If speed of object is more that this value than object is non static
+    /// Speed in m/s in the local ENU plane (requires metric coordinates in
+    /// detections). If the metric speed of an object is known and exceeds
+    /// this value, the object is not static. Without metric data the speed
+    /// is unknown and does not restrict the static detection.
     ///
     track_t m_maxSpeedForStatic = 0.5f;
 

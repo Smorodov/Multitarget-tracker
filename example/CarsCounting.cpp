@@ -65,10 +65,12 @@ void CarsCounting::Detection(FrameInfo& frame)
 {
     VideoExample::Detection(frame);
 
-    if (!m_geoBindingsRead && !frame.m_frames.empty())
+    if (!frame.m_frames.empty())
     {
-        ReadGeobindings(frame.m_frames.front().GetMatBGR().size());
-        m_geoBindingsRead = true;
+        std::call_once(m_geoBindingsOnce, [this, frameSize = frame.m_frames.front().GetMatBGR().size()]()
+        {
+            ReadGeobindings(frameSize);
+        });
     }
 
     if (m_geoParams.Empty())
@@ -82,7 +84,11 @@ void CarsCounting::Detection(FrameInfo& frame)
         {
             const cv::Point2f bottomCenter = BottomCenter(reg.m_rrect);
             const cv::Point groundPoint(cvRound(bottomCenter.x), cvRound(bottomCenter.y));
-            reg.SetLocalCartesian(m_geoParams.Pix2Ground(groundPoint));
+            cv::Point2d localCartesian;
+            // Skip the regions projected on/over the horizon line: their local
+            // coordinates are meaningless, the tracker treats them as unknown.
+            if (m_geoParams.Pix2Ground(groundPoint, localCartesian))
+                reg.SetLocalCartesian(localCartesian);
         }
     }
 }
@@ -237,51 +243,40 @@ bool CarsCounting::InitTracker(cv::UMat frame)
         m_heatMap = cv::Mat(m_keyFrame.size(), CV_32FC1, cv::Scalar::all(0));
     }
 
-    // The geo bindings may already be loaded by Detection() in the asynchronous mode.
-    if (!m_geoBindingsRead)
+    // The geo bindings may already be loaded by Detection() in the asynchronous
+    // mode: std::call_once makes both entry points safe in any order.
+    std::call_once(m_geoBindingsOnce, [this, frameSize = frame.size()]()
     {
-        ReadGeobindings(frame.size());
-        m_geoBindingsRead = true;
-    }
+        ReadGeobindings(frameSize);
+    });
 
-    const int minStaticTime = 5;
-
-    TrackerSettings settings;
+    // Use the [tracking] settings parsed in the constructor
+    // (ParseTrackerSettings -> m_trackerSettings): the ini file controls
+    // the kalman/matcher/tracker types, dt, noise, distance thresholds,
+    // lost/trace times, abandoned detection (time based, see H9) and the
+    // ByteTrack parameters. Only the distance is overridden: this example
+    // works in meters, so DistLocalCartesian is required with geo bindings
+    // and DistJaccard without them (the pixel thresholds of the other
+    // distance types are not meaningful here).
     if (!m_geoParams.Empty())
-        settings.SetDistance(tracking::DistLocalCartesian);
-    else
-        settings.SetDistance(tracking::DistJaccard);
-    settings.m_kalmanType = tracking::KalmanLinear;
-    settings.m_filterGoal = tracking::FilterCenter;
-    settings.m_lostTrackType = tracking::TrackCSRT; // Use KCF tracker for collisions resolving. Used if m_filterGoal == tracking::FilterRect
-    settings.m_matchType = tracking::MatchHungrian;
-    settings.m_dt = 0.3f;                           // Delta time for Kalman filter
-    settings.m_accelNoiseMag = 0.2f;                // Accel noise magnitude for Kalman filter
-    settings.m_distThres = 0.7f;                    // Distance threshold between region and object on two frames
-    settings.m_distThresLocalCartesian = 10.0f;     // Same threshold in meters for DistLocalCartesian
-    settings.m_minAreaRadiusPix = frame.rows / 20.f;
-    settings.m_maximumAllowedLostTime = 2.;         // Maximum allowed lost time
-
-    settings.AddNearTypes(TypeConverter::Str2Type("car"), TypeConverter::Str2Type("bus"), false);
-    settings.AddNearTypes(TypeConverter::Str2Type("car"), TypeConverter::Str2Type("truck"), false);
-    settings.AddNearTypes(TypeConverter::Str2Type("person"), TypeConverter::Str2Type("bicycle"), true);
-    settings.AddNearTypes(TypeConverter::Str2Type("person"), TypeConverter::Str2Type("motorbike"), true);
-
-    settings.m_useAbandonedDetection = false;
-    if (settings.m_useAbandonedDetection)
     {
-        settings.m_minStaticTime = minStaticTime;
-        settings.m_maxStaticTime = 60;
-        settings.m_maximumAllowedLostTime = settings.m_minStaticTime;      // Maximum allowed lost time
-        settings.m_maxTraceLength = 2 * settings.m_maximumAllowedLostTime; // Maximum trace length
+        m_logger->info("Geo bindings are loaded: the tracker distance is forced to DistLocalCartesian ({0})",
+            (int)tracking::DistLocalCartesian);
+        m_trackerSettings.SetDistance(tracking::DistLocalCartesian);
     }
     else
     {
-        settings.m_maximumAllowedLostTime = 10.; // Maximum allowed lost time
-        settings.m_maxTraceLength = 4.;          // Maximum trace length
+        m_logger->info("No geo bindings: the tracker distance is forced to DistJaccard ({0})",
+            (int)tracking::DistJaccard);
+        m_trackerSettings.SetDistance(tracking::DistJaccard);
     }
 
-    m_tracker = BaseTracker::CreateTracker(settings, m_fps);
+    m_trackerSettings.AddNearTypes(TypeConverter::Str2Type("car"), TypeConverter::Str2Type("bus"), false);
+    m_trackerSettings.AddNearTypes(TypeConverter::Str2Type("car"), TypeConverter::Str2Type("truck"), false);
+    m_trackerSettings.AddNearTypes(TypeConverter::Str2Type("person"), TypeConverter::Str2Type("bicycle"), true);
+    m_trackerSettings.AddNearTypes(TypeConverter::Str2Type("person"), TypeConverter::Str2Type("motorbike"), true);
+
+    m_tracker = BaseTracker::CreateTracker(m_trackerSettings, m_fps);
     if (!m_tracker)
     {
         m_logger->error("Tracker creation failed: unsupported Kalman/FilterGoal combination");
@@ -498,8 +493,18 @@ bool CarsCounting::ReadGeobindings(cv::Size frameSize)
         std::string px_y = "px_y" + std::to_string(i);
         if (reader.HasValue("points", lat) && reader.HasValue("points", lon) && reader.HasValue("points", px_x) && reader.HasValue("points", px_y))
         {
+            const double pxX = reader.GetReal("points", px_x, 0);
+            const double pxY = reader.GetReal("points", px_y, 0);
+            // The coordinates are normalized to the frame size: reject the
+            // bindings outside of the frame instead of accepting them silently.
+            if (pxX < 0.0 || pxX > 1.0 || pxY < 0.0 || pxY > 1.0)
+            {
+                m_logger->critical("GeoBindFile {0}: point {1} is outside of the frame: px = ({2:.4}, {3:.4})",
+                    m_geoBindFile, i, pxX, pxY);
+                continue;
+            }
             geoPoints.emplace_back(reader.GetReal("points", lat, 0), reader.GetReal("points", lon, 0));
-            framePoints.emplace_back(cvRound(reader.GetReal("points", px_x, 0) * frameSize.width), cvRound(reader.GetReal("points", px_y, 0) * frameSize.height));
+            framePoints.emplace_back(cvRound(pxX * frameSize.width), cvRound(pxY * frameSize.height));
         }
         else
         {

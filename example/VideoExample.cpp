@@ -153,6 +153,10 @@ void VideoExample::SyncProcess()
 
     int64 startLoopTime = cv::getTickCount();
 
+    // The Esc key stops the whole processing loop (roadmap H13): without the
+    // flag the break in the draw loop below would end only the current batch.
+    bool stopProcessing = false;
+
     //double fps = capture.get(cv::CAP_PROP_FPS);
     //double readPeriodSeconds = 2.;
     //int readPeriodFrames = cvRound(readPeriodSeconds * fps);
@@ -227,7 +231,10 @@ void VideoExample::SyncProcess()
 			int waitTime = manualMode ? 0 : 1;// std::max<int>(1, cvRound(1000 / m_fps - currTime));
 			int k = cv::waitKey(waitTime);
 			if (k == 27)
+			{
+				stopProcessing = true;
 				break;
+			}
 			else if (k == 'm' || k == 'M')
 				manualMode = !manualMode;
 #else
@@ -236,6 +243,8 @@ void VideoExample::SyncProcess()
 
 			WriteFrame(writer, frameInfo.m_frames[i].GetMatBGR());
 		}
+		if (stopProcessing)
+			break;
         if (framesCounter % 100 == 0)
             m_resultsLog.Flush();
     }
@@ -271,7 +280,10 @@ void VideoExample::AsyncProcess()
     int64 allTime = 0;
     int64 startLoopTime = cv::getTickCount();
     size_t processCounter = 0;
-    for (; !stopCapture.load(); )
+    // The Esc key stops the processing loop (roadmap H13); the flag makes the
+    // exit independent of the batch-loop break below.
+    bool stopProcessing = false;
+    for (; !stopCapture.load() && !stopProcessing; )
     {
         FrameInfo& frameInfo = m_frameInfo[processCounter % 2];
         m_logger->debug("--- waiting tracking from {0} ind = {1}", processCounter % 2, processCounter);
@@ -306,7 +318,9 @@ void VideoExample::AsyncProcess()
 
         m_logger->debug("--- Frame {0}: td = {1}, tt = {2}", frameInfo.m_frameInds[0], 1000 * frameInfo.m_dt / freq, 1000 * (t2 - t1) / freq);
 
+#ifndef SILENT_WORK
 		int key = 0;
+#endif
 		for (size_t i = 0; i < m_batchSize; ++i)
 		{
 			DrawData(frameInfo.m_frames[i].GetMatBGR(), frameInfo.m_tracks[i], frameInfo.m_frameInds[i], currTime);
@@ -318,6 +332,11 @@ void VideoExample::AsyncProcess()
 
 			int waitTime = manualMode ? 0 : 1;// std::max<int>(1, cvRound(1000 / m_fps - currTime));
 			key = cv::waitKey(waitTime);
+			if (key == 27)
+			{
+				stopProcessing = true;
+				break;
+			}
 			if (key == 'm' || key == 'M')
 				manualMode = !manualMode;
 			else
@@ -334,9 +353,6 @@ void VideoExample::AsyncProcess()
             frameInfo.m_captured = false;
         }
         frameInfo.m_cond.notify_one();
-
-        if (key == 27)
-            break;
 
         ++processCounter;
 

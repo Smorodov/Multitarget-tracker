@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cmath>
+#include <mutex>
 #include <unordered_set>
 #include "VideoExample.h"
 
@@ -297,6 +298,110 @@ inline cv::Matx<double, 3, 3> ToMatx(const cv::Mat& m)
 }
 
 ///
+/// \brief The minimal positive homogeneous coordinate w for a valid projection.
+///
+constexpr double kMinHomogeneousW = 1e-9;
+
+///
+/// \brief Check that the homogeneous coordinate of a projected point can be used
+/// as the divisor: zero gives inf/nan, a negative one is a point behind the
+/// plane (mirrored garbage coordinates).
+///
+inline bool ValidHomogeneousW(double w)
+{
+	return w > kMinHomogeneousW;
+}
+
+///
+/// \brief Normalize the homography so that the homogeneous coordinate w is 1
+/// at the given point of its source plane.
+///
+/// After the DLT solve (H /= h33) the sign and the scale of the homogeneous
+/// part are arbitrary, while the projection x' = (H*x)/w is invariant to such
+/// a scaling. Without the normalization the w > 0 checks in Pix2Ground /
+/// Ground2Pix could reject perfectly valid points only because of a negative
+/// overall scale. The scaling is element-wise (cv::Matx does not overload
+/// operator* by a scalar in all OpenCV versions).
+/// \return false if w at the given point is nearly zero.
+///
+inline bool NormalizeHomographyW(cv::Matx<double, 3, 3>& H, const cv::Point2d& at)
+{
+	const cv::Vec<double, 3> p = H * cv::Vec<double, 3>(at.x, at.y, 1.0);
+	if (std::abs(p[2]) < kMinHomogeneousW)
+		return false;
+	const double s = 1.0 / p[2];
+	for (int r = 0; r < 3; ++r)
+	{
+		for (int c = 0; c < 3; ++c)
+			H(r, c) *= s;
+	}
+	return true;
+}
+
+///
+/// \brief Check that the point cloud is not degenerate: no duplicated points
+/// and no 3 points on one line.
+///
+/// An exactly collinear cloud is mapped by the DLT with a zero reprojection
+/// error, but the resulting homography is meaningless outside the line, so an
+/// explicit check is needed in addition to the reprojection error test.
+/// \param pts - points (pixels or meters)
+/// \param what - cloud name for the error messages
+///
+inline bool CheckPointsNotDegenerate(const std::vector<cv::Point2d>& pts, const char* what)
+{
+	// Diagonal of the cloud for the relative thresholds.
+	double diag = 0.0;
+	for (size_t i = 0; i < pts.size(); ++i)
+	{
+		for (size_t j = i + 1; j < pts.size(); ++j)
+			diag = std::max(diag, cv::norm(pts[j] - pts[i]));
+	}
+
+	const double minDist = 1e-6 * diag;
+	for (size_t i = 0; i < pts.size(); ++i)
+	{
+		for (size_t j = i + 1; j < pts.size(); ++j)
+		{
+			if (cv::norm(pts[j] - pts[i]) < minDist)
+			{
+				std::cerr << "CheckPointsNotDegenerate: " << what << " duplicated points: "
+					<< pts[i] << " and " << pts[j] << std::endl;
+				return false;
+			}
+		}
+	}
+
+	// Note the threshold: the points exactly on one line give a zero triangle
+	// area, but the points derived from real geo coordinates through the
+	// ellipsoid ToLocal are never exactly collinear (the curvature adds a
+	// relative deviation of the order of the angular step, about 2e-6 of the
+	// cloud diagonal per 0.001 deg step). 1e-5 * diag^2 still passes real
+	// bindings (a lateral GPS jitter of 2 m over a 100 m span gives an area
+	// of about 1e-2 * diag^2) and rejects the degenerate ones.
+	const double minArea = 1e-5 * diag * diag;
+	for (size_t i = 0; i + 2 < pts.size(); ++i)
+	{
+		for (size_t j = i + 1; j + 1 < pts.size(); ++j)
+		{
+			for (size_t k = j + 1; k < pts.size(); ++k)
+			{
+				const cv::Point2d d1 = pts[j] - pts[i];
+				const cv::Point2d d2 = pts[k] - pts[i];
+				if (std::abs(d1.x * d2.y - d1.y * d2.x) < minArea)
+				{
+					std::cerr << "CheckPointsNotDegenerate: " << what << " collinear points: "
+						<< pts[i] << ", " << pts[j] << ", " << pts[k] << std::endl;
+					return false;
+				}
+			}
+		}
+	}
+
+	return true;
+}
+
+///
 /// \brief The GeoParams class
 ///
 template<typename T>
@@ -357,6 +462,15 @@ public:
 		std::cout << std::endl;
 #endif
 
+		// Reject the degenerate bindings: duplicated or collinear points give a
+		// formally valid but meaningless homography.
+		if (!CheckPointsNotDegenerate(tmpPix, "frame points") ||
+			!CheckPointsNotDegenerate(tmpGround, "ground points"))
+		{
+			m_valid = false;
+			return false;
+		}
+
 		// The perspective transforms are estimated in the metric coordinates (meters)
 		const cv::Mat toGround = GetPerspectiveTransform(tmpPix, tmpGround);
 		const cv::Mat toPix = GetPerspectiveTransform(tmpGround, tmpPix);
@@ -368,6 +482,58 @@ public:
 		}
 		m_toGround = ToMatx(toGround);
 		m_toPix = ToMatx(toPix);
+
+		// Make the homogeneous coordinate w equal to 1 at the scene centroids:
+		// a projectively invariant normalization, without it the w > 0 checks
+		// below would reject valid points because of an arbitrary sign/scale
+		// of the solved homography. A centroid on the horizon line means a
+		// degenerate binding anyway.
+		cv::Point2d meanPix(0.0, 0.0), meanGround(0.0, 0.0);
+		for (size_t i = 0; i < tmpPix.size(); ++i)
+		{
+			meanPix += tmpPix[i];
+			meanGround += tmpGround[i];
+		}
+		meanPix *= 1.0 / static_cast<double>(tmpPix.size());
+		meanGround *= 1.0 / static_cast<double>(tmpGround.size());
+		if (!NormalizeHomographyW(m_toGround, meanPix) || !NormalizeHomographyW(m_toPix, meanGround))
+		{
+			std::cerr << "SetKeyPoints: the scene centroid is on the horizon line" << std::endl;
+			m_valid = false;
+			return false;
+		}
+
+		// Reprojection error check: a homography over a bad point configuration
+		// must not pass silently. Thresholds are relative to the point clouds
+		// (an exact 4-point solution gives an error of about 1e-10).
+		double diagPix = 0.0, diagGround = 0.0;
+		for (size_t i = 0; i < tmpPix.size(); ++i)
+		{
+			for (size_t j = i + 1; j < tmpPix.size(); ++j)
+			{
+				diagPix = std::max(diagPix, cv::norm(tmpPix[j] - tmpPix[i]));
+				diagGround = std::max(diagGround, cv::norm(tmpGround[j] - tmpGround[i]));
+			}
+		}
+		const double maxPixError = std::max(1.0, 0.01 * diagPix);
+		const double maxGroundError = std::max(0.1, 0.01 * diagGround);
+		for (size_t i = 0; i < tmpPix.size(); ++i)
+		{
+			cv::Point2d ground;
+			cv::Point pix;
+			const bool groundOk = Pix2Ground(cv::Point(tmpPix[i].x, tmpPix[i].y), ground) &&
+				cv::norm(ground - tmpGround[i]) <= maxGroundError;
+			const bool pixOk = Ground2Pix(tmpGround[i], pix) &&
+				cv::norm(cv::Point2d(pix.x, pix.y) - tmpPix[i]) <= maxPixError;
+			if (!groundOk || !pixOk)
+			{
+				std::cerr << "SetKeyPoints: reprojection error is too big for the point "
+					<< i << ": pixel " << tmpPix[i] << ", ground " << tmpGround[i] << std::endl;
+				m_valid = false;
+				return false;
+			}
+		}
+
 		std::cout << "To Ground: " << m_toGround << std::endl;
 		std::cout << "To Pix: " << m_toPix << std::endl;
 
@@ -388,25 +554,37 @@ public:
         if (!m_map.empty())
             m_p2mParams.Init(m_mapGeoCorners, m_map.cols, m_map.rows, m_plane);
 
-        return !m_map.empty();
+        // The map is usable only together with a valid ground -> map transform.
+        return !m_map.empty() && m_p2mParams.Valid();
     }
 
 	///
 	/// \brief Convert the local plane coordinates (East, North) to the frame pixels.
-	cv::Point Ground2Pix(const cv::Point2d& ground) const
+	/// \return false for a point projected behind the frame plane.
+	///
+	bool Ground2Pix(const cv::Point2d& ground, cv::Point& pix) const
 	{
 		cv::Vec<double, 3> g(ground.x, ground.y, 1.0);
 		const cv::Vec<double, 3> p = m_toPix * g;
-		return cv::Point(cvRound(p[0] / p[2]), cvRound(p[1] / p[2]));
+		if (!ValidHomogeneousW(p[2]))
+			return false;
+		pix = cv::Point(cvRound(p[0] / p[2]), cvRound(p[1] / p[2]));
+		return true;
 	}
 
 	///
 	/// \brief Convert the frame pixels to the local plane coordinates (East, North) in meters.
-	cv::Point2d Pix2Ground(const cv::Point& pix) const
+	/// \return false for the pixels on the horizon line or above it: the point is
+	/// behind the ground plane, the division gives inf/nan or mirrored garbage.
+	///
+	bool Pix2Ground(const cv::Point& pix, cv::Point2d& ground) const
 	{
 		cv::Vec<double, 3> p(static_cast<double>(pix.x), static_cast<double>(pix.y), 1.0);
 		const cv::Vec<double, 3> g = m_toGround * p;
-		return cv::Point2d(g[0] / g[2], g[1] / g[2]);
+		if (!ValidHomogeneousW(g[2]))
+			return false;
+		ground = cv::Point2d(g[0] / g[2], g[1] / g[2]);
+		return true;
 	}
 
 	///
@@ -431,7 +609,7 @@ public:
     ///
     cv::Mat DrawTracksOnMap(const std::vector<TrackingObject>& tracks)
     {
-        if (m_map.empty())
+        if (m_map.empty() || !m_p2mParams.Valid())
             return cv::Mat();
 
         cv::Mat map = m_map.clone();
@@ -441,10 +619,13 @@ public:
         for (size_t i = 0; i < m_geoPoints.size(); ++i)
         {
             const cv::Point_<T>& g1 = m_groundPoints[i % m_groundPoints.size()];
-            const cv::Point p1 = m_p2mParams.Ground2Pix(cv::Point2d(g1.x, g1.y));
-
             const cv::Point_<T>& g2 = m_groundPoints[(i + 1) % m_groundPoints.size()];
-            const cv::Point p2 = m_p2mParams.Ground2Pix(cv::Point2d(g2.x, g2.y));
+            cv::Point p1, p2;
+            if (!m_p2mParams.Ground2Pix(cv::Point2d(g1.x, g1.y), p1) ||
+                !m_p2mParams.Ground2Pix(cv::Point2d(g2.x, g2.y), p2))
+            {
+                continue;
+            }
 
             cv::line(map, p1, p2, cv::Scalar(255, 255, 255), 2, cv::LINE_AA);
 
@@ -464,8 +645,10 @@ public:
         {
             if (track.m_lastRobust)
             {
-                const cv::Point2d ground = Pix2Ground(track.m_rrect.center);
-                const cv::Point center = m_p2mParams.Ground2Pix(ground);
+                cv::Point2d ground;
+                cv::Point center;
+                if (!Pix2Ground(track.m_rrect.center, ground) || !m_p2mParams.Ground2Pix(ground, center))
+                    continue;
                 //std::cout << "Convert: " << track.m_rrect.center << " -> " << ground << " -> " << center << std::endl;
                 if (center.x > 0 && center.x < map.cols && center.y > 0 && center.y < map.rows)
                     cv::ellipse(map, center, cv::Size(5, 5), 0, 0, 360, cv::Scalar(255, 0, 255), cv::FILLED, 8);
@@ -491,21 +674,39 @@ private:
     std::vector<cv::Point_<T>> m_mapGeoCorners;
 
     ///
+    /// \brief Frame ground plane (meters) -> map image pixels transform.
+    ///
     struct Pix2MapParams
     {
         cv::Matx<double, 3, 3> m_toPix;
+        bool m_valid = false;
 
         ///
-        cv::Point Ground2Pix(const cv::Point2d& ground) const
+        bool Valid() const
         {
+            return m_valid;
+        }
+
+        ///
+        bool Ground2Pix(const cv::Point2d& ground, cv::Point& pix) const
+        {
+            if (!m_valid)
+                return false;
+
             cv::Vec<double, 3> g(ground.x, ground.y, 1.0);
             const cv::Vec<double, 3> p = m_toPix * g;
-            return cv::Point(cvRound(p[0] / p[2]), cvRound(p[1] / p[2]));
+            if (!ValidHomogeneousW(p[2]))
+                return false;
+
+            pix = cv::Point(cvRound(p[0] / p[2]), cvRound(p[1] / p[2]));
+            return true;
         }
 
         ///
         void Init(const std::vector<cv::Point_<T>>& geoCorners, int mapWidth, int mapHeight, const LocalPlane& plane)
         {
+            m_valid = false;
+
             std::vector<cv::Point2d> groundCorners;
             groundCorners.reserve(geoCorners.size());
             for (const auto& c : geoCorners)
@@ -513,11 +714,28 @@ private:
                 const cv::Point2d g = plane.ToLocal(static_cast<double>(c.x), static_cast<double>(c.y));
                 groundCorners.push_back(g);
             }
+
+            // Duplicated or collinear map corners give a degenerate transform.
+            if (!CheckPointsNotDegenerate(groundCorners, "map ground corners"))
+                return;
+
             const std::vector<cv::Point2d> frameCorners { cv::Point2d(0.0, 0.0), cv::Point2d(static_cast<double>(mapWidth), 0.0),
                                                           cv::Point2d(static_cast<double>(mapWidth), static_cast<double>(mapHeight)), cv::Point2d(0.0, static_cast<double>(mapHeight)) };
             const cv::Mat toPix = GetPerspectiveTransform(groundCorners, frameCorners);
-            if (!toPix.empty())
-                m_toPix = ToMatx(toPix);
+            if (toPix.empty())
+                return;
+
+            m_toPix = ToMatx(toPix);
+
+            // w = 1 at the centroid of the ground corners: see NormalizeHomographyW.
+            cv::Point2d meanGround(0.0, 0.0);
+            for (const auto& g : groundCorners)
+                meanGround += g;
+            meanGround *= 1.0 / static_cast<double>(groundCorners.size());
+            if (!NormalizeHomographyW(m_toPix, meanGround))
+                return;
+
+            m_valid = true;
         }
     };
     Pix2MapParams m_p2mParams;
@@ -604,28 +822,28 @@ public:
             if ((m_pt1.x <= m_pt2.x) && (m_pt1.y > m_pt2.y))
             {
                 pt.x = (m_pt1.x + m_pt2.x) / 2.f - 0.01f;
-                pt.y = (m_pt1.y + m_pt1.y) / 2.f - 0.01f;
+                pt.y = (m_pt1.y + m_pt2.y) / 2.f - 0.01f;
             }
             else
             {
                 if ((m_pt1.x <= m_pt2.x) && (m_pt1.y <= m_pt2.y))
                 {
                     pt.x = (m_pt1.x + m_pt2.x) / 2.f + 0.01f;
-                    pt.y = (m_pt1.y + m_pt1.y) / 2.f - 0.01f;
+                    pt.y = (m_pt1.y + m_pt2.y) / 2.f - 0.01f;
                 }
                 else
                 {
                     if ((m_pt1.x > m_pt2.x) && (m_pt1.y > m_pt2.y))
                     {
                         pt.x = (m_pt1.x + m_pt2.x) / 2.f - 0.01f;
-                        pt.y = (m_pt1.y + m_pt1.y) / 2.f + 0.01f;
+                        pt.y = (m_pt1.y + m_pt2.y) / 2.f + 0.01f;
                     }
                     else
                     {
                         if ((m_pt1.x > m_pt2.x) && (m_pt1.y <= m_pt2.y))
                         {
                             pt.x = (m_pt1.x + m_pt2.x) / 2.f + 0.01f;
-                            pt.y = (m_pt1.y + m_pt1.y) / 2.f + 0.01f;
+                            pt.y = (m_pt1.y + m_pt2.y) / 2.f + 0.01f;
                         }
                     }
                 }
@@ -647,6 +865,12 @@ public:
 
 private:
 
+#ifdef H12_TEST_ACCESS
+    // Test-only hook: build/h12_test checks the degenerate geometry of
+    // CheckIntersection directly (roadmap H12).
+    friend class H12Test;
+#endif
+
     std::unordered_set<track_id_t> m_lastIntersections;
 
     ///
@@ -658,6 +882,11 @@ private:
     bool CheckIntersection(cv::Point2f pt1, cv::Point2f pt2) const
     {
         const float eps = 0.00001f; // Epsilon for equal comparing
+
+        auto InRange = [](float val, float minVal, float  maxVal) -> bool
+        {
+            return (val >= minVal) && (val <= maxVal);
+        };
 
         // First line equation
         float a1 = 0;
@@ -689,18 +918,24 @@ private:
             b2 = (pt2.x * pt1.y - pt1.x * pt2.y) / (pt2.x - pt1.x);
         }
 
-        // Intersection coords
-        cv::Point2f intersectPt;
+        if (trivial1 && trivial2)
+        {
+            // Both lines are vertical: there is no unique intersection point,
+            // so the InRange check of the point does not apply. The segments
+            // meet only if they lie on the same vertical line and their
+            // y-ranges overlap.
+            return (fabs(m_pt1.x - pt1.x) < eps) &&
+                (std::min(m_pt1.y, m_pt2.y) - eps <= std::max(pt1.y, pt2.y) + eps) &&
+                (std::min(pt1.y, pt2.y) - eps <= std::max(m_pt1.y, m_pt2.y) + eps);
+        }
 
-        bool isIntersect = true;
+        // Intersection coords (initialized: the reads of the uninitialized
+        // value below were undefined behavior)
+        cv::Point2f intersectPt(0.f, 0.f);
+
         if (trivial1)
         {
-            if (trivial2)
-                isIntersect = (fabs(m_pt1.x - pt1.x) < eps);
-            else
-                intersectPt.x = m_pt1.x;
-
-            intersectPt.y = a2 * intersectPt.x + b2;
+            intersectPt.x = m_pt1.x;
         }
         else
         {
@@ -713,23 +948,25 @@ private:
                 if (fabs(a2 - a1) > eps)
                     intersectPt.x = (b1 - b2) / (a2 - a1);
                 else
-                    isIntersect = false;
+                {
+                    // Parallel or coincident non-vertical lines: no unique
+                    // intersection point, conservatively no crossing (a
+                    // collinear overlap is not resolved either).
+                    return false;
+                }
             }
+        }
+
+        if (trivial1)
+            intersectPt.y = a2 * intersectPt.x + b2;
+        else
             intersectPt.y = a1 * intersectPt.x + b1;
-        }
 
-        if (isIntersect)
-        {
-            auto InRange = [](float val, float minVal, float  maxVal) -> bool
-            {
-                return (val >= minVal) && (val <= maxVal);
-            };
-
-            isIntersect = InRange(intersectPt.x, std::min(m_pt1.x, m_pt2.x) - eps, std::max(m_pt1.x, m_pt2.x) + eps) &&
-                    InRange(intersectPt.x, std::min(pt1.x, pt2.x) - eps, std::max(pt1.x, pt2.x) + eps) &&
-                    InRange(intersectPt.y, std::min(m_pt1.y, m_pt2.y) - eps, std::max(m_pt1.y, m_pt2.y) + eps) &&
-                    InRange(intersectPt.y, std::min(pt1.y, pt2.y) - eps, std::max(pt1.y, pt2.y) + eps);
-        }
+        const bool isIntersect =
+                InRange(intersectPt.x, std::min(m_pt1.x, m_pt2.x) - eps, std::max(m_pt1.x, m_pt2.x) + eps) &&
+                InRange(intersectPt.x, std::min(pt1.x, pt2.x) - eps, std::max(pt1.x, pt2.x) + eps) &&
+                InRange(intersectPt.y, std::min(m_pt1.y, m_pt2.y) - eps, std::max(m_pt1.y, m_pt2.y) + eps) &&
+                InRange(intersectPt.y, std::min(pt1.y, pt2.y) - eps, std::max(pt1.y, pt2.y) + eps);
 
         return isIntersect;
     }
@@ -750,6 +987,12 @@ public:
 
 private:
 
+#ifdef H10_TEST_ACCESS
+	// Test-only hook: build/h10_test checks that InitTracker really uses the
+	// [tracking] settings parsed from the ini file (roadmap H10).
+	friend class H10Test;
+#endif
+
 	bool m_drawHeatMap = false;
 
     bool InitDetector(cv::UMat frame) override;
@@ -763,10 +1006,14 @@ private:
     std::deque<RoadLine> m_lines;
     void CheckLinesIntersection(const TrackingObject& track, float xMax, float yMax);
 
-	// Binding frame coordinates to geographical coordinates
+	// Binding frame coordinates to geographical coordinates.
+	// std::call_once: ReadGeobindings may be called by Detection() from the
+	// capture thread (async mode) or by InitTracker() from the main thread,
+	// whichever comes first; the other one blocks until it is done, so
+	// m_geoParams is never initialized twice or read while being written.
 	GeoParams<double> m_geoParams;
 	std::string m_geoBindFile;
-	bool m_geoBindingsRead = false;
+	std::once_flag m_geoBindingsOnce;
 	bool ReadGeobindings(cv::Size frameSize);
 
 	// Heat map for visualization long term detections

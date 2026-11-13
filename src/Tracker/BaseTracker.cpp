@@ -416,19 +416,19 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
             if (regionEmbeddings.empty())
                 m_tracks[i]->Update(regions[assignmentT2R[i]],
                         true, m_settings.m_maxTraceLength,
-                        m_prevFrame, currFrame,
+                        currFrame,
                         m_settings.m_useAbandonedDetection ? m_settings.m_minStaticTime : 0, m_settings.m_maxSpeedForStatic,
                         frameTime);
             else
                 m_tracks[i]->Update(regions[assignmentT2R[i]], regionEmbeddings[assignmentT2R[i]],
                         true, m_settings.m_maxTraceLength,
-                        m_prevFrame, currFrame,
+                        currFrame,
                         m_settings.m_useAbandonedDetection ? m_settings.m_minStaticTime : 0, m_settings.m_maxSpeedForStatic,
                         frameTime);
         }
         else				     // if not continue using predictions
         {
-            m_tracks[i]->Update(CRegion(), false, m_settings.m_maxTraceLength, m_prevFrame, currFrame, 0, m_settings.m_maxSpeedForStatic, frameTime);
+            m_tracks[i]->Update(CRegion(), false, m_settings.m_maxTraceLength, currFrame, 0, m_settings.m_maxSpeedForStatic, frameTime);
         }
     }
 

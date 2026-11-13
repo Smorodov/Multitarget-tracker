@@ -136,6 +136,13 @@ public:
     }
 
 private:
+
+#ifdef H14_TEST_ACCESS
+    // Test-only hook: build/h14_test checks the thread guards of the UMat
+    // caches (roadmap H14).
+    friend class H14Test;
+#endif
+
     cv::Mat m_mBGR;
     cv::Mat m_mGray;
     cv::UMat m_umBGR;

@@ -1,5 +1,6 @@
 #include "track.h"
 
+#include <algorithm>
 #include <chrono>
 #include <cmath>
 
@@ -278,16 +279,14 @@ std::pair<track_t, bool> CTrack::CalcCosine(const RegionEmbedding& embedding) co
 /// \param region
 /// \param dataCorrect
 /// \param maxTraceLength
-/// \param prevFrame
 /// \param currFrame
 /// \param trajLen
 ///
 void CTrack::Update(const CRegion& region,
                     bool dataCorrect,
                     double maxTraceLength,
-                    cv::UMat prevFrame,
                     cv::UMat currFrame,
-                    int trajLen, int maxSpeedForStatic,
+                    double minStaticTime, int maxSpeedForStatic,
                     time_point_t currTime)
 {
 	//std::cout << "CTrack::Update: dataCorrect = " << dataCorrect << ", m_predictionRect: " << m_predictionRect.center << ", " << m_predictionRect.angle << ", " << m_predictionRect.size << std::endl;
@@ -324,10 +323,10 @@ void CTrack::Update(const CRegion& region,
 		PointUpdate(region.m_rrect.center, region.m_rrect.size, region.m_rrect.angle, dataCorrect, currFrame.size());
 		break;
 	case tracking::FilterGoal::FilterRect:
-		RectUpdate(region, dataCorrect, prevFrame, currFrame);
+		RectUpdate(region, dataCorrect, currFrame);
 		break;
 	case tracking::FilterGoal::FilterRRect:
-		RectUpdate(region, dataCorrect, prevFrame, currFrame);
+		RectUpdate(region, dataCorrect, currFrame);
 		break;
 	};    
 
@@ -339,14 +338,16 @@ void CTrack::Update(const CRegion& region,
         AddMetricPoint(region, currTime);
         m_trace.push_back(m_predictionPoint, region.m_rrect.center, currTime);
 
-        CheckStatic(trajLen, currFrame, region, maxSpeedForStatic, currTime);
+        CheckStatic(minStaticTime, currFrame, region, maxSpeedForStatic, currTime);
     }
     else
     {
         m_trace.push_back(m_predictionPoint, currTime);
     }
 
-    TrimTrace(maxTraceLength, currTime);
+    // Keep enough history for the static-detection window even when the
+    // configured trace is shorter (defaults: 2 s trace vs 5 s static time).
+    TrimTrace(std::max(maxTraceLength, minStaticTime), currTime);
 }
 
 ///
@@ -355,7 +356,6 @@ void CTrack::Update(const CRegion& region,
 /// \param regionEmbedding
 /// \param dataCorrect
 /// \param maxTraceLength
-/// \param prevFrame
 /// \param currFrame
 /// \param trajLen
 ///
@@ -363,9 +363,8 @@ void CTrack::Update(const CRegion& region,
                     const RegionEmbedding& regionEmbedding,
                     bool dataCorrect,
                     double maxTraceLength,
-                    cv::UMat prevFrame,
                     cv::UMat currFrame,
-                    int trajLen, int maxSpeedForStatic,
+                    double minStaticTime, int maxSpeedForStatic,
                     time_point_t currTime)
 {
     m_regionEmbedding = regionEmbedding;
@@ -376,10 +375,10 @@ void CTrack::Update(const CRegion& region,
 		PointUpdate(region.m_rrect.center, region.m_rrect.size, region.m_rrect.angle, dataCorrect, currFrame.size());
 		break;
 	case tracking::FilterGoal::FilterRect:
-		RectUpdate(region, dataCorrect, prevFrame, currFrame);
+		RectUpdate(region, dataCorrect, currFrame);
 		break;
 	case tracking::FilterGoal::FilterRRect:
-		RectUpdate(region, dataCorrect, prevFrame, currFrame);
+		RectUpdate(region, dataCorrect, currFrame);
 		break;
 	};
 
@@ -391,14 +390,16 @@ void CTrack::Update(const CRegion& region,
         AddMetricPoint(region, currTime);
         m_trace.push_back(m_predictionPoint, m_lastRegion.m_rrect.center, currTime);
 
-        CheckStatic(trajLen, currFrame, region, maxSpeedForStatic, currTime);
+        CheckStatic(minStaticTime, currFrame, region, maxSpeedForStatic, currTime);
     }
     else
     {
         m_trace.push_back(m_predictionPoint, currTime);
     }
 
-    TrimTrace(maxTraceLength, currTime);
+    // Keep enough history for the static-detection window even when the
+    // configured trace is shorter (defaults: 2 s trace vs 5 s static time).
+    TrimTrace(std::max(maxTraceLength, minStaticTime), currTime);
 }
 
 ///
@@ -557,71 +558,94 @@ track_t CTrack::HeightDist(const CRegion& reg) const
 
 ///
 /// \brief CTrack::CheckStatic
-/// \param trajLen
+/// \param minStaticTime: window length in seconds
+/// \param currFrame
+/// \param region
+/// \param maxSpeedForStatic
+/// \param currTime
 /// \return
 ///
-bool CTrack::CheckStatic(int trajLen, cv::UMat currFrame, const CRegion& region, int maxSpeedForStatic, time_point_t currTime)
+bool CTrack::CheckStatic(double minStaticTime, cv::UMat currFrame, const CRegion& region, int maxSpeedForStatic, time_point_t currTime)
 {
-    if (!trajLen || static_cast<int>(m_trace.size()) < trajLen)
+    (void)currFrame; // used only by the disabled debug block below
+
+    if (minStaticTime <= 0.0 || m_trace.size() == 0 ||
+        std::chrono::duration<double>(currTime - m_trace.at(0).m_frameTime).count() < minStaticTime)
+    {
+        // Abandoned detection is disabled, or the trajectory history is
+        // shorter than the requested static window (cold start, or the track
+        // was lost for a while) - the static state cannot be confirmed.
+        m_isStatic = false;
+        m_staticStartTime = currTime;
+        m_staticFrame = cv::UMat();
+        return m_isStatic;
+    }
+
+    // The oldest point inside the window [currTime - minStaticTime; currTime].
+    size_t startIdx = 0;
+    while (startIdx + 1 < m_trace.size() &&
+           std::chrono::duration<double>(currTime - m_trace.at(startIdx).m_frameTime).count() > minStaticTime)
+    {
+        ++startIdx;
+    }
+
+    // Metric speed gate: an object known to move faster than
+    // maxSpeedForStatic (m/s in the local ENU plane) is not static. Unknown
+    // speed (-1, no metric data) does not block the static detection,
+    // otherwise abandoned detection would be impossible without calibration.
+    const double speedMps = CalcSpeedMps(currTime);
+    const bool speedOk = (speedMps < 0.0) || (speedMps <= maxSpeedForStatic);
+
+    bool inCenter = true;
+    cv::Rect centerROI(cvRound(m_trace.at(startIdx).m_prediction.x) - region.m_brect.width / 2,
+                       cvRound(m_trace.at(startIdx).m_prediction.y) - region.m_brect.height / 2, region.m_brect.width, region.m_brect.height);
+    for (size_t i = startIdx; i < m_trace.size() - 1; ++i)
+    {
+        if (!centerROI.contains(m_trace[i]))
+        {
+            inCenter = false;
+            break;
+        }
+    }
+
+    if (inCenter && speedOk)
+    {
+#if 0
+#ifndef SILENT_WORK
+        auto velocity = m_kalman.GetVelocity();
+        const track_t speed = sqrt(sqr(velocity[0]) + sqr(velocity[1]));
+        m_staticFrame = currFrame.clone();
+        m_staticRect = region.m_brect;
+        cv::namedWindow("m_staticFrame", cv::WINDOW_NORMAL);
+        cv::Mat img = m_staticFrame.getMat(cv::ACCESS_READ).clone();
+        cv::rectangle(img, m_staticRect, cv::Scalar(255, 0, 255), 1);
+        for (size_t i = startIdx; i < m_trace.size() - 1; ++i)
+        {
+            cv::line(img, m_trace[i], m_trace[i + 1], cv::Scalar(0, 0, 0), 1, cv::LINE_8);
+        }
+        std::string label = "(" + std::to_string(velocity[0]) + ", "  + std::to_string(velocity[1]) + ") = " + std::to_string(speed) + " px/s, " + std::to_string(speedMps) + " m/s";
+        Point_t p0 = m_trace[startIdx];
+        cv::line(img,
+                 cv::Point(cvRound(p0.x), cvRound(p0.y)),
+                 cv::Point(cvRound(velocity[0] * static_cast<track_t>(m_trace.size() - 1 - startIdx) + p0.x), cvRound(velocity[1] * static_cast<track_t>(m_trace.size() - 1 - startIdx) + p0.y)),
+                 cv::Scalar(0, 0, 0), 1, cv::LINE_8);
+        cv::putText(img, label, m_staticRect.tl(), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 0, 0));
+        cv::imshow("m_staticFrame", img);
+        std::cout << "m_staticRect = " << m_staticRect << std::endl;
+        cv::waitKey(1);
+#endif
+#endif
+
+        if (!m_isStatic)
+            m_staticStartTime = currTime;
+
+        m_isStatic = true;
+    }
+    else
     {
         m_isStatic = false;
         m_staticStartTime = currTime;
         m_staticFrame = cv::UMat();
-    }
-    else
-    {
-        auto velocity = m_kalman.GetVelocity();
-        track_t speed = sqrt(sqr(velocity[0]) + sqr(velocity[1]));
-        
-        bool inCenter = true;
-        cv::Rect centerROI(cvRound(m_trace[m_trace.size() - trajLen].x) - region.m_brect.width / 2,
-                           cvRound(m_trace[m_trace.size() - trajLen].y) - region.m_brect.height / 2, region.m_brect.width, region.m_brect.height);
-        for (size_t i = m_trace.size() - trajLen; i < m_trace.size() - 1; ++i)
-        {
-            if (!centerROI.contains(m_trace[i]))
-            {
-                inCenter = false;
-                break;
-            }
-        }
-        
-        if (inCenter/*speed < maxSpeedForStatic*/)
-        {
-            if (!m_isStatic)
-            {
-                m_staticFrame = currFrame.clone();
-                m_staticRect = region.m_brect;
-#if 0
-#ifndef SILENT_WORK
-                cv::namedWindow("m_staticFrame", cv::WINDOW_NORMAL);
-                cv::Mat img = m_staticFrame.getMat(cv::ACCESS_READ).clone();
-                cv::rectangle(img, m_staticRect, cv::Scalar(255, 0, 255), 1);
-                for (size_t i = m_trace.size() - trajLen; i < m_trace.size() - 1; ++i)
-                {
-                    cv::line(img, m_trace[i], m_trace[i + 1], cv::Scalar(0, 0, 0), 1, cv::LINE_8);
-                }
-                std::string label = "(" + std::to_string(velocity[0]) + ", "  + std::to_string(velocity[1]) + ") = " + std::to_string(speed);
-				Point_t p0 = m_trace[m_trace.size() - trajLen];
-				cv::line(img,
-                         cv::Point(cvRound(p0.x), cvRound(p0.y)),
-                         cv::Point(cvRound(velocity[0] * trajLen + p0.x), cvRound(velocity[1] * trajLen + p0.y)),
-                         cv::Scalar(0, 0, 0), 1, cv::LINE_8);
-                cv::putText(img, label, m_staticRect.tl(), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 0, 0));
-                cv::imshow("m_staticFrame", img);
-                std::cout << "m_staticRect = " << m_staticRect << std::endl;
-                cv::waitKey(1);
-#endif
-#endif
-            }
-
-            m_isStatic = true;
-        }
-        else
-        {
-            m_isStatic = false;
-            m_staticStartTime = currTime;
-            m_staticFrame = cv::UMat();
-        }
     }
     return m_isStatic;
 }
@@ -819,12 +843,10 @@ void CTrack::KalmanPredictPoint()
 /// \brief RectUpdate
 /// \param region
 /// \param dataCorrect
-/// \param prevFrame
 /// \param currFrame
 ///
 void CTrack::RectUpdate(const CRegion& region,
                         bool dataCorrect,
-                        cv::UMat prevFrame,
                         cv::UMat currFrame)
 {
     bool wasTracked = false;
