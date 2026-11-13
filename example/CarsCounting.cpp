@@ -282,6 +282,11 @@ bool CarsCounting::InitTracker(cv::UMat frame)
     }
 
     m_tracker = BaseTracker::CreateTracker(settings, m_fps);
+    if (!m_tracker)
+    {
+        m_logger->error("Tracker creation failed: unsupported Kalman/FilterGoal combination");
+        return false;
+    }
 
     return true;
 }
@@ -338,8 +343,13 @@ void CarsCounting::DrawData(cv::Mat frame, const std::vector<TrackingObject>& tr
             if (true)
             {
                 double k = 0.25;
-                cv::Size mapPreview(cvRound(frame.cols * k), cvRound(((frame.cols * k) / geoMap.cols) * geoMap.rows));
-                cv::resize(geoMap, frame(cv::Rect(frame.cols - mapPreview.width - 1, frame.rows - mapPreview.height - 1, mapPreview.width, mapPreview.height)), mapPreview, 0, 0, cv::INTER_CUBIC);
+                const double s = std::min({ k, k * frame.rows / geoMap.rows, frame.cols / (double)geoMap.cols });
+                cv::Size sz(cvRound(geoMap.cols * s), cvRound(geoMap.rows * s));
+                if (sz.width < frame.cols && sz.height < frame.rows)
+                {
+                    cv::Size mapPreview(cvRound(frame.cols * k), cvRound(((frame.cols * k) / geoMap.cols) * geoMap.rows));
+                    cv::resize(geoMap, frame(cv::Rect(frame.cols - mapPreview.width - 1, frame.rows - mapPreview.height - 1, mapPreview.width, mapPreview.height)), mapPreview, 0, 0, cv::INTER_CUBIC);
+                }
             }
 		}
     }
@@ -445,13 +455,12 @@ void CarsCounting::AddToHeatMap(const cv::Rect& rect)
         return;
 
     constexpr float w = 0.001f;
-    for (int y = 0; y < rect.height; ++y)
+    const cv::Rect r = rect & cv::Rect(0, 0, m_heatMap.cols, m_heatMap.rows);
+    for (int y = r.y; y < r.y + r.height; ++y)
     {
-        float* heatPtr = m_heatMap.ptr<float>(rect.y + y) + rect.x;
-        for (int x = 0; x < rect.width; ++x)
-        {
-            heatPtr[x] += w;
-        }
+        float* row = m_heatMap.ptr<float>(y);
+        for (int x = r.x; x < r.x + r.width; ++x)
+            row[x] += w;
     }
 }
 

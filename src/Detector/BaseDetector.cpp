@@ -58,8 +58,17 @@ std::unique_ptr<BaseDetector> BaseDetector::CreateDetector(tracking::Detectors d
         break;
     }
 
+    if (!detector)
+    {
+        std::cerr << "Detector type " << static_cast<int>(detectorType) << " is not available in this build" << std::endl;
+        return nullptr;
+    }
     if (!detector->Init(config))
+    {
         detector.reset();
+        std::cerr << "Detector type " << static_cast<int>(detectorType) << " init failed" << std::endl;
+        return nullptr;
+    }
     return detector;
 }
 

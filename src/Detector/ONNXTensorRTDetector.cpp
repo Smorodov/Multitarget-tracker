@@ -11,7 +11,7 @@ ONNXTensorRTDetector::ONNXTensorRTDetector(const cv::UMat& colorFrame)
 {
 	m_localConfig.m_calibrationImageListFileTxt = "";
 	m_localConfig.m_inferencePrecision = tensor_rt::FP32;
-	m_localConfig.m_netType = tensor_rt::YOLOV4;
+	m_localConfig.m_netType = tensor_rt::YOLOV8;
 	m_localConfig.m_detectThresh = 0.5f;
 	m_localConfig.m_gpuInd = 0;
 }
@@ -25,7 +25,7 @@ ONNXTensorRTDetector::ONNXTensorRTDetector(const cv::Mat& colorFrame)
 {
 	m_localConfig.m_calibrationImageListFileTxt = "";
 	m_localConfig.m_inferencePrecision = tensor_rt::FP32;
-	m_localConfig.m_netType = tensor_rt::YOLOV4;
+	m_localConfig.m_netType = tensor_rt::YOLOV8;
 	m_localConfig.m_detectThresh = 0.5f;
 	m_localConfig.m_gpuInd = 0;
 }
@@ -114,8 +114,8 @@ bool ONNXTensorRTDetector::Init(const config_t& config)
 			m_localConfig.m_netType = netType->second;
 		else
 		{
-			assert(netType == dictNetType.end());
-			std::cerr << "net_type = " << net_type->second << ", " << (int)m_localConfig.m_netType << std::endl;
+			std::cerr << "ONNXTensorRTDetector: unknown net_type = " << net_type->second << std::endl;
+			return false;
 		}
 	}
 
@@ -123,25 +123,23 @@ bool ONNXTensorRTDetector::Init(const config_t& config)
 	if (classNames != config.end())
 	{
 		std::ifstream classNamesFile(classNames->second);
-		if (classNamesFile.is_open())
+		if (!classNamesFile.is_open())
 		{
-			m_classNames.clear();
-			std::string className;
-			for (; std::getline(classNamesFile, className); )
-			{
-				className.erase(className.find_last_not_of(" \t\n\r\f\v") + 1);
-				m_classNames.push_back(className);
-			}
-			if (!FillTypesMap(m_classNames))
-			{
-				std::cout << "Unknown types in class names!" << std::endl;
-				assert(0);
-			}
+			std::cerr << "ONNXTensorRTDetector: can not open class names file " << classNames->second << std::endl;
+			return false;
 		}
-		else
+
+		m_classNames.clear();
+		std::string className;
+		for (; std::getline(classNamesFile, className); )
 		{
-			std::cout << "File with class names can not be opened!" << std::endl;
-			assert(0);
+			className.erase(className.find_last_not_of(" \t\n\r\f\v") + 1);
+			m_classNames.push_back(className);
+		}
+		if (!FillTypesMap(m_classNames))
+		{
+			std::cerr << "ONNXTensorRTDetector: unknown types in class names file " << classNames->second << std::endl;
+			return false;
 		}
 	}
 
@@ -157,14 +155,18 @@ bool ONNXTensorRTDetector::Init(const config_t& config)
 		m_maxCropRatio = std::stof(maxCropRatio->second);
 
 
-	std::cout << "YoloTensorRTDetector::Init: tensor_rt::Detector" << std::endl;
+	std::cout << "ONNXTensorRTDetector::Init: tensor_rt::Detector" << std::endl;
 	m_detector = std::make_unique<tensor_rt::Detector>();
-	if (m_detector)
-        m_detector->Init(m_localConfig);
+	if (!m_detector->Init(m_localConfig))
+	{
+		std::cerr << "ONNXTensorRTDetector::Init: TensorRT detector initialization failed" << std::endl;
+		m_detector.reset();
+		return false;
+	}
 
-	std::cout << "YoloTensorRTDetector::Init: Detector created = " << (m_detector.get() != nullptr) << std::endl;
+	std::cout << "ONNXTensorRTDetector::Init: detector initialized successfully" << std::endl;
 
-	return m_detector.get() != nullptr;
+	return true;
 }
 
 ///
@@ -174,6 +176,10 @@ bool ONNXTensorRTDetector::Init(const config_t& config)
 void ONNXTensorRTDetector::Detect(const cv::UMat& colorFrame)
 {
     m_regions.clear();
+
+    if (!m_detector)
+        return;
+
 	cv::Mat colorMat = colorFrame.getMat(cv::ACCESS_READ);
 
 #define DRAW_MASK 0
@@ -274,6 +280,9 @@ void ONNXTensorRTDetector::Detect(const cv::UMat& colorFrame)
 ///
 void ONNXTensorRTDetector::Detect(const std::vector<cv::UMat>& frames, std::vector<regions_t>& regions)
 {
+    if (!m_detector || frames.empty() || regions.size() < frames.size())
+        return;
+
     if (frames.size() == 1)
     {
         Detect(frames.front());

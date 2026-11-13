@@ -43,10 +43,31 @@ AsyncDetector::AsyncDetector(const cv::CommandLineParser& parser)
 
     size_t max_size = 1024 * 1024 * 5;
     size_t max_files = 3;
-    m_fileSink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>("logs/" + std::string(buffer) + std::to_string(transformed % 1000) + ".txt", max_size, max_files);
-    m_fileSink->set_level(spdlog::level::from_str(m_showLogsLevel));
 
-    m_logger = std::shared_ptr<spdlog::logger>(new spdlog::logger("traffic", { m_consoleSink, m_fileSink }));
+    // The rotating file sink requires an existing directory; do not let a
+    // missing/unwritable logs/ folder terminate the whole application.
+    std::error_code ec;
+    fs::create_directories("logs", ec);
+    if (ec)
+        std::cerr << "AsyncDetector: can not create logs directory: " << ec.message() << std::endl;
+
+    std::vector<spdlog::sink_ptr> sinks;
+    sinks.push_back(m_consoleSink);
+
+    try
+    {
+        m_fileSink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(
+            "logs/" + std::string(buffer) + std::to_string(transformed % 1000) + ".txt", max_size, max_files);
+        m_fileSink->set_level(spdlog::level::from_str(m_showLogsLevel));
+        sinks.push_back(m_fileSink);
+    }
+    catch (const std::exception& e)
+    {
+        std::cerr << "AsyncDetector: can not create log file sink: " << e.what() << std::endl;
+        m_fileSink.reset();
+    }
+
+    m_logger = std::make_shared<spdlog::logger>("traffic", sinks.begin(), sinks.end());
     m_logger->set_level(spdlog::level::from_str(m_showLogsLevel));
     m_logger->info("Start service");
 }
@@ -59,7 +80,7 @@ void AsyncDetector::Process()
     double freq = cv::getTickFrequency();
     int64 allTime = 0;
 
-    bool stopFlag = false;
+    std::atomic<bool> stopFlag{ false };
 
     std::thread thCapture(CaptureThread, m_inFile, m_startFrame, &m_framesCount, &m_fps, &m_framesQue, &stopFlag);
 
@@ -72,7 +93,7 @@ void AsyncDetector::Process()
 
     int framesCounter = m_startFrame + 1;
 
-    for (; !stopFlag;)
+    for (; !stopFlag.load();)
     {
 		int64 t1 = cv::getTickCount();
 
@@ -80,7 +101,7 @@ void AsyncDetector::Process()
         frame_ptr processedFrame = m_framesQue.GetFirstProcessedFrame();
         if (!processedFrame)
         {
-            stopFlag = true;
+            stopFlag.store(true);
             break;
         }
 
@@ -94,7 +115,7 @@ void AsyncDetector::Process()
 		if (!m_outFile.empty())
 		{
 			if (!writer.isOpened())
-				writer.open(m_outFile, cv::VideoWriter::fourcc('H', 'F', 'Y', 'U'), m_fps, processedFrame->m_frame.size(), true);
+				writer.open(m_outFile, cv::VideoWriter::fourcc('H', 'F', 'Y', 'U'), m_fps.load(), processedFrame->m_frame.size(), true);
 			if (writer.isOpened())
 				writer << processedFrame->m_frame;
 		}
@@ -119,7 +140,7 @@ void AsyncDetector::Process()
     }
 
     m_logger->info("Stopping threads...");
-    stopFlag = true;
+    stopFlag.store(true);
     m_framesQue.SetBreak(true);
 
     if (thCapture.joinable())
@@ -192,9 +213,9 @@ void AsyncDetector::DrawData(frame_ptr frameInfo, int framesCounter, int currTim
 {
     int id = frameInfo->m_inDetector.load();
     if (id != FrameInfo::StateNotProcessed && id != FrameInfo::StateSkipped)
-        m_logger->info("Frame {0} ({1}): ({2}) detects= {3}, tracks = {4}, time = {5}", framesCounter, m_framesCount, id, frameInfo->m_regions.size(), frameInfo->m_tracks.size(), currTime);
+        m_logger->info("Frame {0} ({1}): ({2}) detects= {3}, tracks = {4}, time = {5}", framesCounter, m_framesCount.load(), id, frameInfo->m_regions.size(), frameInfo->m_tracks.size(), currTime);
     else
-        m_logger->info("Frame {0} ({1}): tracks = {2}, time = {3}", framesCounter, m_framesCount, frameInfo->m_tracks.size(), currTime);
+        m_logger->info("Frame {0} ({1}): tracks = {2}, time = {3}", framesCounter, m_framesCount.load(), frameInfo->m_tracks.size(), currTime);
 
     for (const auto& track : frameInfo->m_tracks)
     {
@@ -250,7 +271,7 @@ void AsyncDetector::DrawData(frame_ptr frameInfo, int framesCounter, int currTim
 /// \param framesQue
 /// \param stopFlag
 ///
-void AsyncDetector::CaptureThread(std::string fileName, int startFrame, int* framesCount, float* fps, FramesQueue* framesQue, bool* stopFlag)
+void AsyncDetector::CaptureThread(std::string fileName, int startFrame, std::atomic<int>* framesCount, std::atomic<float>* fps, FramesQueue* framesQue, std::atomic<bool>* stopFlag)
 {
     cv::VideoCapture capture;
     if (fileName.size() == 1)
@@ -260,16 +281,17 @@ void AsyncDetector::CaptureThread(std::string fileName, int startFrame, int* fra
 
     if (!capture.isOpened())
     {
-        *stopFlag = true;
+        stopFlag->store(true);
+        framesQue->SetBreak(true);
         std::cerr << "Can't open " << fileName << std::endl;
         return;
     }
-    *framesCount = cvRound(capture.get(cv::CAP_PROP_FRAME_COUNT));
+    framesCount->store(cvRound(capture.get(cv::CAP_PROP_FRAME_COUNT)));
     capture.set(cv::CAP_PROP_POS_FRAMES, startFrame);
 
     time_point_t startTimeStamp = std::chrono::system_clock::now();
 
-    *fps = std::max(1.f, (float)capture.get(cv::CAP_PROP_FPS));
+    fps->store(std::max(1.f, (float)capture.get(cv::CAP_PROP_FPS)));
 	int frameHeight = cvRound(capture.get(cv::CAP_PROP_FRAME_HEIGHT));
 
     // Detector
@@ -284,11 +306,15 @@ void AsyncDetector::CaptureThread(std::string fileName, int startFrame, int* fra
 #if 0
 	detectorConfig.emplace("modelConfiguration", pathToModel + "yolov3-tiny.cfg");
 	detectorConfig.emplace("modelBinary", pathToModel + "yolov3-tiny.weights");
+	detectorConfig.emplace("net_type", "YOLOV3");
 #else
-    detectorConfig.emplace("modelConfiguration", pathToModel + "yolov4-csp.cfg");
-    detectorConfig.emplace("modelBinary", pathToModel + "yolov4-csp.weights");
+    // Legacy Darknet YOLOv4 is not supported by the ONNX/TensorRT backend,
+    // use an exported ONNX model instead.
+    detectorConfig.emplace("modelConfiguration", pathToModel + "coco/yolo11s.onnx");
+    detectorConfig.emplace("modelBinary", pathToModel + "coco/yolo11s.onnx");
+    detectorConfig.emplace("net_type", "YOLOV11");
 #endif
-    detectorConfig.emplace("classNames", pathToModel + "coco.names");
+    detectorConfig.emplace("classNames", pathToModel + "coco/coco.names");
     detectorConfig.emplace("confidenceThreshold", "0.3");
     detectorConfig.emplace("maxCropRatio", "3.0");
 	
@@ -336,19 +362,19 @@ void AsyncDetector::CaptureThread(std::string fileName, int startFrame, int* fra
 	++frameInd;
 
     std::thread thDetection(DetectThread, detectorConfig, firstFrame, framesQue, stopFlag);
-    std::thread thTracking(TrackingThread, trackerSettings, framesQue, *fps, stopFlag);
+    std::thread thTracking(TrackingThread, trackerSettings, framesQue, fps->load(), stopFlag);
 
     // Capture frame
-    for (; !(*stopFlag);)
+    for (; !stopFlag->load();)
     {
         frame_ptr frameInfo(new FrameInfo(frameInd));
         frameInfo->m_dt = cv::getTickCount();
-        frameInfo->m_frameTimeStamp = startTimeStamp + std::chrono::milliseconds(cvRound(frameInd * (1000.f / (*fps))));
+        frameInfo->m_frameTimeStamp = startTimeStamp + std::chrono::milliseconds(cvRound(frameInd * (1000.f / fps->load())));
         capture >> frameInfo->m_frame;
         if (frameInfo->m_frame.empty())
         {
             std::cerr << "Frame is empty!" << std::endl;
-            *stopFlag = true;
+            stopFlag->store(true);
             framesQue->SetBreak(true);
             break;
         }
@@ -358,7 +384,7 @@ void AsyncDetector::CaptureThread(std::string fileName, int startFrame, int* fra
         framesQue->AddNewFrame(frameInfo, 15);
 
 #if 1
-        //std::this_thread::sleep_for(std::chrono::milliseconds(1000 / cvRound(*fps) - 1));
+        //std::this_thread::sleep_for(std::chrono::milliseconds(1000 / cvRound(fps->load()) - 1));
 #else
         //std::this_thread::sleep_for(std::chrono::milliseconds(1));
 #endif
@@ -381,12 +407,19 @@ void AsyncDetector::CaptureThread(std::string fileName, int startFrame, int* fra
 /// \brief AsyncDetector::DetectThread
 /// \param
 ///
-void AsyncDetector::DetectThread(const config_t& config, cv::Mat firstFrame, FramesQueue* framesQue, bool* stopFlag)
+void AsyncDetector::DetectThread(const config_t& config, cv::Mat firstFrame, FramesQueue* framesQue, std::atomic<bool>* stopFlag)
 {
 	cv::UMat ufirst = firstFrame.getUMat(cv::ACCESS_READ);
     std::unique_ptr<BaseDetector> detector = BaseDetector::CreateDetector(tracking::Detectors::ONNX_TensorRT, config, ufirst);
+    if (!detector)
+    {
+        std::cerr << "AsyncDetector: detector initialization failed, stopping" << std::endl;
+        stopFlag->store(true);
+        framesQue->SetBreak(true);
+        return;
+    }
 
-    for (; !(*stopFlag);)
+    for (; !stopFlag->load();)
     {
         frame_ptr frameInfo = framesQue->GetLastUndetectedFrame();
         if (frameInfo)
@@ -406,11 +439,16 @@ void AsyncDetector::DetectThread(const config_t& config, cv::Mat firstFrame, Fra
 /// \brief AsyncDetector::TrackingThread
 /// \param
 ///
-void AsyncDetector::TrackingThread(const TrackerSettings& settings, FramesQueue* framesQue, float fps, bool* stopFlag)
+void AsyncDetector::TrackingThread(const TrackerSettings& settings, FramesQueue* framesQue, float fps, std::atomic<bool>* stopFlag)
 {
     std::unique_ptr<BaseTracker> tracker = BaseTracker::CreateTracker(settings, fps);
+    if (!tracker)
+    {
+        std::cerr << "AsyncDetector::TrackingThread: tracker creation failed, tracking thread stopped" << std::endl;
+        return;
+    }
 
-    for (; !(*stopFlag);)
+    for (; !stopFlag->load();)
     {
         frame_ptr frameInfo = framesQue->GetFirstDetectedFrame();
         if (frameInfo)

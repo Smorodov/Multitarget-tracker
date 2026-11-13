@@ -178,30 +178,42 @@ track_t CTrack::CalcDistLocalCartesian(const CRegion& reg) const
 
 ///
 /// \brief CTrack::CalcMahalanobisDist
-/// \param reg
+/// \param rrect
 /// \return
 ///
 track_t CTrack::CalcMahalanobisDist(const cv::RotatedRect& rrect) const
 {
-    cv::Mat res1, predictPoint;
-    // res1 = Hn * Pn+1|n+1 * Hn^T + Rn+1	error covariance
-    // res2 = Hn * Xn+1|n
-    m_kalman.GetPtStateAndResCov(res1, predictPoint);
+    // Innovation covariance S = H * P * H^T + R and predicted measurement
+    // H * state (2/4/5 components for point/rect/rrect models).
+    cv::Mat innovCov, predictedMeas;
+    m_kalman.GetPredictionAndInnovCov(innovCov, predictedMeas);
 
-    double mahaDist = 0.0;
-    if (!res1.empty() && !predictPoint.empty())
+    // The metric is not implemented for the UKF, return no extra cost.
+    if (innovCov.empty() || predictedMeas.empty())
+        return 0;
+
+    const int measCount = predictedMeas.rows;
+    if (measCount < 2 || predictedMeas.cols != 1)
+        return 0;
+
+    cv::Mat measure(measCount, 1, Mat_t(1));
+    measure.at<track_t>(0) = rrect.center.x;
+    measure.at<track_t>(1) = rrect.center.y;
+    if (measCount > 3)
     {
-        cv::Mat icovar_Pn;
-        cv::invert(res1, icovar_Pn, cv::DECOMP_SVD);
-        cv::Mat measurePoint;
-        if (predictPoint.rows == 2)			// PointUpdate
-            measurePoint = cv::Mat_<track_t>({ 2, 1 }, { rrect.center.x, rrect.center.y }); // detection
-        else
-            measurePoint = cv::Mat_<track_t>({ 4, 1 }, { rrect.center.x, rrect.center.y, rrect.size.width, rrect.size.height }); // predict
-        mahaDist = cv::Mahalanobis(measurePoint, predictPoint, icovar_Pn);
-        mahaDist += std::log(cv::determinant(res1));
+        measure.at<track_t>(2) = rrect.size.width;
+        measure.at<track_t>(3) = rrect.size.height;
     }
-    return static_cast<track_t>(mahaDist);
+    if (measCount > 4)
+        measure.at<track_t>(4) = rrect.angle;
+
+    cv::Mat icovar;
+    cv::invert(innovCov, icovar, cv::DECOMP_SVD);
+
+    // No log(det(S)) term: it would shift the cost scale with respect to the
+    // other metrics, while the determinant of the innovation covariance is
+    // not guaranteed to be non-zero for a degenerate filter state.
+    return static_cast<track_t>(cv::Mahalanobis(measure, predictedMeas, icovar));
 }
 
 ///
@@ -215,19 +227,23 @@ track_t CTrack::CalcDistHist(const RegionEmbedding& embedding) const
 
     if (!embedding.m_hist.empty() && !m_regionEmbedding.m_hist.empty())
 	{
+        // Histograms may have different sizes/types if the frame format
+        // (e.g. number of channels) changes between frames.
+        if (embedding.m_hist.dims == m_regionEmbedding.m_hist.dims &&
+            embedding.m_hist.total() == m_regionEmbedding.m_hist.total() &&
+            embedding.m_hist.type() == m_regionEmbedding.m_hist.type())
+        {
 #if (((CV_VERSION_MAJOR == 4) && (CV_VERSION_MINOR < 1)) || (CV_VERSION_MAJOR == 3))
-		res = static_cast<track_t>(cv::compareHist(embedding.m_hist, m_regionEmbedding.m_hist, CV_COMP_BHATTACHARYYA));
-        //res = 1.f - static_cast<track_t>(cv::compareHist(hist, m_regionEmbedding.m_hist, CV_COMP_CORREL));
+            res = static_cast<track_t>(cv::compareHist(embedding.m_hist, m_regionEmbedding.m_hist, CV_COMP_BHATTACHARYYA));
+            //res = 1.f - static_cast<track_t>(cv::compareHist(hist, m_regionEmbedding.m_hist, CV_COMP_CORREL));
 #else
-        res = static_cast<track_t>(cv::compareHist(embedding.m_hist, m_regionEmbedding.m_hist, cv::HISTCMP_BHATTACHARYYA));
+            res = static_cast<track_t>(cv::compareHist(embedding.m_hist, m_regionEmbedding.m_hist, cv::HISTCMP_BHATTACHARYYA));
 #endif
+        }
 	}
-    else
-    {
-        assert(0);
-        CV_Assert(!embedding.m_hist.empty());
-        CV_Assert(!m_regionEmbedding.m_hist.empty());
-    }
+    // If either histogram is unavailable (out-of-frame/degenerate detection,
+    // empty frame, changed frame layout), report the maximum distance instead
+    // of asserting.
 	return res;
 }
 
@@ -330,14 +346,7 @@ void CTrack::Update(const CRegion& region,
         m_trace.push_back(m_predictionPoint, currTime);
     }
 
-    for (;;)
-    {
-        std::chrono::duration<double> period = currTime - m_trace.at(0).m_frameTime;
-        if (period.count() > maxTraceLength)
-            m_trace.pop_front(1);
-        else
-            break;
-    }
+    TrimTrace(maxTraceLength, currTime);
 }
 
 ///
@@ -389,14 +398,45 @@ void CTrack::Update(const CRegion& region,
         m_trace.push_back(m_predictionPoint, currTime);
     }
 
-    for (;;)
+    TrimTrace(maxTraceLength, currTime);
+}
+
+///
+/// \brief CTrack::TrimTrace
+/// \param maxTraceLength
+/// \param currTime
+///
+void CTrack::TrimTrace(double maxTraceLength, time_point_t currTime)
+{
+    if (m_trace.size() == 0)
     {
-        std::chrono::duration<double> period = currTime - m_trace.at(0).m_frameTime;
+        // Never leave consumers with an empty trajectory.
+        m_trace.push_back(m_predictionPoint, currTime);
+        return;
+    }
+
+    if (maxTraceLength <= 0.0)
+    {
+        // No history requested: keep only the latest point. An empty trace is
+        // not allowed because drawing/history consumers assume at least one
+        // point (and use size() - 1 in loops).
+        while (m_trace.size() > 1)
+            m_trace.pop_front(1);
+        return;
+    }
+
+    while (m_trace.size() > 0)
+    {
+        const std::chrono::duration<double> period = currTime - m_trace.at(0).m_frameTime;
         if (period.count() > maxTraceLength)
             m_trace.pop_front(1);
         else
             break;
     }
+
+    // Defensive: keep the latest point if the history was trimmed completely.
+    if (m_trace.size() == 0)
+        m_trace.push_back(m_predictionPoint, currTime);
 }
 
 ///
@@ -454,12 +494,15 @@ cv::RotatedRect CTrack::CalcPredictionEllipse(cv::Size_<track_t> minRadius) cons
 			rrect.center.x = l * d.x / p2_l + m_predictionPoint.x;
 			rrect.center.y = l * d.y / p2_l + m_predictionPoint.y;
 
-			rrect.angle = atanf(d.y / d.x);
+			// cv::RotatedRect::angle is in degrees (OpenCV convention), so
+			// convert from radians. atan2f (not atanf of a ratio) keeps the
+			// correct quadrant when the target moves to the left.
+			rrect.angle = atan2f(d.y, d.x) * 180.f / static_cast<float>(CV_PI);
 		}
 		else
 		{
 			rrect.center.y += d.y / 3;
-			rrect.angle = static_cast<float>(CV_PI / 2.);
+			rrect.angle = 90.f;
 		}
 	}
 	return rrect;
@@ -475,8 +518,12 @@ track_t CTrack::IsInsideArea(const Point_t& pt, const cv::RotatedRect& rrect) co
 {
 	Point_t pt_(pt.x - rrect.center.x, pt.y - rrect.center.y);
 	track_t r = sqrtf(sqr(pt_.x) + sqr(pt_.y));
-	track_t t = (r > 1) ? acosf(pt_.x / r) : 0;
-	track_t t_ = t - rrect.angle;
+	// rrect.angle is stored in degrees, while the polar angle is in radians.
+	// atan2f (not acosf of x/r) keeps the quadrant, so points below the
+	// ellipse axis are not mirrored above it.
+	const track_t angleRad = rrect.angle * static_cast<track_t>(CV_PI) / 180.f;
+	track_t t = atan2f(pt_.y, pt_.x);
+	track_t t_ = t - angleRad;
 	Point_t pt_rotated(r * cosf(t_), r * sinf(t_));
 
 	return sqr(pt_rotated.x) / sqr(rrect.size.width) + sqr(pt_rotated.y) / sqr(rrect.size.height);

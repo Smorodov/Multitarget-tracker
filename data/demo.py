@@ -55,11 +55,11 @@ def main():
 
     tracker_settings = mt.TrackerSettings()
 
-    tracker_settings.SetDistance(mt.MTracker.DistRects)
-    tracker_settings.kalmanType = mt.MTracker.KalmanLinear
-    tracker_settings.filterGoal = mt.MTracker.FilterCenter
-    tracker_settings.lostTrackType = mt.MTracker.TrackNone
-    tracker_settings.matchType = mt.MTracker.MatchHungrian
+    tracker_settings.SetDistance(mt.MTracker.DistType.DistRects)
+    tracker_settings.kalmanType = mt.MTracker.KalmanType.KalmanLinear
+    tracker_settings.filterGoal = mt.MTracker.FilterGoal.FilterCenter
+    tracker_settings.lostTrackType = mt.MTracker.LostTrackType.TrackNone
+    tracker_settings.matchType = mt.MTracker.MatchType.MatchHungrian
     tracker_settings.useAcceleration = False
     tracker_settings.dt = 0.5
     tracker_settings.accelNoiseMag = 0.1
@@ -67,10 +67,10 @@ def main():
     tracker_settings.minAreaRadiusPix = img.shape[0] / 5.
     tracker_settings.minAreaRadiusK = 0.8
     tracker_settings.useAbandonedDetection = False
-    tracker_settings.maximumAllowedSkippedFrames = int(2 * fps)
-    tracker_settings.maxTraceLength = int(2 * fps)
+    tracker_settings.maximumAllowedLostTime = 2.0
+    tracker_settings.maxTraceLength = 2.0
 
-    mtracker = mt.MTracker(tracker_settings)
+    mtracker = mt.MTracker(tracker_settings, fps)
 
     while True:
         _ret, img = cam.read()
@@ -83,7 +83,7 @@ def main():
         regions = mdetector.GetDetects()
         print("mdetector.Detect:", len(regions))
 
-        mtracker.Update(regions, img, fps)
+        mtracker.Update(regions, img)
         tracks = mtracker.GetTracks()
         print("mtracker.Update:", len(tracks))
 

@@ -45,6 +45,8 @@ void TKalmanFilter::CreateLinear(Point_t xy0, Point_t xyv0)
     // shows, woh much target can accelerate.
 
     // 4 state variables, 2 measurements
+    m_velocityXInd = 2; // vx
+    m_velocityYInd = 3; // vy
     m_linearKalman.init(4, 2, 0, El_t);
     // Transition cv::Matrix
     m_linearKalman.transitionMatrix = cv::Mat_<track_t>({ 4, 4 },
@@ -97,7 +99,9 @@ void TKalmanFilter::CreateLinear(cv::Rect_<track_t> rect0, Point_t rectv0)
     // Process noise. (standard deviation of acceleration: m/s^2)
     // shows, woh much target can accelerate.
 
-    // 8 state variables (x, y, vx, vy, width, height, vw, vh), 4 measurements (x, y, width, height)
+    // 8 state variables (x, y, width, height, vx, vy, vw, vh), 4 measurements (x, y, width, height)
+    m_velocityXInd = 4; // vx
+    m_velocityYInd = 5; // vy
     m_linearKalman.init(8, 4, 0, El_t);
     // Transition cv::Matrix
     m_linearKalman.transitionMatrix = cv::Mat_<track_t>({ 8, 8 },
@@ -167,7 +171,9 @@ void TKalmanFilter::CreateLinear(cv::RotatedRect rrect0, Point_t rrectv0)
 	// Process noise. (standard deviation of acceleration: m/s^2)
 	// shows, woh much target can accelerate.
 
-	// 10 state variables (x, y, vx, vy, width, height, vw, vh, angle, vangle), 5 measurements (x, y, width, height, angle)
+	// 10 state variables (x, y, width, height, angle, vx, vy, vw, vh, vangle), 5 measurements (x, y, width, height, angle)
+	m_velocityXInd = 5; // vx
+	m_velocityYInd = 6; // vy
 	m_linearKalman.init(10, 5, 0, El_t);
 	// Transition cv::Matrix
     m_linearKalman.transitionMatrix = cv::Mat_<track_t>({ 10, 10 },
@@ -239,7 +245,9 @@ void TKalmanFilter::CreateLinear(cv::RotatedRect rrect0, Point_t rrectv0)
 ///
 void TKalmanFilter::CreateLinearAcceleration(Point_t xy0, Point_t xyv0)
 {
-    // 6 state variables, 2 measurements
+    // 6 state variables (x, y, vx, vy, ax, ay), 2 measurements
+    m_velocityXInd = 2; // vx
+    m_velocityYInd = 3; // vy
     m_linearKalman.init(6, 2, 0, El_t);
     // Transition cv::Matrix
     const track_t dt = m_deltaTime;
@@ -299,14 +307,16 @@ void TKalmanFilter::CreateLinearAcceleration(Point_t xy0, Point_t xyv0)
 ///
 void TKalmanFilter::CreateLinearAcceleration(cv::Rect_<track_t> rect0, Point_t rectv0)
 {
-    // 12 state variables (x, y, vx, vy, ax, ay, width, height, vw, vh, aw, ah), 4 measurements (x, y, width, height)
+    // 12 state variables (x, y, width, height, vx, vy, vw, vh, ax, ay, aw, ah), 4 measurements (x, y, width, height)
+    m_velocityXInd = 4; // vx
+    m_velocityYInd = 5; // vy
     m_linearKalman.init(12, 4, 0, El_t);
     // Transition cv::Matrix
     const track_t dt = m_deltaTime;
     const track_t dt2 = 0.5f * m_deltaTime * m_deltaTime;
     m_linearKalman.transitionMatrix = cv::Mat_<track_t>({ 12, 12 },
-                                     { 1, 0, 0, 0, dt, 0,  0,  0,  dt2, 0,   dt2, 0,
-                                       0, 1, 0, 0, 0,  dt, 0,  0,  0,   dt2, 0,   dt2,
+                                     { 1, 0, 0, 0, dt, 0,  0,  0,  dt2, 0,   0,   0,
+                                       0, 1, 0, 0, 0,  dt, 0,  0,  0,   dt2, 0,   0,
                                        0, 0, 1, 0, 0,  0,  dt, 0,  0,   0,   dt2, 0,
                                        0, 0, 0, 1, 0,  0,  0,  dt, 0,   0,   0,   dt2,
                                        0, 0, 0, 0, 1,  0,  0,  0,  dt,  0,   0,   0,
@@ -351,12 +361,12 @@ void TKalmanFilter::CreateLinearAcceleration(cv::Rect_<track_t> rect0, Point_t r
     track_t n2 = pow(m_deltaTime, 3.f) / 2.f;
     track_t n3 = pow(m_deltaTime, 2.f);
     m_linearKalman.processNoiseCov = cv::Mat_<track_t>({ 12, 12 },
-                                    { n1, 0,  0,  0,  n2, 0,  0,  0,  n2, 0,  n2, 0,
-                                      0,  n1, 0,  0,  0,  n2, 0,  0,  0,  n2, 0,  n2,
+                                    { n1, 0,  0,  0,  n2, 0,  0,  0,  n2, 0,  0,  0,
+                                      0,  n1, 0,  0,  0,  n2, 0,  0,  0,  n2, 0,  0,
                                       0,  0,  n1, 0,  0,  0,  n2, 0,  0,  0,  n2, 0,
                                       0,  0,  0,  n1, 0,  0,  0,  n2, 0,  0,  0,  n2,
-                                      n2, 0,  0,  0,  n3, 0,  0,  0,  n3, 0,  n3, 0,
-                                      0,  n2, 0,  0,  0,  n3, 0,  0,  0,  n3, 0,  n3,
+                                      n2, 0,  0,  0,  n3, 0,  0,  0,  n3, 0,  0,  0,
+                                      0,  n2, 0,  0,  0,  n3, 0,  0,  0,  n3, 0,  0,
                                       0,  0,  n2, 0,  0,  0,  n3, 0,  0,  0,  n3, 0,
                                       0,  0,  0,  n2, 0,  0,  0,  n3, 0,  0,  0,  n3,
                                       n2, 0,  0,  0,  n3, 0,  0,  0,  n3, 0,  0,  0,
@@ -382,8 +392,12 @@ void TKalmanFilter::CreateLinearAcceleration(cv::Rect_<track_t> rect0, Point_t r
 ///
 void TKalmanFilter::CreateLinearAcceleration(cv::RotatedRect /*rrect0*/, Point_t /*rrectv0*/)
 {
-	// TODO
-	assert(0);
+	// Not implemented. TrackerSettings::CheckFilterModel rejects
+	// FilterRRect + useAcceleration, so this can only be reached when the
+	// filter is used directly. Leave the filter uninitialized instead of
+	// aborting the application.
+	std::cerr << "TKalmanFilter: constant-acceleration model for RotatedRect is not implemented; "
+		"use KalmanLinear without acceleration with FilterRRect" << std::endl;
 }
 
 #ifdef USE_OCV_UKF
@@ -454,6 +468,9 @@ private:
 //---------------------------------------------------------------------------
 void TKalmanFilter::CreateUnscented(Point_t xy0, Point_t xyv0)
 {
+    // State layout: x, y, vx, vy, ax, ay
+    m_velocityXInd = 2; // vx
+    m_velocityYInd = 3; // vy
     int MP = 2;
     int DP = 6;
     int CP = 0;
@@ -500,6 +517,9 @@ void TKalmanFilter::CreateUnscented(Point_t xy0, Point_t xyv0)
 //---------------------------------------------------------------------------
 void TKalmanFilter::CreateUnscented(cv::Rect_<track_t> rect0, Point_t rectv0)
 {
+    // State layout: x, y, vx, vy, ax, ay, width, height
+    m_velocityXInd = 2; // vx
+    m_velocityYInd = 3; // vy
     int MP = 4;
     int DP = 8;
     int CP = 0;
@@ -552,6 +572,9 @@ void TKalmanFilter::CreateUnscented(cv::Rect_<track_t> rect0, Point_t rectv0)
 //---------------------------------------------------------------------------
 void TKalmanFilter::CreateAugmentedUnscented(Point_t xy0, Point_t xyv0)
 {
+    // State layout: x, y, vx, vy, ax, ay
+    m_velocityXInd = 2; // vx
+    m_velocityYInd = 3; // vy
     int MP = 2;
     int DP = 6;
     int CP = 0;
@@ -598,6 +621,9 @@ void TKalmanFilter::CreateAugmentedUnscented(Point_t xy0, Point_t xyv0)
 //---------------------------------------------------------------------------
 void TKalmanFilter::CreateAugmentedUnscented(cv::Rect_<track_t> rect0, Point_t rectv0)
 {
+    // State layout: x, y, vx, vy, ax, ay, width, height
+    m_velocityXInd = 2; // vx
+    m_velocityYInd = 3; // vy
     int MP = 4;
     int DP = 8;
     int CP = 0;
@@ -766,8 +792,11 @@ Point_t TKalmanFilter::Update(Point_t pt, bool dataCorrect)
         {
             estimated = m_linearKalman.correct(measurement);
 
-            // Inertia correction
-			if (!m_useAcceleration)
+            // Inertia correction. Only adapt when a real measurement is
+			// available: on lost frames pt is an empty region (0, 0) and the
+			// distance to it would push m_deltaTime to its maximum, distorting
+			// the transition matrix precisely while the track is lost.
+			if (dataCorrect && !m_useAcceleration)
 			{
 				track_t currDist = sqrtf(sqr(estimated.at<track_t>(0) - pt.x) + sqr(estimated.at<track_t>(1) - pt.y));
 				if (currDist > m_lastDist)
@@ -819,20 +848,23 @@ cv::Rect TKalmanFilter::GetRectPrediction()
         {
         case tracking::KalmanLinear:
             prediction = m_linearKalman.predict();
+            m_lastRectResult = cv::Rect_<track_t>(prediction.at<track_t>(0), prediction.at<track_t>(1), prediction.at<track_t>(2), prediction.at<track_t>(3));
             break;
 
         case tracking::KalmanUnscented:
         case tracking::KalmanAugmentedUnscented:
 #ifdef USE_OCV_UKF
             prediction = m_uncsentedKalman->predict();
+            // UKF rect state is [x, y, vx, vy, ax, ay, width, height],
+            // so width/height are at indices 6 and 7, not 2 and 3.
+            m_lastRectResult = cv::Rect_<track_t>(prediction.at<track_t>(0), prediction.at<track_t>(1), prediction.at<track_t>(6), prediction.at<track_t>(7));
 #else
             prediction = m_linearKalman.predict();
+            m_lastRectResult = cv::Rect_<track_t>(prediction.at<track_t>(0), prediction.at<track_t>(1), prediction.at<track_t>(2), prediction.at<track_t>(3));
             std::cerr << "UnscentedKalmanFilter was disabled in CMAKE! Set KalmanLinear in constructor." << std::endl;
 #endif
             break;
         }
-
-        m_lastRectResult = cv::Rect_<track_t>(prediction.at<track_t>(0), prediction.at<track_t>(1), prediction.at<track_t>(2), prediction.at<track_t>(3));
     }
     return cv::Rect(static_cast<int>(m_lastRectResult.x), static_cast<int>(m_lastRectResult.y), static_cast<int>(m_lastRectResult.width), static_cast<int>(m_lastRectResult.height));
 }
@@ -945,8 +977,9 @@ cv::Rect TKalmanFilter::Update(cv::Rect rect, bool dataCorrect)
             m_lastRectResult.width = estimated.at<track_t>(2);
             m_lastRectResult.height = estimated.at<track_t>(3);
 
-            // Inertia correction
-			if (!m_useAcceleration)
+            // Inertia correction. Skip lost frames: rect is then an empty
+			// region (0, 0, 0, 0) and the distance to it has no meaning.
+			if (dataCorrect && !m_useAcceleration)
 			{
 				track_t currDist = sqrtf(sqr(estimated.at<track_t>(0) - rect.x) + sqr(estimated.at<track_t>(1) - rect.y) + sqr(estimated.at<track_t>(2) - rect.width) + sqr(estimated.at<track_t>(3) - rect.height));
 				if (currDist > m_lastDist)
@@ -1087,8 +1120,9 @@ cv::RotatedRect TKalmanFilter::Update(cv::RotatedRect rrect, bool dataCorrect)
 
 			case tracking::KalmanUnscented:
 #ifdef USE_OCV_UKF
-				assert(0);
-				//TODO: CreateUnscented(rrect0, rrectv0);
+				// TODO: CreateUnscented(rrect0, rrectv0);
+				std::cerr << "TKalmanFilter: unscented model for RotatedRect is not implemented; "
+					"use KalmanLinear without acceleration with FilterRRect" << std::endl;
 #else
 				if (m_useAcceleration)
 					CreateLinearAcceleration(rrect0, rrectv0);
@@ -1100,8 +1134,9 @@ cv::RotatedRect TKalmanFilter::Update(cv::RotatedRect rrect, bool dataCorrect)
 
 			case tracking::KalmanAugmentedUnscented:
 #ifdef USE_OCV_UKF
-				assert(0);
 				// TODO: CreateAugmentedUnscented(rrect0, rrectv0);
+				std::cerr << "TKalmanFilter: augmented unscented model for RotatedRect is not implemented; "
+					"use KalmanLinear without acceleration with FilterRRect" << std::endl;
 #else
 				if (m_useAcceleration)
 					CreateLinearAcceleration(rrect0, rrectv0);
@@ -1147,8 +1182,9 @@ cv::RotatedRect TKalmanFilter::Update(cv::RotatedRect rrect, bool dataCorrect)
 			m_lastRRectResult.size.height = estimated.at<track_t>(3);
 			m_lastRRectResult.angle = estimated.at<track_t>(4);
 
-			// Inertia correction
-			if (!m_useAcceleration)
+			// Inertia correction. Skip lost frames: rrect is then an empty
+			// region (0, 0, 0, 0) and the distance to it has no meaning.
+			if (dataCorrect && !m_useAcceleration)
 			{
 				track_t currDist = sqrtf(sqr(estimated.at<track_t>(0) - rrect.center.x) + sqr(estimated.at<track_t>(1) - rrect.center.y) +
 					               sqr(estimated.at<track_t>(2) - rrect.size.width) + sqr(estimated.at<track_t>(3) - rrect.size.height));
@@ -1212,18 +1248,12 @@ cv::Vec<track_t, 2> TKalmanFilter::GetVelocity() const
         {
         case tracking::KalmanLinear:
         {
-            if (m_linearKalman.statePre.rows > 3)
+            // The state layout depends on the created model (point/rect/rrect,
+            // with or without acceleration), so use the recorded indices.
+            if (m_linearKalman.statePre.rows > m_velocityYInd)
             {
-                int indX = 2;
-                int indY = 3;
-                if (m_linearKalman.statePre.rows > 4)
-                {
-                    indX = 4;
-                    indY = 5;
-                }
-				//std::cout << "indX = " << indX << ", indY = " << indY << std::endl;
-                res[0] = m_linearKalman.statePre.at<track_t>(indX);
-                res[1] = m_linearKalman.statePre.at<track_t>(indY);
+                res[0] = m_linearKalman.statePre.at<track_t>(m_velocityXInd);
+                res[1] = m_linearKalman.statePre.at<track_t>(m_velocityYInd);
             }
             break;
         }
@@ -1232,8 +1262,11 @@ cv::Vec<track_t, 2> TKalmanFilter::GetVelocity() const
         case tracking::KalmanAugmentedUnscented:
 #ifdef USE_OCV_UKF
             cv::Mat state = m_uncsentedKalman->getState();
-            res[0] = state.at<track_t>(2);
-            res[1] = state.at<track_t>(3);
+            if (state.rows > m_velocityYInd)
+            {
+                res[0] = state.at<track_t>(m_velocityXInd);
+                res[1] = state.at<track_t>(m_velocityYInd);
+            }
 #else
             std::cerr << "UnscentedKalmanFilter was disabled in CMAKE! Set KalmanLinear in constructor." << std::endl;
 #endif
@@ -1244,28 +1277,37 @@ cv::Vec<track_t, 2> TKalmanFilter::GetVelocity() const
 }
 
 //---------------------------------------------------------------------------
-void TKalmanFilter::GetPtStateAndResCov(cv::Mat& covar, cv::Mat& state) const
+void TKalmanFilter::GetPredictionAndInnovCov(cv::Mat& innovCov, cv::Mat& predictedMeas) const
 {
-    if (m_initialized)
-    {
-        switch (m_type)
-        {
-        case tracking::KalmanLinear:
-        {
-            state = m_linearKalman.statePost.clone();
-            covar = m_linearKalman.processNoiseCov.clone();
-            break;
-        }
+    innovCov.release();
+    predictedMeas.release();
 
-        case tracking::KalmanUnscented:
-        case tracking::KalmanAugmentedUnscented:
-#ifdef USE_OCV_UKF
-            state = m_uncsentedKalman->getState();
-#else
-            std::cerr << "UnscentedKalmanFilter was disabled in CMAKE! Set KalmanLinear in constructor." << std::endl;
-#endif
+    if (!m_initialized)
+        return;
+
+    switch (m_type)
+    {
+    case tracking::KalmanLinear:
+    {
+        // statePre and errorCovPre are filled by predict() right before the
+        // assignment matrix is built. Use the measurement matrix (identity
+        // MP x DP for every model) to map the state to the measurement space:
+        //   z = H * x,  S = H * P * H^T + R
+        const cv::Mat& H = m_linearKalman.measurementMatrix;
+        if (H.empty() || m_linearKalman.statePre.empty() || m_linearKalman.errorCovPre.empty())
             break;
-        }
+
+        predictedMeas = H * m_linearKalman.statePre;
+        innovCov = H * m_linearKalman.errorCovPre * H.t() + m_linearKalman.measurementNoiseCov;
+        break;
+    }
+
+    case tracking::KalmanUnscented:
+    case tracking::KalmanAugmentedUnscented:
+        // The Mahalanobis metric is not implemented for the UKF: the wrapper
+        // does not expose the current state covariance and the UKF state
+        // layout is not an identity-prefix of the measurement vector.
+        break;
     }
 }
 

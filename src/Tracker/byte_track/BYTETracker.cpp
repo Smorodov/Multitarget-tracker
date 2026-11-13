@@ -30,7 +30,15 @@ void byte_track::BYTETracker::GetTracks(std::vector<TrackingObject>& tracks) con
         tracks.reserve(output_stracks_.size());
     for (const auto& track : output_stracks_)
     {
-        std::chrono::duration<double> period = m_lastFrameTime - m_lastFrameTime;
+        // ByteTrack does not detect abandoned objects (isStatic is always
+        // false), but staticTime must still be meaningful: report the time
+        // since the last detection/update of the track, like CTrack does.
+        // STrack pushes a trace point on every activate/update/reActivate.
+        const Trace& trace = track->getTrace();
+        const std::chrono::duration<double> period = trace.size() > 0
+            ? m_lastFrameTime - trace.at(trace.size() - 1).m_frameTime
+            : std::chrono::duration<double>(0);
+
         cv::RotatedRect rr(track->getRect().tl(), cv::Point2f(static_cast<float>(track->getRect().x + track->getRect().width), static_cast<float>(track->getRect().y)), track->getRect().br());
         TrackingObject to(rr, track->getTrackId(), track->getTrace(), false, cvRound(period.count()), false,
             track->getType(), track->getScore(), track->getVelocity());
@@ -42,6 +50,10 @@ void byte_track::BYTETracker::GetTracks(std::vector<TrackingObject>& tracks) con
 ///
 void byte_track::BYTETracker::GetRemovedTracks(std::vector<track_id_t>& trackIDs) const
 {
+    // Same contract as CTracker::GetRemovedTracks: replace the content with
+    // the IDs removed on the current frame instead of appending to it.
+    trackIDs.clear();
+
     if (removed_stracks_.size() > trackIDs.capacity())
         trackIDs.reserve(removed_stracks_.size());
     for (const auto& remTrack : removed_stracks_)
@@ -221,9 +233,13 @@ void byte_track::BYTETracker::Update(const regions_t& regions, cv::UMat /*currFr
         }
     }
 
+    // Keep only the tracks removed on this frame. Accumulating them forever
+    // leaked memory on long videos, and GetRemovedTracks only reports the
+    // current frame removals anyway (same contract as CTracker).
+    removed_stracks_ = current_removed_stracks;
+
     tracked_stracks_ = jointStracks(current_tracked_stracks, refind_stracks);
     lost_stracks_ = subStracks(jointStracks(subStracks(lost_stracks_, tracked_stracks_), current_lost_stracks), removed_stracks_);
-    removed_stracks_ = jointStracks(removed_stracks_, current_removed_stracks);
 
     std::vector<STrackPtr> tracked_stracks_out, lost_stracks_out;
     removeDuplicateStracks(tracked_stracks_, lost_stracks_, tracked_stracks_out, lost_stracks_out);

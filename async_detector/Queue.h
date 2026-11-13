@@ -245,6 +245,12 @@ public:
 #if SHOW_QUE_LOG
         QUE_LOG << "Signal start:" << ts << std::endl;
 #endif
+        // Serialize the notification with predicate checks in the waiters:
+        // without this lock a signal between a predicate check and wait()
+        // could be lost and the consumer would sleep forever.
+        {
+            std::lock_guard<std::mutex> lock(m_mutex);
+        }
         m_cond.notify_all();
 #if SHOW_QUE_LOG
         QUE_LOG << "Signal end: " << ts << std::endl;
@@ -256,8 +262,11 @@ public:
 #if SHOW_QUE_LOG
         QUE_LOG << "SetBreak start:" << val << std::endl;
 #endif
-        m_break = val;
-        Signal(0);
+        {
+            std::lock_guard<std::mutex> lock(m_mutex);
+            m_break.store(val);
+        }
+        m_cond.notify_all();
 #if SHOW_QUE_LOG
         QUE_LOG << "SetBreak end:" << val << std::endl;
 #endif

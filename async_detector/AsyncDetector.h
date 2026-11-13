@@ -64,14 +64,14 @@ public:
 
 private:
     std::string m_showLogsLevel = "info";
-    float m_fps = 25;
+    std::atomic<float> m_fps{ 25.f };
 
     std::string m_inFile;
     std::string m_outFile;
     int m_startFrame = 0;
     int m_endFrame = 0;
     int m_finishDelay = 0;
-    int m_framesCount = 0;
+    std::atomic<int> m_framesCount{ 0 };
     std::vector<cv::Scalar> m_colors;
 
 	FramesQueue m_framesQue;
@@ -79,9 +79,9 @@ private:
 	void DrawData(frame_ptr frameInfo, int framesCounter, int currTime);
     void DrawTrack(cv::Mat frame, const TrackingObject& track, bool drawTrajectory = true);
 
-    static void CaptureThread(std::string fileName, int startFrame, int* framesCount, float* fps, FramesQueue* framesQue, bool* stopFlag);
-    static void DetectThread(const config_t& config, cv::Mat firstFrame, FramesQueue* framesQue, bool* stopFlag);
-	static void TrackingThread(const TrackerSettings& settings, FramesQueue* framesQue, float fps, bool* stopFlag);
+    static void CaptureThread(std::string fileName, int startFrame, std::atomic<int>* framesCount, std::atomic<float>* fps, FramesQueue* framesQue, std::atomic<bool>* stopFlag);
+    static void DetectThread(const config_t& config, cv::Mat firstFrame, FramesQueue* framesQue, std::atomic<bool>* stopFlag);
+	static void TrackingThread(const TrackerSettings& settings, FramesQueue* framesQue, float fps, std::atomic<bool>* stopFlag);
 
     std::shared_ptr<spdlog::sinks::stdout_color_sink_mt> m_consoleSink;
     std::shared_ptr<spdlog::sinks::rotating_file_sink_mt> m_fileSink;

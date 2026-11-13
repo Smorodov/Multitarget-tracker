@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <chrono>
 
 #define DEFINE_TRT_ENTRYPOINTS 1
@@ -15,46 +16,56 @@
 //!
 bool YoloONNX::Init(const SampleYoloParams& params)
 {
-    bool res = false;
-
     m_params = params;
 
     sample::setReportableSeverity(sample::Logger::Severity::kINFO);
     initLibNvInferPlugins(&sample::gLogger.getTRTLogger(), "");
 
-    auto GetBindings = [&]()
+    auto GetBindings = [&]() -> bool
     {
-        auto numBindings = m_engine->getNbIOTensors();
+        if (!m_engine)
+            return false;
 
+        const int32_t numBindings = m_engine->getNbIOTensors();
         m_inputDims.clear();
         m_outpuDims.clear();
+
+        // Keep dimensions in binding order: some model parsers (e.g. DFINE)
+        // index m_outpuDims by binding position, while `outputs` is ordered by
+        // m_params.m_outputTensorNames.
+        std::vector<std::string> bindingNames;
+        bindingNames.reserve(static_cast<size_t>(numBindings));
 
         std::cout << "** Bindings: " << numBindings << " **" << std::endl;
         for (int32_t i = 0; i < numBindings; ++i)
         {
-            std::string bindName = m_engine->getIOTensorName(i);
-            nvinfer1::Dims dim = m_engine->getTensorShape(bindName.c_str());
-            
+            const std::string bindName = m_engine->getIOTensorName(i);
+            const nvinfer1::Dims dim = m_engine->getTensorShape(bindName.c_str());
+            bindingNames.push_back(bindName);
+
+            bool isInput = false;
             for (const auto& inName : m_params.m_inputTensorNames)
             {
                 if (bindName == inName)
                 {
                     m_inputDims.emplace_back(dim);
+                    isInput = true;
                     break;
                 }
             }
-            
-            for (const auto& outName : m_params.m_outputTensorNames)
+            if (!isInput)
             {
-                if (bindName == outName)
+                for (const auto& outName : m_params.m_outputTensorNames)
                 {
-                    m_outpuDims.emplace_back(dim);
-                    break;
+                    if (bindName == outName)
+                    {
+                        m_outpuDims.emplace_back(dim);
+                        break;
+                    }
                 }
             }
 
-            std::cout << i << ": name: " << bindName;
-            std::cout << ", size: ";
+            std::cout << i << ": name: " << bindName << ", size: ";
             for (int j = 0; j < dim.nbDims; ++j)
             {
                 std::cout << dim.d[j];
@@ -63,45 +74,85 @@ bool YoloONNX::Init(const SampleYoloParams& params)
             }
             std::cout << std::endl;
         }
+
+        // All declared tensors must exist in the engine: otherwise the
+        // post-processing would read the wrong buffers or out of bounds.
+        bool allFound = true;
+        for (const auto& inName : m_params.m_inputTensorNames)
+        {
+            if (std::find(bindingNames.begin(), bindingNames.end(), inName) == bindingNames.end())
+            {
+                std::cerr << "YoloONNX: input tensor \"" << inName << "\" was not found in the engine" << std::endl;
+                allFound = false;
+            }
+        }
+        for (const auto& outName : m_params.m_outputTensorNames)
+        {
+            if (std::find(bindingNames.begin(), bindingNames.end(), outName) == bindingNames.end())
+            {
+                std::cerr << "YoloONNX: output tensor \"" << outName << "\" was not found in the engine" << std::endl;
+                allFound = false;
+            }
+        }
+
+        return allFound;
     };
 
     if (fs::exists(m_params.m_engineFileName))
     {
-        std::vector<char> trtModelStream;
-        size_t size{0};
         std::ifstream file(m_params.m_engineFileName, std::ios::binary);
-        if (file.good())
+        if (!file.good())
         {
-            file.seekg(0, file.end);
-            size = file.tellg();
-            file.seekg(0, file.beg);
-            trtModelStream.resize(size);
-            file.read(trtModelStream.data(), size);
-            file.close();
+            std::cerr << "YoloONNX: can not open engine file " << m_params.m_engineFileName << std::endl;
+            return false;
         }
 
+        file.seekg(0, file.end);
+        const std::streamsize size = file.tellg();
+        file.seekg(0, file.beg);
+        if (size <= 0)
+        {
+            std::cerr << "YoloONNX: engine file is empty: " << m_params.m_engineFileName << std::endl;
+            return false;
+        }
+
+        std::vector<char> trtModelStream(static_cast<size_t>(size));
+        if (!file.read(trtModelStream.data(), size))
+        {
+            std::cerr << "YoloONNX: can not read engine file " << m_params.m_engineFileName << std::endl;
+            return false;
+        }
+        file.close();
+
         m_inferRuntime = std::shared_ptr<nvinfer1::IRuntime>(nvinfer1::createInferRuntime(sample::gLogger));
+        if (!m_inferRuntime)
+        {
+            std::cerr << "YoloONNX: can not create TensorRT runtime" << std::endl;
+            return false;
+        }
+
         if (m_params.m_dlaCore >= 0)
             m_inferRuntime->setDLACore(m_params.m_dlaCore);
 
-        m_engine = std::shared_ptr<nvinfer1::ICudaEngine>(m_inferRuntime->deserializeCudaEngine(trtModelStream.data(), size), samplesCommon::InferDeleter());
+        m_engine = std::shared_ptr<nvinfer1::ICudaEngine>(
+            m_inferRuntime->deserializeCudaEngine(trtModelStream.data(), trtModelStream.size()),
+            samplesCommon::InferDeleter());
 #if (NV_TENSORRT_MAJOR < 8)
         m_inferRuntime->destroy();
         m_inferRuntime.reset();
-#else
-        //m_inferRuntime.reset();
 #endif
 
-        if (m_engine)
+        if (!m_engine)
         {
-            GetBindings();
-            res = true;
+            std::cerr << "YoloONNX: can not deserialize engine " << m_params.m_engineFileName
+                      << ". Delete the file to rebuild it from the ONNX model." << std::endl;
+            return false;
         }
-        else
-        {
-            res = true;
-        }
-        sample::gLogInfo << "TRT Engine loaded from: " << m_params.m_engineFileName << " with res = " << res << std::endl;
+
+        if (!GetBindings())
+            return false;
+
+        sample::gLogInfo << "TRT Engine loaded from: " << m_params.m_engineFileName << std::endl;
     }
     else
     {
@@ -126,27 +177,37 @@ bool YoloONNX::Init(const SampleYoloParams& params)
         if (!constructed)
             return false;
 
-        GetBindings();
-        assert(m_inputDims[0].nbDims == 4);        
-
-        res = true;
+        if (!GetBindings())
+            return false;
     }
 
-    std::cout << "YoloONNX::Init: loaded = " << res << std::endl;
-
-    if (res)
+    if (m_inputDims.empty() || m_inputDims[0].nbDims != 4)
     {
-        m_buffers = std::make_unique<samplesCommon::BufferManager>(m_engine, 0/*m_params.batchSize*/);
-        std::cout << "YoloONNX::Init: m_buffers = " << (m_buffers != nullptr) << std::endl;
-        m_context = YoloONNXUniquePtr<nvinfer1::IExecutionContext>(m_engine->createExecutionContext());
-        std::cout << "YoloONNX::Init: m_context = " << (m_context != nullptr) << std::endl;
-        if (!m_context)
-            res = false;
+        std::cerr << "YoloONNX: unexpected input tensor dimensions" << std::endl;
+        return false;
+    }
+    if (m_outpuDims.empty())
+    {
+        std::cerr << "YoloONNX: no output tensors found" << std::endl;
+        return false;
     }
 
-    std::cout << "YoloONNX::Init: res = " << res << std::endl;
+    m_buffers = std::make_unique<samplesCommon::BufferManager>(m_engine, 0/*m_params.batchSize*/);
+    if (!m_buffers)
+    {
+        std::cerr << "YoloONNX: can not create the TensorRT buffer manager" << std::endl;
+        return false;
+    }
 
-    return res;
+    m_context = YoloONNXUniquePtr<nvinfer1::IExecutionContext>(m_engine->createExecutionContext());
+    if (!m_context)
+    {
+        std::cerr << "YoloONNX: can not create the TensorRT execution context" << std::endl;
+        return false;
+    }
+
+    std::cout << "YoloONNX::Init: successfully initialized" << std::endl;
+    return true;
 }
 
 //!
@@ -312,6 +373,9 @@ bool YoloONNX::ConstructNetwork(YoloONNXUniquePtr<nvinfer1::IBuilder>& builder,
 ///
 bool YoloONNX::Detect(const std::vector<cv::Mat>& frames, std::vector<tensor_rt::BatchResult>& bboxes)
 {
+    if (!m_engine || !m_buffers || !m_context || frames.empty())
+        return false;
+
     // Read the input data into the managed buffers
     if (!ProcessInputAspectRatio(frames))
         return false;
@@ -342,6 +406,9 @@ bool YoloONNX::Detect(const std::vector<cv::Mat>& frames, std::vector<tensor_rt:
 ///
 cv::Size YoloONNX::GetInputSize() const
 {
+    if (m_inputDims.empty() || m_inputDims[0].nbDims < 4)
+        return cv::Size();
+
     return cv::Size(static_cast<int>(m_inputDims[0].d[3]), static_cast<int>(m_inputDims[0].d[2]));
 }
 
@@ -351,6 +418,9 @@ cv::Size YoloONNX::GetInputSize() const
 ///
 size_t YoloONNX::GetNumClasses() const
 {
+    if (m_outpuDims.empty())
+        return 0;
+
     if (m_outpuDims[0].nbDims == 2) // with nms
     {
         return 0;
@@ -359,7 +429,7 @@ size_t YoloONNX::GetNumClasses() const
     {
         size_t ncInd = 2;
         int nc = static_cast<int>(m_outpuDims[0].d[ncInd] - 5);
-        return (size_t)nc;
+        return (nc > 0) ? static_cast<size_t>(nc) : 0;
     }
 }
 
@@ -368,16 +438,38 @@ size_t YoloONNX::GetNumClasses() const
 //!
 bool YoloONNX::ProcessInputAspectRatio(const std::vector<cv::Mat>& sampleImages)
 {
+    if (sampleImages.empty() || m_inputDims.empty() || m_params.m_inputTensorNames.empty())
+        return false;
+
     const int inputB = static_cast<int>(m_inputDims[0].d[0]);
     const int inputC = static_cast<int>(m_inputDims[0].d[1]);
     const int inputH = static_cast<int>(m_inputDims[0].d[2]);
     const int inputW = static_cast<int>(m_inputDims[0].d[3]);
+
+    if (inputB <= 0 || inputC <= 0 || inputH <= 0 || inputW <= 0)
+    {
+        std::cerr << "YoloONNX: invalid input tensor dimensions" << std::endl;
+        return false;
+    }
+
+    if (static_cast<int>(sampleImages.size()) < inputB)
+    {
+        std::cerr << "YoloONNX: batch size mismatch: engine expects " << inputB
+                  << ", got " << sampleImages.size() << std::endl;
+        return false;
+    }
 
     float* hostInputBuffer = nullptr;
     if (m_params.m_inputTensorNames[0].empty())
         hostInputBuffer = static_cast<float*>(m_buffers->getHostBuffer(0));
     else
         hostInputBuffer = static_cast<float*>(m_buffers->getHostBuffer(m_params.m_inputTensorNames[0]));
+
+    if (!hostInputBuffer)
+    {
+        std::cerr << "YoloONNX: input host buffer is not available" << std::endl;
+        return false;
+    }
 
     if (static_cast<int>(m_inputChannels.size()) < inputB)
     {

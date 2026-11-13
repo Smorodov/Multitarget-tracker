@@ -31,7 +31,9 @@ public:
 
     cv::Vec<track_t, 2> GetVelocity() const;
 
-    void GetPtStateAndResCov(cv::Mat& covar, cv::Mat& state) const;
+    /// \brief Innovation covariance S = H·P·Hᵀ + R and predicted measurement H·x
+    ///        for the linear Kalman filter. For UKF the matrices are left empty.
+    void GetPredictionAndInnovCov(cv::Mat& innovCov, cv::Mat& predictedMeas) const;
 
 private:
     cv::KalmanFilter m_linearKalman;
@@ -62,6 +64,12 @@ private:
     tracking::KalmanType m_type = tracking::KalmanLinear;
     bool m_useAcceleration = false; // If set true then will be used motion model x(t) = x0 + v0 * t + a * t^2 / 2
     bool m_initialized = false;
+
+    // Indices of the velocity components in the filter state. The layout
+    // depends on the model created by Create* (point/rect/rrect, with or
+    // without acceleration), so it is recorded when the filter is created.
+    int m_velocityXInd = 2;
+    int m_velocityYInd = 3;
 
 	// Constant velocity model
     void CreateLinear(Point_t xy0, Point_t xyv0);

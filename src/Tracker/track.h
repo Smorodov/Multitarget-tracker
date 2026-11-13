@@ -191,6 +191,13 @@ private:
 
     ///
     bool CheckStatic(int trajLen, cv::UMat currFrame, const CRegion& region, int maxSpeedForStatic, time_point_t currTime);
+
+    ///
+    /// \brief TrimTrace
+    /// Keep at most maxTraceLength seconds of history. A non-positive limit
+    /// means "keep only the latest point"; the trace is never left empty.
+    void TrimTrace(double maxTraceLength, time_point_t currTime);
+
     cv::UMat m_staticFrame;
     cv::Rect m_staticRect;
     time_point_t m_staticStartTime;

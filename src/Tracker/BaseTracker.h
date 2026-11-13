@@ -42,5 +42,11 @@ public:
     }
     virtual void GetRemovedTracks(std::vector<track_id_t>& trackIDs) const = 0;
 
+    ///
+    /// \brief CreateTracker
+    /// Creates a tracker for the given settings. Returns nullptr when the
+    /// settings contain an unsupported Kalman/FilterGoal combination
+    /// (see TrackerSettings::CheckFilterModel).
+    ///
     static std::unique_ptr<BaseTracker> CreateTracker(const TrackerSettings& settings, float fps);
 };

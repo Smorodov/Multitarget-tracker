@@ -90,7 +90,7 @@ namespace tensor_rt
         std::string m_fileModelCfg = "yolov4.cfg";
         std::string m_fileModelWeights = "yolov4.weights";
         float m_detectThresh = 0.5f;
-        ModelType m_netType = YOLOV4;
+        ModelType m_netType = YOLOV8;
         Precision m_inferencePrecision = FP32;
         int	m_gpuInd = 0;
         size_t m_videoMemory = 0;
