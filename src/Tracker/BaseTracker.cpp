@@ -1,4 +1,5 @@
 #include <fstream>
+#include <stdexcept>
 #include "BaseTracker.h"
 #include "byte_track/BYTETracker.h"
 #include "ShortPathCalculator.h"
@@ -55,6 +56,10 @@ private:
 CTracker::CTracker(const TrackerSettings& settings)
     : m_settings(settings)
 {
+    std::string reason;
+    if (!settings.CheckFilterModel(&reason))
+        throw std::invalid_argument("CTracker: " + reason);
+
     m_SPCalculator.reset();
     SPSettings spSettings = { settings.m_distThres, 12 };
     switch (m_settings.m_matchType)
@@ -561,7 +566,13 @@ void CTracker::CreateDistaceMatrix(const regions_t& regions,
                         }
                         else
                         {
-                            dist /= m_settings.m_distType[ind];
+                            // Embeddings are unavailable (no model for this type or an empty embedding): the cosine metric is excluded from the sum.
+                            // Rescale the accumulated distance by the weights of the remaining metrics so the overall scale (and the m_distThres semantics) stays consistent.
+                            const track_t restWeight = 1.f - m_settings.m_distType[ind];
+                            if (restWeight > 1e-6f)
+                                dist /= restWeight;
+                            else
+                                dist = maxPossibleCost; // No usable metric for this pair
                             //std::cout << "CalcCosine: " << TypeConverter::Type2Str(track->LastRegion().m_type) << ", reg = " << reg.m_brect << ", track = " << track->LastRegion().m_brect << ": res = 1, weight = " << m_settings.m_distType[ind] << ", dist = " << dist << std::endl;
                         }
                     }
@@ -714,13 +725,19 @@ std::unique_ptr<BaseTracker> BaseTracker::CreateTracker(const TrackerSettings& s
     switch (settings.m_tracker)
     {
     case tracking::UniversalTracker:
+    default:
+    {
+        std::string reason;
+        if (!settings.CheckFilterModel(&reason))
+        {
+            std::cerr << "BaseTracker::CreateTracker: " << reason << std::endl;
+            return nullptr;
+        }
         return std::make_unique<CTracker>(settings);
+    }
 
     case tracking::ByteTrack:
         return std::make_unique<byte_track::BYTETracker>((fps > 1.f) ? cvRound(fps) : 30, settings.m_byteTrackSettings.m_trackBuffer,
             settings.m_byteTrackSettings.m_trackThresh, settings.m_byteTrackSettings.m_highThresh, settings.m_byteTrackSettings.m_matchThresh);
-
-    default:
-        return std::make_unique<CTracker>(settings);
     }
 }

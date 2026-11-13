@@ -282,6 +282,11 @@ bool CarsCounting::InitTracker(cv::UMat frame)
     }
 
     m_tracker = BaseTracker::CreateTracker(settings, m_fps);
+    if (!m_tracker)
+    {
+        m_logger->error("Tracker creation failed: unsupported Kalman/FilterGoal combination");
+        return false;
+    }
 
     return true;
 }

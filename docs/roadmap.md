@@ -10,11 +10,15 @@
 > это указано в карточках. Оценки «сработает/не сработает» — результат
 > статического анализа, а не воспроизведения.
 
-> **Статус на 2026-11-11:** C1 (фабрика детекторов), C2 (LAPJV), C7
+> **Статус на 2026-11-13:** C1 (фабрика детекторов), C2 (LAPJV), C7
 > (инициализация TensorRT), C8 (`async_detector`), C11 (ROI гистограмм),
-> C12 (обрезка траектории) и C13 (VIBE RNG/`% 0`) исправлены в рабочем
-> дереве; C2, C7, C8, C11, C12 и C13 — в этих правках, см. карточки.
-> Остальные пункты актуальны.
+> C12 (обрезка траектории), C13 (VIBE RNG/`% 0`), C14 (Python-обёртка),
+> H1 (нормализация без эмбеддинга), H2 (`GetVelocity`), H3
+> (Mahalanobis-метрика), H4 (единицы угла эллипса), H5 (inertia на
+> потерянных кадрах), H6 (матрица ускорения rect), H7 (валидация
+> Kalman/FilterGoal) и H8 (ByteTrack: статика/память/API) исправлены в
+> рабочем дереве; C2, C7, C8, C11, C12 и C13 — в этих правках, C14 и
+> H1–H8 — в этих, см. карточки. Остальные пункты актуальны.
 
 ## 1. Легенда приоритетов
 
@@ -604,6 +608,14 @@ engine собран под батч 4, а пришёл 1 кадр (типичн�
 `py::array` с копией данных (или capsule с `Mat`), обновить `demo.py`,
 добавить CI-джобу сборки модуля и smoke-тест.
 
+**Статус:** ✅ исправлено (2026-11-12). `mtracker.cpp` переписан под
+`BaseTracker`/`DetectMat`: кастер `cv::Mat` копирует данные в `py::array`,
+`MTracker` принимает `settings` и `fps`, `Update` — `double timestamp`
+(секунды). `demo.py` приведён к новому API (доступ к енумам через
+`MTracker.<Enum>`, `maximumAllowedLostTime`/`maxTraceLength` в секундах,
+`Update(regions, frame)`), в `README.md` исправлен заголовок.
+CI-джоба не добавлялась: инфраструктуры CI в репозитории нет.
+
 ---
 
 ## 4. P1 — подробно
@@ -632,6 +644,14 @@ if (restWeight > 1e-6f) dist /= restWeight;
 ```
 
 и документировать, что при отсутствии эмбеддинга метрика исключается.
+
+**Статус:** ✅ исправлено (2026-11-12). Вместо `dist /= weight` накопленная
+сумма нормируется на `1 - m_distType[DistFeatureCos]` (сумма весов
+оставшихся метрик; `CheckDistance` гарантирует, что веса нормированы на 1),
+поэтому шкала расстояний и семантика `m_distThres` сохраняются. Если
+косинус — единственная метрика (`restWeight == 0`), пара получает
+`maxPossibleCost`, то есть не может быть сопоставлена. Метрика
+исключается из сравнения, когда `CalcCosine` вернул `(0, false)`.
 
 ---
 
@@ -663,11 +683,30 @@ if (statePre.rows > 4) { indX = 4; indY = 5; }
 **Исправление:** выбирать индексы по числу состояний и включённому
 ускорению (лучше — хранить метаданные о модели в `TKalmanFilter`).
 
+**Статус:** ✅ исправлено (2026-11-12). `TKalmanFilter` теперь хранит
+индексы `m_velocityXInd`/`m_velocityYInd`, которые заполняются в каждой
+`Create*` по фактической раскладке состояния:
+
+| Создатель | vx, vy | rows |
+|---|---|---|
+| `CreateLinear(Point_t)` | 2, 3 | 4 |
+| `CreateLinearAcceleration(Point_t)` | 2, 3 | 6 |
+| `CreateLinear(Rect)` | 4, 5 | 8 |
+| `CreateLinear(RRect)` | 5, 6 | 10 |
+| `CreateLinearAcceleration(Rect)` | 4, 5 | 12 |
+| UKF / Augmented UKF, точка и rect | 2, 3 | 6 / 8 |
+
+`GetVelocity` читает `statePre`/UKF-состояние по этим индексам, а не по
+размеру состояния. Проверка: `build/h2_test` (точка const-v/const-a, rect
+const-v/const-a, rrect const-v — `GetVelocity` возвращает начальную
+скорость). Несогласованность transition-матрицы `CreateLinearAcceleration
+(Rect)` с её инициализацией остаётся за карточкой H6.
+
 ---
 
 ### H3. Mahalanobis-метрика
 
-**Где:** `src/Tracker/track.cpp:184-205`, `src/Tracker/Kalman.cpp:1247-1270`.
+**Где:** `src/Tracker/track.cpp:184-217`, `src/Tracker/Kalman.cpp:1266-1298`.
 
 1. В качестве ковариации берётся `processNoiseCov` («шум процесса»), а не
    инновационная ковариация `S = H·P·Hᵀ + R`. Это математически неверно:
@@ -684,11 +723,38 @@ if (statePre.rows > 4) { indX = 4; indY = 5; }
 `sqrt((z - Hx)ᵀ S⁻¹ (z - Hx))` для согласованной размерности; не добавлять
 `log det` (или добавлять с ограничением и только как диагностику).
 
+**Статус:** ✅ исправлено (2026-11-12). `GetPtStateAndResCov` заменён на
+`TKalmanFilter::GetPredictionAndInnovCov(innovCov, predictedMeas)`:
+`KalmanLinear` возвращает `predictedMeas = H·statePre` и
+`innovCov = H·errorCovPre·Hᵀ + measurementNoiseCov` (H —
+`measurementMatrix`, identity MP×DP), используя свежие `statePre`/
+`errorCovPre` после `predict()`.
+
+`CTrack::CalcMahalanobisDist` определяет размерность измерения по
+`predictedMeas.rows` (2 → `(cx, cy)`, 4 → `(cx, cy, w, h)`, 5 →
+`(cx, cy, w, h, angle)`), обращает S через SVD и считает только
+`cv::Mahalanobis(z, Hx, S⁻¹)` — член `log(det S)` удалён. Защита от
+нечисловых/отрицательных cost уже есть в `CreateDistaceMatrix`
+(`BaseTracker.cpp:610-612`).
+
+Для UKF (`KalmanUnscented`/`KalmanAugmentedUnscented`) метрика не
+реализована: обёртка не отдаёт текущую ковариацию состояния, а раскладка
+UKF-состояния не является identity-prefix измерения. Функция оставляет
+матрицы пустыми, и `CalcMahalanobisDist` возвращает 0 (как и раньше, без
+изменения шкалы остальных метрик).
+
+Проверка: `build/h3_test` — для point/rect/rrect размеры S (2×2, 4×4,
+5×5), наличие `(w, h)`/угла в `Hx`, невырожденность S, конечность и
+неотрицательность расстояний, порядок «близкая детекция дешевле далёкой»,
+пустые матрицы у неинициализированного фильтра. Сборка `mtracking`
+проходит.
+
 ---
 
 ### H4. Единицы угла в эллипсе предсказания
 
-**Где:** `src/Tracker/track.cpp:439-483`.
+**Где:** `src/Tracker/track.cpp:479-509` (`CalcPredictionEllipse`),
+`src/Tracker/track.cpp:517-528` (`IsInsideArea`).
 
 ```cpp
 rrect.angle = atanf(d.y / d.x);        // радианы (445-463)
@@ -707,11 +773,37 @@ track_t t_ = t - rrect.angle;          // радианы - радианы? Не�
 d.x) * 180.f / CV_PI`), а в `IsInsideArea` переводить:
 `const track_t angleRad = rrect.angle * CV_PI / 180.f;`.
 
+**Статус:** ✅ исправлено (2026-11-12).
+
+- `CalcPredictionEllipse`: `rrect.angle = atan2f(d.y, d.x) * 180.f / CV_PI`
+  (градусы; `atan2f` вместо `atanf(d.y / d.x)` заодно сохраняет квадрант
+  при `d.x < 0`), вертикальная ветка — `rrect.angle = 90.f`.
+- `IsInsideArea`: угол переводится из градусов в радианы
+  (`angleRad = rrect.angle * CV_PI / 180.f`), полярный угол точки считается
+  через `atan2f(pt_.y, pt_.x)` вместо `acosf(pt_.x / r)` — прежний `acos`
+  терял знак `y` и зеркалил точки из нижней полуплоскости в верхнюю.
+  Спец-случай `r <= 1 → t = 0` убран (`atan2f(0, 0) = 0`).
+- Замечание карточки про `GetLastRect` к текущему коду не относится:
+  `GetLastRect` возвращает `m_predictionRect` из Kalman-фильтра (угол уже в
+  градусах), а `CalcPredictionEllipse` используется только в
+  `GetEllipseDist` → `IsInsideArea` (метрики `DistCenters`/`DistRects`).
+- Деление на `sqr(size.width)`/`sqr(size.height)` (полные размеры вместо
+  полуосей) оставлено как есть — это существующая семантика порога `> 1`,
+  привязанная к `minRadius`; её изменение сдвинуло бы порог матчинга.
+
+Проверка: `build/h4_test` (реальный `CTrack`, `KalmanLinear`,
+`FilterCenter`) — диагональное движение даёт 63.435° (а не 1.107),
+вертикальное — 90° (а не 1.571), движение влево — 116.565° (старый код
+давал −63.435°); точка в центре эллипса и на большой оси внутри, далёкая
+снаружи, зеркальные точки над/под осью дают одинаковый cost. Сборка
+`mtracking` проходит.
+
 ---
 
 ### H5. Inertia correction на потерянных кадрах
 
-**Где:** `src/Tracker/Kalman.cpp:769-782` (point), `948-963` (rect).
+**Где:** `src/Tracker/Kalman.cpp:791-807` (point), `973-989` (rect),
+`1176-1192` (rrect).
 
 `CTrack::PointUpdate`/`RectUpdate` при `dataCorrect == false` передают
 пустой `CRegion()` c центром (0,0) и нулевым rect. Внутри `Update`
@@ -730,11 +822,30 @@ if (currDist > m_lastDist) m_deltaTime = min(m_deltaTime + step, max);
 **Исправление:** вычислять `currDist` только при `dataCorrect` (или
 передавать реальную последнюю позицию/предсказание).
 
+**Статус:** ✅ исправлено (2026-11-12). Выбран первый вариант: во всех трёх
+блоках inertia (point, rect и rrect — карточка упоминала только первые два,
+в `Update(cv::RotatedRect, ...)` была та же ошибка) условие стало
+`if (dataCorrect && !m_useAcceleration)`. На кадре без детекции инновации
+нет, поэтому `m_deltaTime` и `transitionMatrix` не меняются; матрица
+остаётся такой, какой была на последнем кадре с измерением. Вариант
+«подставить предсказание» отклонён: `currDist` тогда ≈ 0 и `m_deltaTime`
+дрейфовал бы к минимуму, что тоже искажает динамику без измерений.
+
+Проверка: `build/h5_test` (`Kalman.cpp` + `object_types.cpp`, `dt = 1`,
+скорость 20 px/кадр → шаг дрейфа 1 px/кадр при старом коде). Эмуляция
+потерянного трека (predict → `Update(empty, false)`) для point, rect и
+rrect: шаг предсказания постоянен (spread = 0 при пороге 1e-3; для rect —
+0 при пороге 4 из-за округления `cv::Rect`), после серии потерянных кадров
+реальная детекция корректно обновляет фильтр. С откатом условия в point
+тест падает (`step spread = 5`), т.е. регрессию ловит. Сборка `mtracking`
+проходит.
+
 ---
 
 ### H6. Матрица ускорения для rect-модели
 
-**Где:** `src/Tracker/Kalman.cpp:307-319`.
+**Где:** `src/Tracker/Kalman.cpp:317-329` (transition),
+`363-375` (`processNoiseCov`).
 
 Состояние: `[x, y, w, h, vx, vy, vw, vh, ax, ay, aw, ah]`.
 Строка 0 матрицы перехода:
@@ -752,13 +863,40 @@ if (currDist > m_lastDist) m_deltaTime = min(m_deltaTime + step, max);
 только в `ay` (9); остальные — по аналогии. Добавить тест: при нулевых
 скоростях и `ax > 0` `w` не меняется.
 
+**Статус:** ✅ исправлено (2026-11-12).
+
+- `transitionMatrix`: строка 0 — убран `dt2` в столбце `aw` (10),
+  строка 1 — убран `dt2` в столбце `ah` (11). Теперь
+  `x' = x + dt·vx + dt2·ax`, `y' = y + dt·vy + dt2·ay`; строки `w`/`h`
+  и скоростей не менялись.
+- `processNoiseCov`: та же протечка была не только в строках 0/1
+  (`Q(0,10)`, `Q(1,11)`), но и в строках скоростей — `Q(4,10)` (vx↔aw) и
+  `Q(5,11)` (vy↔ah). Все четыре элемента обнулены; матрица стала
+  блочно-диагональной по координатам и симметричной относительно
+  исправленных строк (симметричные элементы `Q(10,0)`, `Q(11,1)`,
+  `Q(10,4)`, `Q(11,5)` и так были нулями).
+- Вне области карточки (не менялось): в `processNoiseCov` связи
+  `(x,ax)=n2=dt³/2`, `(vx,ax)=n3=dt²` отличаются от стандартной модели
+  шума ускорения `G=[dt²/2, dt, 1]` (там `dt²/2` и `dt`); то же в
+  point-модели. Это равномерно по всем моделям и меняет настройку
+  фильтра, поэтому требует отдельного решения.
+
+Проверка: `build/h6_test` (`KalmanLinear`, `useAcceleration=true`, `dt=2`,
+`dt2=2`; predict вызывается перед каждым `Update`, как в `BaseTracker`).
+Объект с неподвижным центром и квадратично растущим размером
+(`10+4t²`): на потерянных кадрах `x = y = 10`, размер продолжает расти
+(`w/h`: 408 → 678). Контроль: при квадратичном движении центра
+предсказанный `x` уходит вперёд (334 → 409), т.е. столбец `ax` в строке 0
+не задет. При временном возврате старых строк 0/1 тест падает
+(`x`: −3 → −125), затем фикс восстановлен. Сборка `mtracking` проходит.
+
 ---
 
 ### H7. Неподдерживаемые комбинации Kalman/FilterGoal
 
-**Где:** `Kalman.cpp:383-387` (`CreateLinearAcceleration(RotatedRect)` —
-`assert(0)`), `1090-1105` (UKF + FilterRRect — `assert(0)`),
-`812-838` (`GetRectPrediction` для UKF читает `prediction(2),(3)` как
+**Где:** `Kalman.cpp:393-401` (`CreateLinearAcceleration(RotatedRect)` —
+заглушка), `1117-1141` (UKF + FilterRRect — заглушки),
+`841-870` (`GetRectPrediction` для UKF читает `prediction(2),(3)` как
 ширину/высоту, хотя в UKF-состоянии это `vx, vy`).
 
 **Последствия:**
@@ -772,6 +910,60 @@ if (currDist > m_lastDist) m_deltaTime = min(m_deltaTime + step, max);
 **Исправление:** либо реализовать модели, либо валидировать настройки в
 `CTracker`/`CreateTracker` и возвращать ошибку (не `assert`), либо
 документированно понижать до `KalmanLinear`.
+
+**Статус:** ✅ исправлено (2026-11-12). Выбран вариант «валидировать
+настройки и возвращать ошибку»: модели не реализовывались, тихого
+понижения до `KalmanLinear` нет.
+
+- `TrackerSettings.h:243-263` — новый метод
+  `bool CheckFilterModel(std::string* reason = nullptr) const`. Отвергает
+  ровно одну группу комбинаций:
+  `m_filterGoal == FilterRRect && (m_kalmanType != KalmanLinear ||
+  m_useAcceleration)`. Для `FilterCenter`/`FilterRect` валидны все модели,
+  включая UKF; для `FilterRRect` остаётся линейная модель без ускорения
+  (единственная реализованная для `RotatedRect`). В `reason` — описание,
+  какие настройки не поддержаны и что использовать.
+- `BaseTracker.cpp:56-62` — `CTracker::CTracker` проверяет настройки и при
+  ошибке бросает `std::invalid_argument` (защита от прямого
+  конструирования; класс локальный для `.cpp`).
+- `BaseTracker.cpp:723-741` — `BaseTracker::CreateTracker` проверяет
+  настройки до создания `CTracker` (ветки `UniversalTracker` и `default`)
+  и при ошибке печатает причину в `stderr` и возвращает `nullptr`.
+  `ByteTrack` эти настройки не использует и не валидируется.
+- Вызовы обновлены на обработку `nullptr`: `example/CarsCounting.cpp:284`
+  (лог + `return false`), `async_detector/AsyncDetector.cpp:444` (лог +
+  ранний выход из `TrackingThread`, иначе `tracker->Update` падал бы).
+  Python-обёртка использует `py::init(&BaseTracker::CreateTracker)`;
+  `nullptr` превращается в исключение pybind11 при конструировании —
+  оставлено без изменений. В `BaseTracker.h` добавлено описание
+  контракта `CreateTracker` (`nullptr` при неподдерживаемых настройках).
+- `Kalman.cpp:393-401`, `1117-1141` — три `assert(0)` заменены на
+  понятные сообщения в `std::cerr`. После валидации эти пути недостижимы
+  из `CTracker`, но остаются защитой при прямом использовании
+  `TKalmanFilter`; фильтр при этом не инициализируется, abort в Debug нет.
+- `Kalman.cpp:841-870` — исправлен баг `GetRectPrediction` для UKF:
+  ширина/высота теперь читаются из индексов 6 и 7 (`[x, y, vx, vy, ax, ay,
+  w, h]`), а не 2 и 3 (`vx, vy`). Ветка `#else` (UKF выключен в CMake)
+  по-прежнему использует линейное предсказание с индексами 2 и 3. После
+  этого `UKF + FilterRect` работает корректно, поэтому валидация его не
+  отвергает.
+
+Проверка: `build/h7_test` (`TrackerSettings.h` header-only, OpenCV
+`core`) перебирает 3 модели × 3 цели × ускорение вкл/выкл (18
+комбинаций) плюс настройки по умолчанию: отвергаются только
+`FilterRRect` с UKF или с ускорением, у отказа непустой `reason` с
+упоминанием `FilterRRect`, у валидных комбинаций `reason` не меняется.
+При временном отключении проверки тест падает на 5 комбинациях и на
+вызове без `reason`, затем фикс восстановлен. Сборка `mtracking`
+(`USE_OCV_UKF=ON`, проверяет компиляцию исправленной UKF-ветки),
+`MultitargetTracker` и `AsyncDetector` (Release) проходит.
+
+Ограничение: рантайм-проверка UKF на этой машине невозможна —
+`opencv_tracking4140.dll` импортирует `opencv_dnn4140.dll`, которому
+нужны отсутствующие `openvino.dll` и `cublas64_13.dll`. Поэтому фикс
+`GetRectPrediction` для UKF подтверждён только компиляцией и сверкой с
+уже корректным путём `Update(cv::Rect)` (`Kalman.cpp:1007-1008`, читает
+6 и 7).
 
 ---
 
@@ -798,6 +990,51 @@ removed_stracks_ = jointStracks(removed_stracks_, current_removed_stracks); // �
 статичности; очищать/тримить `removed_stracks_`; `trackIDs.clear()` в
 начале `GetRemovedTracks` (или задокументировать контракт и привести
 `CTracker` к тому же).
+
+**Статус:** ✅ исправлено (2026-11-13). Выбран вариант «считать `period`
+от времени последней детекции» без полноценной поддержки статики:
+пороги `m_minStaticTime`/`m_maxStaticTime`/`m_maxSpeedForStatic` в
+конструктор `BYTETracker` не передаются, их реализация была бы новой
+функциональностью.
+
+- `GetTracks` (`25-48`): `period` больше не
+  `m_lastFrameTime - m_lastFrameTime`, а
+  `m_lastFrameTime - trace.at(trace.size() - 1).m_frameTime` — время с
+  последнего обновления/детекции трека, как в `CTrack::ConstructObject`
+  (`track.cpp:663-670`). `STrack` добавляет точку трассы в
+  `activate`/`update`/`reActivate`, поэтому время есть у любого
+  выводимого трека; добавлена защита на пустую трассу. Для активных
+  треков значение ≈ 0 (все они обновлены в текущем кадре) — та же
+  семантика, что у `CTracker` для движущихся объектов. `isStatic`
+  остаётся `false`: ByteTrack не детектирует брошенные объекты.
+- `Update`, шаг 5 (`226-242`): `removed_stracks_ =
+  current_removed_stracks` вместо `jointStracks(removed_stracks_, ...)` —
+  список содержит только удаления текущего кадра, память не растёт.
+  Присваивание выполняется до вычисления `lost_stracks_`, поэтому
+  только-что-удалённые исключаются сразу (раньше они выпадали из lost
+  лишь на следующем кадре через накопленный список). Безопасно:
+  удалённые треки не участвуют в ассоциации и не возвращаются в
+  `lost_stracks_`.
+- `GetRemovedTracks` (`51-63`): `trackIDs.clear()` в начале — контракт
+  как у `CTracker::GetRemovedTracks`: заменить содержимое ID, удалёнными
+  на текущем кадре (перекликается с унификацией контракта из M24).
+- Вне области карточки (не менялось): трасса `STrack` никогда не
+  триммится и растёт весь срок жизни трека; `GetTracks` строит
+  `RotatedRect` из трёх точек (`tl`, `(x+w, y)`, `br`) — это карточка
+  M44.
+
+Проверка: `build/h8_test` (`BYTETracker.cpp` + `STrack.cpp` +
+`KalmanFilter.cpp` + `lapjv.cpp`, OpenCV `core`, `frame_rate = 30`,
+`track_buffer = 1` → `max_time_lost_ = 1`). Сценарии: одиночная
+детекция даёт трек с `isStatic = false` и `staticTime = 0`; при
+превышении lost-таймаута трек попадает в `GetRemovedTracks`; повторный
+вызов не дублирует ID; на следующем кадре список пуст (сброс за кадр);
+удалённый ID не возвращается в `GetTracks`; заполненный вызывающим
+вектор очищается; на 60 кадрах появлений/таймаутов список не
+накапливается. При временном возврате накопления `removed_stracks_` и
+append в `GetRemovedTracks` тест падает на 4 проверках, затем фикс
+восстановлен. Сборка `mtracking` (включает исходники byte_track,
+Release) проходит.
 
 ---
 
@@ -956,9 +1193,8 @@ Python/логов.
   собрался; копируется только один файл.
 * `-DBUILD_YOLO_LIB`/`-DBUILD_YOLO_TENSORRT` (151-152) — таких опций
   больше нет (есть `BUILD_ONNX_TENSORRT`).
-* `demo.py` вызывает `mt.MTracker(tracker_settings)` без `fps` и
-  `mtracker.Update(regions, img, fps)` с `float` вместо `time_point_t`
-  — несовместимо с текущим C++ API (см. C14).
+* `demo.py` приведён к текущему API в рамках C14 (2026-11-12), в части
+  H16 остаётся только упаковка (`setup.py`).
 
 **Исправление:** перейти на `setuptools`/`pyproject.toml`, `exist_ok`,
 проверять результат CMake, обновить demo.py, версионировать из одного

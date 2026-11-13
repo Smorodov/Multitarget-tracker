@@ -442,6 +442,11 @@ void AsyncDetector::DetectThread(const config_t& config, cv::Mat firstFrame, Fra
 void AsyncDetector::TrackingThread(const TrackerSettings& settings, FramesQueue* framesQue, float fps, std::atomic<bool>* stopFlag)
 {
     std::unique_ptr<BaseTracker> tracker = BaseTracker::CreateTracker(settings, fps);
+    if (!tracker)
+    {
+        std::cerr << "AsyncDetector::TrackingThread: tracker creation failed, tracking thread stopped" << std::endl;
+        return;
+    }
 
     for (; !stopFlag->load();)
     {

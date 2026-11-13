@@ -109,7 +109,7 @@ Keyboard Controls:
 
 ### Integration as Library
 ```cpp
-#include <mtracking/Ctracker.h>
+#include <mtracking/BaseTracker.h>
 
 std::unique_ptr<BaseTracker> m_tracker;
 TrackerSettings settings;
