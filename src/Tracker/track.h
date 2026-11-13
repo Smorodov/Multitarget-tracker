@@ -113,8 +113,8 @@ public:
     track_t WidthDist(const CRegion& reg) const;
     track_t HeightDist(const CRegion& reg) const;
 
-    void Update(const CRegion& region, bool dataCorrect, double maxTraceLength, cv::UMat prevFrame, cv::UMat currFrame, double minStaticTime, int maxSpeedForStatic, time_point_t currTime);
-    void Update(const CRegion& region, const RegionEmbedding& regionEmbedding, bool dataCorrect, double maxTraceLength, cv::UMat prevFrame, cv::UMat currFrame, double minStaticTime, int maxSpeedForStatic, time_point_t currTime);
+    void Update(const CRegion& region, bool dataCorrect, double maxTraceLength, cv::UMat currFrame, double minStaticTime, int maxSpeedForStatic, time_point_t currTime);
+    void Update(const CRegion& region, const RegionEmbedding& regionEmbedding, bool dataCorrect, double maxTraceLength, cv::UMat currFrame, double minStaticTime, int maxSpeedForStatic, time_point_t currTime);
 
     bool IsStatic() const;
     bool IsStaticTimeout(time_point_t currTime, double staticPeriod) const;
@@ -179,7 +179,7 @@ private:
 #endif
 
     ///
-    void RectUpdate(const CRegion& region, bool dataCorrect, cv::UMat prevFrame, cv::UMat currFrame);
+    void RectUpdate(const CRegion& region, bool dataCorrect, cv::UMat currFrame);
 
     ///
     void CreateExternalTracker(int channels);

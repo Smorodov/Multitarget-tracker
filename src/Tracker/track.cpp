@@ -279,14 +279,12 @@ std::pair<track_t, bool> CTrack::CalcCosine(const RegionEmbedding& embedding) co
 /// \param region
 /// \param dataCorrect
 /// \param maxTraceLength
-/// \param prevFrame
 /// \param currFrame
 /// \param trajLen
 ///
 void CTrack::Update(const CRegion& region,
                     bool dataCorrect,
                     double maxTraceLength,
-                    cv::UMat prevFrame,
                     cv::UMat currFrame,
                     double minStaticTime, int maxSpeedForStatic,
                     time_point_t currTime)
@@ -325,10 +323,10 @@ void CTrack::Update(const CRegion& region,
 		PointUpdate(region.m_rrect.center, region.m_rrect.size, region.m_rrect.angle, dataCorrect, currFrame.size());
 		break;
 	case tracking::FilterGoal::FilterRect:
-		RectUpdate(region, dataCorrect, prevFrame, currFrame);
+		RectUpdate(region, dataCorrect, currFrame);
 		break;
 	case tracking::FilterGoal::FilterRRect:
-		RectUpdate(region, dataCorrect, prevFrame, currFrame);
+		RectUpdate(region, dataCorrect, currFrame);
 		break;
 	};    
 
@@ -358,7 +356,6 @@ void CTrack::Update(const CRegion& region,
 /// \param regionEmbedding
 /// \param dataCorrect
 /// \param maxTraceLength
-/// \param prevFrame
 /// \param currFrame
 /// \param trajLen
 ///
@@ -366,7 +363,6 @@ void CTrack::Update(const CRegion& region,
                     const RegionEmbedding& regionEmbedding,
                     bool dataCorrect,
                     double maxTraceLength,
-                    cv::UMat prevFrame,
                     cv::UMat currFrame,
                     double minStaticTime, int maxSpeedForStatic,
                     time_point_t currTime)
@@ -379,10 +375,10 @@ void CTrack::Update(const CRegion& region,
 		PointUpdate(region.m_rrect.center, region.m_rrect.size, region.m_rrect.angle, dataCorrect, currFrame.size());
 		break;
 	case tracking::FilterGoal::FilterRect:
-		RectUpdate(region, dataCorrect, prevFrame, currFrame);
+		RectUpdate(region, dataCorrect, currFrame);
 		break;
 	case tracking::FilterGoal::FilterRRect:
-		RectUpdate(region, dataCorrect, prevFrame, currFrame);
+		RectUpdate(region, dataCorrect, currFrame);
 		break;
 	};
 
@@ -847,12 +843,10 @@ void CTrack::KalmanPredictPoint()
 /// \brief RectUpdate
 /// \param region
 /// \param dataCorrect
-/// \param prevFrame
 /// \param currFrame
 ///
 void CTrack::RectUpdate(const CRegion& region,
                         bool dataCorrect,
-                        cv::UMat prevFrame,
                         cv::UMat currFrame)
 {
     bool wasTracked = false;
