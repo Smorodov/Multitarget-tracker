@@ -33,6 +33,7 @@ CTrack::CTrack(const CRegion& region,
       m_predictionPoint(region.m_rrect.center),
       m_trackID(trackID),
       m_lastDetectionTime(currTime),
+      m_staticStartTime(currTime),
       m_currType(region.m_type),
       m_lastType(region.m_type),
       m_externalTrackerForLost(externalTrackerForLost),
@@ -88,6 +89,7 @@ CTrack::CTrack(const CRegion& region,
       m_predictionPoint(region.m_rrect.center),
       m_trackID(trackID),
       m_lastDetectionTime(currTime),
+      m_staticStartTime(currTime),
       m_currType(region.m_type),
       m_lastType(region.m_type),
       m_externalTrackerForLost(externalTrackerForLost),
@@ -686,8 +688,13 @@ objtype_t CTrack::GetCurrType() const
 ///
 TrackingObject CTrack::ConstructObject(time_point_t frameTime) const
 {
-    std::chrono::duration<double> period = frameTime - m_staticStartTime;
-    TrackingObject object(GetLastRect(), m_trackID, m_trace, IsStatic(), cvRound(period.count()), IsOutOfTheFrame(),
+    // The static period is only meaningful for a confirmed static track: a
+    // fresh (not yet updated) or a moving track must report 0, not the time
+    // since the track creation or a leftover of the last non-static period -
+    // the field is public and exposed to Python/logs (roadmap H15).
+    const std::chrono::duration<double> period = frameTime - m_staticStartTime;
+    TrackingObject object(GetLastRect(), m_trackID, m_trace, IsStatic(),
+                          IsStatic() ? cvRound(period.count()) : 0, IsOutOfTheFrame(),
                           m_currType, m_lastRegion.m_confidence, m_kalman.GetVelocity());
     object.m_speedMps = CalcSpeedMps(frameTime);
     return object;

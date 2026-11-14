@@ -20,9 +20,13 @@
 > (статичность: время вместо точек, speed-gate), H10 (CarsCounting
 > читает `[tracking]`), H11 (геопривязка: гонки, деление на ноль,
 > дегенеративные гомографии), H12 (`RoadLine`: направление
-> пересечения, UB), H13 (выход по `Esc` из видео) и H14 (thread-guard
-> кэша UMat в `Frame`) исправлены в рабочем дереве; C2, C7, C8, C11,
-> C12 и C13 — в этих правках, C14 и H1–H14 — в этих, см. карточки.
+> пересечения, UB), H13 (выход по `Esc` из видео), H14 (thread-guard
+> кэша UMat в `Frame`), H15 (`m_staticTime`: мусор для свежих и
+> не-статичных треков), H16 (Python-упаковка: setuptools/pyproject
+> без `distutils`, одноисточниковая версия, диагностика сборки) и
+> H17 (INI с ошибкой больше не считается загруженным) исправлены в
+> рабочем дереве; C2, C7, C8, C11, C12 и C13 — в этих правках, C14 и
+> H1–H17 — в этих, см. карточки.
 > Остальные пункты актуальны.
 
 ## 1. Легенда приоритетов
@@ -1493,6 +1497,49 @@ Python/логов.
 конструкторе `CTrack`; в `ConstructObject` возвращать 0, если
 `!m_isStatic` (или отдельное поле «время с последней детекции»).
 
+**Статус:** ✅ исправлено (2026-11-14). Обе части по предложенному
+варианту, отдельное поле не заводилось (аналог уже есть —
+`GetLostPeriod`).
+
+- Инициализация: в обоих конструкторах `CTrack`
+  (`src/Tracker/track.cpp:36` и `:92`) в список инициализации добавлен
+  `m_staticStartTime(currTime)`. Уточнение к карточке: `time_point_t`
+  по умолчанию — не обязательно эпоха: `std::chrono::duration` с
+  тривиальным default-ctor оставляет rep неопределённым, т.е. там
+  может лежать мусор из переиспользованной памяти кучи (в т.ч.
+  похожий на правдоподобную временную метку) — UB-чтение убрано.
+- Гейт: `ConstructObject` (`src/Tracker/track.cpp:689-699`) отдаёт
+  период в `TrackingObject::m_staticTime` только при `IsStatic()`;
+  не-статичный/свежий трек всегда репортит 0. Раньше движущийся трек
+  после первого `CheckStatic` репортил «время с момента последнего
+  не-статического кадра» — по смыслу поля («Object is abandoned,
+  seconds») вводило в заблуждение. Семантика «период с момента
+  подтверждения статичности» сохранена; отрицательный период в
+  статичной ветке невозможен (`m_staticStartTime ≤ frameTime` по
+  построению), кламп не добавлялся. `IsStaticTimeout` (защищён
+  `m_isStatic`) и `CheckStatic` не менялись.
+- Попутно: `build/h9_test` обновлён под текущую сигнатуру
+  `CTrack::Update` (после удаления `prevFrame` хелпер `Step` передавал
+  два `cv::UMat` — тест перестал бы собираться).
+
+Проверка: `build/h15_test` (компилирует `track.cpp + Kalman.cpp +
+object_types.cpp`, хелперы из h9_test), 11 проверок: свежий трек без
+обновлений — `m_staticTime == 0` и `IsStaticTimeout == false` (создан в
+T(0), `ConstructObject` в T(10) и в T(0)); неподвижный объект — static
+на 2.0 с, сразу после подтверждения 0, через 1 с — 1; движущийся — 0 на
+каждом шаге; переход static → moving — пока не статичен, 0 (объект
+может снова стать статичным на новом месте — это разрешено);
+`minStaticTime = 0` — всегда 0. Замечание по геометрии `CheckStatic`
+(в тестовый сценарий заложено): последняя точка трека и текущая
+детекция исключаются из проверки `inCenter`, предсказания фильтра
+отстают от скачка позиции — выход из статики виден через несколько
+шагов. Чувствительность: возврат только гейта — 1 FAIL (свежий трек
+репортил 10 вместо 0); возврат только инициализации через публичный
+API не наблюдаем (оба потребителя поля защищены гейтом/`m_isStatic`) —
+init проверяется рассуждением как устранение UB-чтения, гейт — тестом.
+Регресс h2–h9 (h9 пересобран) + h10–h14, h15 — зелёный; сборка
+Release `mtracking`, `MultitargetTracker`, `AsyncDetector` проходит.
+
 ---
 
 ### H16. Python-упаковка и demo.py
@@ -1514,6 +1561,87 @@ Python/логов.
 проверять результат CMake, обновить demo.py, версионировать из одного
 источника. Добавить CI-джобу «wheel + `python -c "import pymtracking"`».
 
+**Статус:** ✅ исправлено (2026-11-14). `demo.py` был приведён к текущему
+API в рамках C14 (2026-11-12) и не менялся — в части H16 осталась только
+упаковка.
+
+- `pyproject.toml` (новый файл): PEP 517 —
+  `build-backend = "setuptools.build_meta"`, `requires = ["setuptools>=64",
+  "wheel"]`. Локальный Python 3.10.11 (stdlib `distutils` ещё есть, pip
+  26.1.2, setuptools 65.5.0) баг «сборка падает на Python ≥ 3.12» не
+  воспроизводит — исправление структурное: `distutils` в `setup.py`
+  удалён полностью (проверено: 0 вхождений).
+- `setup.py` переписан (старый шаблон времён setuptools-4.x, 213 строк):
+  остались только `CMakeExtension` + `BuildCMakeExt(build_ext)`
+  (`setup.py:44-119`); удалены легаси-классы `InstallCMakeLibsData`/
+  `InstallCMakeLibs`/`InstallCMakeScripts` (хаки вокруг distutils
+  `install_data`/egg-info, включая `__metaclass__`), не используемый
+  `LooseVersion` и хардкод версии `1.0.1`, разошедшийся с корневым
+  `project(MTTracking VERSION 1.1.0)`.
+- Версия из одного источника: `get_version()` (`setup.py:33-41`) парсит
+  `project(... VERSION x.y.z)` из корневого `CMakeLists.txt`; без
+  совпадения — `RuntimeError`. Проверено: `python setup.py --version` →
+  `1.1.0`; имя колеса `pymtracking-1.1.0-cp310-cp310-win_amd64.whl`.
+- `os.makedirs(..., exist_ok=True)` для build_temp и каталога
+  расширения (`setup.py:62-66`) — повторная сборка не падает.
+- CMake-аргументы (`setup.py:70-87`): мёртвые
+  `-DBUILD_YOLO_LIB`/`-DBUILD_YOLO_TENSORRT` удалены (таких опций нет,
+  есть `BUILD_ONNX_TENSORRT`); современный синтаксис `cmake -S ... -B
+  ...`; конфигурация: `USE_OCV_BGFG/USE_OCV_KCF=ON`, `SILENT_WORK=ON`,
+  `BUILD_EXAMPLES/BUILD_ASYNC_DETECTOR/BUILD_CARS_COUNTING=OFF`,
+  `MTRACKER_PYTHON=ON`; доп. кэш-переменные — через переменную
+  окружения `CMAKE_ARGS` (например `-DOpenCV_DIR=...`).
+- Диагностика вместо `IndexError`: результат CMake ищется рекурсивно по
+  всему build_temp (`os.walk`, `setup.py:96-104`); найдено 0 модулей →
+  `RuntimeError` с подсказкой. Переносятся все найденные модули, а не
+  `[0]`. Чувствительность: с подменённым `PACKAGE_NAME` сборка даёт
+  ясный `RuntimeError: CMake did not produce the ... module` (старый код
+  падал бы `IndexError` в `pyd_path[0]`).
+- Побочно найдено и исправлено в корневом `CMakeLists.txt:33-41`
+  (выход за формальный скоуп карточки): жёсткое
+  `set(CMAKE_BINARY_DIR ${CMAKE_SOURCE_DIR}/build)` перенаправляло
+  выходы ЛЮБОЙ out-of-source сборки (в т.ч. wheel) в один и тот же
+  каталог `<repo>/build`, смешивая артефакты, сконфигурированные с
+  разными опциями (wheel-вариант `SILENT_WORK=ON` перезаписывал
+  `mdetection/inih/mtracking/spdlog` основного дерева и клал туда
+  посторонний pyd). Переопределение оставлено условным
+  (`CMAKE_BINARY_DIR STREQUAL "${CMAKE_SOURCE_DIR}/build"`) — штатное
+  дерево `cmake -B build` работает как раньше, чужие деревья пишут в
+  себя. Обнаруженная при этом несовместимость: pip-сборка использует
+  другой (новее) тулчейн MSVC, чем генератор основного дерева — её
+  объекты не линкуются старым линкером (`__std_find_last_not_of_...`);
+  после удаления перезаписанных `.lib` основное дерево перелинковалось
+  корректно (см. ниже).
+- Windows-специфика сборки: MSBuild понимает `/m`, а не `-j8`
+  (`setup.py:86`, иначе `MSB1001: Unknown switch`).
+
+Проверка (локально, Python 3.10.11): `python -m pip wheel . -w
+build/h16_wheel` с `CMAKE_ARGS=-DOpenCV_DIR=...` — полный
+cmake-configure + сборка `mtracking`/`mdetection`/`pymtracking` в
+изолированном build_temp, `Successfully built pymtracking`; содержимое
+колеса — `pymtracking.cp310-win_amd64.pyd` + dist-info; распаковка
+колеса и `import pymtracking` — успешно. Уточнение к карточке (важно
+для пользователей Windows): с Python 3.8 extension-модули и их
+DLL-зависимости ищутся без PATH (`LOAD_LIBRARY_SEARCH_*`), поэтому
+OpenCV-DLL'ы должны быть видны загрузчику — системные каталоги,
+`os.add_dll_directory(...)` или рядом с модулем; формулировка этого
+ограничения добавлена в docstring `setup.py`. Wheel сознательно
+переносит только python-модуль (перераспределение C++ DLL — вне скоупа,
+как и раньше). CI-джоба не проверяется локально (новый
+`.github/workflows/python.yml`, 26 строк: ubuntu, setup-python 3.12 —
+заодно доказывает отсутствие `distutils`, apt `libopencv-dev
+libopencv-contrib-dev`, `pip wheel .` → установка колеса →
+`python -c "import pymtracking"`); на Linux `.so` линкуется с
+системным OpenCV из apt, так что import-тест там самодостаточен.
+
+Регресс: удалены замусоренные wheel-попытками артефакты из
+`build/Release` (pyd + SILENT_WORK-варианты `mdetection/inih/spdlog/
+mtracking`), основное дерево перелинковано (перелинковка из готовых
+VS2022-объектов; mdetection.lib пришлось удалить принудительно —
+MSBuild считал перезаписанный wheel'ом lib «новее» объектов),
+`mtracking`, `MultitargetTracker`, `AsyncDetector` собраны чисто;
+регресс h2–h9 + h10–h14, h15 — все зелёные.
+
 ---
 
 ### H17. INI с ошибкой считается валидным
@@ -1531,6 +1659,44 @@ if (reader.ParseError() >= 0)
 
 **Исправление:** `if (reader.ParseError() == 0)`; для `> 0` — лог с
 номером строки и `return false` (или явный partial-режим).
+
+**Статус:** ✅ исправлено (2026-11-14). По предложенному варианту,
+partial-режим не заводился — полный отказ надёжнее и совпадает с уже
+существующим паттерном `ReadGeobindings`
+(`example/CarsCounting.cpp:470-480`: раздельный лог «файл не
+существует» / «ошибка в строке N» + `false`).
+
+- Гард (`src/Tracker/TrackerSettings.cpp:16-29`): `parseError != 0` →
+  для `> 0` лог «error in the ini file at line: N», для `−1` — «can't
+  open the file», в обоих случаях `return false` **до** затирания
+  настроек вызывающего (`trackerSettings` не модифицируется). Случай
+  `−1` и раньше отсекался условием `>= 0`, но без диагностики; теперь
+  оба случая логируются в стиле файла (`std::cout` — spdlog-логгера тут
+  нет). Тело чтения настроек не менялось.
+- Потребители: `example/CarsCounting.cpp:52` и
+  `example/VideoExample.cpp:63` — флаг `m_trackerSettingsLoaded`;
+  `InitDetector`/`InitTracker` CarsCounting (`:198`, `:234`) при `false`
+  не инициализируются — битый INI теперь виден как ошибка запуска, а не
+  тихие конструкторские дефолты. Замечание вне скоупа: VideoExample сам
+  флаг не использует (только хранит, потребитель — унаследованный
+  CarsCounting).
+
+Проверка: `build/h17_test` (компилирует `TrackerSettings.cpp +
+thirdparty/inih/INIReader.cpp + ini.c` — тот же состав, что у таргета
+`inih`), 9 проверок: валидный INI → `true` и значения реально
+применяются (`tracker_type` → ByteTrack, `distance_type` →
+DistJaccard, `filter_goal` → FilterRect, `min_static_time` → 9);
+битый INI (мусорная строка 3, значения после неё) → `false` и
+настройки вызывающего не тронуты (сентинел-поле сохранено — раньше
+функция затирала их частично прочитанным файлом); несуществующий файл →
+`false` (регрессия случая `−1`). Чувствительность: удаление гарда
+(возврат к старому поведению) → 3 FAIL — «corrupt ini returns false»,
+«caller settings are not modified», «missing ini returns false» (после
+удаления всего гарда деградировал и случай `−1`). Регресс h2–h9,
+h10–h14, h15, h17 — зелёный; сборка Release `mtracking`,
+`MultitargetTracker`, `AsyncDetector` проходит. Python-колесо H16 не
+пересобиралось: изменение внутри `mtracking`, артефакт wheel'а —
+средство проверки H16, а не публикуемый пакет.
 
 ---
 

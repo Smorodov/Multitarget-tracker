@@ -1,0 +1,33 @@
+name: Python wheel CI
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    # Python 3.12 has no distutils: this job proves that setup.py does not
+    # import it (roadmap H16).
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libopencv-dev libopencv-contrib-dev cmake g++
+
+    - name: Build wheel
+      run: python -m pip wheel . -w dist
+
+    - name: Install wheel
+      run: python -m pip install dist/*.whl
+
+    - name: Import test
+      run: python -c "import pymtracking; print('pymtracking OK')"

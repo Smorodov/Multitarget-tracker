@@ -30,9 +30,15 @@ elseif (MSVC)
     add_definitions(-D_USE_MATH_DEFINES -DNOMINMAX)
 endif()
 
-set(CMAKE_BINARY_DIR ${CMAKE_SOURCE_DIR}/build)
-set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR})
-set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
+# Keep the outputs of the conventional in-repo build tree (cmake -B build)
+# in <repo>/build. Do NOT re-set CMAKE_BINARY_DIR for other (out-of-source)
+# build trees: manually re-pointing it makes every build write into the same
+# directory and mix artifacts configured with different options (e.g. the
+# SILENT_WORK=ON python-wheel build vs the normal tree) - roadmap H16.
+if (CMAKE_BINARY_DIR STREQUAL "${CMAKE_SOURCE_DIR}/build")
+    set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR})
+    set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
+endif()
 
 FIND_PACKAGE(OpenCV REQUIRED)
 
