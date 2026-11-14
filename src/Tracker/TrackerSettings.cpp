@@ -13,11 +13,24 @@ bool ParseTrackerSettings(const std::string& settingsFile, TrackerSettings& trac
 
     INIReader reader(settingsFile);
 
-    if (reader.ParseError() >= 0)
+    // A file with a syntax error must not be treated as loaded: ini_parse
+    // stops at the first error, so only the values before it would be read
+    // and the rest would silently fall back to defaults (roadmap H17).
+    const int parseError = reader.ParseError();
+    if (parseError != 0)
     {
-        std::cout << "ParseTrackerSettings - readed" << std::endl;
+        if (parseError > 0)
+            std::cout << "ParseTrackerSettings - error in the ini file at line: " << parseError << std::endl;
+        else
+            std::cout << "ParseTrackerSettings - can't open the file" << std::endl;
 
-        trackerSettings = TrackerSettings();
+        std::cout << "ParseTrackerSettings: " << false << std::endl;
+        return false;
+    }
+
+    std::cout << "ParseTrackerSettings - readed" << std::endl;
+
+    trackerSettings = TrackerSettings();
 
         // Read tracking settings
         auto trackerType = reader.GetInteger("tracking", "tracker_type", -1);
@@ -90,8 +103,7 @@ bool ParseTrackerSettings(const std::string& settingsFile, TrackerSettings& trac
 			trackerSettings.m_whiteList.push_back(wname);
 		}
 
-        res = true;
-    }
+    res = true;
     std::cout << "ParseTrackerSettings: " << res << std::endl;
     return res;
 }

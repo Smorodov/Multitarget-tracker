@@ -120,7 +120,7 @@ public:
         {
             if (m_mGray.empty() || !m_mGrayGenerated)
             {
-                if (m_umBGR.empty() || !m_umBGRGenerated || lastThreadID != m_umGrayThreadID)
+                if (m_umBGR.empty() || !m_umBGRGenerated || lastThreadID != m_umBGRThreadID)
                     cv::cvtColor(m_mBGR, m_umGray, cv::COLOR_BGR2GRAY);
                 else
                     cv::cvtColor(m_umBGR, m_umGray, cv::COLOR_BGR2GRAY);
