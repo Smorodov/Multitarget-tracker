@@ -1,6 +1,71 @@
+#include <algorithm>
+#include <cctype>
 #include <fstream>
+#include <utility>
 #include "OCVDNNDetector.h"
 #include "mtracking/nms.h"
+
+namespace
+{
+///
+/// \brief Safe query of the parser-consumed shape of a forward output.
+///
+/// A valid layout is rank 2 (rows x dimensions) or rank 3 (1 x rows x
+/// dimensions). Returns false and leaves the outputs untouched for an
+/// index outside the vector, an empty output and any other rank: the
+/// parsers must not index size[] beyond the actual dims and must not
+/// treat a wrong-model output as data (roadmap H19).
+///
+bool OutShape(const std::vector<cv::Mat>& detections, size_t index, int& rows, int& dimensions)
+{
+    if (index >= detections.size())
+        return false;
+    const cv::Mat& out = detections[index];
+    if (out.total() == 0)
+        return false;
+    if (out.dims == 2)
+    {
+        rows = out.size[0];
+        dimensions = out.size[1];
+    }
+    else if (out.dims == 3 && out.size[0] == 1)
+    {
+        rows = out.size[1];
+        dimensions = out.size[2];
+    }
+    else
+        return false;
+    return rows > 0 && dimensions > 0;
+}
+
+///
+/// \brief Find a forward output by a substring of its name
+///        (case-insensitive).
+/// \param names Output blob names (m_outNames).
+/// \param keys Substrings to search for.
+/// \return The first matching index or -1 if nothing matches.
+///
+/// The parsers must not rely on a hard-coded output order: the same model
+/// family is exported with different output orders (e.g. D-FINE provides
+/// [labels, boxes, scores] in the OpenCV DNN export and
+/// [scores, labels, boxes] in the TensorRT one, see DFINE_bb.hpp).
+///
+int FindOut(const std::vector<cv::String>& names, std::initializer_list<const char*> keys)
+{
+    for (size_t i = 0; i < names.size(); ++i)
+    {
+        std::string name = names[i];
+        std::transform(name.begin(), name.end(), name.begin(),
+            [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+        for (const char* key : keys)
+        {
+            if (name.find(key) != std::string::npos)
+                return static_cast<int>(i);
+        }
+    }
+    return -1;
+}
+} // namespace
 
 ///
 /// \brief OCVDNNDetector::OCVDNNDetector
@@ -204,10 +269,16 @@ bool OCVDNNDetector::Init(const config_t& config)
                 className.erase(className.find_last_not_of(" \t\n\r\f\v") + 1);
                 m_classNames.push_back(className);
             }
+            // A trailing blank line must not shift class indices or fail
+            // validation; internal blank lines stay and are rejected below.
+            while (!m_classNames.empty() && m_classNames.back().empty())
+                m_classNames.pop_back();
+
 			if (!FillTypesMap(m_classNames))
 			{
-				std::cout << "Unknown types in class names!" << std::endl;
-				assert(0);
+				std::cerr << "OCVDNNDetector: unknown types in class names file "
+					<< classNames->second << std::endl;
+				return false;
 			}
         }
     }
@@ -216,7 +287,12 @@ bool OCVDNNDetector::Init(const config_t& config)
 	auto whiteRange = config.equal_range("white_list");
 	for (auto it = whiteRange.first; it != whiteRange.second; ++it)
 	{
-        m_classesWhiteList.insert(TypeConverter::Str2Type(it->second));
+		const objtype_t type = TypeConverter::Str2Type(it->second);
+		if (type != bad_type)
+			m_classesWhiteList.insert(type);
+		else
+			std::cerr << "OCVDNNDetector: unknown white_list type \""
+				<< it->second << "\" (ignored)" << std::endl;
 	}
 
     auto confidenceThreshold = config.find("confidenceThreshold");
@@ -363,6 +439,25 @@ void OCVDNNDetector::Detect(const cv::UMat& colorFrame)
 }
 
 ///
+/// \brief OCVDNNDetector::ExpectedOutCount
+///
+size_t OCVDNNDetector::ExpectedOutCount(ModelType netType)
+{
+    switch (netType)
+    {
+    case ModelType::RFDETR:     // dets + labels
+    case ModelType::RFDETR_IS:
+        return 2;
+    case ModelType::DFINE:      // labels + boxes + scores
+        return 3;
+    default:
+        // The YOLO* families index only detections[0]; the old YOLO
+        // parsers iterate all outputs and tolerate any count.
+        return 1;
+    }
+}
+
+///
 /// \brief OCVDNNDetector::DetectInCrop
 /// \param colorFrame
 /// \param crop
@@ -392,6 +487,24 @@ void OCVDNNDetector::DetectInCrop(const cv::UMat& colorFrame, const cv::Rect& cr
         std::cout << i << ": " << detections[i].size() << "\n";
     }
 #endif
+
+    // A model that produced fewer outputs than the parser for the
+    // configured net_type indexes is a model/net_type mismatch: without
+    // the check the parser did an out-of-bounds std::vector access
+    // (roadmap H19). Log once, skip the detections.
+    const size_t expectedOutCount = ExpectedOutCount(m_netType);
+    if (detections.size() < expectedOutCount)
+    {
+        if (!m_netMismatchLogged)
+        {
+            m_netMismatchLogged = true;
+            std::cout << "OCVDNNDetector: the net produced " << detections.size()
+                      << " outputs, but the configured net_type needs at least "
+                      << expectedOutCount << " - the model does not match net_type"
+                      << std::endl;
+        }
+        return;
+    }
 
 	switch (m_netType)
 	{
@@ -557,20 +670,24 @@ void OCVDNNDetector::ParseOldYOLO(const cv::Rect& crop, const std::vector<cv::Ma
 ///
 void OCVDNNDetector::ParseYOLOv5(const cv::Rect& crop, std::vector<cv::Mat>& detections, regions_t& tmpRegions)
 {
-	int rows = detections[0].size[1];
-	int dimensions = detections[0].size[2];
+	int rows = 0;
+	int dimensions = 0;
 
 	// yolov5 has an output of shape (batchSize, 25200, 85) (Num classes + box[x,y,w,h] + confidence[c])
 	// yolov8 has an output of shape (batchSize, 84,  8400) (Num classes + box[x,y,w,h])
+	// Safe shape query: reject an empty/wrong-rank output (roadmap H19).
+	if (!OutShape(detections, 0, rows, dimensions))
+		return; // unexpected export: not (1 x N x F) / (N x F)
 	if (dimensions > rows) // Check if the shape[2] is more than shape[1] (yolov8)
 	{
-		rows = detections[0].size[2];
-		dimensions = detections[0].size[1];
-
-		detections[0] = detections[0].reshape(1, dimensions);
+		detections[0] = detections[0].reshape(1, rows);
 		cv::transpose(detections[0], detections[0]);
+		std::swap(rows, dimensions);
 	}
 	float* data = (float*)detections[0].data;
+
+	if (dimensions < 5 + static_cast<int>(m_classNames.size()))
+		return; // not enough columns for box + confidence + class scores
 
 	float x_factor = crop.width / static_cast<float>(m_inWidth);
 	float y_factor = crop.height / static_cast<float>(m_inHeight);
@@ -617,20 +734,24 @@ void OCVDNNDetector::ParseYOLOv5(const cv::Rect& crop, std::vector<cv::Mat>& det
 ///
 void OCVDNNDetector::ParseYOLOv8(const cv::Rect& crop, std::vector<cv::Mat>& detections, regions_t& tmpRegions)
 {
-	int rows = detections[0].size[1];
-	int dimensions = detections[0].size[2];
+	int rows = 0;
+	int dimensions = 0;
 
 	// yolov5 has an output of shape (batchSize, 25200, 85) (Num classes + box[x,y,w,h] + confidence[c])
 	// yolov8 has an output of shape (batchSize, 84,  8400) (Num classes + box[x,y,w,h])
+	// Safe shape query: reject an empty/wrong-rank output (roadmap H19).
+	if (!OutShape(detections, 0, rows, dimensions))
+		return; // unexpected export: not (1 x N x F) / (N x F)
 	if (dimensions > rows) // Check if the shape[2] is more than shape[1] (yolov8)
 	{
-		rows = detections[0].size[2];
-		dimensions = detections[0].size[1];
-
-		detections[0] = detections[0].reshape(1, dimensions);
+		detections[0] = detections[0].reshape(1, rows);
 		cv::transpose(detections[0], detections[0]);
+		std::swap(rows, dimensions);
 	}
 	float* data = (float*)detections[0].data;
+
+	if (dimensions < 4 + static_cast<int>(m_classNames.size()))
+		return; // not enough columns for box + class scores
 
 	float x_factor = crop.width / static_cast<float>(m_inWidth);
 	float y_factor = crop.height / static_cast<float>(m_inHeight);
@@ -672,20 +793,24 @@ void OCVDNNDetector::ParseYOLOv8(const cv::Rect& crop, std::vector<cv::Mat>& det
 ///
 void OCVDNNDetector::ParseYOLOv9(const cv::Rect& crop, std::vector<cv::Mat>& detections, regions_t& tmpRegions)
 {
-	int rows = detections[0].size[1];
-	int dimensions = detections[0].size[2];
+	int rows = 0;
+	int dimensions = 0;
 
 	// yolov5 has an output of shape (batchSize, 25200, 85) (Num classes + box[x,y,w,h] + confidence[c])
 	// yolov8 has an output of shape (batchSize, 84,  8400) (Num classes + box[x,y,w,h])
+	// Safe shape query: reject an empty/wrong-rank output (roadmap H19).
+	if (!OutShape(detections, 0, rows, dimensions))
+		return; // unexpected export: not (1 x N x F) / (N x F)
 	if (dimensions > rows) // Check if the shape[2] is more than shape[1] (yolov8)
 	{
-		rows = detections[0].size[2];
-		dimensions = detections[0].size[1];
-
-		detections[0] = detections[0].reshape(1, dimensions);
+		detections[0] = detections[0].reshape(1, rows);
 		cv::transpose(detections[0], detections[0]);
+		std::swap(rows, dimensions);
 	}
 	float* data = (float*)detections[0].data;
+
+	if (dimensions < 4 + static_cast<int>(m_classNames.size()))
+		return; // not enough columns for box + class scores
 
 	float x_factor = crop.width / static_cast<float>(m_inWidth);
 	float y_factor = crop.height / static_cast<float>(m_inHeight);
@@ -727,20 +852,24 @@ void OCVDNNDetector::ParseYOLOv9(const cv::Rect& crop, std::vector<cv::Mat>& det
 ///
 void OCVDNNDetector::ParseYOLOv10(const cv::Rect& crop, std::vector<cv::Mat>& detections, regions_t& tmpRegions)
 {
-	int rows = detections[0].size[1];
-	int dimensions = detections[0].size[2];
+	int rows = 0;
+	int dimensions = 0;
 
 	// yolov5 has an output of shape (batchSize, 25200, 85) (Num classes + box[x,y,w,h] + confidence[c])
 	// yolov8 has an output of shape (batchSize, 84,  8400) (Num classes + box[x,y,w,h])
+	// Safe shape query: reject an empty/wrong-rank output (roadmap H19).
+	if (!OutShape(detections, 0, rows, dimensions))
+		return; // unexpected export: not (1 x N x F) / (N x F)
 	if (dimensions > rows) // Check if the shape[2] is more than shape[1] (yolov8)
 	{
-		rows = detections[0].size[2];
-		dimensions = detections[0].size[1];
-
-		detections[0] = detections[0].reshape(1, dimensions);
+		detections[0] = detections[0].reshape(1, rows);
 		cv::transpose(detections[0], detections[0]);
+		std::swap(rows, dimensions);
 	}
 	float* data = (float*)detections[0].data;
+
+	if (dimensions < 6)
+		return; // not enough columns for box + confidence + class
 
 	float x_factor = crop.width / static_cast<float>(m_inWidth);
 	float y_factor = crop.height / static_cast<float>(m_inHeight);
@@ -771,20 +900,24 @@ void OCVDNNDetector::ParseYOLOv10(const cv::Rect& crop, std::vector<cv::Mat>& de
 ///
 void OCVDNNDetector::ParseYOLOv11(const cv::Rect& crop, std::vector<cv::Mat>& detections, regions_t& tmpRegions)
 {
-	int rows = detections[0].size[1];
-	int dimensions = detections[0].size[2];
+	int rows = 0;
+	int dimensions = 0;
 
 	// yolov5 has an output of shape (batchSize, 25200, 85) (Num classes + box[x,y,w,h] + confidence[c])
 	// yolov8 has an output of shape (batchSize, 84,  8400) (Num classes + box[x,y,w,h])
+	// Safe shape query: reject an empty/wrong-rank output (roadmap H19).
+	if (!OutShape(detections, 0, rows, dimensions))
+		return; // unexpected export: not (1 x N x F) / (N x F)
 	if (dimensions > rows) // Check if the shape[2] is more than shape[1] (yolov8)
 	{
-		rows = detections[0].size[2];
-		dimensions = detections[0].size[1];
-
-		detections[0] = detections[0].reshape(1, dimensions);
+		detections[0] = detections[0].reshape(1, rows);
 		cv::transpose(detections[0], detections[0]);
+		std::swap(rows, dimensions);
 	}
 	float* data = (float*)detections[0].data;
+
+	if (dimensions < 4 + static_cast<int>(m_classNames.size()))
+		return; // not enough columns for box + class scores
 
 	float x_factor = crop.width / static_cast<float>(m_inWidth);
 	float y_factor = crop.height / static_cast<float>(m_inHeight);
@@ -826,20 +959,24 @@ void OCVDNNDetector::ParseYOLOv11(const cv::Rect& crop, std::vector<cv::Mat>& de
 ///
 void OCVDNNDetector::ParseYOLOv5_8_11_obb(const cv::Rect& crop, std::vector<cv::Mat>& detections, regions_t& tmpRegions)
 {
-    int rows = detections[0].size[1];
-    int dimensions = detections[0].size[2];
+    int rows = 0;
+    int dimensions = 0;
 
     // yolov5 has an output of shape (batchSize, 25200, 85) (Num classes + box[x,y,w,h] + confidence[c])
     // yolov8 has an output of shape (batchSize, 84,  8400) (Num classes + box[x,y,w,h])
+    // Safe shape query: reject an empty/wrong-rank output (roadmap H19).
+    if (!OutShape(detections, 0, rows, dimensions))
+        return; // unexpected export: not (1 x N x F) / (N x F)
     if (dimensions > rows) // Check if the shape[2] is more than shape[1] (yolov8)
     {
-        rows = detections[0].size[2];
-        dimensions = detections[0].size[1];
-
-        detections[0] = detections[0].reshape(1, dimensions);
+        detections[0] = detections[0].reshape(1, rows);
         cv::transpose(detections[0], detections[0]);
+        std::swap(rows, dimensions);
     }
     float* data = (float*)detections[0].data;
+
+    if (dimensions < 5 + static_cast<int>(m_classNames.size()))
+        return; // not enough columns for box + class scores + angle
 
     float x_factor = crop.width / static_cast<float>(m_inWidth);
     float y_factor = crop.height / static_cast<float>(m_inHeight);
@@ -876,20 +1013,24 @@ void OCVDNNDetector::ParseYOLOv5_8_11_obb(const cv::Rect& crop, std::vector<cv::
 ///
 void OCVDNNDetector::ParseYOLOv5_8_11_seg(const cv::Rect& crop, std::vector<cv::Mat>& detections, regions_t& tmpRegions)
 {
-    int rows = detections[0].size[1];
-    int dimensions = detections[0].size[2];
+    int rows = 0;
+    int dimensions = 0;
 
     // yolov5 has an output of shape (batchSize, 25200, 85) (Num classes + box[x,y,w,h] + confidence[c])
     // yolov8 has an output of shape (batchSize, 84,  8400) (Num classes + box[x,y,w,h])
+    // Safe shape query: reject an empty/wrong-rank output (roadmap H19).
+    if (!OutShape(detections, 0, rows, dimensions))
+        return; // unexpected export: not (1 x N x F) / (N x F)
     if (dimensions > rows) // Check if the shape[2] is more than shape[1] (yolov8)
     {
-        rows = detections[0].size[2];
-        dimensions = detections[0].size[1];
-
-        detections[0] = detections[0].reshape(1, dimensions);
+        detections[0] = detections[0].reshape(1, rows);
         cv::transpose(detections[0], detections[0]);
+        std::swap(rows, dimensions);
     }
     float* data = (float*)detections[0].data;
+
+    if (dimensions < 4 + static_cast<int>(m_classNames.size()))
+        return; // not enough columns for box + class scores
 
     float x_factor = crop.width / static_cast<float>(m_inWidth);
     float y_factor = crop.height / static_cast<float>(m_inHeight);
@@ -926,9 +1067,13 @@ void OCVDNNDetector::ParseYOLOv5_8_11_seg(const cv::Rect& crop, std::vector<cv::
 ///
 void OCVDNNDetector::ParseRFDETR(const cv::Rect& crop, std::vector<cv::Mat>& detections, regions_t& tmpRegions)
 {
-    int rows = detections[0].size[1];
-    int dimensionsDets = detections[0].size[2];
-    int dimensionsLabels = detections[1].size[2];
+    int rowsDets = 0, dimensionsDets = 0, rowsLabels = 0, dimensionsLabels = 0;
+    if (!OutShape(detections, 0, rowsDets, dimensionsDets) ||
+        !OutShape(detections, 1, rowsLabels, dimensionsLabels))
+        return; // unexpected export: the outputs are not (1 x N x F) / (N x F) (roadmap H19)
+    if (dimensionsDets < 4 || dimensionsLabels < 1)
+        return; // not enough columns for box / labels
+    const int rows = rowsDets < rowsLabels ? rowsDets : rowsLabels;
 
     //0: name: input, size : 1x3x560x560
     //1: name: dets, size : 1x300x4
@@ -990,9 +1135,13 @@ void OCVDNNDetector::ParseRFDETR(const cv::Rect& crop, std::vector<cv::Mat>& det
 ///
 void OCVDNNDetector::ParseRFDETR_IS(const cv::Rect& crop, std::vector<cv::Mat>& detections, regions_t& tmpRegions)
 {
-    int rows = detections[0].size[1];
-    int dimensionsDets = detections[0].size[2];
-    int dimensionsLabels = detections[1].size[2];
+    int rowsDets = 0, dimensionsDets = 0, rowsLabels = 0, dimensionsLabels = 0;
+    if (!OutShape(detections, 0, rowsDets, dimensionsDets) ||
+        !OutShape(detections, 1, rowsLabels, dimensionsLabels))
+        return; // unexpected export: the outputs are not (1 x N x F) / (N x F) (roadmap H19)
+    if (dimensionsDets < 4 || dimensionsLabels < 1)
+        return; // not enough columns for box / labels
+    const int rows = rowsDets < rowsLabels ? rowsDets : rowsLabels;
 
     //0: name: input, size : 1x3x560x560
     //1: name: dets, size : 1x300x4
@@ -1054,25 +1203,75 @@ void OCVDNNDetector::ParseRFDETR_IS(const cv::Rect& crop, std::vector<cv::Mat>& 
 ///
 void OCVDNNDetector::ParseDFINE(const cv::Rect& crop, std::vector<cv::Mat>& detections, regions_t& tmpRegions)
 {
-    int rows = detections[0].size[1];
+    // The post-processed D-FINE export provides three outputs (see
+    // DFINE_bb.hpp): labels (1xN, integer), boxes (1xNx4, xyxy) and
+    // scores (1xN). The export order may differ between backends, so
+    // select the tensors by name and fall back to [labels, boxes,
+    // scores] with a warning (roadmap C6).
+    int labelsInd = FindOut(m_outNames, { "label" });
+    int boxesInd = FindOut(m_outNames, { "box", "det" });
+    int scoresInd = FindOut(m_outNames, { "score" });
+    if (labelsInd < 0 || boxesInd < 0 || scoresInd < 0)
+    {
+        labelsInd = 0;
+        boxesInd = 1;
+        scoresInd = 2;
+        std::cout << "OCVDNNDetector: ParseDFINE cannot select outputs by name, using the [labels, boxes, scores] order" << std::endl;
+    }
+    if (labelsInd >= static_cast<int>(detections.size()) ||
+        boxesInd >= static_cast<int>(detections.size()) ||
+        scoresInd >= static_cast<int>(detections.size()))
+        return; // fewer output blobs than expected (roadmap H19)
 
-    //0: name: images, size : 1x3x640x640
-    //1: name: orig_target_sizes, size : 1x2
-    //2: name: labels, size : 1x300
-    //3: name: boxes, size : 1x300x4
-    //4: name: scores, size : 1x300
+    int rowsBoxes = 0, dimBoxes = 0;
+    if (!OutShape(detections, boxesInd, rowsBoxes, dimBoxes))
+        return; // unexpected export: the outputs are not (1 x N x F) / (N x F) (roadmap H19)
+    if (dimBoxes < 4)
+        return; // not enough columns for boxes
+    if (detections[boxesInd].total() < static_cast<size_t>(rowsBoxes) * 4)
+        return; // boxes shorter than expected
+    if (detections[boxesInd].depth() != CV_32F || detections[scoresInd].depth() != CV_32F)
+        return; // unexpected boxes/scores data type (roadmap C6)
+    // Rank sanity for the flat outputs (roadmap H19); the detection count
+    // is taken from total(), not from OutShape rows: a (1xN) tensor yields
+    // rows=1, which would clamp the number of parsed detections to 1.
+    int rowsLabels = 0, dimLabels = 0, rowsScores = 0, dimScores = 0;
+    if (!OutShape(detections, labelsInd, rowsLabels, dimLabels) ||
+        !OutShape(detections, scoresInd, rowsScores, dimScores))
+        return; // unexpected labels/scores shape (roadmap H19)
+    (void)dimLabels;
+    (void)dimScores;
 
-    int64_t* labels = (int64_t*)detections[0].data;
-    float* dets = (float*)detections[1].data;
-    float* scores = (float*)detections[2].data;
+    // OpenCV DNN has no int64 blob type: integer outputs arrive as CV_32S.
+    // The old code cast labels to int64_t* and read 8 bytes per element out
+    // of a 4-byte buffer (roadmap C6).
+    cv::Mat labelsFlat;
+    if (detections[labelsInd].depth() == CV_32S)
+        labelsFlat = detections[labelsInd].reshape(1, 1); // share the buffer, no copy
+    else if (detections[labelsInd].depth() == CV_32F || detections[labelsInd].depth() == CV_64F)
+        detections[labelsInd].reshape(1, 1).convertTo(labelsFlat, CV_32S);
+    else
+        return; // unexpected labels data type (roadmap C6)
+    cv::Mat boxesFlat = detections[boxesInd].reshape(1, 1);
+    cv::Mat scoresFlat = detections[scoresInd].reshape(1, 1);
+
+    int rows = std::min(rowsBoxes, static_cast<int>(labelsFlat.total()));
+    rows = std::min(rows, static_cast<int>(scoresFlat.total()));
+
+    const float* dets = boxesFlat.ptr<float>(0);
+    const float* scores = scoresFlat.ptr<float>(0);
+    const int* labels = labelsFlat.ptr<int>(0);
 
     float x_factor = crop.width / static_cast<float>(m_inWidth);
     float y_factor = crop.height / static_cast<float>(m_inHeight);
 
     for (int i = 0; i < rows; ++i)
     {
-        float maxClassScore = scores[i];
-        size_t classId = labels[i];
+        const float maxClassScore = scores[i];
+        const int label = labels[i];
+        if (label < 0)
+            continue; // invalid class id
+        const size_t classId = static_cast<size_t>(label);
 
         if (maxClassScore > m_confidenceThreshold)
         {
@@ -1101,7 +1300,166 @@ void OCVDNNDetector::ParseDFINE(const cv::Rect& crop, std::vector<cv::Mat>& dete
 ///
 void OCVDNNDetector::ParseDFINE_IS(const cv::Rect& crop, std::vector<cv::Mat>& detections, regions_t& tmpRegions)
 {
-    assert(0);
+    // The D-FINE instance segmentation export (see DFINE_is.hpp) provides
+    // logits (1xNxC), boxes (1xNx4, cxcywh in normalized input
+    // coordinates) and mask_probs (1xNxmhxmw). The post-processed export
+    // provides integer labels (1xN) and scores (1xN) instead of logits.
+    // Masks are not consumed by the tracking pipeline (the same as in
+    // ParseYOLOv5_8_11_seg and ParseRFDETR_IS), so only boxes and classes
+    // are parsed here (roadmap C6).
+    int boxesInd = FindOut(m_outNames, { "box", "det" });
+    int labelsInd = FindOut(m_outNames, { "logit", "label" });
+    if (boxesInd < 0 || labelsInd < 0 || boxesInd == labelsInd)
+    {
+        // Fallback: the raw export order [logits, boxes, masks].
+        labelsInd = 0;
+        boxesInd = 1;
+        std::cout << "OCVDNNDetector: ParseDFINE_IS cannot select outputs by name, using the [logits, boxes, masks] order" << std::endl;
+    }
+    if (boxesInd >= static_cast<int>(detections.size()) ||
+        labelsInd >= static_cast<int>(detections.size()))
+        return; // fewer output blobs than expected (roadmap H19)
+
+    int rowsBoxes = 0, dimBoxes = 0;
+    if (!OutShape(detections, boxesInd, rowsBoxes, dimBoxes))
+        return; // unexpected export: the outputs are not (1 x N x F) / (N x F) (roadmap H19)
+    if (dimBoxes < 4)
+        return; // not enough columns for boxes
+    if (detections[boxesInd].total() < static_cast<size_t>(rowsBoxes) * 4)
+        return; // boxes shorter than expected
+    if (detections[boxesInd].depth() != CV_32F)
+        return; // unexpected boxes data type (roadmap C6)
+    // Rank sanity for the labels/logits output (roadmap H19).
+    int rowsLogits = 0, dimLogits = 0;
+    if (!OutShape(detections, labelsInd, rowsLogits, dimLogits))
+        return; // unexpected labels/logits shape (roadmap H19)
+    (void)rowsLogits;
+    (void)dimLogits;
+    cv::Mat boxesFlat = detections[boxesInd].reshape(1, 1);
+    const float* dets = boxesFlat.ptr<float>(0);
+
+    float x_factor = crop.width / static_cast<float>(m_inWidth);
+    float y_factor = crop.height / static_cast<float>(m_inHeight);
+
+    auto L2Conf = [](float v)
+    {
+        return 1.f / (1.f + std::exp(-v));
+    };
+
+    if (detections[labelsInd].depth() == CV_32S)
+    {
+        // Post-processed export: integer labels + float scores. Never
+        // reinterpret an integer blob through a wider type (roadmap C6).
+        int scoresInd = FindOut(m_outNames, { "score" });
+        if (scoresInd < 0 || scoresInd >= static_cast<int>(detections.size()))
+        {
+            std::cout << "OCVDNNDetector: ParseDFINE_IS cannot find the scores output" << std::endl;
+            return;
+        }
+        if (detections[scoresInd].depth() != CV_32F)
+            return; // unexpected scores data type (roadmap C6)
+        // Rank sanity for the scores output (roadmap H19).
+        int rowsScores = 0, dimScores = 0;
+        if (!OutShape(detections, scoresInd, rowsScores, dimScores))
+            return; // unexpected scores shape (roadmap H19)
+        (void)rowsScores;
+        (void)dimScores;
+        cv::Mat scoresFlat = detections[scoresInd].reshape(1, 1);
+        cv::Mat labelsFlat = detections[labelsInd].reshape(1, 1);
+
+        // Labels and scores are flat (1xN): count elements, not rows.
+        int rows = std::min(rowsBoxes, static_cast<int>(labelsFlat.total()));
+        rows = std::min(rows, static_cast<int>(scoresFlat.total()));
+
+        const float* scores = scoresFlat.ptr<float>(0);
+        const int* labels = labelsFlat.ptr<int>(0);
+
+        for (int i = 0; i < rows; ++i)
+        {
+            const float maxClassScore = scores[i];
+            const int label = labels[i];
+            if (label < 0)
+                continue; // invalid class id
+            const size_t classId = static_cast<size_t>(label);
+
+            if (maxClassScore > m_confidenceThreshold)
+            {
+                // Boxes are xyxy in the post-processed export (the same as ParseDFINE).
+                float x = dets[4 * i + 0];
+                float y = dets[4 * i + 1];
+                float w = dets[4 * i + 2] - x;
+                float h = dets[4 * i + 3] - y;
+
+                int left = cvRound(x * x_factor);
+                int top = cvRound(y * y_factor);
+
+                int width = cvRound(w * x_factor);
+                int height = cvRound(h * y_factor);
+
+                if (m_classesWhiteList.empty() || m_classesWhiteList.find(T2T(classId)) != std::end(m_classesWhiteList))
+                    tmpRegions.emplace_back(cv::Rect(left + crop.x, top + crop.y, width, height), T2T(classId), static_cast<float>(maxClassScore));
+            }
+        }
+    }
+    else if (detections[labelsInd].depth() == CV_32F)
+    {
+        // Raw export: per-class logits; the class is argmax + sigmoid.
+        const cv::Mat& logitsMat = detections[labelsInd];
+        int nc = 0;
+        if (logitsMat.dims == 3 && logitsMat.size[0] == 1)
+            nc = logitsMat.size[2];
+        else if (logitsMat.dims == 2)
+            nc = logitsMat.size[1];
+        else
+            return; // unexpected logits shape
+        if (nc < 2)
+            return; // argmax over classes makes no sense
+        if (logitsMat.total() < static_cast<size_t>(rowsBoxes) * static_cast<size_t>(nc))
+            return; // logits shorter than boxes
+
+        cv::Mat logitsFlat = logitsMat.reshape(1, 1);
+        const float* logits = logitsFlat.ptr<float>(0);
+
+        for (int i = 0; i < rowsBoxes; ++i)
+        {
+            const float* curLogits = logits + static_cast<size_t>(i) * nc;
+            float classConf = L2Conf(curLogits[0]);
+            size_t classId = 0;
+            for (int cli = 1; cli < nc; ++cli)
+            {
+                const float conf = L2Conf(curLogits[cli]);
+                if (classConf < conf)
+                {
+                    classConf = conf;
+                    classId = static_cast<size_t>(cli);
+                }
+            }
+
+            if (classConf > m_confidenceThreshold)
+            {
+                // Boxes are cxcywh in normalized input coordinates (see DFINE_is.hpp).
+                const float cx = dets[4 * i + 0];
+                const float cy = dets[4 * i + 1];
+                const float bw = dets[4 * i + 2];
+                const float bh = dets[4 * i + 3];
+                const float x = (cx - 0.5f * bw) * static_cast<float>(m_inWidth);
+                const float y = (cy - 0.5f * bh) * static_cast<float>(m_inHeight);
+                const float w = bw * static_cast<float>(m_inWidth);
+                const float h = bh * static_cast<float>(m_inHeight);
+
+                int left = cvRound(x * x_factor);
+                int top = cvRound(y * y_factor);
+
+                int width = cvRound(w * x_factor);
+                int height = cvRound(h * y_factor);
+
+                if (m_classesWhiteList.empty() || m_classesWhiteList.find(T2T(classId)) != std::end(m_classesWhiteList))
+                    tmpRegions.emplace_back(cv::Rect(left + crop.x, top + crop.y, width, height), T2T(classId), classConf);
+            }
+        }
+    }
+    else
+        return; // unexpected labels/logits data type (roadmap C6)
 }
 
 ///
@@ -1112,7 +1470,12 @@ void OCVDNNDetector::ParseDFINE_IS(const cv::Rect& crop, std::vector<cv::Mat>& d
 ///
 void OCVDNNDetector::ParseYOLOv26(const cv::Rect& crop, std::vector<cv::Mat>& detections, regions_t& tmpRegions)
 {
-    int rows = detections[0].size[1];
+    int rows = 0;
+    int dimensions = 0;
+    if (!OutShape(detections, 0, rows, dimensions))
+        return; // unexpected export (roadmap H19)
+    if (dimensions < 6)
+        return; // not enough columns for box + confidence + class
 
     //0: name: images, size: 1x3x640x640
     //1: name: output0, size: 1x300x6
@@ -1160,7 +1523,12 @@ void OCVDNNDetector::ParseYOLOv26(const cv::Rect& crop, std::vector<cv::Mat>& de
 ///
 void OCVDNNDetector::ParseYOLOv26_obb(const cv::Rect& crop, std::vector<cv::Mat>& detections, regions_t& tmpRegions)
 {
-    int rows = detections[0].size[1];
+    int rows = 0;
+    int dimensions = 0;
+    if (!OutShape(detections, 0, rows, dimensions))
+        return; // unexpected export (roadmap H19)
+    if (dimensions < 7)
+        return; // not enough columns for box + confidence + class + angle
 
     //0: name: images, size: 1x3x1024x1024
     //1: name: output0, size: 1x300x7
@@ -1203,7 +1571,12 @@ void OCVDNNDetector::ParseYOLOv26_obb(const cv::Rect& crop, std::vector<cv::Mat>
 ///
 void OCVDNNDetector::ParseYOLOv26_seg(const cv::Rect& crop, std::vector<cv::Mat>& detections, regions_t& tmpRegions)
 {
-    int rows = detections[0].size[1];
+    int rows = 0;
+    int dimensions = 0;
+    if (!OutShape(detections, 0, rows, dimensions))
+        return; // unexpected export (roadmap H19)
+    if (dimensions < 38)
+        return; // not enough columns for box + confidence + class + mask coefficients
 
     //0: name: images, size: 1x3x640x640
     //1: name: output0, size: 1x300x38
@@ -1252,18 +1625,21 @@ void OCVDNNDetector::ParseYOLOv26_seg(const cv::Rect& crop, std::vector<cv::Mat>
 ///
 void OCVDNNDetector::ParseYOLOE(const cv::Rect& crop, std::vector<cv::Mat>& detections, regions_t& tmpRegions)
 {
+    int rows = 0;
+    int dimensions = 0;
+    if (!OutShape(detections, 0, rows, dimensions))
+        return; // unexpected export (roadmap H19)
+    if (rows < dimensions) // features are in the first axis (e.g. 1x54x8400)
+    {
+        detections[0] = detections[0].reshape(1, rows);
+        cv::transpose(detections[0], detections[0]);
+        std::swap(rows, dimensions);
+    }
+    if (dimensions < 4 + static_cast<int>(m_classNames.size()))
+        return; // not enough columns for box + class scores
+
     float x_factor = crop.width / static_cast<float>(m_inWidth);
     float y_factor = crop.height / static_cast<float>(m_inHeight);
-
-    //0: name: images, size: 1x3x640x640
-    //1: name: output0, size: 1x54x8400
-    //2: name: output1, size: 1x32x160x160
-
-    int rows = detections[0].size[2];
-    int dimensions = detections[0].size[1];
-
-	detections[0] = detections[0].reshape(1, dimensions);
-	cv::transpose(detections[0], detections[0]);
 
     float* data = (float*)detections[0].data;
 
@@ -1299,18 +1675,21 @@ void OCVDNNDetector::ParseYOLOE(const cv::Rect& crop, std::vector<cv::Mat>& dete
 ///
 void OCVDNNDetector::ParseYOLOEMask(const cv::Rect& crop, std::vector<cv::Mat>& detections, regions_t& tmpRegions)
 {
+    int rows = 0;
+    int dimensions = 0;
+    if (!OutShape(detections, 0, rows, dimensions))
+        return; // unexpected export (roadmap H19)
+    if (rows < dimensions) // features are in the first axis (e.g. 1x54x8400)
+    {
+        detections[0] = detections[0].reshape(1, rows);
+        cv::transpose(detections[0], detections[0]);
+        std::swap(rows, dimensions);
+    }
+    if (dimensions < 4 + static_cast<int>(m_classNames.size()))
+        return; // not enough columns for box + class scores
+
     float x_factor = crop.width / static_cast<float>(m_inWidth);
     float y_factor = crop.height / static_cast<float>(m_inHeight);
-
-    //0: name: images, size: 1x3x640x640
-    //1: name: output0, size: 1x54x8400
-    //2: name: output1, size: 1x32x160x160
-
-    int rows = detections[0].size[2];
-    int dimensions = detections[0].size[1];
-
-    detections[0] = detections[0].reshape(1, dimensions);
-    cv::transpose(detections[0], detections[0]);
 
     float* data = (float*)detections[0].data;
 

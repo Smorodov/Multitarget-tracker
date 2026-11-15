@@ -266,14 +266,15 @@ class BaseTracker {
 `CTracker::Update` (`src/Tracker/BaseTracker.cpp`) на каждом кадре:
 
 1. запоминает время кадра, очищает список удалённых ID;
-2. `UpdateTrackingState` — основной алгоритм;
-3. копирует текущий кадр в `m_prevFrame` (используется для визуальных
-   трекеров/статики, см. замечания в roadmap).
+2. `UpdateTrackingState` — основной алгоритм. Копии кадра в `m_prevFrame`
+   больше нет (roadmap M1).
 
 `UpdateTrackingState`:
 
 ```text
-1. (опционально) CalcEmbeddins: гистограммы и ReID-эмбеддинги для всех регионов
+1. (опционально) CalcEmbeddins: гистограммы и ReID-эмбеддинги для всех
+   регионов; в IoU-only режиме (ни Hist, ни FeatureCos) пропускается,
+   буфер переиспользуется между кадрами (roadmap M3)
 2. для каждого трека: KalmanPredictPoint()/KalmanPredictRect()
 3. CreateDistaceMatrix: cost[track][region] = сумма взвешенных метрик
 4. ShortPathCalculator::Solve -> assignmentT2R
@@ -534,6 +535,12 @@ m_captured` на каждом из двух `FrameInfo`; таймауты 60 с.
 независимые треки обновляются параллельно. VIBE и отрисовка motion map также
 используют OpenMP.
 
+Визуальные трекеры OpenCV (`cv::Tracker`) не документированы как
+потокобезопасные, поэтому их `init`/`update` (включая `CreateExternalTracker`)
+сериализуются одним `std::mutex` внутри `CTrack::RectUpdate`; остальная
+часть обновления трека (Калман, траектория, статика) остаётся параллельной
+(roadmap M5, вариант A).
+
 ## 10. Расширение
 
 * **Новый детектор** — унаследовать `BaseDetector`, реализовать `Init`,
@@ -580,8 +587,11 @@ Python-обёртка, `async_detector`, `BUILD_CARS_COUNTING`, `BUILD_ONNX_TENS
    Release с `-march=native` не переносима.
 7. Python-обёртка (`src/python_bind`) приведена к актуальному C++ API, но
    CI-сборки модуля по-прежнему нет.
-8. Глобальное изменяемое состояние (`TypeConverter::m_typeNames`) не
-   потокобезопасно и делает ID типов зависящими от порядка инициализации.
+
+> Реестр типов (`TypeConverter`) больше не входит в этот список: после
+> исправления H22 (2026-11-15) `Type2Str`/`Str2Type` — чистые lookup'ы
+> без OOB и без мутации, `AddNewType` — явная потокобезопасная
+> регистрация на этапе инициализации.
 
 ## 13. Карта файлов (кратко)
 

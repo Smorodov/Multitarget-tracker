@@ -87,3 +87,7 @@ std::vector<std::string> TypeConverter::m_typeNames =
 };
 
 std::string TypeConverter::m_badTypeName = "unknown";
+
+// Guards AddNewType so explicit registration from several initializers
+// cannot corrupt the registry (roadmap H22).
+std::mutex TypeConverter::m_mutex;

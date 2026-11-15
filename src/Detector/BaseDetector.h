@@ -230,6 +230,10 @@ protected:
     {
         std::vector<cv::Rect> crops;
 
+        if (netSize.width <= 0 || netSize.height <= 0 ||
+            imgSize.width <= 0 || imgSize.height <= 0)
+            return {}; // degenerate sizes: no valid crops (roadmap H18)
+
         const float whRatio = static_cast<float>(netSize.width) / static_cast<float>(netSize.height);
         int cropHeight = cvRound(maxCropRatio * netSize.height);
         int cropWidth = cvRound(maxCropRatio * netSize.width);
@@ -247,10 +251,17 @@ protected:
             cropHeight = cvRound(cropWidth / whRatio);
         }
 
+        // The crops are rounded from maxCropRatio * netSize: a tiny ratio
+        // (from an unvalidated config) or a tiny net size rounds them to 0
+        // and the sliding-window steps 3*w/4 below would be 0 - an infinite
+        // loop (roadmap H18).
+        if (cropWidth < 1 || cropHeight < 1)
+            return {};
+
         //std::cout << "Frame size " << imgSize << ", crop size = " << cv::Size(cropWidth, cropHeight) << ", ratio = " << maxCropRatio << std::endl;
 
-        const int stepX = 3 * cropWidth / 4;
-        const int stepY = 3 * cropHeight / 4;
+        const int stepX = std::max(1, 3 * cropWidth / 4);
+        const int stepY = std::max(1, 3 * cropHeight / 4);
         for (int y = 0; y < imgSize.height; y += stepY)
         {
             bool needBreakY = false;
@@ -286,6 +297,14 @@ protected:
 		for (size_t i = 0; i < classNames.size(); ++i)
 		{
 			objtype_t type = TypeConverter::Str2Type(classNames[i]);
+			if (type == bad_type)
+			{
+				// Custom model class name (not part of the default schema):
+				// register it explicitly instead of letting Str2Type mutate
+				// the global registry on lookup (roadmap H22).
+				TypeConverter::AddNewType(classNames[i]);
+				type = TypeConverter::Str2Type(classNames[i]);
+			}
 			m_typesMap[i] = type;
 			res &= (type != bad_type);
 		}

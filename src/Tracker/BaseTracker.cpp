@@ -35,10 +35,11 @@ private:
     track_id_t m_nextTrackID;
     std::vector<track_id_t> m_removedObjects;
 
-    cv::UMat m_prevFrame;
-
     std::unique_ptr<ShortPathCalculator> m_SPCalculator;
     std::map<objtype_t, std::shared_ptr<EmbeddingsCalculator>> m_embCalculators;
+
+    // Reused across frames to avoid per-frame reallocations (roadmap M3).
+    std::vector<RegionEmbedding> m_regionEmbeddings;
 
     void CreateDistaceMatrix(const regions_t& regions, const std::vector<RegionEmbedding>& regionEmbeddings, distMatrix_t& costMatrix, track_t maxPossibleCost, track_t& maxCost, bool useLocalCartesian);
     void UpdateTrackingState(const regions_t& regions, cv::UMat currFrame, time_point_t frameTime, bool useLocalCartesian);
@@ -139,9 +140,8 @@ void CTracker::Update(const regions_t& regions, cv::UMat currFrame, time_point_t
     m_lastFrameTime = frameTime;
     m_removedObjects.clear();
 
+    // distType is only the ENU-mode flag (see BaseTracker.h): the metric weights always come from m_settings.m_distType.
     UpdateTrackingState(regions, currFrame, frameTime, distType == tracking::DistLocalCartesian);
-
-    currFrame.copyTo(m_prevFrame);
 }
 
 #define DRAW_DBG_ASSIGNMENT 0
@@ -163,8 +163,10 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
 
     assignments_t assignmentT2R(colsTracks, -1); // Assignments: index - track, value - region
 
-    std::vector<RegionEmbedding> regionEmbeddings;
-    CalcEmbeddins(regionEmbeddings, regions, currFrame);
+    // Reuse the per-tracker buffer instead of allocating a new vector every
+    // frame; CalcEmbeddins leaves it empty when no embedding metric is active.
+    CalcEmbeddins(m_regionEmbeddings, regions, currFrame);
+    const std::vector<RegionEmbedding>& regionEmbeddings = m_regionEmbeddings;
 
 #if DRAW_DBG_ASSIGNMENT
     std::cout << "CTracker::UpdateTrackingState: m_tracks = " << colsTracks << ", regions = " << rowsRegions << std::endl;
@@ -361,7 +363,16 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
         }
     }
 
-    // Search for unassigned detects and start new tracks for them
+    // Search for unassigned detects and start new tracks for them. Mark the
+    // assigned regions once (O(tracks)) instead of scanning assignmentT2R for
+    // every region, which made this O(tracks * regions) per frame (roadmap M4).
+    std::vector<bool> regionAssigned(regions.size(), false);
+    for (int assignedRegion : assignmentT2R)
+    {
+        if (assignedRegion >= 0 && static_cast<size_t>(assignedRegion) < regions.size())
+            regionAssigned[static_cast<size_t>(assignedRegion)] = true;
+    }
+
 #if DRAW_DBG_ASSIGNMENT
     std::cout << "CTracker::UpdateTrackingState: Search for unassigned detects and start new tracks for them" << std::endl;
 #endif
@@ -370,7 +381,7 @@ void CTracker::UpdateTrackingState(const regions_t& regions,
 #if DRAW_DBG_ASSIGNMENT
 		std::cout << "CTracker::update: regions[" << i << "].m_rrect: " << regions[i].m_rrect.center << ", " << regions[i].m_rrect.angle << ", " << regions[i].m_rrect.size << std::endl;
 #endif
-        if (std::find(assignmentT2R.begin(), assignmentT2R.end(), i) == assignmentT2R.end())
+        if (!regionAssigned[i])
         {
             if (regionEmbeddings.empty())
                 m_tracks.push_back(std::make_unique<CTrack>(regions[i],
@@ -630,7 +641,18 @@ void CTracker::CreateDistaceMatrix(const regions_t& regions,
 ///
 void CTracker::CalcEmbeddins(std::vector<RegionEmbedding>& regionEmbeddings, const regions_t& regions, cv::UMat currFrame) const
 {
+    regionEmbeddings.clear();
+
     if (regions.empty())
+        return;
+
+    // Only histogram/cosine distances need per-region buffers. In the default
+    // IoU-only mode (neither metric enabled) there is nothing to compute, so
+    // leave the vector empty: the callers already take the "no embeddings"
+    // path (roadmap M3, 4.1). This also keeps the reused buffer capacity.
+    const bool needHist = m_settings.m_distType[tracking::DistHist] > 0.0f;
+    const bool needFeature = m_settings.m_distType[tracking::DistFeatureCos] > 0.0f;
+    if (!needHist && !needFeature)
         return;
 
     regionEmbeddings.resize(regions.size());
@@ -639,7 +661,7 @@ void CTracker::CalcEmbeddins(std::vector<RegionEmbedding>& regionEmbeddings, con
     const bool hasFrame = !currFrame.empty() && currFrame.cols > 1 && currFrame.rows > 1;
 
     // Bhatacharia distance between histograms
-    if (hasFrame && m_settings.m_distType[tracking::DistHist] > 0.0f)
+    if (hasFrame && needHist)
     {
         const int bins = 64;
         std::vector<int> histSize;
@@ -669,7 +691,7 @@ void CTracker::CalcEmbeddins(std::vector<RegionEmbedding>& regionEmbeddings, con
     }
 
     // Cosine distance between embeddings
-    if (hasFrame && m_settings.m_distType[tracking::DistFeatureCos] > 0.0f)
+    if (hasFrame && needFeature)
     {
         for (size_t j = 0; j < regions.size(); ++j)
         {

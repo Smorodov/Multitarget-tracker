@@ -82,6 +82,21 @@ private:
     std::vector<int> m_outLayers;
     std::vector<std::string> m_outLayerTypes;
     cv::UMat m_inputBlob;
+    bool m_netMismatchLogged = false;
+
+    // The number of the forward outputs the parser for this model type
+    // actually indexes: DetectInCrop rejects a model that produced fewer
+    // outputs than its net_type expects (a version/export mismatch used to
+    // be an out-of-bounds std::vector access - roadmap H19).
+    static size_t ExpectedOutCount(ModelType netType);
+
+#ifdef H19_TEST_ACCESS
+    friend class H19Test;
+#endif
+
+#ifdef C6_TEST_ACCESS
+    friend class C6Test;
+#endif
 
     void ParseOldYOLO(const cv::Rect& crop, const std::vector<cv::Mat>& detections, regions_t& tmpRegions);
 
