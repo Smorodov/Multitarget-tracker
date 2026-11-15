@@ -123,12 +123,6 @@ if(MTRACKER_PYTHON)
     set(PYBIND11_LTO_CXX_FLAGS "")
     set(PYBIND11_PYTHON_VERSION 3)
 
-    # The vendored pybind11 2.5 still declares compatibility with CMake < 3.5,
-    # which CMake 4 removed. Allow configuring the old pybind11 scripts.
-    if (CMAKE_VERSION VERSION_GREATER_EQUAL 4.0)
-        set(CMAKE_POLICY_VERSION_MINIMUM 3.5 CACHE STRING "" FORCE)
-    endif()
-
     add_subdirectory(thirdparty/pybind11)
 endif(MTRACKER_PYTHON)
 
