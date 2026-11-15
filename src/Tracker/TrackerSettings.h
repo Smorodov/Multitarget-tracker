@@ -170,9 +170,11 @@ struct TrackerSettings
     /// FP32
     std::string m_inferencePrecision = "FP16";
 
-    // opencv_dnn = 6
-    // tensorrt = 5
-    int m_detectorBackend = 5;
+    // The detector backend for a TrackerSettings that is not filled from
+    // an ini file (ParseTrackerSettings reads "detector_backend" and
+    // otherwise also falls back to DNN_OCV). ONNX_TensorRT was the default:
+    // a raw struct required a TensorRT-enabled build. H21.
+    int m_detectorBackend = static_cast<int>(tracking::Detectors::DNN_OCV);
 
     // DNN_TARGET_CPU
     // DNN_TARGET_OPENCL
@@ -231,10 +233,15 @@ struct TrackerSettings
 	///
 	TrackerSettings()
 	{
+		// The default matching metric is IoU only: histogram (and embedding)
+		// distances require a color frame and a valid ROI, and silently add
+		// a constant penalty to every pair when they are unavailable.
+		// ParseTrackerSettings() always overrides these weights from the
+		// ini file. H21: DistHist was 0.5 by default.
 		m_distType[tracking::DistCenters] = static_cast<track_t>(0.0);
 		m_distType[tracking::DistRects] = static_cast<track_t>(0.0);
-		m_distType[tracking::DistJaccard] = static_cast<track_t>(0.5);
-		m_distType[tracking::DistHist] = static_cast<track_t>(0.5);
+		m_distType[tracking::DistJaccard] = static_cast<track_t>(1.0);
+		m_distType[tracking::DistHist] = static_cast<track_t>(0.0);
 		m_distType[tracking::DistFeatureCos] = static_cast<track_t>(0.0);
 		m_distType[tracking::DistMahalanobis] = static_cast<track_t>(0.0);
 		m_distType[tracking::DistLocalCartesian] = static_cast<track_t>(0.0);
