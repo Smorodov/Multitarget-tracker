@@ -128,17 +128,29 @@ graph TD
 Корневой `CMakeLists.txt`:
 
 * `cmake_minimum_required(3.16)`, `CMAKE_CXX_STANDARD 17`;
-* `find_package(OpenCV REQUIRED)`;
-* GNU: `-Wall -Wextra -pedantic-errors`; Release — `-O3 -g -march=native
-  -mtune=native -funroll-loops -DNDEBUG`;
-* MSVC: `/W4 /utf-8`, Release — `/MD /Ox /Ob2 /Oi /Ot /arch:AVX2 /fp:fast`;
-* OpenMP подключается при `find_package(OpenMP)`;
-* `CMAKE_BINARY_DIR` жёстко указывает на `<source>/build`.
+* `find_package(OpenCV REQUIRED)`, `find_package(Threads REQUIRED)`,
+  `find_package(OpenMP)`;
+* GNU: `-Wall -Wextra -pedantic-errors`; Release — `-O3 -g` (переносимый);
+  `MT_NATIVE=ON` добавляет `-march=native -mtune=native -funroll-loops`;
+* MSVC: `/W4 /utf-8`, Release — `/fp:fast`; `MT_NATIVE=ON` добавляет
+  `/arch:AVX2`;
+* `Threads::Threads` и `OpenMP::OpenMP_CXX` линкуются таргетам, а не
+  дописываются в глобальные флаги;
+* выходные каталоги — `CMAKE_RUNTIME/LIBRARY/ARCHIVE_OUTPUT_DIRECTORY`
+  (только для `<source>/build`).
+
+Пакет `MTTrackingConfig.cmake` (install) выполняет
+`find_dependency(OpenCV/Threads/OpenMP)`, экспортирует
+`MTTracking::mtracking_core`, `MTTracking::mtracking`,
+`MTTracking::mdetection`, `MTTracking::inih` и работает с
+мультиконфигурационными генераторами.
 
 Опции:
 
 | Опция | По умолчанию | Что включает |
 |---|---|---|
+| `MT_NATIVE` | OFF | `-march=native`/`/arch:AVX2` (Release переносимый) |
+| `MT_SHARED` | ON (GCC) / OFF (MSVC) | тип библиотек `SHARED`/`STATIC` |
 | `BUILD_EXAMPLES` | ON | `example/` (`MultitargetTracker`) |
 | `BUILD_CARS_COUNTING` | OFF | пример подсчёта машин + геопривязка |
 | `BUILD_ASYNC_DETECTOR` | OFF | `async_detector/AsyncDetector` |

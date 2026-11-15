@@ -1992,3 +1992,86 @@ OpenCV не документированы как потокобезопасны
 
 ---
 
+### M20. Корневой CMake: флаги и выходные каталоги
+
+**Где:** `CMakeLists.txt`.
+
+**Симптом:** `unset(... CACHE)` стирал пользовательские флаги;
+Release/Debug-флаги выставлялись через `CACHE ... FORCE`; `-march=native
+-mtune=native -funroll-loops` (и MSVC `/arch:AVX2`) были включены всегда,
+делая Release непереносимым; выходные каталоги задавались устаревшими
+`EXECUTABLE_OUTPUT_PATH`/`LIBRARY_OUTPUT_PATH`.
+
+**Исправление (2026-11-15):** `unset` удалён, флаги только дописываются;
+`-march=native`/`/arch:AVX2` — под опцией `MT_NATIVE` (OFF по умолчанию,
+Release переносимый); `-fPIC` заменён на `CMAKE_POSITION_INDEPENDENT_CODE`;
+выходные каталоги — `CMAKE_RUNTIME/LIBRARY/ARCHIVE_OUTPUT_DIRECTORY`
+(по-прежнему только для `<source>/build`, H16).
+
+---
+
+### M21. Тип библиотек и линковка OpenCV на MSVC
+
+**Где:** `src/Tracker/CMakeLists.txt`, `src/Detector/CMakeLists.txt`,
+`src/CMakeLists.txt`, `src/mtracking/object_types.h`.
+
+**Симптом:** на GCC библиотеки собирались `SHARED`, на MSVC — статическими,
+причём `mtracking` не линковал OpenCV (закомментирован `${OpenCV_LIBS}`).
+В SHARED-сборке на MSVC `mdetection.dll` не мог разрешить данные
+`TypeConverter` (они определялись в `object_types.cpp` внутри `mtracking`).
+
+**Исправление (2026-11-15):** единый тип через `MT_SHARED`
+(`MT_LIBRARY_TYPE`); OpenCV линкуется `PUBLIC` на обеих платформах; реестр
+типов вынесен в `mtracking_core` (одна копия, единые ID), трекер и
+детекторы линкуют её; для SHARED на MSVC включены
+`CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS` и `MT_CORE_API`
+(`__declspec(dllexport/dllimport)` для статических данных `TypeConverter`).
+
+---
+
+### M22. Threads/OpenMP через target'ы
+
+**Где:** `CMakeLists.txt`, target-CMakeLists.
+
+**Симптом:** OpenMP подключался дописыванием флагов в глобальные
+`CMAKE_*_FLAGS`; `Threads::Threads` не линковался нашим таргетам.
+
+**Исправление (2026-11-15):** `find_package(Threads REQUIRED)`;
+`Threads::Threads` и `OpenMP::OpenMP_CXX` (при `OpenMP_CXX_FOUND`)
+линкуются `mtracking`, `mdetection`, `MultitargetTracker`, `AsyncDetector`,
+`pymtracking`; глобальные OpenMP-флаги убраны.
+
+---
+
+### M23. Мёртвые include-пути
+
+**Где:** `example/CMakeLists.txt`, `async_detector/CMakeLists.txt`.
+
+**Симптом:** `INCLUDE_DIRECTORIES(... /src/Detector/Subsense)` указывал на
+несуществующий каталог (`darknet` в текущих CMake уже отсутствовал).
+
+**Исправление (2026-11-15):** строка `Detector/Subsense` удалена в обоих
+файлах.
+
+---
+
+### CMake-пакет (раздел 4.4)
+
+**Где:** `MTTrackingConfig.cmake.in`, корневой `CMakeLists.txt`,
+install-правила таргетов.
+
+**Симптом:** `MTTrackingConfig.cmake` не вызывал `find_dependency(OpenCV)`
+(и другие зависимости); `LIB_DIR` вычислялся как
+`@PACKAGE_INCLUDE_INSTALL_DIR@../lib`; у SHARED-таргетов не ставились
+import-библиотеки (`ARCHIVE`), из-за чего пакет не работал у потребителя.
+
+**Исправление (2026-11-15):** `find_dependency(OpenCV/Threads/OpenMP)`;
+`LIB_DIR` из `@PACKAGE_LIB_INSTALL_DIR@` (в `PATH_VARS` добавлен
+`LIB_INSTALL_DIR`); `ARCHIVE DESTINATION lib` у `mtracking`/`mdetection`;
+экспортируемые таргеты получают `INTERFACE_INCLUDE_DIRECTORIES`; конфиг
+копирует `IMPORTED_LOCATION/IMPLIB` установленной конфигурации на остальные
+(мультиконфиг VS). Проверено consumer-проектом с
+`find_package(MTTracking CONFIG REQUIRED)` для static и shared установок.
+
+---
+

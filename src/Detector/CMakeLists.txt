@@ -52,30 +52,35 @@ include_directories(${PROJECT_SOURCE_DIR})
 include_directories(${PROJECT_SOURCE_DIR}/../src)
 include_directories(${PROJECT_SOURCE_DIR}/..)
 
-if (CMAKE_COMPILER_IS_GNUCXX)
-    add_library(${PROJECT_NAME} SHARED
+add_library(${PROJECT_NAME} ${MT_LIBRARY_TYPE}
 	${detector_sources})
-else(CMAKE_COMPILER_IS_GNUCXX)
-    add_library(${PROJECT_NAME}
-	${detector_sources})
-endif()
 
-if (CMAKE_COMPILER_IS_GNUCXX)
-    set(LIBS ${OpenCV_LIBS})
-else(CMAKE_COMPILER_IS_GNUCXX)
-    set(LIBS ${OpenCV_LIBS})
-endif()
+# OpenCV types appear in the public headers, so it is a PUBLIC dependency;
+# the threading/OpenMP runtimes and yolo_rt_lib stay private (roadmap M21, M22).
+target_link_libraries(${PROJECT_NAME}
+    PUBLIC
+        ${OpenCV_LIBS}
+        mtracking_core
+    PRIVATE
+        Threads::Threads)
 
 if (BUILD_ONNX_TENSORRT)
-    set(LIBS ${LIBS} yolo_rt_lib)
+    target_link_libraries(${PROJECT_NAME} PRIVATE yolo_rt_lib)
 endif(BUILD_ONNX_TENSORRT)
 
+if (OpenMP_CXX_FOUND)
+    target_link_libraries(${PROJECT_NAME} PRIVATE OpenMP::OpenMP_CXX)
+endif()
 
-target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBS})
+# Headers are installed flat into include/<project>; expose that root to
+# consumers of the exported CMake package (roadmap 4.4).
+target_include_directories(${PROJECT_NAME} INTERFACE
+    $<INSTALL_INTERFACE:include>)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${detector_headers}")
 install(TARGETS ${PROJECT_NAME}
         EXPORT MTTrackingExports
+        ARCHIVE DESTINATION lib
         LIBRARY DESTINATION lib
         RUNTIME DESTINATION bin
         PUBLIC_HEADER DESTINATION include/${PROJECT_NAME})
