@@ -1971,3 +1971,24 @@ O(1). Суммарно O(T + R). Логика назначения не меня
 
 ---
 
+### M5. OpenMP и потокобезопасность визуальных трекеров
+
+**Где:** `src/Tracker/track.cpp` (`CTrack::RectUpdate`), `BaseTracker.cpp`
+(`#pragma omp parallel for`).
+
+**Симптом:** обновление треков выполнялось в `#pragma omp parallel for`;
+внутри `CTrack::RectUpdate` вызывались `CreateExternalTracker` и
+`m_tracker->init/update` (KCF/CSRT/DaSiamRPN/Nano/Vit). Визуальные трекеры
+OpenCV не документированы как потокобезопасные (DNN-трекеры особенно) —
+потенциальные гонки/нестабильность.
+
+**Исправление (2026-11-15, вариант A):** в `CTrack::RectUpdate` введён
+статический `std::mutex`, который сериализует только блок внешнего
+трекера (создание + `init` + `update`). Калман-коррекция, обновление
+траектории/статики и предсказание остаются параллельными; при
+`lostTrackType = TrackNone` блок вообще не выполняется и мьютекс не
+берётся. Сборка `mtracking`, `MultitargetTracker`, `AsyncDetector`
+проходит.
+
+---
+

@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cmath>
+#include <mutex>
 
 #include "Circular_Code/CircVal.h"
 #include "Circular_Code/CircStat.h"
@@ -943,6 +944,13 @@ void CTrack::RectUpdate(const CRegion& region,
 
 	if (m_externalTrackerForLost != tracking::TrackNone)
 	{
+		// OpenCV visual trackers are not documented as thread-safe, and this
+		// method runs inside the OpenMP per-track loop. Serialize only the
+		// external-tracker init/update; the Kalman/trace update stays
+		// parallel (roadmap M5, variant A).
+		static std::mutex externalTrackerMutex;
+		std::lock_guard<std::mutex> lock(externalTrackerMutex);
+
 #ifdef USE_OCV_KCF
 		cv::Rect roiRect;
 		bool inited = InitTracker(roiRect, false);
