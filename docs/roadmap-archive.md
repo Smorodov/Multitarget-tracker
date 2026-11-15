@@ -1912,3 +1912,62 @@ Release `mtracking`, `MultitargetTracker`, `AsyncDetector` проходит.
 
 ---
 
+### M1. Мёртвая копия кадра в `m_prevFrame`
+
+**Где:** `src/Tracker/BaseTracker.cpp` (поле `m_prevFrame` и
+`currFrame.copyTo(m_prevFrame)` в `CTracker::Update`).
+
+**Симптом:** каждый кадр полностью копировался в `m_prevFrame`, который
+нигде не читался (ни в трекере, ни в примерах).
+
+**Исправление (2026-11-15):** удалены поле `cv::UMat m_prevFrame` и строка
+`currFrame.copyTo(m_prevFrame)`; лишняя копия полного кадра на каждый
+`Update` устранена. Сборка `mtracking` и `MultitargetTracker` проходит.
+
+---
+
+### M2. Мёртвый клон кадра в `CheckStatic`
+
+**Где:** `src/Tracker/track.cpp` (`CTrack::CheckStatic`), `track.h`.
+
+**Симптом:** карточка описывала клонирование полного кадра
+(`m_staticFrame = currFrame.clone()`) на каждый статический объект. В
+актуальном коде этот блок уже был внутри `#if 0`, а `m_staticFrame` /
+`m_staticRect` в активном коде только присваивались пустыми и не читались.
+
+**Исправление (2026-11-15):** удалён мёртвый `#if 0`-блок отладочной
+отрисовки и неиспользуемые поля `m_staticFrame`/`m_staticRect`; присваивания
+`m_staticFrame = cv::UMat()` убраны. Поведение статики не менялось
+(блок был выключен). Сборка `mtracking` проходит.
+
+---
+
+### M3 (частично). `CalcEmbeddins`: переиспользование буферов
+
+**Исправлено (2026-11-15):** `CalcEmbeddins` больше не аллоцирует
+`std::vector<RegionEmbedding>` каждый кадр — буфер хранится в
+`CTracker::m_regionEmbeddings` и переиспользуется. В IoU-only режиме
+(ни `DistHist`, ни `DistFeatureCos` не включены) функция сразу выходит,
+оставляя буфер пустым: вызывающий код уже выбирает ветку без эмбеддингов.
+Индексация `regionEmbeddings[j]` в `CreateDistaceMatrix` и OMP-цикле
+остаётся под теми же проверками весов/`empty()`.
+
+**Осталось:** `GetTracks` по-прежнему копирует полную траекторию в каждый
+`TrackingObject` (`ConstructObject`); см. открытый пункт M3 в
+`docs/roadmap.md`.
+
+---
+
+### M4. O(T·R) поиск непривязанных регионов
+
+**Где:** `src/Tracker/BaseTracker.cpp` (`CTracker::UpdateTrackingState`).
+
+**Симптом:** для каждого региона выполнялся `std::find` по
+`assignmentT2R` → O(число треков × число регионов) на кадр.
+
+**Исправление (2026-11-15):** один проход по `assignmentT2R` строит
+`std::vector<bool> regionAssigned`, затем проверка свободного региона —
+O(1). Суммарно O(T + R). Логика назначения не менялась.
+
+---
+

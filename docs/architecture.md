@@ -266,14 +266,15 @@ class BaseTracker {
 `CTracker::Update` (`src/Tracker/BaseTracker.cpp`) на каждом кадре:
 
 1. запоминает время кадра, очищает список удалённых ID;
-2. `UpdateTrackingState` — основной алгоритм;
-3. копирует текущий кадр в `m_prevFrame` (используется для визуальных
-   трекеров/статики, см. замечания в roadmap).
+2. `UpdateTrackingState` — основной алгоритм. Копии кадра в `m_prevFrame`
+   больше нет (roadmap M1).
 
 `UpdateTrackingState`:
 
 ```text
-1. (опционально) CalcEmbeddins: гистограммы и ReID-эмбеддинги для всех регионов
+1. (опционально) CalcEmbeddins: гистограммы и ReID-эмбеддинги для всех
+   регионов; в IoU-only режиме (ни Hist, ни FeatureCos) пропускается,
+   буфер переиспользуется между кадрами (roadmap M3)
 2. для каждого трека: KalmanPredictPoint()/KalmanPredictRect()
 3. CreateDistaceMatrix: cost[track][region] = сумма взвешенных метрик
 4. ShortPathCalculator::Solve -> assignmentT2R
