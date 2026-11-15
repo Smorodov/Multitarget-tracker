@@ -94,6 +94,10 @@ private:
     friend class H19Test;
 #endif
 
+#ifdef C6_TEST_ACCESS
+    friend class C6Test;
+#endif
+
     void ParseOldYOLO(const cv::Rect& crop, const std::vector<cv::Mat>& detections, regions_t& tmpRegions);
 
     void ParseYOLOv5(const cv::Rect& crop, std::vector<cv::Mat>& detections, regions_t& tmpRegions);

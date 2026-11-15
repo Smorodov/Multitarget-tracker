@@ -1,3 +1,5 @@
+#include <algorithm>
+#include <cctype>
 #include <fstream>
 #include <utility>
 #include "OCVDNNDetector.h"
@@ -34,6 +36,34 @@ bool OutShape(const std::vector<cv::Mat>& detections, size_t index, int& rows, i
     else
         return false;
     return rows > 0 && dimensions > 0;
+}
+
+///
+/// \brief Find a forward output by a substring of its name
+///        (case-insensitive).
+/// \param names Output blob names (m_outNames).
+/// \param keys Substrings to search for.
+/// \return The first matching index or -1 if nothing matches.
+///
+/// The parsers must not rely on a hard-coded output order: the same model
+/// family is exported with different output orders (e.g. D-FINE provides
+/// [labels, boxes, scores] in the OpenCV DNN export and
+/// [scores, labels, boxes] in the TensorRT one, see DFINE_bb.hpp).
+///
+int FindOut(const std::vector<cv::String>& names, std::initializer_list<const char*> keys)
+{
+    for (size_t i = 0; i < names.size(); ++i)
+    {
+        std::string name = names[i];
+        std::transform(name.begin(), name.end(), name.begin(),
+            [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+        for (const char* key : keys)
+        {
+            if (name.find(key) != std::string::npos)
+                return static_cast<int>(i);
+        }
+    }
+    return -1;
 }
 } // namespace
 
@@ -1162,38 +1192,75 @@ void OCVDNNDetector::ParseRFDETR_IS(const cv::Rect& crop, std::vector<cv::Mat>& 
 ///
 void OCVDNNDetector::ParseDFINE(const cv::Rect& crop, std::vector<cv::Mat>& detections, regions_t& tmpRegions)
 {
-    int rowsLabels = 0, dimLabels = 0, rowsBoxes = 0, dimBoxes = 0, rowsScores = 0, dimScores = 0;
-    if (!OutShape(detections, 0, rowsLabels, dimLabels) ||
-        !OutShape(detections, 1, rowsBoxes, dimBoxes) ||
-        !OutShape(detections, 2, rowsScores, dimScores))
+    // The post-processed D-FINE export provides three outputs (see
+    // DFINE_bb.hpp): labels (1xN, integer), boxes (1xNx4, xyxy) and
+    // scores (1xN). The export order may differ between backends, so
+    // select the tensors by name and fall back to [labels, boxes,
+    // scores] with a warning (roadmap C6).
+    int labelsInd = FindOut(m_outNames, { "label" });
+    int boxesInd = FindOut(m_outNames, { "box", "det" });
+    int scoresInd = FindOut(m_outNames, { "score" });
+    if (labelsInd < 0 || boxesInd < 0 || scoresInd < 0)
+    {
+        labelsInd = 0;
+        boxesInd = 1;
+        scoresInd = 2;
+        std::cout << "OCVDNNDetector: ParseDFINE cannot select outputs by name, using the [labels, boxes, scores] order" << std::endl;
+    }
+    if (labelsInd >= static_cast<int>(detections.size()) ||
+        boxesInd >= static_cast<int>(detections.size()) ||
+        scoresInd >= static_cast<int>(detections.size()))
+        return; // fewer output blobs than expected (roadmap H19)
+
+    int rowsBoxes = 0, dimBoxes = 0;
+    if (!OutShape(detections, boxesInd, rowsBoxes, dimBoxes))
         return; // unexpected export: the outputs are not (1 x N x F) / (N x F) (roadmap H19)
     if (dimBoxes < 4)
         return; // not enough columns for boxes
+    if (detections[boxesInd].total() < static_cast<size_t>(rowsBoxes) * 4)
+        return; // boxes shorter than expected
+    if (detections[boxesInd].depth() != CV_32F || detections[scoresInd].depth() != CV_32F)
+        return; // unexpected boxes/scores data type (roadmap C6)
+    // Rank sanity for the flat outputs (roadmap H19); the detection count
+    // is taken from total(), not from OutShape rows: a (1xN) tensor yields
+    // rows=1, which would clamp the number of parsed detections to 1.
+    int rowsLabels = 0, dimLabels = 0, rowsScores = 0, dimScores = 0;
+    if (!OutShape(detections, labelsInd, rowsLabels, dimLabels) ||
+        !OutShape(detections, scoresInd, rowsScores, dimScores))
+        return; // unexpected labels/scores shape (roadmap H19)
     (void)dimLabels;
     (void)dimScores;
-    // Keep in sync with the smallest output: a model/export mismatch must
-    // not walk past the end of any of the three buffers.
-    int rows = rowsLabels < rowsBoxes ? rowsLabels : rowsBoxes;
-    if (rows > rowsScores)
-        rows = rowsScores;
 
-    //0: name: images, size : 1x3x640x640
-    //1: name: orig_target_sizes, size : 1x2
-    //2: name: labels, size : 1x300
-    //3: name: boxes, size : 1x300x4
-    //4: name: scores, size : 1x300
+    // OpenCV DNN has no int64 blob type: integer outputs arrive as CV_32S.
+    // The old code cast labels to int64_t* and read 8 bytes per element out
+    // of a 4-byte buffer (roadmap C6).
+    cv::Mat labelsFlat;
+    if (detections[labelsInd].depth() == CV_32S)
+        labelsFlat = detections[labelsInd].reshape(1, 1); // share the buffer, no copy
+    else if (detections[labelsInd].depth() == CV_32F || detections[labelsInd].depth() == CV_64F)
+        detections[labelsInd].reshape(1, 1).convertTo(labelsFlat, CV_32S);
+    else
+        return; // unexpected labels data type (roadmap C6)
+    cv::Mat boxesFlat = detections[boxesInd].reshape(1, 1);
+    cv::Mat scoresFlat = detections[scoresInd].reshape(1, 1);
 
-    int64_t* labels = (int64_t*)detections[0].data;
-    float* dets = (float*)detections[1].data;
-    float* scores = (float*)detections[2].data;
+    int rows = std::min(rowsBoxes, static_cast<int>(labelsFlat.total()));
+    rows = std::min(rows, static_cast<int>(scoresFlat.total()));
+
+    const float* dets = boxesFlat.ptr<float>(0);
+    const float* scores = scoresFlat.ptr<float>(0);
+    const int* labels = labelsFlat.ptr<int>(0);
 
     float x_factor = crop.width / static_cast<float>(m_inWidth);
     float y_factor = crop.height / static_cast<float>(m_inHeight);
 
     for (int i = 0; i < rows; ++i)
     {
-        float maxClassScore = scores[i];
-        size_t classId = labels[i];
+        const float maxClassScore = scores[i];
+        const int label = labels[i];
+        if (label < 0)
+            continue; // invalid class id
+        const size_t classId = static_cast<size_t>(label);
 
         if (maxClassScore > m_confidenceThreshold)
         {
@@ -1222,7 +1289,166 @@ void OCVDNNDetector::ParseDFINE(const cv::Rect& crop, std::vector<cv::Mat>& dete
 ///
 void OCVDNNDetector::ParseDFINE_IS(const cv::Rect& crop, std::vector<cv::Mat>& detections, regions_t& tmpRegions)
 {
-    assert(0);
+    // The D-FINE instance segmentation export (see DFINE_is.hpp) provides
+    // logits (1xNxC), boxes (1xNx4, cxcywh in normalized input
+    // coordinates) and mask_probs (1xNxmhxmw). The post-processed export
+    // provides integer labels (1xN) and scores (1xN) instead of logits.
+    // Masks are not consumed by the tracking pipeline (the same as in
+    // ParseYOLOv5_8_11_seg and ParseRFDETR_IS), so only boxes and classes
+    // are parsed here (roadmap C6).
+    int boxesInd = FindOut(m_outNames, { "box", "det" });
+    int labelsInd = FindOut(m_outNames, { "logit", "label" });
+    if (boxesInd < 0 || labelsInd < 0 || boxesInd == labelsInd)
+    {
+        // Fallback: the raw export order [logits, boxes, masks].
+        labelsInd = 0;
+        boxesInd = 1;
+        std::cout << "OCVDNNDetector: ParseDFINE_IS cannot select outputs by name, using the [logits, boxes, masks] order" << std::endl;
+    }
+    if (boxesInd >= static_cast<int>(detections.size()) ||
+        labelsInd >= static_cast<int>(detections.size()))
+        return; // fewer output blobs than expected (roadmap H19)
+
+    int rowsBoxes = 0, dimBoxes = 0;
+    if (!OutShape(detections, boxesInd, rowsBoxes, dimBoxes))
+        return; // unexpected export: the outputs are not (1 x N x F) / (N x F) (roadmap H19)
+    if (dimBoxes < 4)
+        return; // not enough columns for boxes
+    if (detections[boxesInd].total() < static_cast<size_t>(rowsBoxes) * 4)
+        return; // boxes shorter than expected
+    if (detections[boxesInd].depth() != CV_32F)
+        return; // unexpected boxes data type (roadmap C6)
+    // Rank sanity for the labels/logits output (roadmap H19).
+    int rowsLogits = 0, dimLogits = 0;
+    if (!OutShape(detections, labelsInd, rowsLogits, dimLogits))
+        return; // unexpected labels/logits shape (roadmap H19)
+    (void)rowsLogits;
+    (void)dimLogits;
+    cv::Mat boxesFlat = detections[boxesInd].reshape(1, 1);
+    const float* dets = boxesFlat.ptr<float>(0);
+
+    float x_factor = crop.width / static_cast<float>(m_inWidth);
+    float y_factor = crop.height / static_cast<float>(m_inHeight);
+
+    auto L2Conf = [](float v)
+    {
+        return 1.f / (1.f + std::exp(-v));
+    };
+
+    if (detections[labelsInd].depth() == CV_32S)
+    {
+        // Post-processed export: integer labels + float scores. Never
+        // reinterpret an integer blob through a wider type (roadmap C6).
+        int scoresInd = FindOut(m_outNames, { "score" });
+        if (scoresInd < 0 || scoresInd >= static_cast<int>(detections.size()))
+        {
+            std::cout << "OCVDNNDetector: ParseDFINE_IS cannot find the scores output" << std::endl;
+            return;
+        }
+        if (detections[scoresInd].depth() != CV_32F)
+            return; // unexpected scores data type (roadmap C6)
+        // Rank sanity for the scores output (roadmap H19).
+        int rowsScores = 0, dimScores = 0;
+        if (!OutShape(detections, scoresInd, rowsScores, dimScores))
+            return; // unexpected scores shape (roadmap H19)
+        (void)rowsScores;
+        (void)dimScores;
+        cv::Mat scoresFlat = detections[scoresInd].reshape(1, 1);
+        cv::Mat labelsFlat = detections[labelsInd].reshape(1, 1);
+
+        // Labels and scores are flat (1xN): count elements, not rows.
+        int rows = std::min(rowsBoxes, static_cast<int>(labelsFlat.total()));
+        rows = std::min(rows, static_cast<int>(scoresFlat.total()));
+
+        const float* scores = scoresFlat.ptr<float>(0);
+        const int* labels = labelsFlat.ptr<int>(0);
+
+        for (int i = 0; i < rows; ++i)
+        {
+            const float maxClassScore = scores[i];
+            const int label = labels[i];
+            if (label < 0)
+                continue; // invalid class id
+            const size_t classId = static_cast<size_t>(label);
+
+            if (maxClassScore > m_confidenceThreshold)
+            {
+                // Boxes are xyxy in the post-processed export (the same as ParseDFINE).
+                float x = dets[4 * i + 0];
+                float y = dets[4 * i + 1];
+                float w = dets[4 * i + 2] - x;
+                float h = dets[4 * i + 3] - y;
+
+                int left = cvRound(x * x_factor);
+                int top = cvRound(y * y_factor);
+
+                int width = cvRound(w * x_factor);
+                int height = cvRound(h * y_factor);
+
+                if (m_classesWhiteList.empty() || m_classesWhiteList.find(T2T(classId)) != std::end(m_classesWhiteList))
+                    tmpRegions.emplace_back(cv::Rect(left + crop.x, top + crop.y, width, height), T2T(classId), static_cast<float>(maxClassScore));
+            }
+        }
+    }
+    else if (detections[labelsInd].depth() == CV_32F)
+    {
+        // Raw export: per-class logits; the class is argmax + sigmoid.
+        const cv::Mat& logitsMat = detections[labelsInd];
+        int nc = 0;
+        if (logitsMat.dims == 3 && logitsMat.size[0] == 1)
+            nc = logitsMat.size[2];
+        else if (logitsMat.dims == 2)
+            nc = logitsMat.size[1];
+        else
+            return; // unexpected logits shape
+        if (nc < 2)
+            return; // argmax over classes makes no sense
+        if (logitsMat.total() < static_cast<size_t>(rowsBoxes) * static_cast<size_t>(nc))
+            return; // logits shorter than boxes
+
+        cv::Mat logitsFlat = logitsMat.reshape(1, 1);
+        const float* logits = logitsFlat.ptr<float>(0);
+
+        for (int i = 0; i < rowsBoxes; ++i)
+        {
+            const float* curLogits = logits + static_cast<size_t>(i) * nc;
+            float classConf = L2Conf(curLogits[0]);
+            size_t classId = 0;
+            for (int cli = 1; cli < nc; ++cli)
+            {
+                const float conf = L2Conf(curLogits[cli]);
+                if (classConf < conf)
+                {
+                    classConf = conf;
+                    classId = static_cast<size_t>(cli);
+                }
+            }
+
+            if (classConf > m_confidenceThreshold)
+            {
+                // Boxes are cxcywh in normalized input coordinates (see DFINE_is.hpp).
+                const float cx = dets[4 * i + 0];
+                const float cy = dets[4 * i + 1];
+                const float bw = dets[4 * i + 2];
+                const float bh = dets[4 * i + 3];
+                const float x = (cx - 0.5f * bw) * static_cast<float>(m_inWidth);
+                const float y = (cy - 0.5f * bh) * static_cast<float>(m_inHeight);
+                const float w = bw * static_cast<float>(m_inWidth);
+                const float h = bh * static_cast<float>(m_inHeight);
+
+                int left = cvRound(x * x_factor);
+                int top = cvRound(y * y_factor);
+
+                int width = cvRound(w * x_factor);
+                int height = cvRound(h * y_factor);
+
+                if (m_classesWhiteList.empty() || m_classesWhiteList.find(T2T(classId)) != std::end(m_classesWhiteList))
+                    tmpRegions.emplace_back(cv::Rect(left + crop.x, top + crop.y, width, height), T2T(classId), classConf);
+            }
+        }
+    }
+    else
+        return; // unexpected labels/logits data type (roadmap C6)
 }
 
 ///
