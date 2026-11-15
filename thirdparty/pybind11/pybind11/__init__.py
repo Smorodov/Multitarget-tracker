@@ -1,12 +1,19 @@
-from ._version import version_info, __version__  # noqa: F401 imported but unused
+from __future__ import annotations
+
+import sys
+
+if sys.version_info < (3, 7):  # noqa: UP036
+    msg = "pybind11 does not support Python < 3.7. v2.12 was the last release supporting Python 3.6."
+    raise ImportError(msg)
 
 
-def get_include(user=False):
-    import os
-    d = os.path.dirname(__file__)
-    if os.path.exists(os.path.join(d, "include")):
-        # Package is installed
-        return os.path.join(d, "include")
-    else:
-        # Package is from a source directory
-        return os.path.join(os.path.dirname(d), "include")
+from ._version import __version__, version_info
+from .commands import get_cmake_dir, get_include, get_pkgconfig_dir
+
+__all__ = (
+    "version_info",
+    "__version__",
+    "get_include",
+    "get_cmake_dir",
+    "get_pkgconfig_dir",
+)
