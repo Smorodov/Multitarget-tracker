@@ -1611,6 +1611,57 @@ h10–h14, h15, h17 — зелёный; сборка Release `mtracking`,
 
 ---
 
+### H18. `GetCrops` может зависнуть
+
+**Где:** `src/Detector/BaseDetector.h:229-277`.
+
+```cpp
+int cropHeight = cvRound(maxCropRatio * netSize.height);
+...
+const int stepX = 3 * cropWidth / 4;
+const int stepY = 3 * cropHeight / 4;
+for (int y = 0; y < imgSize.height; y += stepY) ...
+```
+
+Если `maxCropRatio` мал (например, `0.001`) или `netSize` мал, `cropWidth`
+/`cropHeight` могут округлиться до 0 → `stepX/stepY == 0` → бесконечный
+цикл (и деление на 0 в `netSize.width / netSize.height`, если размер 0).
+`maxCropRatio` берётся из INI/конфига без валидации.
+
+> **Примечание (2026-11-15):** коммит `d790db2` с сообщением
+> «Fixed H18» файл `BaseDetector.h` не менял (в нём фиксы H15/H16/H17);
+> гард в коде отсутствовал, пункт был открыт.
+
+**Исправление:** `if (cropWidth < 1 || cropHeight < 1 || netSize.width <= 0
+|| netSize.height <= 0) return {};` и `stepX = std::max(1, ...)`.
+
+**Статус:** ✅ исправлено (2026-11-15).
+
+* Гард degenerate-размеров в начале функции: `netSize`/`imgSize` с
+  нулевым измерением → `{}` (заодно устранено деление на 0 в
+  `whRatio = netSize.width / netSize.height`).
+* Гард после клэмпов: `cropWidth < 1 || cropHeight < 1` → `{}` — ловит
+  округление к 0 как напрямую (`cvRound(maxCropRatio * netSize)`), так и
+  после пересчёта через `whRatio`.
+* `stepX/stepY = std::max(1, 3 * crop/4)` — валидный, но крошечный кроп
+  (например, 1x1 при `maxCropRatio = 0.001` и `netSize 608`: именно этот
+  кейс реально зависал — `cvRound(0.001*608) = 1`, а шаг `3*1/4 = 0`)
+  больше не даёт бесконечного цикла: цикл завершается, хотя сетка
+  становится плотной (кроп-режим включается только при
+  `m_maxCropRatio > 0`, оба вызова — `OCVDNNDetector.cpp:415` и
+  `ONNXTensorRTDetector.cpp:230`).
+* Поведение нормальной сетки не изменилось (golden-проверки в тесте:
+  1920x1080, ratio 1.0 → те же 12 кропов, последний прижат к углу).
+* Регрессионный набор: `build/h18_test` (12 проверок; `GetCrops`
+  protected — тест идёт через минимальный стаб-наследник `BaseDetector`,
+  без friend-хука и без реального детектора) — все зелёные; полная
+  регрессия h2–h19 + h21 + c6 — TOTAL_FAIL=0.
+* Вне скоупа: валидация `maxCropRatio`/`netSize` на уровне
+  `ParseTrackerSettings` (срезать мусор при чтении INI) — остаётся в
+  M13/настройках; H18 чинит саму функцию.
+
+---
+
 ### H19. Выходы сети без проверки количества
 
 **Где:** `OCVDNNDetector.cpp:558-665, 927-1047, 1055-1093`.
@@ -1805,6 +1856,59 @@ backend DNN_OCV, no-keys веса, invalid distance_type веса); провер
 «no keys: backend» осталась зелёной — она тестирует fallback парсера,
 который не менялся. Регресс h2–h19 — зелёный (16 наборов); сборка
 Release `mtracking`, `MultitargetTracker`, `AsyncDetector` проходит.
+
+---
+
+### H22. Глобальный реестр типов
+
+**Где:** `src/mtracking/object_types.h`, `src/mtracking/object_types.cpp`,
+`src/Detector/BaseDetector.h` (`FillTypesMap`),
+`src/Detector/OCVDNNDetector.cpp`, `src/Detector/ONNXTensorRTDetector.cpp`.
+
+**Симптом:** `Type2Str` индексировал `m_typeNames[(size_t)type]` без
+проверки — любой `objtype_t` вне диапазона (внешний API, битый файл)
+давал OOB-чтение. `Str2Type` **добавлял** неизвестное имя в глобальный
+статический вектор и возвращал новый индекс, поэтому `FillTypesMap`
+всегда возвращал `true`, проверка «Unknown types in class names» и
+`assert(0)` были мёртвым кодом, ID типов зависели от порядка
+инициализации, а конкурентные вызовы были небезопасны.
+
+**Исправление (2026-11-15):**
+
+* `Type2Str` — проверка границ: `bad_type`, отрицательный индекс или
+  `>= m_typeNames.size()` → `m_badTypeName` («unknown»); OOB-чтения
+  больше нет.
+* `Str2Type` — чистый lookup без мутации; неизвестное имя возвращает
+  `bad_type` и реестр не растёт (детерминированные ID, безопасные
+  конкурентные чтения после инициализации).
+* `AddNewType` — единственный явный путь регистрации: пустое/дублирующее
+  имя отклоняется, новый тип добавляется один раз; защищён
+  `std::mutex` (`m_mutex`).
+* `BaseDetector::FillTypesMap` (`src/Detector/BaseDetector.h:292-312`) —
+  неизвестное имя из `.names`-файла регистрируется явно через
+  `AddNewType` (сохранена поддержка пользовательских моделей: DOTA,
+  9k, `classes_new.names` и т. п.), после чего ищется в реестре; пустое
+  имя даёт `false`.
+* `OCVDNNDetector::Init` — мёртвый `assert(0)` заменён на `std::cerr` +
+  `return false` (как в `ONNXTensorRTDetector`).
+* Белые списки (`OCVDNNDetector.cpp`, `ONNXTensorRTDetector.cpp`) —
+  неизвестное имя в `white_list` пропускается с предупреждением, а не
+  вставляется как `-1`.
+* Оба детектора срезают пустые хвостовые строки `.names`-файла, чтобы
+  лишний перевод строки не сдвигал индексы классов и не вызывал ложный
+  отказ.
+
+Проверка: `build/h22_test` (`object_types.cpp` + `test.cpp`), 14
+проверок: `Type2Str(bad_type/negative/out-of-range)` → «unknown»;
+`Str2Type(unknown)` → `bad_type` и размер реестра не меняется;
+`AddNewType` (пустое → false, дубль → false, новое → true, стабильный
+индекс); round-trip `Str2Type(Type2Str(i)) == i` для всех типов.
+Регресс: Release-сборка `mtracking` (включая `object_types.cpp`) и
+`mdetection` (включая `OCVDNNDetector.cpp`, `ONNXTensorRTDetector.cpp`)
+проходит.
+
+**M48** закрыт этой же правкой: `assert(0)` в `OCVDNNDetector.cpp` удалён
+(`FillTypesMap` теперь может вернуть `false`, `Init` — вернуть `false`).
 
 ---
 

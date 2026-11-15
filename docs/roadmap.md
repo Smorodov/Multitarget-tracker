@@ -11,7 +11,7 @@
 > статического анализа, а не воспроизведения.
 
 > **Статус на 2026-11-15.** Исправленные пункты (C1–C14,
-> H1–H17, H19, H21; H20 закрыт как by-design без правок поведения)
+> H1–H19, H21–H22, M48; H20 закрыт как by-design без правок поведения)
 > перенесены в `docs/roadmap-archive.md`. Полная история правок — в
 > git-истории (батч стабильности a8fdcb5 от 2026-11-11, точечные фиксы
 > 2026-11-15). Ниже — только открытая работа.
@@ -34,10 +34,7 @@
 
 ### 2.2 P1 — высокая важность
 
-| ID | Кратко | Где |
-|---|---|---|
-| **H18** | `GetCrops` может зависнуть при `maxCropRatio ≈ 0` (`stepX/stepY == 0`) | `src/Detector/BaseDetector.h:229-277` |
-| **H22** | `TypeConverter::Type2Str` без проверки границ; `Str2Type` неограниченно расширяет глобальный список | `src/mtracking/object_types.h:14-33` |
+Открытых пунктов P1 нет — H18 и H22 исправлены (см. `docs/roadmap-archive.md`).
 
 ### 2.3 P2/P3 — плановые
 
@@ -90,57 +87,13 @@
 | **M45** | P3 | `AsyncDetector`/`VideoExample` дублируют код логгеров, отрисовки, CLI | `async_detector/*`, `example/*` |
 | **M46** | P2 | Авто-определение входа по 4D-выходу (`DetectionOutput`) даёт `N×7` вместо размера сети; из-за дефолта `608` ветка обычно мертва | `OCVDNNDetector.cpp:282-327`, `OCVDNNDetector.h:68-69` |
 | **M47** | P2 | `VerifyOutputAspectRatio` удаляет имена выходов из `m_params` во время обхода, а `m_outpuDims` не привязаны к именам → после удаления данные читаются как чужие тензоры | `YoloONNX.cpp:29-66,479-505` |
-| **M48** | P2 | `assert(0)` как обработка ошибок конфигурации — мёртвый код: `FillTypesMap` всегда возвращает `true` из-за H22 (`ParseDFINE_IS` исправлен — C6) | `OCVDNNDetector.cpp:275` |
 
 ---
 
 ## 3. P1 — подробно
 
-### H18. `GetCrops` может зависнуть
-
-**Где:** `src/Detector/BaseDetector.h:229-277`.
-
-```cpp
-int cropHeight = cvRound(maxCropRatio * netSize.height);
-...
-const int stepX = 3 * cropWidth / 4;
-const int stepY = 3 * cropHeight / 4;
-for (int y = 0; y < imgSize.height; y += stepY) ...
-```
-
-Если `maxCropRatio` мал (например, `0.001`) или `netSize` мал, `cropWidth`
-/`cropHeight` могут округлиться до 0 → `stepX/stepY == 0` → бесконечный
-цикл (и деление на 0 в `netSize.width / netSize.height`, если размер 0).
-`maxCropRatio` берётся из INI/конфига без валидации.
-
-> **Примечание (2026-11-15):** коммит `d790db2` с сообщением
-> «Fixed H18» файл `BaseDetector.h` не менял (в нём фиксы H15/H16/H17);
-> гард в коде отсутствует, пункт открыт.
-
-**Исправление:** `if (cropWidth < 1 || cropHeight < 1 || netSize.width <= 0
-|| netSize.height <= 0) return {};` и `stepX = std::max(1, ...)`.
-
----
-
-### H22. Глобальный реестр типов
-
-**Где:** `src/mtracking/object_types.h:14-33`.
-
-* `Type2Str(type)` индексирует `m_typeNames[(size_t)type]` без проверки —
-  любой `objtype_t >= size` (например, из внешнего API/битого файла)
-  даёт OOB чтение.
-* `Str2Type(name)` **добавляет** неизвестное имя в глобальный статический
-  вектор и возвращает новый индекс. Из-за этого:
-  * `FillTypesMap` всегда возвращает `true` (`Str2Type` не возвращает
-    `bad_type`) → проверки «Unknown types in class names» и `assert(0)` —
-    мёртвый код;
-  * ID типов зависят от порядка инициализации детекторов/файлов;
-  * нет потокобезопасности (вызовы из детекторов и примеров).
-* `Type2Str`/`Str2Type` используются в горячем пути отрисовки/логов.
-
-**Исправление:** проверять границы; сделать реестр явным (инициализация
-из файла, неизменяемая после старта) или `thread_local`/мьютекс; для
-неизвестных имён возвращать `bad_type`.
+Открытых пунктов P1 нет — H18 и H22 исправлены 2026-11-15 (карточки и
+подробности в `docs/roadmap-archive.md`).
 
 ---
 
@@ -180,9 +133,6 @@ for (int y = 0; y < imgSize.height; y += stepY) ...
 * Отделить публичные заголовки (`BaseTracker.h`, `TrackerSettings.h`,
   `trajectory.h`, типы) от внутренних (`track.h`, `Kalman.h`,
   `ShortPathCalculator.h`); обновить `PUBLIC_HEADER`/install.
-* Сделать `TypeConverter` неизменяемым после инициализации и вернуть
-  `bad_type` для неизвестных имён (H22); заодно убрать мёртвый
-  `assert(0)` в `OCVDNNDetector.cpp:275`.
 * Ввести `DetectorFactory`-регистрацию вместо `switch` (упрощает
   добавление моделей и тестирование).
 * Для парсеров DNN: выбирать выходы по именам, а не по индексам,
@@ -224,9 +174,10 @@ for (int y = 0; y < imgSize.height; y += stepY) ...
 
 Цель: убрать оставшиеся падения/UB/зависания; выпустить патч-релиз `1.1.1`.
 
-- [ ] H18 — защита `GetCrops` от нулевых кропов и нулевых шагов.
-- [ ] H22 — реестр типов: границы, неизменяемость после старта,
-      `bad_type` для неизвестных имён.
+- [x] H22 — реестр типов: границы, неизменяемость после старта,
+      `bad_type` для неизвестных имён; заодно мёртвый `assert(0)`
+      (`OCVDNNDetector.cpp:275`). Сделано 2026-11-15 (см.
+      `docs/roadmap-archive.md`).
 - [ ] Добавить ASan/UBSan-сборку в CI (хотя бы один workflow).
 
 **Критерий готовности:** примеры `-e=1`, `-e=2`, `-e=4` и
@@ -237,7 +188,7 @@ for (int y = 0; y < imgSize.height; y += stepY) ...
 
 - [ ] Перенести локальные регрессионные наборы (`build/h*_test`,
       `build/c6_test`, сейчас вне git) в репозиторий под CTest:
-      property-тест LAPJV, INI/`ParseTrackerSettings`, наборы h2–h21
+      property-тест LAPJV, INI/`ParseTrackerSettings`, наборы h2–h22
       и c6.
 - [ ] Юнит-тесты: LAPJV/Hungarian (прямоугольные и вырожденные матрицы),
       Kalman (модели/размерности), GEO (ENU ↔ WGS84, гомография),
@@ -282,11 +233,11 @@ for (int y = 0; y < imgSize.height; y += stepY) ...
 
 | Уровень | Что проверять | Инструмент | Статус |
 |---|---|---|---|
-| Unit | `lap()` vs эталон, `AssignmentProblemSolver`, `TKalmanFilter` (все модели), `CRegion` (вырожденные), `nms`, `TypeConverter`, `ParseTrackerSettings` | GoogleTest/Catch2 + CTest | есть INI-тесты `ParseTrackerSettings`; LAPJV/Kalman/`nms`/`CRegion`/`TypeConverter` — нет |
+| Unit | `lap()` vs эталон, `AssignmentProblemSolver`, `TKalmanFilter` (все модели), `CRegion` (вырожденные), `nms`, `TypeConverter`, `ParseTrackerSettings` | GoogleTest/Catch2 + CTest | есть INI-тесты `ParseTrackerSettings`; `TypeConverter` — локальный `build/h22_test` (не в git); LAPJV/Kalman/`nms`/`CRegion` — нет |
 | Property | LAPJV: сумма cost ≤ Hungarian; перестановочность; прямоугольные матрицы | генератор случайных матриц | есть локально (`build/lapjv_test`), не в git/CI |
 | Sanitizers | ASan/UBSan на примерах и unit-тестах | CI | нет (локальные регрессионные прогоны h2–h21 выполнялись) |
 | Integration | Синтетическое видео: 5 объектов, пересечения, потеря, статика; проверка ID и counts | OpenCV + эталонные CSV | нет |
-| Regression | `data/atrium.avi`, `data/TrackingBugs.mp4` — метрики и число треков | скрипт сравнения | частично: 17 локальных наборов (h2–h21, c6) в gitignored `build/` |
+| Regression | `data/atrium.avi`, `data/TrackingBugs.mp4` — метрики и число треков | скрипт сравнения | частично: локальные наборы (h2–h22, c6) в gitignored `build/` |
 | Fuzz | Парсеры выходов DNN (shape/тип), INI-парсер, `str2ID` | libFuzzer/AFL (опционально) | нет |
 | Python | `import pymtracking`, `MTracker(settings, fps)`, `Update`, `GetTracks`, numpy-массивы | pytest | нет (wheel собирается, smoke — через `demo.py`) |
 
@@ -295,8 +246,10 @@ for (int y = 0; y < imgSize.height; y += stepY) ...
 ## 7. Приложение. Чек-лист перед релизом
 
 - [ ] Ни одного `exit`/`assert(0)` в библиотечных путях
-      (`grep -rn "exit(\|assert(0)" src`); остался только
-      `OCVDNNDetector.cpp:275` (мёртвый код из-за H22).
+      (`grep -rn "exit(\|assert(0)" src`); в коде проекта таких вызовов
+      нет — `OCVDNNDetector::Init` теперь возвращает `false` вместо
+      `assert(0)` (H22); оставшиеся вхождения — в сторонних исходниках
+      `src/Detector/tensorrt_onnx/common/` (вынос — задача M2).
 - [ ] ASan/UBSan-прогон всех примеров без ошибок.
 - [ ] Python-модуль собирается и проходит smoke-тест.
 - [ ] CI собирает Debug/Release, MSVC/GCC/Clang, Python и async-пример.

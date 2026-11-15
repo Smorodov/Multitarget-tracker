@@ -269,10 +269,16 @@ bool OCVDNNDetector::Init(const config_t& config)
                 className.erase(className.find_last_not_of(" \t\n\r\f\v") + 1);
                 m_classNames.push_back(className);
             }
+            // A trailing blank line must not shift class indices or fail
+            // validation; internal blank lines stay and are rejected below.
+            while (!m_classNames.empty() && m_classNames.back().empty())
+                m_classNames.pop_back();
+
 			if (!FillTypesMap(m_classNames))
 			{
-				std::cout << "Unknown types in class names!" << std::endl;
-				assert(0);
+				std::cerr << "OCVDNNDetector: unknown types in class names file "
+					<< classNames->second << std::endl;
+				return false;
 			}
         }
     }
@@ -281,7 +287,12 @@ bool OCVDNNDetector::Init(const config_t& config)
 	auto whiteRange = config.equal_range("white_list");
 	for (auto it = whiteRange.first; it != whiteRange.second; ++it)
 	{
-        m_classesWhiteList.insert(TypeConverter::Str2Type(it->second));
+		const objtype_t type = TypeConverter::Str2Type(it->second);
+		if (type != bad_type)
+			m_classesWhiteList.insert(type);
+		else
+			std::cerr << "OCVDNNDetector: unknown white_list type \""
+				<< it->second << "\" (ignored)" << std::endl;
 	}
 
     auto confidenceThreshold = config.find("confidenceThreshold");
