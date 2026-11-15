@@ -139,6 +139,7 @@ void CTracker::Update(const regions_t& regions, cv::UMat currFrame, time_point_t
     m_lastFrameTime = frameTime;
     m_removedObjects.clear();
 
+    // distType is only the ENU-mode flag (see BaseTracker.h): the metric weights always come from m_settings.m_distType.
     UpdateTrackingState(regions, currFrame, frameTime, distType == tracking::DistLocalCartesian);
 
     currFrame.copyTo(m_prevFrame);

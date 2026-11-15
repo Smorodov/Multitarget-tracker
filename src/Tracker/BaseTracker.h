@@ -22,6 +22,10 @@ public:
     virtual ~BaseTracker(void) = default;
 
     virtual void Update(const regions_t& regions, cv::UMat currFrame, time_point_t frameTime) = 0;
+    // distType is not a metric selector: the matching weights always come from TrackerSettings::m_distType.
+    // It only switches the mode: DistLocalCartesian matches in the local ENU plane (meters, m_distThresLocalCartesian),
+    // overriding the settings even when the DistLocalCartesian weight is 0 (weight fallback 1.0); any other
+    // value keeps the pixel mode (m_distThres), also overriding the settings (roadmap H20 - by design).
     virtual void Update(const regions_t& regions, cv::UMat currFrame, time_point_t frameTime, tracking::DistType distType)
     {
         (void)distType;
