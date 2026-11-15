@@ -11,7 +11,7 @@
 > статического анализа, а не воспроизведения.
 
 > **Статус на 2026-11-15.** Исправленные пункты (C1–C14,
-> H1–H19, H21–H22, M1, M2, M4, M5, M48; H20 закрыт как by-design без правок поведения)
+> H1–H19, H21–H22, M1, M2, M4, M5, M20–M23, M48; H20 закрыт как by-design без правок поведения)
 > перенесены в `docs/roadmap-archive.md`. Полная история правок — в
 > git-истории (батч стабильности a8fdcb5 от 2026-11-11, точечные фиксы
 > 2026-11-15). Ниже — только открытая работа.
@@ -59,10 +59,6 @@
 | **M17** | P2 | `GeoParams::Pix2MapParams::Init`: при неудаче `m_toPix` остаётся неинициализированной | `example/CarsCounting.h:507-521` |
 | **M18** | P2 | `VideoExample::AsyncProcess`: при `batch_size > 1` отображается/обрабатывается только первый кадр батча | `example/VideoExample.cpp:309-328` |
 | **M19** | P2 | `AsyncDetector` измеряет не время обработки, а ожидание в очереди | `async_detector/AsyncDetector.cpp:77-90` |
-| **M20** | P2 | Корневой CMake: переопределение `CMAKE_BINARY_DIR`, сброс пользовательских флагов, `-march=native` в Release | `CMakeLists.txt:7-10,23,33` |
-| **M21** | P2 | MSVC-ветка собирает статические библиотеки, `mtracking` не линкует OpenCV; поведение отличается от GCC | `src/Tracker/CMakeLists.txt:82-99` |
-| **M22** | P2 | Нет `Threads::Threads` для `std::thread`/spdlog; OpenMP подключён через флаги, а не target | `CMakeLists.txt:12-16` |
-| **M23** | P2 | Мёртвые include-пути (`Detector/Subsense`, `Detector/darknet/...`) | `example/CMakeLists.txt:26`, `src/CMakeLists.txt:19-20` |
 | **M25** | P2 | `m_velocity` документирован как «pixels/sec», но это приращение за шаг фильтра (dt не равен реальному интервалу) | `trajectory.h:207`, `Kalman.cpp:1206` |
 | **M27** | P3 | `CTrack` ctor №1 смещает первую точку траектории на `height/2`, ctor №2 — нет | `track.cpp:55` vs `110` |
 | **M28** | P3 | `CreateLinear(RRect)` резервирует `m_initialRects` вместо `m_initialRRects` | `Kalman.cpp:230` |
@@ -132,19 +128,19 @@ M1, M2, M4, M5 и часть M3 (`CalcEmbeddins`) исправлены 2026-11-1
 
 ### 4.4 Сборка и упаковка
 
-* Убрать переопределение `CMAKE_BINARY_DIR`, `unset(... CACHE)`;
-  использовать `CMAKE_RUNTIME_OUTPUT_DIRECTORY`/`CMAKE_LIBRARY_OUTPUT_DIRECTORY`
-  (M20).
-* Вынести `-march=native`/`-funroll-loops` в отдельную опцию
-  (`MT_NATIVE=ON/OFF`), Release по умолчанию — переносимый (M20).
-* Единый тип библиотек на всех платформах (`SHARED`/`STATIC` по опции) и
-  линковка OpenCV на MSVC (M21).
-* `find_package(Threads REQUIRED)` + `Threads::Threads`; OpenMP — через
-  `OpenMP::OpenMP_CXX` (M22).
-* Удалить мёртвые include-пути (M23).
-* CMake-пакет: `MTTrackingConfig.cmake.in` не находит OpenCV/зависимости
-  (`find_dependency(OpenCV)`), `LIB_DIR` вычисляется от
-  `INCLUDE_INSTALL_DIR` — проверить и исправить.
+M20–M23 и CMake-пакет исправлены 2026-11-15 — карточки в
+`docs/roadmap-archive.md`. Итог:
+
+* флаги не перетирают пользовательские; `-march=native`/`/arch:AVX2` —
+  под опцией `MT_NATIVE` (OFF по умолчанию, Release переносимый);
+* единый тип библиотек через `MT_SHARED`; на MSVC при SHARED включены
+  `CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS` и `MT_CORE_API` для реестра типов;
+* реестр типов вынесен в `mtracking_core` (единый для трекера и
+  детекторов), OpenCV линкуется `PUBLIC`;
+* `Threads::Threads` и `OpenMP::OpenMP_CXX` — через target'ы, а не флаги;
+* мёртвые include-пути удалены;
+* CMake-пакет: `find_dependency(OpenCV/Threads/OpenMP)`, `LIB_DIR` из
+  `LIB_INSTALL_DIR`, проверен consumer-проектом (static и shared).
 
 ### 4.5 Документация
 

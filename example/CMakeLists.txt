@@ -23,7 +23,6 @@ INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/../src
                     ${PROJECT_SOURCE_DIR}/../src/mtracking
                     ${PROJECT_SOURCE_DIR}/../src/Detector
                     ${PROJECT_SOURCE_DIR}/../src/Detector/vibe_src
-                    ${PROJECT_SOURCE_DIR}/../src/Detector/Subsense
                     ${PROJECT_SOURCE_DIR}/../src/Tracker
                     ${PROJECT_SOURCE_DIR}/../src/Tracker/HungarianAlg
                     ${PROJECT_SOURCE_DIR}/../thirdparty
@@ -32,7 +31,12 @@ INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/../src
 set(LIBS ${OpenCV_LIBS}
          mtracking
          mdetection
-         inih)
+         inih
+         Threads::Threads)
+
+if (OpenMP_CXX_FOUND)
+    set(LIBS ${LIBS} OpenMP::OpenMP_CXX)
+endif()
 
 if (BUILD_ONNX_TENSORRT)
     add_definitions(-DBUILD_ONNX_TENSORRT)

@@ -7,6 +7,18 @@
 typedef int objtype_t;
 constexpr objtype_t bad_type = -1;
 
+// The registry lives in its own (optionally shared) library, so its static
+// data members must be explicitly imported/exported on Windows (roadmap M21).
+#if defined(_WIN32) && defined(MT_CORE_SHARED)
+#  if defined(mtracking_core_EXPORTS)
+#    define MT_CORE_API __declspec(dllexport)
+#  else
+#    define MT_CORE_API __declspec(dllimport)
+#  endif
+#else
+#  define MT_CORE_API
+#endif
+
 ///
 /// \brief Global registry of object type names.
 ///
@@ -87,7 +99,7 @@ public:
 	}
 
 private:
-	static std::vector<std::string> m_typeNames;
-	static std::string m_badTypeName;
-	static std::mutex m_mutex;
+	static MT_CORE_API std::vector<std::string> m_typeNames;
+	static MT_CORE_API std::string m_badTypeName;
+	static MT_CORE_API std::mutex m_mutex;
 };

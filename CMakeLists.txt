@@ -4,28 +4,50 @@ project(MTTracking VERSION 1.1.0)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-unset(CMAKE_C_FLAGS CACHE)
-unset(CMAKE_CXX_FLAGS CACHE)
-unset(CMAKE_CXX_FLAGS_RELEASE CACHE)
-# unset(CMAKE_CXX_FLAGS_DEBUG CACHE)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(OpenMP)
-if (OPENMP_FOUND)
-    list(APPEND CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-    list(APPEND CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+# ---------------------------------------------------------------------------
+# Build options (roadmap M20-M22)
+# ---------------------------------------------------------------------------
+option(MT_NATIVE "Tune the build for the build machine CPU (-march=native / /arch:AVX2). OFF keeps Release portable" OFF)
+if (MSVC)
+    option(MT_SHARED "Build mtracking/mdetection as shared libraries" OFF)
+else()
+    option(MT_SHARED "Build mtracking/mdetection as shared libraries" ON)
 endif()
 
-set(CMAKE_CXX_STANDARD 17)
+if (MT_SHARED)
+    set(MT_LIBRARY_TYPE SHARED)
+else()
+    set(MT_LIBRARY_TYPE STATIC)
+endif()
 
+if (MT_SHARED AND MSVC)
+    # mtracking/mdetection have no MT_API export macros yet, so let CMake
+    # export every symbol of the shared libraries (roadmap M21).
+    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+endif()
+
+find_package(Threads REQUIRED)
+find_package(OpenMP)
+
+# ---------------------------------------------------------------------------
+# Compiler flags: append, never wipe or FORCE user-provided flags (roadmap M20).
+# ---------------------------------------------------------------------------
 if (CMAKE_COMPILER_IS_GNUCXX)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC" CACHE STRING COMPILE_FLAGS FORCE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic-errors -fPIC" CACHE STRING COMPILE_FLAGS FORCE)
-    set(CMAKE_CXX_FLAGS_RELEASE "-O3 -g -march=native -mtune=native -funroll-loops -DNDEBUG -DBOOST_DISABLE_ASSERTS" CACHE STRING COMPILE_FLAGS FORCE)
-    set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g -march=native -mtune=native -DDEBUG" CACHE STRING COMPILE_FLAGS FORCE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic-errors")
+    set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -g")
+    if (MT_NATIVE)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native -mtune=native -funroll-loops")
+    endif()
 elseif (MSVC)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc /W4 /utf-8" CACHE STRING COMPILE_FLAGS FORCE)
-    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MD /Ox /Ob2 /Oi /Ot /arch:AVX2 /fp:fast /DNDEBUG" CACHE STRING COMPILE_FLAGS FORCE)
-    # set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MDd /Od /Ob0 /DDEBUG" CACHE STRING COMPILE_FLAGS FORCE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc /W4 /utf-8")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /fp:fast")
+    if (MT_NATIVE)
+        set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /arch:AVX2")
+    endif()
 
     add_definitions(-D_USE_MATH_DEFINES -DNOMINMAX)
 endif()
@@ -36,8 +58,9 @@ endif()
 # directory and mix artifacts configured with different options (e.g. the
 # SILENT_WORK=ON python-wheel build vs the normal tree) - roadmap H16.
 if (CMAKE_BINARY_DIR STREQUAL "${CMAKE_SOURCE_DIR}/build")
-    set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR})
-    set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 endif()
 
 FIND_PACKAGE(OpenCV REQUIRED)
@@ -115,8 +138,8 @@ add_subdirectory(src)
 
 
 # Create CMake config files for distribution
-set(INCLUDE_INSTALL_DIR include/ )
-set(LIB_INSTALL_DIR lib/ )
+set(INCLUDE_INSTALL_DIR include)
+set(LIB_INSTALL_DIR lib)
 
 install(EXPORT MTTrackingExports
     FILE ${PROJECT_NAME}Targets.cmake
@@ -128,10 +151,14 @@ include(CMakePackageConfigHelpers)
 
 set(CONFIG_FILENAME ${PROJECT_NAME}Config.cmake)
 
+# Static libraries leak their PRIVATE dependencies into the link interface as
+# $<LINK_ONLY:...>; the package config must therefore find them as well.
+set(MT_OPENMP_USED ${OpenMP_CXX_FOUND})
+
 configure_package_config_file(${CONFIG_FILENAME}.in
     ${CMAKE_CURRENT_BINARY_DIR}/${CONFIG_FILENAME}
     INSTALL_DESTINATION ${LIB_INSTALL_DIR}/${PROJECT_NAME}/cmake
-    PATH_VARS INCLUDE_INSTALL_DIR)
+    PATH_VARS INCLUDE_INSTALL_DIR LIB_INSTALL_DIR)
 
 write_basic_package_version_file(
     ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake

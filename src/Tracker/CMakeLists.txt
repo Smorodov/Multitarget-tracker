@@ -5,8 +5,7 @@ project(mtracking)
 set(main_sources
              ../mtracking/nms.h
              ../mtracking/defines.h
-             ../mtracking/object_types.h
-             ../mtracking/object_types.cpp)
+             ../mtracking/object_types.h)
 
 set(tracker_sources
              BaseTracker.cpp
@@ -79,28 +78,33 @@ include_directories(${PROJECT_SOURCE_DIR}/../src)
 include_directories(${PROJECT_SOURCE_DIR}/../mtracking)
 include_directories(${PROJECT_SOURCE_DIR}/../../thirdparty)
 
-if (CMAKE_COMPILER_IS_GNUCXX)
-    add_library(${PROJECT_NAME} SHARED
-        ${main_sources}
-	${tracker_sources})
-    set(LIBS
+add_library(${PROJECT_NAME} ${MT_LIBRARY_TYPE}
+    ${main_sources}
+    ${tracker_sources})
+
+# OpenCV types appear in the public headers, so it is a PUBLIC dependency;
+# inih and the threading/OpenMP runtimes stay private (roadmap M21, M22).
+target_link_libraries(${PROJECT_NAME}
+    PUBLIC
         ${OpenCV_LIBS}
-        inih)
-else(CMAKE_COMPILER_IS_GNUCXX)
-    add_library(${PROJECT_NAME}
-        ${main_sources}
-        ${tracker_sources})
-    set(LIBS
-        # ${OpenCV_LIBS}
-        inih)
-    target_include_directories(${PROJECT_NAME} PRIVATE ${OpenCV_INCLUDE_DIRS})
+        mtracking_core
+    PRIVATE
+        inih
+        Threads::Threads)
+
+if (OpenMP_CXX_FOUND)
+    target_link_libraries(${PROJECT_NAME} PRIVATE OpenMP::OpenMP_CXX)
 endif()
 
-target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBS})
+# Headers are installed flat into include/<project>; expose that root to
+# consumers of the exported CMake package (roadmap 4.4).
+target_include_directories(${PROJECT_NAME} INTERFACE
+    $<INSTALL_INTERFACE:include>)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${tracker_headers};../mtracking/defines.h;../mtracking/object_types.h")
 install(TARGETS ${PROJECT_NAME}
         EXPORT MTTrackingExports
+        ARCHIVE DESTINATION lib
         LIBRARY DESTINATION lib
         RUNTIME DESTINATION bin
         PUBLIC_HEADER DESTINATION include/${PROJECT_NAME})

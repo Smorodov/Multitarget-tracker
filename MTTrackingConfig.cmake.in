@@ -2,9 +2,44 @@ set(@PROJECT_NAME@_VERSION @PROJECT_VERSION@)
 
 @PACKAGE_INIT@
 
+include(CMakeFindDependencyMacro)
+find_dependency(OpenCV)
+find_dependency(Threads)
+if (@MT_OPENMP_USED@)
+    find_dependency(OpenMP)
+endif()
+
 include("${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@Targets.cmake")
 
+# The package is normally installed for a single configuration. Mirror the
+# installed config's location/implib onto the other configurations so that
+# multi-config generators (Visual Studio, Xcode) can generate for all of them.
+foreach (_MT_TARGET @PROJECT_NAME@::inih @PROJECT_NAME@::mtracking_core @PROJECT_NAME@::mtracking @PROJECT_NAME@::mdetection)
+    if (NOT TARGET ${_MT_TARGET})
+        continue()
+    endif()
+    get_target_property(_MT_CONFIGS ${_MT_TARGET} IMPORTED_CONFIGURATIONS)
+    if (NOT _MT_CONFIGS)
+        continue()
+    endif()
+    list(GET _MT_CONFIGS 0 _MT_SRC_CFG)
+    get_target_property(_MT_LOC ${_MT_TARGET} IMPORTED_LOCATION_${_MT_SRC_CFG})
+    get_target_property(_MT_IMPLIB ${_MT_TARGET} IMPORTED_IMPLIB_${_MT_SRC_CFG})
+    foreach (_MT_CFG DEBUG RELEASE RELWITHDEBINFO MINSIZEREL)
+        if (_MT_CFG STREQUAL _MT_SRC_CFG)
+            continue()
+        endif()
+        if (_MT_LOC AND NOT _MT_LOC MATCHES "-NOTFOUND$")
+            set_property(TARGET ${_MT_TARGET} PROPERTY IMPORTED_LOCATION_${_MT_CFG} "${_MT_LOC}")
+        endif()
+        if (_MT_IMPLIB AND NOT _MT_IMPLIB MATCHES "-NOTFOUND$")
+            set_property(TARGET ${_MT_TARGET} PROPERTY IMPORTED_IMPLIB_${_MT_CFG} "${_MT_IMPLIB}")
+        endif()
+    endforeach()
+    set_property(TARGET ${_MT_TARGET} PROPERTY IMPORTED_CONFIGURATIONS "DEBUG;RELEASE;RELWITHDEBINFO;MINSIZEREL")
+endforeach()
+
 set_and_check(@PROJECT_NAME@_INCLUDE_DIR "@PACKAGE_INCLUDE_INSTALL_DIR@")
-set_and_check(@PROJECT_NAME@_LIB_DIR "@PACKAGE_INCLUDE_INSTALL_DIR@../lib")
+set_and_check(@PROJECT_NAME@_LIB_DIR "@PACKAGE_LIB_INSTALL_DIR@")
 
 check_required_components(@PROJECT_NAME@)
