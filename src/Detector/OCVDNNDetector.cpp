@@ -391,8 +391,10 @@ bool OCVDNNDetector::Init(const config_t& config)
 
             if (!m_inWidth || !m_inHeight)
             {
-                m_inWidth = outputs[0][2];
-                m_inHeight = outputs[0][3];
+                // The input shape is NCHW: [2] is the height, [3] is the
+                // width (blobFromImage below needs cv::Size(width, height)).
+                m_inHeight = outputs[0][2];
+                m_inWidth = outputs[0][3];
             }
         }
     }

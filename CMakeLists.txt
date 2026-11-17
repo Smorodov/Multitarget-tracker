@@ -92,6 +92,11 @@ if (BUILD_EXAMPLES)
     add_subdirectory(example)
 endif(BUILD_EXAMPLES)
 
+option(BUILD_MOT_EVAL "Should compiled the MOT benchmark metrics tool (mot_eval)?" ON)
+if (BUILD_MOT_EVAL)
+    add_subdirectory(tools)
+endif(BUILD_MOT_EVAL)
+
 
 option(USE_CLIP "Should be used RuCLIP|CLIP for objects classification?" OFF)
 if (USE_CLIP)
