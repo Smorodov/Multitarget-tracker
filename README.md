@@ -2,6 +2,7 @@
 
 [![Build Ubuntu](https://github.com/Smorodov/Multitarget-tracker/actions/workflows/ubuntu.yml/badge.svg)](https://github.com/Smorodov/Multitarget-tracker/actions/workflows/ubuntu.yml)
 [![Build MacOS](https://github.com/Smorodov/Multitarget-tracker/actions/workflows/macos.yml/badge.svg)](https://github.com/Smorodov/Multitarget-tracker/actions/workflows/macos.yml)
+[![Build Ubuntu](https://github.com/Smorodov/Multitarget-tracker/actions/workflows/python.yml/badge.svg)](https://github.com/Smorodov/Multitarget-tracker/actions/workflows/python.yml)
 [![CodeQL](https://github.com/Smorodov/Multitarget-tracker/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/Smorodov/Multitarget-tracker/actions/workflows/codeql-analysis.yml)
 
 ## Latest Features
