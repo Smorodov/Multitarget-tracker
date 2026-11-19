@@ -12,6 +12,7 @@
 #include "BaseTracker.h"
 #include "FileLogger.h"
 #include "cvatAnnotationsGenerator.h"
+#include "motResultsWriter.h"
 
 #include "spdlog/spdlog.h"
 #include "spdlog/async.h"
@@ -260,6 +261,9 @@ protected:
 
     ResultsLog m_resultsLog;
 	CVATAnnotationsGenerator m_cvatAnnotationsGenerator;
+	MOTResultsWriter m_motResultsWriter;
+
+    bool m_noShow = false;
 
     static void CaptureAndDetect(VideoExample* thisPtr, std::atomic<bool>& stopCapture);
 

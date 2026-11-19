@@ -9,7 +9,8 @@
 ///
 VideoExample::VideoExample(const cv::CommandLineParser& parser)
     : m_resultsLog(parser.get<std::string>("log_res"), parser.get<int>("write_n_frame")),
-	m_cvatAnnotationsGenerator(parser.get<std::string>("cvat_res"))
+	m_cvatAnnotationsGenerator(parser.get<std::string>("cvat_res")),
+	m_motResultsWriter(parser.get<std::string>("mot_res"))
 {
     m_inFile = parser.get<std::string>(0);
     m_outFile = parser.get<std::string>("out");
@@ -19,6 +20,7 @@ VideoExample::VideoExample(const cv::CommandLineParser& parser)
     m_finishDelay = parser.get<int>("end_delay");
 	m_batchSize = std::max(1, parser.get<int>("batch_size"));
     m_useContrastAdjustment = parser.get<int>("contrast_adjustment") != 0;
+    m_noShow = parser.get<int>("no_show") != 0;
 
     m_colors.emplace_back(255, 0, 0);
     m_colors.emplace_back(0, 255, 0);
@@ -87,7 +89,8 @@ void VideoExample::SyncProcess()
     cv::VideoWriter writer;
 
 #ifndef SILENT_WORK
-    cv::namedWindow("Video", cv::WINDOW_NORMAL | cv::WINDOW_KEEPRATIO);
+    if (!m_noShow)
+        cv::namedWindow("Video", cv::WINDOW_NORMAL | cv::WINDOW_KEEPRATIO);
     bool manualMode = false;
 #endif
 
@@ -226,17 +229,20 @@ void VideoExample::SyncProcess()
 			DrawData(frameInfo.m_frames[i].GetMatBGR(), frameInfo.m_tracks[i], frameInfo.m_frameInds[i], currTime);
 
 #ifndef SILENT_WORK
-			cv::imshow("Video", frameInfo.m_frames[i].GetMatBGR());
-
-			int waitTime = manualMode ? 0 : 1;// std::max<int>(1, cvRound(1000 / m_fps - currTime));
-			int k = cv::waitKey(waitTime);
-			if (k == 27)
+			if (!m_noShow)
 			{
-				stopProcessing = true;
-				break;
+				cv::imshow("Video", frameInfo.m_frames[i].GetMatBGR());
+
+				int waitTime = manualMode ? 0 : 1;// std::max<int>(1, cvRound(1000 / m_fps - currTime));
+				int k = cv::waitKey(waitTime);
+				if (k == 27)
+				{
+					stopProcessing = true;
+					break;
+				}
+				else if (k == 'm' || k == 'M')
+					manualMode = !manualMode;
 			}
-			else if (k == 'm' || k == 'M')
-				manualMode = !manualMode;
 #else
             //std::this_thread::sleep_for(std::chrono::milliseconds(1));
 #endif
@@ -250,12 +256,14 @@ void VideoExample::SyncProcess()
     }
 
 	m_cvatAnnotationsGenerator.Save(m_inFile, m_framesCount, m_frameSize);
+	m_motResultsWriter.Save();
 
     int64 stopLoopTime = cv::getTickCount();
 
     m_logger->info("algorithms time = {0}, work time = {1}", allTime / freq, (stopLoopTime - startLoopTime) / freq);
 #ifndef SILENT_WORK
-    cv::waitKey(m_finishDelay);
+    if (!m_noShow)
+        cv::waitKey(m_finishDelay);
 #endif
 }
 
@@ -271,7 +279,8 @@ void VideoExample::AsyncProcess()
     cv::VideoWriter writer;
 
 #ifndef SILENT_WORK
-    cv::namedWindow("Video", cv::WINDOW_NORMAL | cv::WINDOW_KEEPRATIO);
+    if (!m_noShow)
+        cv::namedWindow("Video", cv::WINDOW_NORMAL | cv::WINDOW_KEEPRATIO);
     bool manualMode = false;
 #endif
 
@@ -328,19 +337,22 @@ void VideoExample::AsyncProcess()
 			WriteFrame(writer, frameInfo.m_frames[i].GetMatBGR());
 
 #ifndef SILENT_WORK
-			cv::imshow("Video", frameInfo.m_frames[i].GetMatBGR());
-
-			int waitTime = manualMode ? 0 : 1;// std::max<int>(1, cvRound(1000 / m_fps - currTime));
-			key = cv::waitKey(waitTime);
-			if (key == 27)
+			if (!m_noShow)
 			{
-				stopProcessing = true;
-				break;
+				cv::imshow("Video", frameInfo.m_frames[i].GetMatBGR());
+
+				int waitTime = manualMode ? 0 : 1;// std::max<int>(1, cvRound(1000 / m_fps - currTime));
+				key = cv::waitKey(waitTime);
+				if (key == 27)
+				{
+					stopProcessing = true;
+					break;
+				}
+				if (key == 'm' || key == 'M')
+					manualMode = !manualMode;
+				else
+					break;
 			}
-			if (key == 'm' || key == 'M')
-				manualMode = !manualMode;
-			else
-				break;
 #else
 			//std::this_thread::sleep_for(std::chrono::milliseconds(1));
 #endif
@@ -365,13 +377,15 @@ void VideoExample::AsyncProcess()
         thCapDet.join();
 
 	m_cvatAnnotationsGenerator.Save(m_inFile, m_framesCount, m_frameSize);
+	m_motResultsWriter.Save();
 
     int64 stopLoopTime = cv::getTickCount();
 
     m_logger->info("--- algorithms time = {0}, work time = {1}", allTime / freq, (stopLoopTime - startLoopTime) / freq);
 
 #ifndef SILENT_WORK
-    cv::waitKey(m_finishDelay);
+    if (!m_noShow)
+        cv::waitKey(m_finishDelay);
 #endif
 }
 
@@ -390,7 +404,10 @@ void VideoExample::CaptureAndDetect(VideoExample* thisPtr, std::atomic<bool>& st
         return;
     }
 
-	int framesCounter = 0;
+	// 1-based frame numbering like in SyncProcess (m_startFrame + 1): it
+	// matches the MOTChallenge ground truth numbering used by the MOT
+	// results writer.
+	int framesCounter = thisPtr->m_startFrame + 1;
 
     const auto localEndFrame = thisPtr->m_endFrame;
     auto localIsDetectorInitialized = thisPtr->m_isDetectorInitialized;
@@ -530,6 +547,7 @@ void VideoExample::Tracking(FrameInfo& frame)
 		m_tracker->GetTracks(frame.m_tracks[i]);
 
 		m_cvatAnnotationsGenerator.NewDetects(frame.m_frameInds[i], frame.m_tracks[i], 0);
+		m_motResultsWriter.NewDetects(frame.m_frameInds[i], frame.m_tracks[i], 0);
 	}
 	if (m_trackerSettings.m_useAbandonedDetection)
 		m_tracker->GetTracks(m_tracks);

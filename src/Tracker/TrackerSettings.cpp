@@ -103,6 +103,27 @@ bool ParseTrackerSettings(const std::string& settingsFile, TrackerSettings& trac
 			trackerSettings.m_whiteList.push_back(wname);
 		}
 
+        // Read clip (ruCLIP) settings
+        trackerSettings.m_clipSettings.m_modelDir = reader.GetString("clip", "model_dir", "");
+        trackerSettings.m_clipSettings.m_rejectLabel = reader.GetString("clip", "reject_label", "другое");
+        trackerSettings.m_clipSettings.m_backend = reader.GetString("clip", "backend", "trt");
+        trackerSettings.m_clipSettings.m_useFp16 = reader.GetInteger("clip", "use_fp16", 1) != 0;
+        trackerSettings.m_clipSettings.m_maxBatch = reader.GetInteger("clip", "max_batch", 32);
+        trackerSettings.m_clipSettings.m_deviceIndex = reader.GetInteger("clip", "device_index", 0);
+        trackerSettings.m_clipSettings.m_threshold = static_cast<float>(reader.GetReal("clip", "threshold", 0.5));
+        trackerSettings.m_clipSettings.m_recheckInterval = reader.GetInteger("clip", "recheck_interval", 30);
+        trackerSettings.m_clipSettings.m_minObjectWidth = reader.GetInteger("clip", "min_object_width", 16);
+        trackerSettings.m_clipSettings.m_minObjectHeight = reader.GetInteger("clip", "min_object_height", 16);
+
+        std::stringstream clipLabels{ reader.GetString("clip", "labels", "человек;машина;грузовик;автобус;велосипед") };
+        trackerSettings.m_clipSettings.m_labels.clear();
+        std::string clipLabel;
+        while (std::getline(clipLabels, clipLabel, ';'))
+        {
+            if (!clipLabel.empty())
+                trackerSettings.m_clipSettings.m_labels.push_back(clipLabel);
+        }
+
     res = true;
     std::cout << "ParseTrackerSettings: " << res << std::endl;
     return res;

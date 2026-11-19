@@ -198,6 +198,80 @@ struct TrackerSettings
     size_t m_maxVideoMemory = 0;
 
     ///
+    /// \brief ClipSettings
+    /// Optional ruCLIP zero-shot classification of detections. Filled from the
+    /// [clip] section of the settings ini file; used only when the project is
+    /// built with -DUSE_CLIP=ON.
+    ///
+    struct ClipSettings
+    {
+        ///
+        /// \brief m_modelDir
+        /// Directory with the ruCLIP model (config.json, bpe.model and the
+        /// clip_visual.onnx / clip_textual.onnx files for the TensorRT backend).
+        /// Empty disables classification.
+        ///
+        std::string m_modelDir;
+
+        ///
+        /// \brief m_labels
+        /// Positive class prompts (UTF-8) to compare the crops with.
+        ///
+        std::vector<std::string> m_labels;
+
+        ///
+        /// \brief m_rejectLabel
+        /// Catch-all "unknown" prompt appended to m_labels. A prediction of
+        /// this label (or a confidence below m_threshold) rejects the object.
+        ///
+        std::string m_rejectLabel = "другое";
+
+        ///
+        /// \brief m_backend
+        /// ruCLIP backend: "trt" (TensorRT), "torch" (LibTorch) or "dnn".
+        ///
+        std::string m_backend = "trt";
+
+        ///
+        /// \brief m_useFp16
+        /// FP16 inference (TensorRT engine / LibTorch CUDA).
+        ///
+        bool m_useFp16 = true;
+
+        ///
+        /// \brief m_maxBatch
+        /// Upper bound of the batch in one inference call (TensorRT profile).
+        ///
+        int m_maxBatch = 32;
+
+        ///
+        /// \brief m_deviceIndex
+        /// CUDA device index.
+        ///
+        int m_deviceIndex = 0;
+
+        ///
+        /// \brief m_threshold
+        /// Minimum confidence to accept a label; lower values are rejected.
+        ///
+        float m_threshold = 0.5f;
+
+        ///
+        /// \brief m_recheckInterval
+        /// Number of frames a track keeps its classification before re-checking.
+        ///
+        int m_recheckInterval = 30;
+
+        ///
+        /// \brief m_minObjectWidth, m_minObjectHeight
+        /// Minimal crop size in pixels; smaller crops are not classified.
+        ///
+        int m_minObjectWidth = 16;
+        int m_minObjectHeight = 16;
+    };
+    ClipSettings m_clipSettings;
+
+    ///
     struct EmbeddingParams
     {
         ///

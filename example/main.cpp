@@ -25,6 +25,8 @@ int main(int argc, char** argv)
         "{ a async             |1                   | Use 2 theads for processing pipeline | }"
         "{ r log_res           |                    | Path to the csv file with tracking result | }"
         "{ cvat_res            |                    | Path to the xml file in cvat format with tracking result | }"
+        "{ mot_res             |                    | Path to the txt file in MOTChallenge format with tracking result | }"
+        "{ no_show             |0                   | Do not show video windows (for batch runs and benchmarks) | }"
         "{ s settings          |                    | Path to the ini file with tracking settings | }"
         "{ bs batch_size       |1                   | Batch size - frames count for processing | }"
         "{ wf write_n_frame    |1                   | Write logs on each N frame: 1 for writing each frame | }"
