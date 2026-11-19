@@ -88,6 +88,20 @@ if (USE_GEOGRAPHICLIB)
     add_definitions(-DUSE_GEOGRAPHICLIB)
 endif(USE_GEOGRAPHICLIB)
 
+# ---------------------------------------------------------------------------
+# RuCLIP (optional): object classification in the motion example.
+# The library is a standalone package (see C:/work/clip/ruclip/RuCLIP) built with
+# the TensorRT backend. Point CMake at the installed package with either
+#   -DruCLIP_DIR=<prefix>/lib/cmake/ruCLIP
+# or -DCMAKE_PREFIX_PATH=<prefix>. When USE_CLIP is OFF nothing is linked or
+# compiled in.
+# ---------------------------------------------------------------------------
+option(USE_CLIP "Enable RuCLIP object classification (requires installed ruCLIP package)" OFF)
+if (USE_CLIP)
+    find_package(ruCLIP CONFIG REQUIRED)
+    add_definitions(-DUSE_CLIP)
+endif(USE_CLIP)
+
 if (BUILD_EXAMPLES)
     add_subdirectory(example)
 endif(BUILD_EXAMPLES)
@@ -97,11 +111,6 @@ if (BUILD_MOT_EVAL)
     add_subdirectory(tools)
 endif(BUILD_MOT_EVAL)
 
-
-option(USE_CLIP "Should be used RuCLIP|CLIP for objects classification?" OFF)
-if (USE_CLIP)
-    add_definitions(-DUSE_CLIP)
-endif(USE_CLIP)
 
 option(BUILD_ASYNC_DETECTOR "Should compiled async example with low fps Detector?" OFF)
 if (BUILD_ASYNC_DETECTOR)

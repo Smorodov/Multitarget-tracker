@@ -66,7 +66,7 @@
 │   └── python_bind/mtracker.cpp   pybind11-модуль pymtracking
 ├── async_detector/                отдельное приложение: 4-поточный конвейер
 ├── example/                       основное приложение и примеры
-└── thirdparty/                    inih, spdlog, pybind11, Circular_Code, ruclip
+└── thirdparty/                    inih, spdlog, pybind11, Circular_Code
 ```
 
 ### 2.1 Артефакты сборки
@@ -115,7 +115,7 @@ graph TD
   (плюс `object_types.cpp`), которые компилируются в `mtracking`/`mdetection`.
   Имена include-путей плоские: `#include "BaseTracker.h"`, `#include "defines.h"`.
 * **`TrackerSettings`** — общий конфиг всего конвейера: и трекинг, и детектор
-  (`m_nnWeights`, `m_dnnTarget`, `m_inputSize`, `m_embeddings` и т.д.).
+  (`m_nnWeights`, `m_dnnTarget`, `m_inputSize`, `m_embeddings`, `m_clipSettings` и т.д.).
   Фактически это «god object» конфигурации.
 * **Детекторы** не зависят от трекера, но зависят от `src/mtracking`.
 * **`example`** и **`async_detector`** знают детали обеих библиотек (включая
@@ -161,7 +161,7 @@ graph TD
 | `USE_OCV_KCF` | ON при наличии contrib | визуальные трекеры OpenCV для потерянных целей |
 | `USE_OCV_UKF` | OFF | Unscented Kalman из contrib |
 | `USE_OCV_EMBEDDINGS` | ON | ReID-эмбеддинги через `cv::dnn` |
-| `USE_CLIP` | OFF | классификация RuCLIP в примере motion |
+| `USE_CLIP` | OFF | классификация в примере motion через внешний пакет `ruCLIP` (`find_package(ruCLIP CONFIG)`, цель `ruclip::ruclip`) |
 | `USE_GEOGRAPHICLIB` | OFF | `GeographicLib::LocalCartesian` для ENU |
 | `SILENT_WORK` | OFF | вырезает `imshow`/`waitKey` |
 

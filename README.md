@@ -89,6 +89,35 @@ cmake . .. \
 make -j
 ```
 
+#### Optional: RuCLIP classification
+
+RuCLIP is **not built here** — it is a standalone CMake package (`ruclip::ruclip`)
+that supports LibTorch, TensorRT and OpenCV DNN backends. Build and install it once,
+then point CMake at the installed package:
+
+```bash
+# in the RuCLIP checkout (TensorRT backend; see its README for the precise paths)
+cmake -S RuCLIP -B build -DRUCLIP_WITH_TORCH=OFF -DRUCLIP_WITH_TRT=ON \
+      -DRUCLIP_BUILD_CLI=OFF -DCMAKE_INSTALL_PREFIX=<prefix>
+cmake --build build --config Release && cmake --install build --config Release
+
+# in Multitarget-tracker
+cmake . .. -DUSE_CLIP=ON -DruCLIP_DIR=<prefix>/lib/cmake/ruCLIP
+```
+
+The motion example (`-e=1`) uses the TensorRT backend with FP16 (`--fp16` engine,
+`clip_*.fp16.gpu<N>.b<B>.engine`), so the model directory must contain the exported
+ONNX files (`clip_visual.onnx`, `clip_textual.onnx`). At runtime the app needs the
+TensorRT/CUDA/cuDNN and OpenCV DLL directories on `PATH`.
+
+Classification parameters live in the `[clip]` section of the settings ini file
+(see [`data/settings_motion_clip.ini`](data/settings_motion_clip.ini)): model
+directory, prompts, backend, FP16, a catch-all `reject_label`, a confidence
+`threshold` and the per-track `recheck_interval`. Pass it with
+`--settings=../data/settings_motion_clip.ini`; without `model_dir`/`labels` the
+classification stays disabled even when built with `USE_CLIP=ON`.
+
+
 ### Usage Guide
 Basic command syntax:
 ```bash
@@ -125,6 +154,7 @@ m_tracker = BaseTracker::CreateTracker(settings);
 - [Non Maximum Suppression](https://github.com/Nuzhny007/Non-Maximum-Suppression)
 - [Ini file parser](https://github.com/benhoyt/inih)
 - [Circular Code](https://github.com/LiorKogan/Circular)
+- RuCLIP (optional, standalone package; TensorRT backend) — object classification in the motion example
 
 ### License
 [Apache 2.0 License](https://github.com/Smorodov/Multitarget-tracker/blob/master/LICENSE)

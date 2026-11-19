@@ -47,8 +47,7 @@ if (BUILD_CARS_COUNTING)
 endif(BUILD_CARS_COUNTING)
 
 if (USE_CLIP)
-    add_definitions(-DUSE_CLIP)
-    set(LIBS ${LIBS} ruclip)
+    set(LIBS ${LIBS} ruclip::ruclip)
 endif(USE_CLIP)
 
 if (USE_GEOGRAPHICLIB)

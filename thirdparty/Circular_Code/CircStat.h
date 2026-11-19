@@ -243,7 +243,7 @@ std::set<CircVal<T>> WeightedCircAverage(std::vector<std::pair<CircVal<T>,double
         double w= a.second;                           // weight
         fASumW += w    ;
         fASumWA+= w*v  ;
-        fASumWA2= w*v*v;
+        fASumWA2+= w*v*v;
 
              if (v < 180.) LowerAngles.push_back(std::pair<double,double>(v,w));
         else if (v > 180.) UpperAngles.push_back(std::pair<double,double>(v,w));
