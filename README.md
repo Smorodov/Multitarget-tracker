@@ -24,7 +24,7 @@
 ## Demo Videos
 
 ### Detection & Tracking
-
+[![Multi-Camera Traffic Monitoring and Real-Time Emissions Estimation](https://img.youtube.com/vi/L_xdTEQiT6s/0.jpg)](https://youtu.be/L_xdTEQiT6s)
 [![WALDO30 YOLOv8l model for UAV Traffic monitoring](https://img.youtube.com/vi/RBou0eFDbrM/0.jpg)](https://youtu.be/RBou0eFDbrM)
 [![Satellite planes detection and tracking with YOLOv11-obb](https://img.youtube.com/vi/gTpWnkMF7Lg/0.jpg)](https://youtu.be/gTpWnkMF7Lg)
 [![4-in-1 latest SOTA detectors](https://img.youtube.com/vi/Pb_HnejRpY4/0.jpg)](https://youtu.be/Pb_HnejRpY4)
